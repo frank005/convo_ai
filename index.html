@@ -5,6 +5,80 @@
   <title>Conversational AI Agent</title>
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
+  <style>
+    /* Your neon volume-indicator styles */
+    .ai-volume-indicator {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .ai-avatar {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0px 0px 20px rgba(0, 255, 255, 0.5);
+    }
+    .ai-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+    .volume-ring {
+      position: absolute;
+      top: -8px;
+      left: -8px;
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      border: 4px solid rgba(0, 255, 255, 0.3);
+      box-shadow: 0px 0px 20px rgba(0, 255, 255, 0.8);
+      transition: transform 0.1s;
+    }
+    .ai-volume-indicator canvas {
+      width: 200px;
+      height: 60px;
+      margin-top: 16px;
+      background: linear-gradient(90deg, rgba(0, 255, 255, 0.3), rgba(0, 255, 255, 0.8), rgba(0, 255, 255, 0.3));
+      box-shadow: 0px 0px 15px rgba(0, 255, 255, 0.6);
+      border-radius: 8px;
+    }
+
+    /* Floating widget in the top‐right */
+    #aiVolumeWidget {
+      position: fixed;
+      top: 6.5rem;
+      right: 1rem;
+      background: #111;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+      display: none; /* hidden by default */
+      z-index: 9999; 
+    }
+    #aiVolumeWidget h2 {
+      margin-bottom: 0.5rem;
+      text-align: center;
+      color: cyan;
+    }
+
+    /* Toggle button in the top‐right corner, slightly offset to not overlap the widget */
+    #toggleVolumeBtn {
+      position: fixed;
+      top: 1rem;
+      right: 8rem; /* so it doesn't overlap the widget itself */
+      background: cyan;
+      color: #111;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.4);
+      cursor: pointer;
+      z-index: 10000;
+    }
+  </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen py-10 px-4">
   <div class="max-w-6xl mx-auto">
@@ -15,6 +89,41 @@
     >
       Set API Credentials
     </button>
+
+    <body class="bg-gray-900 text-white min-h-screen">    
+      <button id="toggleVolumeBtn" onclick="toggleVolumeWidget()">
+        Show AI Volume
+      </button>
+    
+      <!-- The floating volume widget in top‐right -->
+      <div id="aiVolumeWidget">
+        <h2>AI Speaker Volume</h2>
+        <div class="ai-volume-indicator">
+          <div class="ai-avatar">
+            <img src="https://mouseattack.s3.us-west-2.amazonaws.com/gi2.jpg" alt="AI Avatar">
+            <div class="volume-ring"></div>
+          </div>
+          <canvas id="audio-wave"></canvas>
+        </div>
+        <button onclick="joinChannel()" class="mt-4 px-3 py-2 bg-cyan-500 text-gray-900 rounded hover:bg-cyan-400">
+          Join Channel
+        </button>
+        <button onclick="leaveChannel()" class="mt-4 px-3 py-2 bg-cyan-500 text-gray-900 rounded hover:bg-cyan-400">
+          Leave Channel
+        </button>
+        <div>
+          <input
+            id="clientRtcUid"
+            class="mt-4 px-3 py-2 w-full rounded bg-gray-700 text-white"
+            placeholder="client UID (if token required)"
+          />
+          </div>
+          <input
+            id="clientRtcToken"
+            class="mt-4 px-3 py-2 w-full rounded bg-gray-700 text-white"
+            placeholder="Agora token  (if token required)"
+          />
+      </div>
 
     <div class="grid md:grid-cols-2 gap-6">
       <!-- Left panel: Create/Update/Stop -->
@@ -305,6 +414,143 @@
   </div>
 
   <script>
+    // Toggle widget visibility
+    function toggleVolumeWidget() {
+      const widget = document.getElementById('aiVolumeWidget');
+      const btn    = document.getElementById('toggleVolumeBtn');
+      if (widget.style.display === 'none' || widget.style.display === '') {
+        widget.style.display = 'block';
+        btn.textContent = 'Hide AI Volume';
+      } else {
+        widget.style.display = 'none';
+        btn.textContent = 'Show AI Volume';
+      }
+    }
+
+    async function joinChannel() {
+      APP_ID = storedAppId;
+      CHANNEL_NAME = document.getElementById("agoraChannelName").value.trim();;
+      UID = null;
+      TOKEN = null;  // Replace with token if required
+
+      clientRtcUid = document.getElementById("clientRtcUid").value.trim();
+      clientRtcToken = document.getElementById("clientRtcToken").value.trim();
+
+      if (clientRtcUid && clientRtcToken) {
+        TOKEN = clientRtcToken;
+        UID = clientRtcUid;
+      }
+      else if (clientRtcUid && clientRtcToken === "") {
+        UID = clientRtcUid;
+      }
+
+      // Basic credentials check
+      if (!storedAppId) {
+          alert("App ID not set. Click 'Set API Credentials'.");
+          output.textContent = "Error: Missing App ID.";
+          return;
+      }
+      if (!CHANNEL_NAME) {
+          alert("Channel name not set. Please enter a channel name.");
+          output.textContent = "Error: Missing channel name.";
+          return;
+      }
+      client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+      client.on("user-published", async (user, mediaType) => {
+        await client.subscribe(user, mediaType);
+        if (mediaType === "audio") {
+          const remoteAudioTrack = user.audioTrack;
+          remoteAudioTrack.play();
+          setupAudioProcessing(remoteAudioTrack);
+        }
+      });
+      await client.join(APP_ID, CHANNEL_NAME, TOKEN, UID);
+      if (!localTracks.audioTrack) {
+      localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
+         encoderConfig: "music_standard"
+      });
+      }
+      await client.publish(localTracks.audioTrack);
+      console.log("Joined channel:", CHANNEL_NAME);
+    }
+
+    async function leaveChannel() {
+            if (!client) return;
+
+            // Leave Agora Channel
+            await client.leave();
+            console.log("Left the channel");
+
+            /*Stop animations
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }*/
+
+            // Reset UI effects
+            const volumeRing = document.querySelector(".volume-ring");
+            volumeRing.style.transform = `scale(1)`;
+            volumeRing.style.boxShadow = `0px 0px 30px rgba(0, 255, 255, 0.8)`;
+
+            const canvas = document.getElementById("audio-wave");
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Close AudioContext
+            if (audioContext) {
+                audioContext.close().then(() => {
+                    console.log("Audio context closed.");
+                });
+            }
+
+            // Reset Agora client
+            client = null;
+        }
+
+    function setupAudioProcessing(remoteAudioTrack) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      const bufferLength = analyser.frequencyBinCount;
+      dataArray = new Uint8Array(bufferLength);
+
+      const mediaStream = new MediaStream([remoteAudioTrack.getMediaStreamTrack()]);
+      const source = audioContext.createMediaStreamSource(mediaStream);
+      source.connect(analyser);
+
+      visualizeAudio();
+    }
+
+    function visualizeAudio() {
+      const volumeRing = document.querySelector(".volume-ring");
+      const canvas = document.getElementById("audio-wave");
+      const ctx = canvas.getContext("2d");
+
+      function drawWave() {
+        requestAnimationFrame(drawWave);
+        analyser.getByteFrequencyData(dataArray);
+        let averageVolume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+        let volumeLevel = averageVolume / 128;
+
+        let bounceScale = 1 + (volumeLevel * 0.8);
+        volumeRing.style.transform = `scale(${bounceScale})`;
+        volumeRing.style.boxShadow = `0px 0px ${10 + volumeLevel * 20}px rgba(0, 255, 255, 0.8)`;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height / 2);
+
+        for (let i = 0; i < canvas.width; i += 10) {
+          let height = Math.sin(i * 0.05) * volumeLevel * 50;
+          ctx.lineTo(i, canvas.height / 2 - height);
+        }
+
+        ctx.strokeStyle = `rgba(0, 255, 255, ${0.3 + volumeLevel * 0.7})`;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
+
+      drawWave();
+    }
 
     /********************************************************
      * 1) localStorage-based credentials
