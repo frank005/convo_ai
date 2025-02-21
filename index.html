@@ -195,6 +195,19 @@
             placeholder="Failure Message(Required)"
             value="Sorry, I do not know how to answer this question."
           />
+          <input
+            id="sMsgContent"
+            class="w-full p-2 rounded bg-gray-700 text-white"
+            placeholder="System Instructions (Required)"
+            value="You are a helpful chatbot."
+          />
+
+          <!-- Custom Parameters Section -->
+          <div class="w-full p-4 bg-gray-700 rounded-lg">
+            <span class="font-bold mb-2">LLM Custom Parameters</span>
+            <div id="param-container" class="space-y-2"></div>
+            <button onclick="addParamField()" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded">Add Parameter</button>
+          </div>
 
           <!-- ASR dropdown (single label block) -->
           <div class="w-full p-2 rounded bg-gray-700 text-white">
@@ -586,6 +599,9 @@
         audioTrack: null
     };
     let audioContext, analyser, dataArray;
+    let gMsg;
+    let fMsg;
+    let sMsgContent;
 
     let APP_ID;
     let CHANNEL_NAME;
@@ -1378,6 +1394,84 @@
       });
     }
 
+    let params = {}; // Store key-value pairs
+
+    function addParamField() {
+        const container = document.getElementById("param-container");
+        const paramId = "param-" + Object.keys(params).length;
+
+        const div = document.createElement("div");
+        div.classList.add("flex", "gap-2", "items-center");
+        div.id = paramId;
+
+        div.innerHTML = `
+            <select class="border p-2 w-1/5 rounded bg-gray-800 text-white" onchange="updateParam('${paramId}', this, 'type')">
+                <option value="string">String</option>
+                <option value="number">Number</option>
+                <option value="array">Array</option>
+                <option value="object">Object</option>
+            </select>
+            <input type="text" placeholder="Key" class="border p-2 w-1/4 rounded bg-gray-800 text-white" oninput="updateParam('${paramId}', this, 'key')">
+            <input type="text" placeholder="Value" class="border p-2 w-2/5 rounded bg-gray-800 text-white" oninput="updateParam('${paramId}', this, 'value')" id="${paramId}-value">
+            <button onclick="removeParam('${paramId}')" class="text-red-500">❌</button>
+        `;
+
+        container.appendChild(div);
+        params[paramId] = { key: "", type: "string", value: "" };
+    }
+
+    function updateParam(id, input, fieldType) {
+        if (fieldType === "key") params[id].key = input.value;
+        
+        if (fieldType === "type") {
+            params[id].type = input.value;
+            let valueInput = document.getElementById(`${id}-value`);
+
+            if (input.value === "array") {
+                valueInput.placeholder = "Comma-separated values";
+            } else if (input.value === "object") {
+                valueInput.placeholder = "Enter JSON";
+                valueInput.value = "{}"; // Default JSON value
+            } else {
+                valueInput.placeholder = "Value";
+                valueInput.value = "";
+            }
+        }
+
+        if (fieldType === "value") {
+            let type = params[id].type;
+            if (type === "array") {
+                params[id].value = input.value.split(",").map(v => v.trim()); // Convert CSV input to array
+            } else if (type === "number") {
+                params[id].value = Number(input.value);
+            } else if (type === "object") {
+                try {
+                    params[id].value = JSON.parse(input.value); // Parse JSON
+                    input.style.borderColor = "green";
+                } catch (e) {
+                    input.style.borderColor = "red"; // Invalid JSON
+                }
+            } else {
+                params[id].value = input.value;
+            }
+        }
+    }
+
+    function removeParam(id) {
+        document.getElementById(id).remove();
+        delete params[id];
+    }
+
+    // Function to merge params into the final JSON payload
+    function getFinalPayload(basePayload) {
+        let finalParams = {};
+        for (let key in params) {
+            if (params[key].key && params[key].value !== "") {
+                finalParams[params[key].key] = params[key].value;
+            }
+        }
+        return { ...basePayload, ...finalParams };
+    }
     /********************************************************
      * 4) CREATE Agent
      ********************************************************/
@@ -1394,6 +1488,7 @@
       ttsKey        = document.getElementById("ttsKey").value.trim();
       gMsg    = document.getElementById("gMsg").value.trim();
       fMsg    = document.getElementById("fMsg").value.trim();
+      sMsgContent = document.getElementById("sMsgContent").value.trim();
 
 
       APP_ID = storedAppId;
@@ -1426,9 +1521,10 @@
       const vendor    = document.getElementById("ttsVendor").value;
       const isStringUid = document.getElementById('enableStringUid').checked; // Read whether the box is checked
       const llmModel  = document.getElementById("llmModel").value;
+      let customParams = getFinalPayload({});
 
       // Build request
-      const reqBody = {
+      let reqBody = {
         name: uniqueName,
         properties: {
           channel,
@@ -1451,14 +1547,15 @@
             url: llmUrl,
             api_key: llmApiKey,
             system_messages: [
-              { role: "system", content: "You are a helpful chatbot." }
+              { role: "system", content: sMsgContent }
             ],
             greeting_message: gMsg,
             failure_message: fMsg,
             max_history: 10,
             params: {
               model: llmModel,
-              max_completion_tokens: 1000
+              max_completion_tokens: 1000,
+              ...customParams
             }
           }
         }
