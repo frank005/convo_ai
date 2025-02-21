@@ -313,6 +313,23 @@
     let storedCustomerSecret = localStorage.getItem("customerSecret") || "";
     let storedAppId = localStorage.getItem("appId") || "";
 
+    let uniqueName;
+    let channel;
+    let rtcUid;
+    let llmApiKey;
+    let llmUrl;
+    let ttsKey;
+    let client;
+    var localTracks = { 
+        audioTrack: null
+    };
+    let audioContext, analyser, dataArray;
+
+    let APP_ID;
+    let CHANNEL_NAME;
+    let UID = null;
+    let TOKEN = null;
+
     function openCredsModal() {
       document.getElementById("customerId").value = storedCustomerId;
       document.getElementById("customerSecret").value = storedCustomerSecret;
@@ -1106,20 +1123,25 @@
       const output = document.getElementById("agentResponse");
       output.textContent = "Creating...";
 
+      // Required fields
+      uniqueName    = document.getElementById("uniqueName").value.trim();
+      channel       = document.getElementById("agoraChannelName").value.trim();
+      rtcUid        = document.getElementById("agoraRtcUid").value.trim();
+      llmApiKey     = document.getElementById("llmApiKey").value.trim();
+      llmUrl        = document.getElementById("llmUrl").value.trim();
+      ttsKey        = document.getElementById("ttsKey").value.trim();
+
+      APP_ID = storedAppId;
+      CHANNEL_NAME = channel;
+      UID = null;
+      TOKEN = null;  // Replace with token if required
+
       // Basic credentials check
       if (!storedAppId) {
-        alert("App ID not set. Click 'Set API Credentials'.");
-        output.textContent = "Error: Missing App ID.";
-        return;
+          alert("App ID not set. Click 'Set API Credentials'.");
+          output.textContent = "Error: Missing App ID.";
+          return;
       }
-
-      // Required fields
-      const uniqueName    = document.getElementById("uniqueName").value.trim();
-      const channel       = document.getElementById("agoraChannelName").value.trim();
-      const rtcUid        = document.getElementById("agoraRtcUid").value.trim();
-      const llmApiKey     = document.getElementById("llmApiKey").value.trim();
-      const llmUrl        = document.getElementById("llmUrl").value.trim();
-      const ttsKey        = document.getElementById("ttsKey").value.trim();
 
       if (!uniqueName || !channel || !rtcUid || !llmApiKey || !llmUrl || !ttsKey) {
         alert("Please fill out all required fields.");
