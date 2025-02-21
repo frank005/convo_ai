@@ -183,6 +183,18 @@
             placeholder="LLM URL (Required)"
             value="https://api.openai.com/v1/chat/completions"
           />
+          <input
+            id="gMsg"
+            class="w-full p-2 rounded bg-gray-700 text-white"
+            placeholder="Greeting Message (Required)"
+            value="Hello, how can I help you?"
+          />
+          <input
+            id="fMsg"
+            class="w-full p-2 rounded bg-gray-700 text-white"
+            placeholder="Failure Message(Required)"
+            value="Sorry, I do not know how to answer this question."
+          />
 
           <!-- ASR dropdown (single label block) -->
           <div class="w-full p-2 rounded bg-gray-700 text-white">
@@ -1380,6 +1392,9 @@
       llmApiKey     = document.getElementById("llmApiKey").value.trim();
       llmUrl        = document.getElementById("llmUrl").value.trim();
       ttsKey        = document.getElementById("ttsKey").value.trim();
+      gMsg    = document.getElementById("gMsg").value.trim();
+      fMsg    = document.getElementById("fMsg").value.trim();
+
 
       APP_ID = storedAppId;
       CHANNEL_NAME = channel;
@@ -1438,8 +1453,8 @@
             system_messages: [
               { role: "system", content: "You are a helpful chatbot." }
             ],
-            greeting_message: "Hello, how can I help you?",
-            failure_message: "Sorry, I do not know how to answer this question.",
+            greeting_message: gMsg,
+            failure_message: fMsg,
             max_history: 10,
             params: {
               model: llmModel,
