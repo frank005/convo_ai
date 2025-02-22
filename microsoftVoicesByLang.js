@@ -1,11 +1,11 @@
 const microsoftVoicesByLang = {
     "Afrikaans (South Africa)": [
-      { "shortName": "af-ZA-AdriNeural3", "friendlyName": "Adri" },
-      { "shortName": "af-ZA-WillemNeural3", "friendlyName": "Willem" }
+      { "shortName": "af-ZA-AdriNeural", "friendlyName": "Adri" },
+      { "shortName": "af-ZA-WillemNeural", "friendlyName": "Willem" }
     ],
     "Amharic (Ethiopia)": [
-      { "shortName": "am-ET-MekdesNeural3", "friendlyName": "Mekdes" },
-      { "shortName": "am-ET-AmehaNeural3", "friendlyName": "Ameha" }
+      { "shortName": "am-ET-MekdesNeural", "friendlyName": "Mekdes" },
+      { "shortName": "am-ET-AmehaNeural", "friendlyName": "Ameha" }
     ],
     "Arabic (United Arab Emirates)": [
       { "shortName": "ar-AE-FatimaNeural", "friendlyName": "Fatima" },
@@ -72,28 +72,28 @@ const microsoftVoicesByLang = {
       { "shortName": "ar-YE-SalehNeural", "friendlyName": "Saleh" }
     ],
     "Assamese (India)": [
-      { "shortName": "as-IN-YashicaNeural3", "friendlyName": "Yashica" },
-      { "shortName": "as-IN-PriyomNeural3", "friendlyName": "Priyom" }
+      { "shortName": "as-IN-YashicaNeural", "friendlyName": "Yashica" },
+      { "shortName": "as-IN-PriyomNeural", "friendlyName": "Priyom" }
     ],
     "Azerbaijani (Latin, Azerbaijan)": [
-      { "shortName": "az-AZ-BanuNeural3", "friendlyName": "Banu" },
-      { "shortName": "az-AZ-BabekNeural3", "friendlyName": "Babek" }
+      { "shortName": "az-AZ-BanuNeural", "friendlyName": "Banu" },
+      { "shortName": "az-AZ-BabekNeural", "friendlyName": "Babek" }
     ],
     "Bulgarian (Bulgaria)": [
       { "shortName": "bg-BG-KalinaNeural", "friendlyName": "Kalina" },
       { "shortName": "bg-BG-BorislavNeural", "friendlyName": "Borislav" }
     ],
     "Bangla (Bangladesh)": [
-      { "shortName": "bn-BD-NabanitaNeural3", "friendlyName": "Nabanita" },
-      { "shortName": "bn-BD-PradeepNeural3", "friendlyName": "Pradeep" }
+      { "shortName": "bn-BD-NabanitaNeural", "friendlyName": "Nabanita" },
+      { "shortName": "bn-BD-PradeepNeural", "friendlyName": "Pradeep" }
     ],
     "Bengali (India)": [
-      { "shortName": "bn-IN-TanishaaNeural3", "friendlyName": "Tanishaa" },
-      { "shortName": "bn-IN-BashkarNeural3", "friendlyName": "Bashkar" }
+      { "shortName": "bn-IN-TanishaaNeural", "friendlyName": "Tanishaa" },
+      { "shortName": "bn-IN-BashkarNeural", "friendlyName": "Bashkar" }
     ],
     "Bosnian (Bosnia and Herzegovina)": [
-      { "shortName": "bs-BA-VesnaNeural3", "friendlyName": "Vesna" },
-      { "shortName": "bs-BA-GoranNeural3", "friendlyName": "Goran" }
+      { "shortName": "bs-BA-VesnaNeural", "friendlyName": "Vesna" },
+      { "shortName": "bs-BA-GoranNeural", "friendlyName": "Goran" }
     ],
     "Catalan": [
       { "shortName": "ca-ES-JoanaNeural", "friendlyName": "Joana" },
@@ -105,8 +105,8 @@ const microsoftVoicesByLang = {
       { "shortName": "cs-CZ-AntoninNeural", "friendlyName": "Antonin" }
     ],
     "Welsh (United Kingdom)": [
-      { "shortName": "cy-GB-NiaNeural3", "friendlyName": "Nia" },
-      { "shortName": "cy-GB-AledNeural3", "friendlyName": "Aled" }
+      { "shortName": "cy-GB-NiaNeural", "friendlyName": "Nia" },
+      { "shortName": "cy-GB-AledNeural", "friendlyName": "Aled" }
     ],
     "Danish (Denmark)": [
       { "shortName": "da-DK-ChristelNeural", "friendlyName": "Christel" },
@@ -123,8 +123,8 @@ const microsoftVoicesByLang = {
     "German (Germany)": [
       { "shortName": "de-DE-KatjaNeural", "friendlyName": "Katja" },
       { "shortName": "de-DE-ConradNeural", "friendlyName": "Conrad" },
-      { "shortName": "de-DE-SeraphinaMultilingualNeural4", "friendlyName": "Seraphina" },
-      { "shortName": "de-DE-FlorianMultilingualNeural4", "friendlyName": "Florian" },
+      { "shortName": "de-DE-SeraphinaMultilingualNeural", "friendlyName": "Seraphina" },
+      { "shortName": "de-DE-FlorianMultilingualNeural", "friendlyName": "Florian" },
       { "shortName": "de-DE-AmalaNeural", "friendlyName": "Amala" },
       { "shortName": "de-DE-BerndNeural", "friendlyName": "Bernd" },
       { "shortName": "de-DE-ChristophNeural", "friendlyName": "Christoph" },
@@ -138,9 +138,9 @@ const microsoftVoicesByLang = {
       { "shortName": "de-DE-MajaNeural", "friendlyName": "Maja" },
       { "shortName": "de-DE-RalfNeural", "friendlyName": "Ralf" },
       { "shortName": "de-DE-TanjaNeural", "friendlyName": "Tanja" },
-      { "shortName": "de-DE-Florian:DragonHDLatestNeural1", "friendlyName": "Florian" },
-      { "shortName": "de-DE-Seraphina:DragonHDLatestNeural1", "friendlyName": "Seraphina" },
-      { "shortName": "de-DE-Seraphina:DragonHDV1Neural1", "friendlyName": "Seraphina" }
+      { "shortName": "de-DE-Florian:DragonHDLatestNeural", "friendlyName": "Florian" },
+      { "shortName": "de-DE-Seraphina:DragonHDLatestNeural", "friendlyName": "Seraphina" },
+      { "shortName": "de-DE-Seraphina:DragonHDV1Neural", "friendlyName": "Seraphina" }
     ],
     "Greek (Greece)": [
       { "shortName": "el-GR-AthinaNeural", "friendlyName": "Athina" },
@@ -170,8 +170,8 @@ const microsoftVoicesByLang = {
       { "shortName": "en-GB-SoniaNeural", "friendlyName": "Sonia" },
       { "shortName": "en-GB-RyanNeural", "friendlyName": "Ryan" },
       { "shortName": "en-GB-LibbyNeural", "friendlyName": "Libby" },
-      { "shortName": "en-GB-AdaMultilingualNeural4", "friendlyName": "Ada" },
-      { "shortName": "en-GB-OllieMultilingualNeural4", "friendlyName": "Ollie" },
+      { "shortName": "en-GB-AdaMultilingualNeural", "friendlyName": "Ada" },
+      { "shortName": "en-GB-OllieMultilingualNeural", "friendlyName": "Ollie" },
       { "shortName": "en-GB-AbbiNeural", "friendlyName": "Abbi" },
       { "shortName": "en-GB-AlfieNeural", "friendlyName": "Alfie" },
       { "shortName": "en-GB-BellaNeural", "friendlyName": "Bella" },
@@ -201,8 +201,8 @@ const microsoftVoicesByLang = {
       { "shortName": "en-IN-NeerjaNeural", "friendlyName": "Neerja" },
       { "shortName": "en-IN-PrabhatNeural", "friendlyName": "Prabhat" },
       { "shortName": "en-IN-RehaanNeural", "friendlyName": "Rehaan" },
-      { "shortName": "en-IN-AartiNeural1", "friendlyName": "Aarti" },
-      { "shortName": "en-IN-ArjunNeural1", "friendlyName": "Arjun" }
+      { "shortName": "en-IN-AartiNeural", "friendlyName": "Aarti" },
+      { "shortName": "en-IN-ArjunNeural", "friendlyName": "Arjun" }
     ],
     "English (Kenya)": [
       { "shortName": "en-KE-AsiliaNeural", "friendlyName": "Asilia" },
@@ -229,16 +229,16 @@ const microsoftVoicesByLang = {
       { "shortName": "en-TZ-ElimuNeural", "friendlyName": "Elimu" }
     ],
     "English (United States)": [
-      { "shortName": "en-US-AvaMultilingualNeural4", "friendlyName": "Ava" },
-      { "shortName": "en-US-AndrewMultilingualNeural4", "friendlyName": "Andrew" },
-      { "shortName": "en-US-EmmaMultilingualNeural4", "friendlyName": "Emma" },
-      { "shortName": "en-US-AlloyTurboMultilingualNeural4", "friendlyName": "Alloy" },
-      { "shortName": "en-US-EchoTurboMultilingualNeural4", "friendlyName": "Echo" },
-      { "shortName": "en-US-FableTurboMultilingualNeural4", "friendlyName": "Fable" },
-      { "shortName": "en-US-OnyxTurboMultilingualNeural4", "friendlyName": "Onyx" },
-      { "shortName": "en-US-NovaTurboMultilingualNeural4", "friendlyName": "Nova" },
-      { "shortName": "en-US-ShimmerTurboMultilingualNeural4", "friendlyName": "Shimmer" },
-      { "shortName": "en-US-BrianMultilingualNeural4", "friendlyName": "Brian" },
+      { "shortName": "en-US-AvaMultilingualNeural", "friendlyName": "Ava" },
+      { "shortName": "en-US-AndrewMultilingualNeural", "friendlyName": "Andrew" },
+      { "shortName": "en-US-EmmaMultilingualNeural", "friendlyName": "Emma" },
+      { "shortName": "en-US-AlloyTurboMultilingualNeural", "friendlyName": "Alloy" },
+      { "shortName": "en-US-EchoTurboMultilingualNeural", "friendlyName": "Echo" },
+      { "shortName": "en-US-FableTurboMultilingualNeural", "friendlyName": "Fable" },
+      { "shortName": "en-US-OnyxTurboMultilingualNeural", "friendlyName": "Onyx" },
+      { "shortName": "en-US-NovaTurboMultilingualNeural", "friendlyName": "Nova" },
+      { "shortName": "en-US-ShimmerTurboMultilingualNeural", "friendlyName": "Shimmer" },
+      { "shortName": "en-US-BrianMultilingualNeural", "friendlyName": "Brian" },
       { "shortName": "en-US-AvaNeural", "friendlyName": "Ava" },
       { "shortName": "en-US-AndrewNeural", "friendlyName": "Andrew" },
       { "shortName": "en-US-EmmaNeural", "friendlyName": "Emma" },
@@ -254,9 +254,9 @@ const microsoftVoicesByLang = {
       { "shortName": "en-US-SaraNeural", "friendlyName": "Sara" },
       { "shortName": "en-US-TonyNeural", "friendlyName": "Tony" },
       { "shortName": "en-US-NancyNeural", "friendlyName": "Nancy" },
-      { "shortName": "en-US-CoraMultilingualNeural4", "friendlyName": "Cora" },
-      { "shortName": "en-US-ChristopherMultilingualNeural4", "friendlyName": "Christopher" },
-      { "shortName": "en-US-BrandonMultilingualNeural4", "friendlyName": "Brandon" },
+      { "shortName": "en-US-CoraMultilingualNeural", "friendlyName": "Cora" },
+      { "shortName": "en-US-ChristopherMultilingualNeural", "friendlyName": "Christopher" },
+      { "shortName": "en-US-BrandonMultilingualNeural", "friendlyName": "Brandon" },
       { "shortName": "en-US-AmberNeural", "friendlyName": "Amber" },
       { "shortName": "en-US-AnaNeural", "friendlyName": "Ana (child)" },
       { "shortName": "en-US-AshleyNeural", "friendlyName": "Ashley" },
@@ -266,55 +266,55 @@ const microsoftVoicesByLang = {
       { "shortName": "en-US-ElizabethNeural", "friendlyName": "Elizabeth" },
       { "shortName": "en-US-EricNeural", "friendlyName": "Eric" },
       { "shortName": "en-US-JacobNeural", "friendlyName": "Jacob" },
-      { "shortName": "en-US-JennyMultilingualNeural4", "friendlyName": "Jenny" },
+      { "shortName": "en-US-JennyMultilingualNeural", "friendlyName": "Jenny" },
       { "shortName": "en-US-MichelleNeural", "friendlyName": "Michelle" },
       { "shortName": "en-US-MonicaNeural", "friendlyName": "Monica" },
       { "shortName": "en-US-RogerNeural", "friendlyName": "Roger" },
-      { "shortName": "en-US-RyanMultilingualNeural4", "friendlyName": "Ryan" },
+      { "shortName": "en-US-RyanMultilingualNeural", "friendlyName": "Ryan" },
       { "shortName": "en-US-SteffanNeural", "friendlyName": "Steffan" },
-      { "shortName": "en-US-AdamMultilingualNeural1,4", "friendlyName": "Adam" },
-      { "shortName": "en-US-AIGenerate1Neural1", "friendlyName": "AIGenerate1" },
-      { "shortName": "en-US-AIGenerate2Neural1", "friendlyName": "AIGenerate2" },
-      { "shortName": "en-US-AmandaMultilingualNeural1,4", "friendlyName": "Amanda" },
-      { "shortName": "en-US-BlueNeural1", "friendlyName": "Blue" },
-      { "shortName": "en-US-DavisMultilingualNeural1,4", "friendlyName": "Davis" },
-      { "shortName": "en-US-DerekMultilingualNeural1,4", "friendlyName": "Derek" },
-      { "shortName": "en-US-DustinMultilingualNeural1,4", "friendlyName": "Dustin" },
-      { "shortName": "en-US-EvelynMultilingualNeural1,4", "friendlyName": "Evelyn" },
-      { "shortName": "en-US-LewisMultilingualNeural1,4", "friendlyName": "Lewis" },
-      { "shortName": "en-US-LolaMultilingualNeural1,4", "friendlyName": "Lola" },
-      { "shortName": "en-US-NancyMultilingualNeural1,4", "friendlyName": "Nancy" },
-      { "shortName": "en-US-PhoebeMultilingualNeural1,4", "friendlyName": "Phoebe" },
-      { "shortName": "en-US-SamuelMultilingualNeural1,4", "friendlyName": "Samuel" },
-      { "shortName": "en-US-SerenaMultilingualNeural1,4", "friendlyName": "Serena" },
-      { "shortName": "en-US-SteffanMultilingualNeural1,4", "friendlyName": "Steffan" },
-      { "shortName": "en-US-Adam:DragonHDLatestNeural1", "friendlyName": "Adam" },
-      { "shortName": "en-US-Alloy:DragonHDLatestNeural1", "friendlyName": "Alloy" },
-      { "shortName": "en-US-Andrew:DragonHDLatestNeural1", "friendlyName": "Andrew" },
-      { "shortName": "en-US-Andrew:DragonHDV1Neural1", "friendlyName": "Andrew" },
-      { "shortName": "en-US-Andrew2:DragonHDLatestNeural1", "friendlyName": "Andrew2" },
-      { "shortName": "en-US-Andrew2:DragonHDV1Neural1", "friendlyName": "Andrew2" },
-      { "shortName": "en-US-Andrew3:DragonHDLatestNeural1", "friendlyName": "Andrew3" },
-      { "shortName": "en-US-Aria:DragonHDLatestNeural1", "friendlyName": "Aria" },
-      { "shortName": "en-US-Aria:DragonHDV1Neural1", "friendlyName": "Aria" },
-      { "shortName": "en-US-Ava:DragonHDLatestNeural1", "friendlyName": "Ava" },
-      { "shortName": "en-US-Ava:DragonHDV1Neural1", "friendlyName": "Ava" },
-      { "shortName": "en-US-Ava2:DragonHDLatestNeural1", "friendlyName": "Ava2" },
-      { "shortName": "en-US-Brian:DragonHDLatestNeural1", "friendlyName": "Brian" },
-      { "shortName": "en-US-Brian:DragonHDV1Neural1", "friendlyName": "Brian" },
-      { "shortName": "en-US-Davis:DragonHDLatestNeural1", "friendlyName": "Davis" },
-      { "shortName": "en-US-Davis:DragonHDV1Neural1", "friendlyName": "Davis" },
-      { "shortName": "en-US-Emma:DragonHDLatestNeural1", "friendlyName": "Emma" },
-      { "shortName": "en-US-Emma:DragonHDV1Neural1", "friendlyName": "Emma" },
-      { "shortName": "en-US-Emma2:DragonHDLatestNeural1", "friendlyName": "Emma2" },
-      { "shortName": "en-US-Emma2:DragonHDV1Neural1", "friendlyName": "Emma2" },
-      { "shortName": "en-US-Jenny:DragonHDLatestNeural1", "friendlyName": "Jenny" },
-      { "shortName": "en-US-Jenny:DragonHDV1Neural1", "friendlyName": "Jenny" },
-      { "shortName": "en-US-Nova:DragonHDLatestNeural1", "friendlyName": "Nova" },
-      { "shortName": "en-US-Phoebe:DragonHDLatestNeural1", "friendlyName": "Phoebe" },
-      { "shortName": "en-US-Serena:DragonHDLatestNeural1", "friendlyName": "Serena" },
-      { "shortName": "en-US-Steffan:DragonHDLatestNeural1", "friendlyName": "Steffan" },
-      { "shortName": "en-US-Steffan:DragonHDV1Neural1", "friendlyName": "Steffan" }
+      { "shortName": "en-US-AdamMultilingualNeural", "friendlyName": "Adam" },
+      { "shortName": "en-US-AIGenerate1Neural", "friendlyName": "AIGenerate1" },
+      { "shortName": "en-US-AIGenerate2Neural", "friendlyName": "AIGenerate2" },
+      { "shortName": "en-US-AmandaMultilingualNeural", "friendlyName": "Amanda" },
+      { "shortName": "en-US-BlueNeural", "friendlyName": "Blue" },
+      { "shortName": "en-US-DavisMultilingualNeural", "friendlyName": "Davis" },
+      { "shortName": "en-US-DerekMultilingualNeural", "friendlyName": "Derek" },
+      { "shortName": "en-US-DustinMultilingualNeural", "friendlyName": "Dustin" },
+      { "shortName": "en-US-EvelynMultilingualNeural", "friendlyName": "Evelyn" },
+      { "shortName": "en-US-LewisMultilingualNeural", "friendlyName": "Lewis" },
+      { "shortName": "en-US-LolaMultilingualNeural", "friendlyName": "Lola" },
+      { "shortName": "en-US-NancyMultilingualNeural", "friendlyName": "Nancy" },
+      { "shortName": "en-US-PhoebeMultilingualNeural", "friendlyName": "Phoebe" },
+      { "shortName": "en-US-SamuelMultilingualNeural", "friendlyName": "Samuel" },
+      { "shortName": "en-US-SerenaMultilingualNeural", "friendlyName": "Serena" },
+      { "shortName": "en-US-SteffanMultilingualNeural", "friendlyName": "Steffan" },
+      { "shortName": "en-US-Adam:DragonHDLatestNeural", "friendlyName": "Adam" },
+      { "shortName": "en-US-Alloy:DragonHDLatestNeural", "friendlyName": "Alloy" },
+      { "shortName": "en-US-Andrew:DragonHDLatestNeural", "friendlyName": "Andrew" },
+      { "shortName": "en-US-Andrew:DragonHDV1Neural", "friendlyName": "Andrew" },
+      { "shortName": "en-US-Andrew2:DragonHDLatestNeural", "friendlyName": "Andrew2" },
+      { "shortName": "en-US-Andrew2:DragonHDV1Neural", "friendlyName": "Andrew2" },
+      { "shortName": "en-US-Andrew3:DragonHDLatestNeural", "friendlyName": "Andrew" },
+      { "shortName": "en-US-Aria:DragonHDLatestNeural", "friendlyName": "Aria" },
+      { "shortName": "en-US-Aria:DragonHDV1Neural", "friendlyName": "Aria" },
+      { "shortName": "en-US-Ava:DragonHDLatestNeural", "friendlyName": "Ava" },
+      { "shortName": "en-US-Ava:DragonHDV1Neural", "friendlyName": "Ava" },
+      { "shortName": "en-US-Ava2:DragonHDLatestNeural", "friendlyName": "Ava2" },
+      { "shortName": "en-US-Brian:DragonHDLatestNeural", "friendlyName": "Brian" },
+      { "shortName": "en-US-Brian:DragonHDV1Neural", "friendlyName": "Brian" },
+      { "shortName": "en-US-Davis:DragonHDLatestNeural", "friendlyName": "Davis" },
+      { "shortName": "en-US-Davis:DragonHDV1Neural", "friendlyName": "Davis" },
+      { "shortName": "en-US-Emma:DragonHDLatestNeural", "friendlyName": "Emma" },
+      { "shortName": "en-US-Emma:DragonHDV1Neural", "friendlyName": "Emma" },
+      { "shortName": "en-US-Emma2:DragonHDLatestNeural", "friendlyName": "Emma2" },
+      { "shortName": "en-US-Emma2:DragonHDV1Neural", "friendlyName": "Emma2" },
+      { "shortName": "en-US-Jenny:DragonHDLatestNeural", "friendlyName": "Jenny" },
+      { "shortName": "en-US-Jenny:DragonHDV1Neural", "friendlyName": "Jenny" },
+      { "shortName": "en-US-Nova:DragonHDLatestNeural", "friendlyName": "Nova" },
+      { "shortName": "en-US-Phoebe:DragonHDLatestNeural", "friendlyName": "Phoebe" },
+      { "shortName": "en-US-Serena:DragonHDLatestNeural", "friendlyName": "Serena" },
+      { "shortName": "en-US-Steffan:DragonHDLatestNeural", "friendlyName": "Steffan" },
+      { "shortName": "en-US-Steffan:DragonHDV1Neural", "friendlyName": "Steffan" }
     ],
     "English (South Africa)": [
       { "shortName": "en-ZA-LeahNeural", "friendlyName": "Leah" },
@@ -355,10 +355,10 @@ const microsoftVoicesByLang = {
     "Spanish (Spain)": [
       { "shortName": "es-ES-ElviraNeural", "friendlyName": "Elvira" },
       { "shortName": "es-ES-AlvaroNeural", "friendlyName": "Alvaro" },
-      { "shortName": "es-ES-ArabellaMultilingualNeural4", "friendlyName": "Arabella" },
-      { "shortName": "es-ES-IsidoraMultilingualNeural4", "friendlyName": "Isidora" },
-      { "shortName": "es-ES-TristanMultilingualNeural4", "friendlyName": "Tristan" },
-      { "shortName": "es-ES-XimenaMultilingualNeural4", "friendlyName": "Ximena" },
+      { "shortName": "es-ES-ArabellaMultilingualNeural", "friendlyName": "Arabella" },
+      { "shortName": "es-ES-IsidoraMultilingualNeural", "friendlyName": "Isidora" },
+      { "shortName": "es-ES-TristanMultilingualNeural", "friendlyName": "Tristan" },
+      { "shortName": "es-ES-XimenaMultilingualNeural", "friendlyName": "Ximena" },
       { "shortName": "es-ES-AbrilNeural", "friendlyName": "Abril" },
       { "shortName": "es-ES-ArnauNeural", "friendlyName": "Arnau" },
       { "shortName": "es-ES-DarioNeural", "friendlyName": "Dario" },
@@ -373,8 +373,8 @@ const microsoftVoicesByLang = {
       { "shortName": "es-ES-TrianaNeural", "friendlyName": "Triana" },
       { "shortName": "es-ES-VeraNeural", "friendlyName": "Vera" },
       { "shortName": "es-ES-XimenaNeural", "friendlyName": "Ximena" },
-      { "shortName": "es-ES-Tristan:DragonHDLatestNeural1", "friendlyName": "Tristan" },
-      { "shortName": "es-ES-Ximena:DragonHDLatestNeural1", "friendlyName": "Ximena" }
+      { "shortName": "es-ES-Tristan:DragonHDLatestNeural", "friendlyName": "Tristan" },
+      { "shortName": "es-ES-Ximena:DragonHDLatestNeural", "friendlyName": "Ximena" }
     ],
     "Spanish (Equatorial Guinea)": [
       { "shortName": "es-GQ-TeresaNeural", "friendlyName": "Teresa" },
@@ -442,16 +442,16 @@ const microsoftVoicesByLang = {
       { "shortName": "es-VE-SebastianNeural", "friendlyName": "Sebastian" }
     ],
     "Estonian (Estonia)": [
-      { "shortName": "et-EE-AnuNeural3", "friendlyName": "Anu" },
-      { "shortName": "et-EE-KertNeural3", "friendlyName": "Kert" }
+      { "shortName": "et-EE-AnuNeural", "friendlyName": "Anu" },
+      { "shortName": "et-EE-KertNeural", "friendlyName": "Kert" }
     ],
     "Basque": [
-      { "shortName": "eu-ES-AinhoaNeural3", "friendlyName": "Ainhoa" },
-      { "shortName": "eu-ES-AnderNeural3", "friendlyName": "Ander" }
+      { "shortName": "eu-ES-AinhoaNeural", "friendlyName": "Ainhoa" },
+      { "shortName": "eu-ES-AnderNeural", "friendlyName": "Ander" }
     ],
     "Persian (Iran)": [
-      { "shortName": "fa-IR-DilaraNeural3", "friendlyName": "Dilara" },
-      { "shortName": "fa-IR-FaridNeural3", "friendlyName": "Farid" }
+      { "shortName": "fa-IR-DilaraNeural", "friendlyName": "Dilara" },
+      { "shortName": "fa-IR-FaridNeural", "friendlyName": "Farid" }
     ],
     "Finnish (Finland)": [
       { "shortName": "fi-FI-SelmaNeural", "friendlyName": "Selma" },
@@ -459,8 +459,8 @@ const microsoftVoicesByLang = {
       { "shortName": "fi-FI-NooraNeural", "friendlyName": "Noora" }
     ],
     "Filipino (Philippines)": [
-      { "shortName": "fil-PH-BlessicaNeural3", "friendlyName": "Blessica" },
-      { "shortName": "fil-PH-AngeloNeural3", "friendlyName": "Angelo" }
+      { "shortName": "fil-PH-BlessicaNeural", "friendlyName": "Blessica" },
+      { "shortName": "fil-PH-AngeloNeural", "friendlyName": "Angelo" }
     ],
     "French (Belgium)": [
       { "shortName": "fr-BE-CharlineNeural", "friendlyName": "Charline" },
@@ -479,9 +479,9 @@ const microsoftVoicesByLang = {
     "French (France)": [
       { "shortName": "fr-FR-DeniseNeural", "friendlyName": "Denise" },
       { "shortName": "fr-FR-HenriNeural", "friendlyName": "Henri" },
-      { "shortName": "fr-FR-VivienneMultilingualNeural4", "friendlyName": "Vivienne" },
-      { "shortName": "fr-FR-RemyMultilingualNeural4", "friendlyName": "Remy" },
-      { "shortName": "fr-FR-LucienMultilingualNeural4", "friendlyName": "Lucien" },
+      { "shortName": "fr-FR-VivienneMultilingualNeural", "friendlyName": "Vivienne" },
+      { "shortName": "fr-FR-RemyMultilingualNeural", "friendlyName": "Remy" },
+      { "shortName": "fr-FR-LucienMultilingualNeural", "friendlyName": "Lucien" },
       { "shortName": "fr-FR-AlainNeural", "friendlyName": "Alain" },
       { "shortName": "fr-FR-BrigitteNeural", "friendlyName": "Brigitte" },
       { "shortName": "fr-FR-CelesteNeural", "friendlyName": "Celeste" },
@@ -494,16 +494,16 @@ const microsoftVoicesByLang = {
       { "shortName": "fr-FR-MauriceNeural", "friendlyName": "Maurice" },
       { "shortName": "fr-FR-YvesNeural", "friendlyName": "Yves" },
       { "shortName": "fr-FR-YvetteNeural", "friendlyName": "Yvette" },
-      { "shortName": "fr-FR-Remy:DragonHDLatestNeural1", "friendlyName": "Remy" },
-      { "shortName": "fr-FR-Vivienne:DragonHDLatestNeural1", "friendlyName": "Vivienne" }
+      { "shortName": "fr-FR-Remy:DragonHDLatestNeural", "friendlyName": "Remy" },
+      { "shortName": "fr-FR-Vivienne:DragonHDLatestNeural", "friendlyName": "Vivienne" }
     ],
     "Irish (Ireland)": [
-      { "shortName": "ga-IE-OrlaNeural3", "friendlyName": "Orla" },
-      { "shortName": "ga-IE-ColmNeural3", "friendlyName": "Colm" }
+      { "shortName": "ga-IE-OrlaNeural", "friendlyName": "Orla" },
+      { "shortName": "ga-IE-ColmNeural", "friendlyName": "Colm" }
     ],
     "Galician": [
-      { "shortName": "gl-ES-SabelaNeural3", "friendlyName": "Sabela" },
-      { "shortName": "gl-ES-RoiNeural3", "friendlyName": "Roi" }
+      { "shortName": "gl-ES-SabelaNeural", "friendlyName": "Sabela" },
+      { "shortName": "gl-ES-RoiNeural", "friendlyName": "Roi" }
     ],
     "Gujarati (India)": [
       { "shortName": "gu-IN-DhwaniNeural", "friendlyName": "Dhwani" },
@@ -521,8 +521,8 @@ const microsoftVoicesByLang = {
       { "shortName": "hi-IN-RehaanNeural", "friendlyName": "Rehaan" },
       { "shortName": "hi-IN-SwaraNeural", "friendlyName": "Swara" },
       { "shortName": "hi-IN-MadhurNeural", "friendlyName": "Madhur" },
-      { "shortName": "hi-IN-AartiNeural1", "friendlyName": "Aarti" },
-      { "shortName": "hi-IN-ArjunNeural1", "friendlyName": "Arjun" }
+      { "shortName": "hi-IN-AartiNeural", "friendlyName": "Aarti" },
+      { "shortName": "hi-IN-ArjunNeural", "friendlyName": "Arjun" }
     ],
     "Croatian (Croatia)": [
       { "shortName": "hr-HR-GabrijelaNeural", "friendlyName": "Gabrijela" },
@@ -533,25 +533,25 @@ const microsoftVoicesByLang = {
       { "shortName": "hu-HU-TamasNeural", "friendlyName": "Tamas" }
     ],
     "Armenian (Armenia)": [
-      { "shortName": "hy-AM-AnahitNeural3", "friendlyName": "Anahit" },
-      { "shortName": "hy-AM-HaykNeural3", "friendlyName": "Hayk" }
+      { "shortName": "hy-AM-AnahitNeural", "friendlyName": "Anahit" },
+      { "shortName": "hy-AM-HaykNeural", "friendlyName": "Hayk" }
     ],
     "Indonesian (Indonesia)": [
       { "shortName": "id-ID-GadisNeural", "friendlyName": "Gadis" },
       { "shortName": "id-ID-ArdiNeural", "friendlyName": "Ardi" }
     ],
     "Icelandic (Iceland)": [
-      { "shortName": "is-IS-GudrunNeural3", "friendlyName": "Gudrun" },
-      { "shortName": "is-IS-GunnarNeural3", "friendlyName": "Gunnar" }
+      { "shortName": "is-IS-GudrunNeural", "friendlyName": "Gudrun" },
+      { "shortName": "is-IS-GunnarNeural", "friendlyName": "Gunnar" }
     ],
     "Italian (Italy)": [
       { "shortName": "it-IT-ElsaNeural", "friendlyName": "Elsa" },
       { "shortName": "it-IT-IsabellaNeural", "friendlyName": "Isabella" },
       { "shortName": "it-IT-DiegoNeural", "friendlyName": "Diego" },
-      { "shortName": "it-IT-AlessioMultilingualNeural4", "friendlyName": "Alessio" },
-      { "shortName": "it-IT-IsabellaMultilingualNeural4", "friendlyName": "Isabella" },
-      { "shortName": "it-IT-GiuseppeMultilingualNeural4", "friendlyName": "Giuseppe" },
-      { "shortName": "it-IT-MarcelloMultilingualNeural4", "friendlyName": "Marcello" },
+      { "shortName": "it-IT-AlessioMultilingualNeural", "friendlyName": "Alessio" },
+      { "shortName": "it-IT-IsabellaMultilingualNeural", "friendlyName": "Isabella" },
+      { "shortName": "it-IT-GiuseppeMultilingualNeural", "friendlyName": "Giuseppe" },
+      { "shortName": "it-IT-MarcelloMultilingualNeural", "friendlyName": "Marcello" },
       { "shortName": "it-IT-BenignoNeural", "friendlyName": "Benigno" },
       { "shortName": "it-IT-CalimeroNeural", "friendlyName": "Calimero" },
       { "shortName": "it-IT-CataldoNeural", "friendlyName": "Cataldo" },
@@ -567,12 +567,12 @@ const microsoftVoicesByLang = {
       { "shortName": "it-IT-RinaldoNeural", "friendlyName": "Rinaldo" }
     ],
     "Inuktitut (Syllabics, Canada)": [
-      { "shortName": "iu-Cans-CA-SiqiniqNeural3", "friendlyName": "Siqiniq" },
-      { "shortName": "iu-Cans-CA-TaqqiqNeural3", "friendlyName": "Taqqiq" }
+      { "shortName": "iu-Cans-CA-SiqiniqNeural", "friendlyName": "Siqiniq" },
+      { "shortName": "iu-Cans-CA-TaqqiqNeural", "friendlyName": "Taqqiq" }
     ],
     "Inuktitut (Latin, Canada)": [
-      { "shortName": "iu-Latn-CA-SiqiniqNeural3", "friendlyName": "Siqiniq" },
-      { "shortName": "iu-Latn-CA-TaqqiqNeural3", "friendlyName": "Taqqiq" }
+      { "shortName": "iu-Latn-CA-SiqiniqNeural", "friendlyName": "Siqiniq" },
+      { "shortName": "iu-Latn-CA-TaqqiqNeural", "friendlyName": "Taqqiq" }
     ],
     "Japanese (Japan)": [
       { "shortName": "ja-JP-NanamiNeural", "friendlyName": "Nanami" },
@@ -582,35 +582,35 @@ const microsoftVoicesByLang = {
       { "shortName": "ja-JP-MayuNeural", "friendlyName": "Mayu" },
       { "shortName": "ja-JP-NaokiNeural", "friendlyName": "Naoki" },
       { "shortName": "ja-JP-ShioriNeural", "friendlyName": "Shiori" },
-      { "shortName": "ja-JP-MasaruMultilingualNeural1,4", "friendlyName": "Masaru" },
-      { "shortName": "ja-JP-Masaru:DragonHDLatestNeural1", "friendlyName": "Masaru" },
-      { "shortName": "ja-JP-Masaru:DragonHDV1Neural1", "friendlyName": "Masaru" },
-      { "shortName": "ja-JP-Nanami:DragonHDLatestNeural1", "friendlyName": "Nanami" }
+      { "shortName": "ja-JP-MasaruMultilingualNeural", "friendlyName": "Masaru" },
+      { "shortName": "ja-JP-Masaru:DragonHDLatestNeural", "friendlyName": "Masaru" },
+      { "shortName": "ja-JP-Masaru:DragonHDV1Neural", "friendlyName": "Masaru" },
+      { "shortName": "ja-JP-Nanami:DragonHDLatestNeural", "friendlyName": "Nanami" }
     ],
     "Javanese (Latin, Indonesia)": [
-      { "shortName": "jv-ID-SitiNeural3", "friendlyName": "Siti" },
-      { "shortName": "jv-ID-DimasNeural3", "friendlyName": "Dimas" }
+      { "shortName": "jv-ID-SitiNeural", "friendlyName": "Siti" },
+      { "shortName": "jv-ID-DimasNeural", "friendlyName": "Dimas" }
     ],
     "Georgian (Georgia)": [
-      { "shortName": "ka-GE-EkaNeural3", "friendlyName": "Eka" },
-      { "shortName": "ka-GE-GiorgiNeural3", "friendlyName": "Giorgi" }
+      { "shortName": "ka-GE-EkaNeural", "friendlyName": "Eka" },
+      { "shortName": "ka-GE-GiorgiNeural", "friendlyName": "Giorgi" }
     ],
     "Kazakh (Kazakhstan)": [
-      { "shortName": "kk-KZ-AigulNeural3", "friendlyName": "Aigul" },
-      { "shortName": "kk-KZ-DauletNeural3", "friendlyName": "Daulet" }
+      { "shortName": "kk-KZ-AigulNeural", "friendlyName": "Aigul" },
+      { "shortName": "kk-KZ-DauletNeural", "friendlyName": "Daulet" }
     ],
     "Khmer (Cambodia)": [
-      { "shortName": "km-KH-SreymomNeural3", "friendlyName": "Sreymom" },
-      { "shortName": "km-KH-PisethNeural3", "friendlyName": "Piseth" }
+      { "shortName": "km-KH-SreymomNeural", "friendlyName": "Sreymom" },
+      { "shortName": "km-KH-PisethNeural", "friendlyName": "Piseth" }
     ],
     "Kannada (India)": [
-      { "shortName": "kn-IN-SapnaNeural3", "friendlyName": "Sapna" },
-      { "shortName": "kn-IN-GaganNeural3", "friendlyName": "Gagan" }
+      { "shortName": "kn-IN-SapnaNeural", "friendlyName": "Sapna" },
+      { "shortName": "kn-IN-GaganNeural", "friendlyName": "Gagan" }
     ],
     "Korean (Korea)": [
       { "shortName": "ko-KR-SunHiNeural", "friendlyName": "SunHi" },
       { "shortName": "ko-KR-InJoonNeural", "friendlyName": "InJoon" },
-      { "shortName": "ko-KR-HyunsuMultilingualNeural4", "friendlyName": "Hyunsu" },
+      { "shortName": "ko-KR-HyunsuMultilingualNeural", "friendlyName": "Hyunsu" },
       { "shortName": "ko-KR-BongJinNeural", "friendlyName": "BongJin" },
       { "shortName": "ko-KR-GookMinNeural", "friendlyName": "GookMin" },
       { "shortName": "ko-KR-HyunsuNeural", "friendlyName": "Hyunsu" },
@@ -620,28 +620,28 @@ const microsoftVoicesByLang = {
       { "shortName": "ko-KR-YuJinNeural", "friendlyName": "YuJin" }
     ],
     "Lao (Laos)": [
-      { "shortName": "lo-LA-KeomanyNeural3", "friendlyName": "Keomany" },
-      { "shortName": "lo-LA-ChanthavongNeural3", "friendlyName": "Chanthavong" }
+      { "shortName": "lo-LA-KeomanyNeural", "friendlyName": "Keomany" },
+      { "shortName": "lo-LA-ChanthavongNeural", "friendlyName": "Chanthavong" }
     ],
     "Lithuanian (Lithuania)": [
-      { "shortName": "lt-LT-OnaNeural3", "friendlyName": "Ona" },
-      { "shortName": "lt-LT-LeonasNeural3", "friendlyName": "Leonas" }
+      { "shortName": "lt-LT-OnaNeural", "friendlyName": "Ona" },
+      { "shortName": "lt-LT-LeonasNeural", "friendlyName": "Leonas" }
     ],
     "Latvian (Latvia)": [
-      { "shortName": "lv-LV-EveritaNeural3", "friendlyName": "Everita" },
-      { "shortName": "lv-LV-NilsNeural3", "friendlyName": "Nils" }
+      { "shortName": "lv-LV-EveritaNeural", "friendlyName": "Everita" },
+      { "shortName": "lv-LV-NilsNeural", "friendlyName": "Nils" }
     ],
     "Macedonian (North Macedonia)": [
-      { "shortName": "mk-MK-MarijaNeural3", "friendlyName": "Marija" },
-      { "shortName": "mk-MK-AleksandarNeural3", "friendlyName": "Aleksandar" }
+      { "shortName": "mk-MK-MarijaNeural", "friendlyName": "Marija" },
+      { "shortName": "mk-MK-AleksandarNeural", "friendlyName": "Aleksandar" }
     ],
     "Malayalam (India)": [
-      { "shortName": "ml-IN-SobhanaNeural3", "friendlyName": "Sobhana" },
-      { "shortName": "ml-IN-MidhunNeural3", "friendlyName": "Midhun" }
+      { "shortName": "ml-IN-SobhanaNeural", "friendlyName": "Sobhana" },
+      { "shortName": "ml-IN-MidhunNeural", "friendlyName": "Midhun" }
     ],
     "Mongolian (Mongolia)": [
-      { "shortName": "mn-MN-YesuiNeural3", "friendlyName": "Yesui" },
-      { "shortName": "mn-MN-BataaNeural3", "friendlyName": "Bataa" }
+      { "shortName": "mn-MN-YesuiNeural", "friendlyName": "Yesui" },
+      { "shortName": "mn-MN-BataaNeural", "friendlyName": "Bataa" }
     ],
     "Marathi (India)": [
       { "shortName": "mr-IN-AarohiNeural", "friendlyName": "Aarohi" },
@@ -652,12 +652,12 @@ const microsoftVoicesByLang = {
       { "shortName": "ms-MY-OsmanNeural", "friendlyName": "Osman" }
     ],
     "Maltese (Malta)": [
-      { "shortName": "mt-MT-GraceNeural3", "friendlyName": "Grace" },
-      { "shortName": "mt-MT-JosephNeural3", "friendlyName": "Joseph" }
+      { "shortName": "mt-MT-GraceNeural", "friendlyName": "Grace" },
+      { "shortName": "mt-MT-JosephNeural", "friendlyName": "Joseph" }
     ],
     "Burmese (Myanmar)": [
-      { "shortName": "my-MM-NilarNeural3", "friendlyName": "Nilar" },
-      { "shortName": "my-MM-ThihaNeural3", "friendlyName": "Thiha" }
+      { "shortName": "my-MM-NilarNeural", "friendlyName": "Nilar" },
+      { "shortName": "my-MM-ThihaNeural", "friendlyName": "Thiha" }
     ],
     "Norwegian Bokmål (Norway)": [
       { "shortName": "nb-NO-PernilleNeural", "friendlyName": "Pernille" },
@@ -665,8 +665,8 @@ const microsoftVoicesByLang = {
       { "shortName": "nb-NO-IselinNeural", "friendlyName": "Iselin" }
     ],
     "Nepali (Nepal)": [
-      { "shortName": "ne-NP-HemkalaNeural3", "friendlyName": "Hemkala" },
-      { "shortName": "ne-NP-SagarNeural3", "friendlyName": "Sagar" }
+      { "shortName": "ne-NP-HemkalaNeural", "friendlyName": "Hemkala" },
+      { "shortName": "ne-NP-SagarNeural", "friendlyName": "Sagar" }
     ],
     "Dutch (Belgium)": [
       { "shortName": "nl-BE-DenaNeural", "friendlyName": "Dena" },
@@ -678,12 +678,12 @@ const microsoftVoicesByLang = {
       { "shortName": "nl-NL-ColetteNeural", "friendlyName": "Colette" }
     ],
     "Odia (India)": [
-      { "shortName": "or-IN-SubhasiniNeural3", "friendlyName": "Subhasini" },
-      { "shortName": "or-IN-SukantNeural3", "friendlyName": "Sukant" }
+      { "shortName": "or-IN-SubhasiniNeural", "friendlyName": "Subhasini" },
+      { "shortName": "or-IN-SukantNeural", "friendlyName": "Sukant" }
     ],
     "Punjabi (India)": [
-      { "shortName": "pa-IN-OjasNeural3", "friendlyName": "Ojas" },
-      { "shortName": "pa-IN-VaaniNeural3", "friendlyName": "Vaani" }
+      { "shortName": "pa-IN-OjasNeural", "friendlyName": "Ojas" },
+      { "shortName": "pa-IN-VaaniNeural", "friendlyName": "Vaani" }
     ],
     "Polish (Poland)": [
       { "shortName": "pl-PL-AgnieszkaNeural", "friendlyName": "Agnieszka" },
@@ -691,14 +691,14 @@ const microsoftVoicesByLang = {
       { "shortName": "pl-PL-ZofiaNeural", "friendlyName": "Zofia" }
     ],
     "Pashto (Afghanistan)": [
-      { "shortName": "ps-AF-LatifaNeural3", "friendlyName": "Latifa" },
-      { "shortName": "ps-AF-GulNawazNeural3", "friendlyName": "GulNawaz" }
+      { "shortName": "ps-AF-LatifaNeural", "friendlyName": "Latifa" },
+      { "shortName": "ps-AF-GulNawazNeural", "friendlyName": "GulNawaz" }
     ],
     "Portuguese (Brazil)": [
       { "shortName": "pt-BR-FranciscaNeural", "friendlyName": "Francisca" },
       { "shortName": "pt-BR-AntonioNeural", "friendlyName": "Antonio" },
-      { "shortName": "pt-BR-MacerioMultilingualNeural4", "friendlyName": "Macerio" },
-      { "shortName": "pt-BR-ThalitaMultilingualNeural4", "friendlyName": "Thalita" },
+      { "shortName": "pt-BR-MacerioMultilingualNeural", "friendlyName": "Macerio" },
+      { "shortName": "pt-BR-ThalitaMultilingualNeural", "friendlyName": "Thalita" },
       { "shortName": "pt-BR-BrendaNeural", "friendlyName": "Brenda" },
       { "shortName": "pt-BR-DonatoNeural", "friendlyName": "Donato" },
       { "shortName": "pt-BR-ElzaNeural", "friendlyName": "Elza" },
@@ -729,8 +729,8 @@ const microsoftVoicesByLang = {
       { "shortName": "ru-RU-DariyaNeural", "friendlyName": "Dariya" }
     ],
     "Sinhala (Sri Lanka)": [
-      { "shortName": "si-LK-ThiliniNeural3", "friendlyName": "Thilini" },
-      { "shortName": "si-LK-SameeraNeural3", "friendlyName": "Sameera" }
+      { "shortName": "si-LK-ThiliniNeural", "friendlyName": "Thilini" },
+      { "shortName": "si-LK-SameeraNeural", "friendlyName": "Sameera" }
     ],
     "Slovak (Slovakia)": [
       { "shortName": "sk-SK-ViktoriaNeural", "friendlyName": "Viktoria" },
@@ -741,24 +741,24 @@ const microsoftVoicesByLang = {
       { "shortName": "sl-SI-RokNeural", "friendlyName": "Rok" }
     ],
     "Somali (Somalia)": [
-      { "shortName": "so-SO-UbaxNeural3", "friendlyName": "Ubax" },
-      { "shortName": "so-SO-MuuseNeural3", "friendlyName": "Muuse" }
+      { "shortName": "so-SO-UbaxNeural", "friendlyName": "Ubax" },
+      { "shortName": "so-SO-MuuseNeural", "friendlyName": "Muuse" }
     ],
     "Albanian (Albania)": [
-      { "shortName": "sq-AL-AnilaNeural3", "friendlyName": "Anila" },
-      { "shortName": "sq-AL-IlirNeural3", "friendlyName": "Ilir" }
+      { "shortName": "sq-AL-AnilaNeural", "friendlyName": "Anila" },
+      { "shortName": "sq-AL-IlirNeural", "friendlyName": "Ilir" }
     ],
     "Serbian (Latin, Serbia)": [
-      { "shortName": "sr-Latn-RS-NicholasNeural3", "friendlyName": "Nicholas" },
-      { "shortName": "sr-Latn-RS-SophieNeural3", "friendlyName": "Sophie" }
+      { "shortName": "sr-Latn-RS-NicholasNeural", "friendlyName": "Nicholas" },
+      { "shortName": "sr-Latn-RS-SophieNeural", "friendlyName": "Sophie" }
     ],
     "Serbian (Cyrillic, Serbia)": [
-      { "shortName": "sr-RS-SophieNeural3", "friendlyName": "Sophie" },
-      { "shortName": "sr-RS-NicholasNeural3", "friendlyName": "Nicholas" }
+      { "shortName": "sr-RS-SophieNeural", "friendlyName": "Sophie" },
+      { "shortName": "sr-RS-NicholasNeural", "friendlyName": "Nicholas" }
     ],
     "Sundanese (Indonesia)": [
-      { "shortName": "su-ID-TutiNeural3", "friendlyName": "Tuti" },
-      { "shortName": "su-ID-JajangNeural3", "friendlyName": "Jajang" }
+      { "shortName": "su-ID-TutiNeural", "friendlyName": "Tuti" },
+      { "shortName": "su-ID-JajangNeural", "friendlyName": "Jajang" }
     ],
     "Swedish (Sweden)": [
       { "shortName": "sv-SE-SofieNeural", "friendlyName": "Sofie" },
@@ -766,8 +766,8 @@ const microsoftVoicesByLang = {
       { "shortName": "sv-SE-HilleviNeural", "friendlyName": "Hillevi" }
     ],
     "Kiswahili (Kenya)": [
-      { "shortName": "sw-KE-ZuriNeural3", "friendlyName": "Zuri" },
-      { "shortName": "sw-KE-RafikiNeural3", "friendlyName": "Rafiki" }
+      { "shortName": "sw-KE-ZuriNeural", "friendlyName": "Zuri" },
+      { "shortName": "sw-KE-RafikiNeural", "friendlyName": "Rafiki" }
     ],
     "Kiswahili (Tanzania)": [
       { "shortName": "sw-TZ-RehemaNeural", "friendlyName": "Rehema" },
@@ -815,20 +815,20 @@ const microsoftVoicesByLang = {
       { "shortName": "ur-PK-AsadNeural", "friendlyName": "Asad" }
     ],
     "Uzbek (Latin, Uzbekistan)": [
-      { "shortName": "uz-UZ-MadinaNeural3", "friendlyName": "Madina" },
-      { "shortName": "uz-UZ-SardorNeural3", "friendlyName": "Sardor" }
+      { "shortName": "uz-UZ-MadinaNeural", "friendlyName": "Madina" },
+      { "shortName": "uz-UZ-SardorNeural", "friendlyName": "Sardor" }
     ],
     "Vietnamese (Vietnam)": [
       { "shortName": "vi-VN-HoaiMyNeural", "friendlyName": "HoaiMy" },
       { "shortName": "vi-VN-NamMinhNeural", "friendlyName": "NamMinh" }
     ],
     "Chinese (Wu, Simplified)": [
-      { "shortName": "wuu-CN-XiaotongNeural3", "friendlyName": "Xiaotong" },
-      { "shortName": "wuu-CN-YunzheNeural3", "friendlyName": "Yunzhe" }
+      { "shortName": "wuu-CN-XiaotongNeural", "friendlyName": "Xiaotong" },
+      { "shortName": "wuu-CN-YunzheNeural", "friendlyName": "Yunzhe" }
     ],
     "Chinese (Cantonese, Simplified)": [
-      { "shortName": "yue-CN-XiaoMinNeural3", "friendlyName": "XiaoMin" },
-      { "shortName": "yue-CN-YunSongNeural3", "friendlyName": "YunSong" }
+      { "shortName": "yue-CN-XiaoMinNeural", "friendlyName": "XiaoMin" },
+      { "shortName": "yue-CN-YunSongNeural", "friendlyName": "YunSong" }
     ],
     "Chinese (Mandarin, Simplified)": [
       { "shortName": "zh-CN-XiaoxiaoNeural", "friendlyName": "Xiaoxiao" },
@@ -837,7 +837,7 @@ const microsoftVoicesByLang = {
       { "shortName": "zh-CN-XiaoyiNeural", "friendlyName": "Xiaoyi" },
       { "shortName": "zh-CN-YunyangNeural", "friendlyName": "Yunyang" },
       { "shortName": "zh-CN-XiaochenNeural", "friendlyName": "Xiaochen" },
-      { "shortName": "zh-CN-XiaochenMultilingualNeural4", "friendlyName": "Xiaochen" },
+      { "shortName": "zh-CN-XiaochenMultilingualNeural", "friendlyName": "Xiaochen" },
       { "shortName": "zh-CN-XiaohanNeural", "friendlyName": "Xiaohan" },
       { "shortName": "zh-CN-XiaomengNeural", "friendlyName": "Xiaomeng" },
       { "shortName": "zh-CN-XiaomoNeural", "friendlyName": "Xiaomo" },
@@ -846,42 +846,42 @@ const microsoftVoicesByLang = {
       { "shortName": "zh-CN-XiaoruiNeural", "friendlyName": "Xiaorui" },
       { "shortName": "zh-CN-XiaoshuangNeural", "friendlyName": "Xiaoshuang (child)" },
       { "shortName": "zh-CN-XiaoxiaoDialectsNeural", "friendlyName": "XiaoxiaoDialects" },
-      { "shortName": "zh-CN-XiaoxiaoMultilingualNeural4", "friendlyName": "Xiaoxiao" },
+      { "shortName": "zh-CN-XiaoxiaoMultilingualNeural", "friendlyName": "Xiaoxiao" },
       { "shortName": "zh-CN-XiaoyanNeural", "friendlyName": "Xiaoyan" },
       { "shortName": "zh-CN-XiaoyouNeural", "friendlyName": "Xiaoyou (child)" },
-      { "shortName": "zh-CN-XiaoyuMultilingualNeural4", "friendlyName": "Xiaoyu" },
+      { "shortName": "zh-CN-XiaoyuMultilingualNeural", "friendlyName": "Xiaoyu" },
       { "shortName": "zh-CN-XiaozhenNeural", "friendlyName": "Xiaozhen" },
       { "shortName": "zh-CN-YunfengNeural", "friendlyName": "Yunfeng" },
       { "shortName": "zh-CN-YunhaoNeural", "friendlyName": "Yunhao" },
       { "shortName": "zh-CN-YunjieNeural", "friendlyName": "Yunjie" },
       { "shortName": "zh-CN-YunxiaNeural", "friendlyName": "Yunxia" },
       { "shortName": "zh-CN-YunyeNeural", "friendlyName": "Yunye" },
-      { "shortName": "zh-CN-YunyiMultilingualNeural4", "friendlyName": "Yunyi" },
+      { "shortName": "zh-CN-YunyiMultilingualNeural", "friendlyName": "Yunyi" },
       { "shortName": "zh-CN-YunzeNeural", "friendlyName": "Yunze" },
-      { "shortName": "zh-CN-YunfanMultilingualNeural1,4", "friendlyName": "Yunfan" },
-      { "shortName": "zh-CN-YunxiaoMultilingualNeural1,4", "friendlyName": "Yunxiao" },
-      { "shortName": "zh-CN-Xiaochen:DragonHDLatestNeural1", "friendlyName": "Xiaochen" },
-      { "shortName": "zh-CN-Xiaochen:DragonHDV1Neural1", "friendlyName": "Xiaochen" },
-      { "shortName": "zh-CN-Yunfan:DragonHDLatestNeural1", "friendlyName": "Yunfan" }
+      { "shortName": "zh-CN-YunfanMultilingualNeural", "friendlyName": "Yunfan" },
+      { "shortName": "zh-CN-YunxiaoMultilingualNeural", "friendlyName": "Yunxiao" },
+      { "shortName": "zh-CN-Xiaochen:DragonHDLatestNeural", "friendlyName": "Xiaochen" },
+      { "shortName": "zh-CN-Xiaochen:DragonHDV1Neural", "friendlyName": "Xiaochen" },
+      { "shortName": "zh-CN-Yunfan:DragonHDLatestNeural", "friendlyName": "Yunfan" }
     ],
     "Chinese (Guangxi Accent Mandarin, Simplified)": [
-      { "shortName": "zh-CN-guangxi-YunqiNeural1,3", "friendlyName": "Yunqi" }
+      { "shortName": "zh-CN-guangxi-YunqiNeural", "friendlyName": "Yunqi" }
     ],
     "Chinese (Zhongyuan Mandarin Henan, Simplified)": [
-      { "shortName": "zh-CN-henan-YundengNeural3", "friendlyName": "Yundeng" }
+      { "shortName": "zh-CN-henan-YundengNeural", "friendlyName": "Yundeng" }
     ],
     "Chinese (Northeastern Mandarin, Simplified)": [
-      { "shortName": "zh-CN-liaoning-XiaobeiNeural1,3", "friendlyName": "Xiaobei" },
-      { "shortName": "zh-CN-liaoning-YunbiaoNeural1,3", "friendlyName": "Yunbiao" }
+      { "shortName": "zh-CN-liaoning-XiaobeiNeural", "friendlyName": "Xiaobei" },
+      { "shortName": "zh-CN-liaoning-YunbiaoNeural", "friendlyName": "Yunbiao" }
     ],
     "Chinese (Zhongyuan Mandarin Shaanxi, Simplified)": [
-      { "shortName": "zh-CN-shaanxi-XiaoniNeural1,3", "friendlyName": "Xiaoni" }
+      { "shortName": "zh-CN-shaanxi-XiaoniNeural", "friendlyName": "Xiaoni" }
     ],
     "Chinese (Jilu Mandarin, Simplified)": [
-      { "shortName": "zh-CN-shandong-YunxiangNeural3", "friendlyName": "Yunxiang" }
+      { "shortName": "zh-CN-shandong-YunxiangNeural", "friendlyName": "Yunxiang" }
     ],
     "Chinese (Southwestern Mandarin, Simplified)": [
-      { "shortName": "zh-CN-sichuan-YunxiNeural1,3", "friendlyName": "Yunxi" }
+      { "shortName": "zh-CN-sichuan-YunxiNeural", "friendlyName": "Yunxi" }
     ],
     "Chinese (Cantonese, Traditional)": [
       { "shortName": "zh-HK-HiuMaanNeural", "friendlyName": "HiuMaan" },
@@ -894,7 +894,7 @@ const microsoftVoicesByLang = {
       { "shortName": "zh-TW-HsiaoYuNeural", "friendlyName": "HsiaoYu" }
     ],
     "isiZulu (South Africa)": [
-      { "shortName": "zu-ZA-ThandoNeural3", "friendlyName": "Thando" },
-      { "shortName": "zu-ZA-ThembaNeural3", "friendlyName": "Themba" }
+      { "shortName": "zu-ZA-ThandoNeural", "friendlyName": "Thando" },
+      { "shortName": "zu-ZA-ThembaNeural", "friendlyName": "Themba" }
     ]
   }
