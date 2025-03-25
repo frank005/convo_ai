@@ -1,4 +1,4 @@
-const microsoftVoicesByLang = {
+export const microsoftVoicesByLang = {
     "Afrikaans (South Africa)": [
       { "shortName": "af-ZA-AdriNeural", "friendlyName": "Adri" },
       { "shortName": "af-ZA-WillemNeural", "friendlyName": "Willem" }

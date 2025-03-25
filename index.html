@@ -6,125 +6,52 @@
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
-  <script src="./microsoftVoicesByLang.js"></script>
-  <style>
-    /* Your neon volume-indicator styles */
-    .ai-volume-indicator {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .ai-avatar {
-      position: relative;
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      overflow: hidden;
-      box-shadow: 0px 0px 20px rgba(0, 255, 255, 0.5);
-    }
-    .ai-avatar img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-    }
-    .volume-ring {
-      position: absolute;
-      top: -8px;
-      left: -8px;
-      width: 96px;
-      height: 96px;
-      border-radius: 50%;
-      border: 4px solid rgba(0, 255, 255, 0.3);
-      box-shadow: 0px 0px 20px rgba(0, 255, 255, 0.8);
-      transition: transform 0.1s;
-    }
-    .ai-volume-indicator canvas {
-      width: 200px;
-      height: 60px;
-      margin-top: 16px;
-      background: linear-gradient(90deg, rgba(0, 255, 255, 0.3), rgba(0, 255, 255, 0.8), rgba(0, 255, 255, 0.3));
-      box-shadow: 0px 0px 15px rgba(0, 255, 255, 0.6);
-      border-radius: 8px;
-    }
-
-    /* Floating widget in the top‐right */
-    #aiVolumeWidget {
-      position: fixed;
-      top: 6.5rem;
-      right: 1rem;
-      background: #111;
-      padding: 1rem;
-      border-radius: 0.5rem;
-      box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
-      display: none; /* hidden by default */
-      z-index: 9999; 
-    }
-    #aiVolumeWidget h2 {
-      margin-bottom: 0.5rem;
-      text-align: center;
-      color: cyan;
-    }
-
-    /* Toggle button in the top‐right corner, slightly offset to not overlap the widget */
-    #toggleVolumeBtn {
-      position: fixed;
-      top: 1rem;
-      right: 8rem; /* so it doesn't overlap the widget itself */
-      background: cyan;
-      color: #111;
-      padding: 0.5rem 1rem;
-      border-radius: 9999px;
-      box-shadow: 0 0 6px rgba(0,0,0,0.4);
-      cursor: pointer;
-      z-index: 10000;
-    }
-  </style>
+  <script src="src/lib/microsoftVoicesByLang.js"></script>
+  <link rel="stylesheet" href="src/css/styles.css">
 </head>
 <body class="bg-gray-900 text-white min-h-screen py-10 px-4">
   <div class="max-w-6xl mx-auto">
     <!-- Button to open credentials modal -->
     <button
-      onclick="openCredsModal()"
+      id="setCredsBtn"
       class="mb-6 bg-gray-600 hover:bg-gray-700 p-2 rounded font-bold"
     >
       Set API Credentials
     </button>
 
-    <body class="bg-gray-900 text-white min-h-screen">    
-      <button id="toggleVolumeBtn" onclick="toggleVolumeWidget()">
-        Show AI Interaction
-      </button>
-    
-      <!-- The floating volume widget in top‐right -->
-      <div id="aiVolumeWidget">
-        <h2>AI Agent</h2>
-        <div class="ai-volume-indicator">
-          <div class="ai-avatar">
-            <img src="https://mouseattack.s3.us-west-2.amazonaws.com/gi2.jpg" alt="AI Avatar">
-            <div class="volume-ring"></div>
-          </div>
-          <canvas id="audio-wave"></canvas>
+    <button id="toggleVolumeBtn">
+      Show AI Interaction
+    </button>
+  
+    <!-- The floating volume widget in top‐right -->
+    <div id="aiVolumeWidget">
+      <h2>AI Agent</h2>
+      <div class="ai-volume-indicator">
+        <div class="ai-avatar">
+          <img src="https://mouseattack.s3.us-west-2.amazonaws.com/gi2.jpg" alt="AI Avatar">
+          <div class="volume-ring"></div>
         </div>
-        <button id="joinChannel" onclick="joinChannel()" class="mt-4 px-3 py-2 bg-cyan-500 text-gray-900 rounded disabled:opacity-50 disabled:pointer-events-none hover:bg-cyan-400">
-          Join Channel
-        </button>
-        <button id="leaveChannel" onclick="leaveChannel()" class="mt-4 px-3 py-2 bg-cyan-500 text-gray-900 rounded hover:bg-cyan-400 disabled:opacity-50 disabled:pointer-events-none" disabled>
-          Leave Channel
-        </button>
-        <div>
-          <input
-            id="clientRtcUid"
-            class="mt-4 px-3 py-2 w-full rounded bg-gray-700 text-white"
-            placeholder="Client UID (if token required)"
-          />
-          </div>
-          <input
-            id="clientRtcToken"
-            class="mt-4 px-3 py-2 w-full rounded bg-gray-700 text-white"
-            placeholder="Agora token  (if token required)"
-          />
+        <canvas id="audio-wave"></canvas>
       </div>
+      <button id="joinChannel" class="mt-4 px-3 py-2 bg-cyan-500 text-gray-900 rounded disabled:opacity-50 disabled:pointer-events-none hover:bg-cyan-400">
+        Join Channel
+      </button>
+      <button id="leaveChannel" class="mt-4 px-3 py-2 bg-cyan-500 text-gray-900 rounded hover:bg-cyan-400 disabled:opacity-50 disabled:pointer-events-none" disabled>
+        Leave Channel
+      </button>
+      <div>
+        <input
+          id="clientRtcUid"
+          class="mt-4 px-3 py-2 w-full rounded bg-gray-700 text-white"
+          placeholder="Client UID (if token required)"
+        />
+      </div>
+      <input
+        id="clientRtcToken"
+        class="mt-4 px-3 py-2 w-full rounded bg-gray-700 text-white"
+        placeholder="Agora token  (if token required)"
+      />
+    </div>
 
     <div class="grid md:grid-cols-2 gap-6">
       <!-- Left panel: Create/Update/Stop -->
@@ -205,12 +132,19 @@
 
           <!-- Custom Parameters Section -->
           <div class="w-full p-4 bg-gray-700 rounded-lg">
-            <span class="font-bold mb-2">LLM Custom Parameters</span>
+            <div class="flex justify-between items-center">
+              <h2 class="text-xl font-bold">Custom Parameters</h2>
+              <button
+                id="addParamBtn"
+                class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold"
+              >
+                Add Parameter
+              </button>
+            </div>
             <div id="param-container" class="space-y-2"></div>
-            <button onclick="addParamField()" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded">Add Parameter</button>
           </div>
 
-          <!-- ASR dropdown (single label block) -->
+          <!-- ASR dropdown -->
           <div class="w-full p-2 rounded bg-gray-700 text-white">
             <span class="block mb-1 font-semibold">ASR Language</span>
             <select
@@ -232,50 +166,49 @@
             <select
               id="ttsVendor"
               class="w-full p-2 rounded bg-gray-700 text-white"
-              onchange="handleTtsVendorChange()"
             >
               <option value="microsoft">microsoft</option>
               <option value="elevenlabs">elevenlabs</option>
             </select>
           </div>
 
-          <!-- If TTS vendor is microsoft, show region + language + voice -->
+          <!-- Microsoft TTS blocks -->
           <div id="microsoftRegionBlock" class="w-full p-2 rounded bg-gray-700 text-white">
             <span class="block mb-1 font-semibold">Microsoft TTS Region</span>
             <select
               id="ttsRegion"
               class="w-full p-2 rounded bg-gray-700 text-white"
             >
-            <option value="australiaeast">australia east</option>
-            <option value="brazilsouth">brazil south</option>
-            <option value="canadacentral">canada central</option>
-            <option value="centralindia">central india</option>
-            <option value="centralus">central us</option>
-            <option value="eastasia">east asia</option>
-            <option value="eastus" selected>east us</option>
-            <option value="eastus2">east us2</option>
-            <option value="francecentral">France Central</option>
-            <option value="germanywestcentral">Germany West Central</option>
-            <option value="japaneast">japan east</option>
-            <option value="japanwest">japan west</option>
-            <option value="koreacentral">korea central</option>
-            <option value="northcentralus">north central us</option>
-            <option value="northeurope">north europe</option>
-            <option value="norwayeast">norway east</option>
-            <option value="qatarcentral">qatar central</option>
-            <option value="southafricanorth">south africa north</option>
-            <option value="southcentralus">south central us</option>
-            <option value="southeastasia">south east asia</option>
-            <option value="swedencentral">sweden central</option>
-            <option value="switzerlandnorth">switzerland north</option>
-            <option value="switzerlandwest">switzerland west</option>
-            <option value="uaenorth">uae north</option>
-            <option value="uksouth">uk south</option>
-            <option value="westcentralus">west central us</option>
-            <option value="westeurope">west europe</option>
-            <option value="westus">west us</option>
-            <option value="westus2">west us2</option>
-            <option value="westus3">west us3</option>
+              <option value="australiaeast">australia east</option>
+              <option value="brazilsouth">brazil south</option>
+              <option value="canadacentral">canada central</option>
+              <option value="centralindia">central india</option>
+              <option value="centralus">central us</option>
+              <option value="eastasia">east asia</option>
+              <option value="eastus" selected>east us</option>
+              <option value="eastus2">east us2</option>
+              <option value="francecentral">France Central</option>
+              <option value="germanywestcentral">Germany West Central</option>
+              <option value="japaneast">japan east</option>
+              <option value="japanwest">japan west</option>
+              <option value="koreacentral">korea central</option>
+              <option value="northcentralus">north central us</option>
+              <option value="northeurope">north europe</option>
+              <option value="norwayeast">norway east</option>
+              <option value="qatarcentral">qatar central</option>
+              <option value="southafricanorth">south africa north</option>
+              <option value="southcentralus">south central us</option>
+              <option value="southeastasia">south east asia</option>
+              <option value="swedencentral">sweden central</option>
+              <option value="switzerlandnorth">switzerland north</option>
+              <option value="switzerlandwest">switzerland west</option>
+              <option value="uaenorth">uae north</option>
+              <option value="uksouth">uk south</option>
+              <option value="westcentralus">west central us</option>
+              <option value="westeurope">west europe</option>
+              <option value="westus">west us</option>
+              <option value="westus2">west us2</option>
+              <option value="westus3">west us3</option>
             </select>
           </div>
 
@@ -284,9 +217,8 @@
             <select
               id="microsoftLangSelect"
               class="w-full p-2 rounded bg-gray-700 text-white"
-              onchange="handleMicrosoftLangChange()"
             >
-              <!-- We'll populate in JS from the dictionary -->
+              <!-- Populated by JavaScript -->
             </select>
           </div>
 
@@ -296,11 +228,11 @@
               id="microsoftVoiceSelect"
               class="w-full p-2 rounded bg-gray-700 text-white"
             >
-              <!-- We'll populate voices for the chosen language -->
+              <!-- Populated by JavaScript -->
             </select>
           </div>
 
-          <!-- If TTS vendor is elevenlabs, show model + voice + optional text input -->
+          <!-- ElevenLabs blocks -->
           <div id="elevenLabsModelBlock" class="w-full p-2 rounded bg-gray-700 text-white hidden">
             <span class="block mb-1 font-semibold">ElevenLabs Model</span>
             <select
@@ -320,7 +252,6 @@
             <select
               id="elevenLabsVoiceSelect"
               class="w-full p-2 rounded bg-gray-700 text-white"
-              onchange="handleElevenLabsVoiceChange()"
             >
               <option value="">—</option>
               <option value="other">Other</option>
@@ -348,19 +279,19 @@
         <!-- Create/Update/Stop in one row -->
         <div class="mt-6 grid grid-cols-3 gap-2">
           <button
-            onclick="createAgent()"
+            id="createAgentBtn"
             class="bg-green-600 hover:bg-green-700 p-2 rounded font-bold"
           >
             Create
           </button>
           <button
-            onclick="updateAgent()"
+            id="updateAgentBtn"
             class="bg-yellow-600 hover:bg-yellow-700 p-2 rounded font-bold"
           >
             Update
           </button>
           <button
-            onclick="stopAgent()"
+            id="stopAgentBtn"
             class="bg-red-600 hover:bg-red-700 p-2 rounded font-bold"
           >
             Stop
@@ -385,14 +316,14 @@
           />
 
           <button
-            onclick="queryAgent()"
+            id="queryAgentBtn"
             class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold"
           >
             Query Agent Status
           </button>
 
           <button
-            onclick="listAgents()"
+            id="listAgentsBtn"
             class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold"
           >
             Retrieve Agent List
@@ -410,7 +341,7 @@
   <!-- Credentials Modal -->
   <div
     id="credsModal"
-    class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+    class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
   >
     <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-sm">
       <h2 class="text-lg font-bold mb-4">API Credentials</h2>
@@ -431,7 +362,7 @@
         placeholder="App ID (Required)"
       />
       <button
-        onclick="saveCreds()"
+        id="saveCredsBtn"
         class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold"
       >
         Save & Close
@@ -439,702 +370,56 @@
     </div>
   </div>
 
-  <script>
-    // Toggle widget visibility
-    function toggleVolumeWidget() {
-      const widget = document.getElementById('aiVolumeWidget');
-      const btn    = document.getElementById('toggleVolumeBtn');
-      if (widget.style.display === 'none' || widget.style.display === '') {
-        widget.style.display = 'block';
-        btn.textContent = 'Hide AI Interaction';
-      } else {
-        widget.style.display = 'none';
-        btn.textContent = 'Show AI Interaction';
-      }
-    }
-
-    async function joinChannel() {
-      APP_ID = storedAppId;
-      CHANNEL_NAME = document.getElementById("agoraChannelName").value.trim();;
-      UID = null;
-      TOKEN = null;  // Replace with token if required
-
-      clientRtcUid = document.getElementById("clientRtcUid").value.trim();
-      clientRtcToken = document.getElementById("clientRtcToken").value.trim();
-
-      if (clientRtcUid && clientRtcToken) {
-        TOKEN = clientRtcToken;
-        UID = clientRtcUid;
-      }
-      else if (clientRtcUid && clientRtcToken === "") {
-        UID = clientRtcUid;
-      }
-
-      // Basic credentials check
-      if (!storedAppId) {
-          alert("App ID not set. Click 'Set API Credentials'.");
-          output.textContent = "Error: Missing App ID.";
-          return;
-      }
-      if (!CHANNEL_NAME) {
-          alert("Channel name not set. Please enter a channel name.");
-          output.textContent = "Error: Missing channel name.";
-          return;
-      }
-      client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-      client.on("user-published", async (user, mediaType) => {
-        await client.subscribe(user, mediaType);
-        if (mediaType === "audio") {
-          const remoteAudioTrack = user.audioTrack;
-          remoteAudioTrack.play();
-          setupAudioProcessing(remoteAudioTrack);
-        }
-      });
-      await client.join(APP_ID, CHANNEL_NAME, TOKEN, UID);
-      if (!localTracks.audioTrack) {
-      localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
-         encoderConfig: "music_standard"
-      });
-      }
-      await client.publish(localTracks.audioTrack);
-      console.log("Joined channel:", CHANNEL_NAME);
-      document.getElementById("joinChannel").disabled = true;
-      document.getElementById("leaveChannel").disabled = false;
-    }
-
-    async function leaveChannel() {
-            if (!client) return;
-
-            // Leave Agora Channel
-            await client.leave();
-            console.log("Left the channel");
-
-            /*Stop animations
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-            }*/
-
-            // Reset UI effects
-            const volumeRing = document.querySelector(".volume-ring");
-            volumeRing.style.transform = `scale(1)`;
-            volumeRing.style.boxShadow = `0px 0px 30px rgba(0, 255, 255, 0.8)`;
-
-            const canvas = document.getElementById("audio-wave");
-            const ctx = canvas.getContext("2d");
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Close AudioContext
-            if (audioContext) {
-                audioContext.close().then(() => {
-                    console.log("Audio context closed.");
-                });
-            }
-
-            // Reset Agora client
-            client = null;
-            document.getElementById("joinChannel").disabled = false;
-            document.getElementById("leaveChannel").disabled = true;
-        }
-
-    function setupAudioProcessing(remoteAudioTrack) {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      const bufferLength = analyser.frequencyBinCount;
-      dataArray = new Uint8Array(bufferLength);
-
-      const mediaStream = new MediaStream([remoteAudioTrack.getMediaStreamTrack()]);
-      const source = audioContext.createMediaStreamSource(mediaStream);
-      source.connect(analyser);
-
-      visualizeAudio();
-    }
-
-    function visualizeAudio() {
-      const volumeRing = document.querySelector(".volume-ring");
-      const canvas = document.getElementById("audio-wave");
-      const ctx = canvas.getContext("2d");
-
-      function drawWave() {
-        requestAnimationFrame(drawWave);
-        analyser.getByteFrequencyData(dataArray);
-        let averageVolume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-        let volumeLevel = averageVolume / 128;
-
-        let bounceScale = 1 + (volumeLevel * 0.8);
-        volumeRing.style.transform = `scale(${bounceScale})`;
-        volumeRing.style.boxShadow = `0px 0px ${10 + volumeLevel * 20}px rgba(0, 255, 255, 0.8)`;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.beginPath();
-        ctx.moveTo(0, canvas.height / 2);
-
-        for (let i = 0; i < canvas.width; i += 10) {
-          let height = Math.sin(i * 0.05) * volumeLevel * 50;
-          ctx.lineTo(i, canvas.height / 2 - height);
-        }
-
-        ctx.strokeStyle = `rgba(0, 255, 255, ${0.3 + volumeLevel * 0.7})`;
-        ctx.lineWidth = 4;
-        ctx.stroke();
-      }
-
-      drawWave();
-    }
-
-    /********************************************************
-     * 1) localStorage-based credentials
-     ********************************************************/
-    let storedCustomerId = localStorage.getItem("customerId") || "";
-    let storedCustomerSecret = localStorage.getItem("customerSecret") || "";
-    let storedAppId = localStorage.getItem("appId") || "";
-
-    let uniqueName;
-    let channel;
-    let rtcUid;
-    let llmApiKey;
-    let llmUrl;
-    let ttsKey;
-    let client;
-    var localTracks = { 
-        audioTrack: null
-    };
-    let audioContext, analyser, dataArray;
-    let gMsg;
-    let fMsg;
-    let sMsgContent;
-
-    let APP_ID;
-    let CHANNEL_NAME;
-    let UID = null;
-    let TOKEN = null;
-
-    function openCredsModal() {
-      document.getElementById("customerId").value = storedCustomerId;
-      document.getElementById("customerSecret").value = storedCustomerSecret;
-      document.getElementById("appId").value = storedAppId;
-      document.getElementById("credsModal").classList.remove("hidden");
-    }
-
-    function saveCreds() {
-      const cid = document.getElementById("customerId").value.trim();
-      const csec = document.getElementById("customerSecret").value.trim();
-      const aid = document.getElementById("appId").value.trim();
-
-      if (!cid || !csec || !aid) {
-        alert("All fields required (CustomerID, CustomerSecret, AppID).");
-        return;
-      }
-      storedCustomerId = cid;
-      storedCustomerSecret = csec;
-      storedAppId = aid;
-      localStorage.setItem("customerId", cid);
-      localStorage.setItem("customerSecret", csec);
-      localStorage.setItem("appId", aid);
-
-      document.getElementById("credsModal").classList.add("hidden");
-    }
-
-    // If missing any creds, show popup on load
-    window.addEventListener("DOMContentLoaded", () => {
-      if (!storedCustomerId || !storedCustomerSecret || !storedAppId) {
-        openCredsModal();
-      }
-      populateMicrosoftLangList(); // fill in the ms languages
-    });
-
-    function getAuthHeaders() {
-      if (!storedCustomerId || !storedCustomerSecret || !storedAppId) {
-        alert("Please set API credentials first.");
-        return null;
-      }
-      const encoded = btoa(`${storedCustomerId}:${storedCustomerSecret}`);
-      return {
-        "Content-Type": "application/json",
-        "Authorization": `Basic ${encoded}`
-      };
-    }
-
-    /********************************************************
-     * 2) TTS Vendor logic
-     ********************************************************/
-    function handleTtsVendorChange() {
-      const vendor = document.getElementById("ttsVendor").value;
-
-      const msRegionBlk = document.getElementById("microsoftRegionBlock");
-      const msLangBlk   = document.getElementById("microsoftLangBlock");
-      const msVoiceBlk  = document.getElementById("microsoftVoiceBlock");
-
-      const elModelBlk  = document.getElementById("elevenLabsModelBlock");
-      const elVoiceBlk  = document.getElementById("elevenLabsVoiceBlock");
-      const elVoiceIdBlk= document.getElementById("elevenLabsVoiceIdBlock");
-
-      if (vendor === "microsoft") {
-        msRegionBlk.classList.remove("hidden");
-        msLangBlk.classList.remove("hidden");
-        msVoiceBlk.classList.remove("hidden");
-
-        elModelBlk.classList.add("hidden");
-        elVoiceBlk.classList.add("hidden");
-        elVoiceIdBlk.classList.add("hidden");
-      } else {
-        // elevenlabs
-        msRegionBlk.classList.add("hidden");
-        msLangBlk.classList.add("hidden");
-        msVoiceBlk.classList.add("hidden");
-
-        elModelBlk.classList.remove("hidden");
-        elVoiceBlk.classList.remove("hidden");
-        // check if user previously selected "other"
-        if (document.getElementById("elevenLabsVoiceSelect").value === "other") {
-          elVoiceIdBlk.classList.remove("hidden");
-        }
-      }
-    }
-
-    function handleElevenLabsVoiceChange() {
-      const voiceSel = document.getElementById("elevenLabsVoiceSelect").value;
-      const voiceIdBlk = document.getElementById("elevenLabsVoiceIdBlock");
-      if (voiceSel === "other") {
-        voiceIdBlk.classList.remove("hidden");
-      } else {
-        voiceIdBlk.classList.add("hidden");
-      }
-    }
-
-    /********************************************************
-     * 3) Microsoft TTS voice list (example)
-     *    Expand to your full data from the file you uploaded
-     ********************************************************/
-
-    function populateMicrosoftLangList() {
-      const msLangSelect = document.getElementById("microsoftLangSelect");
-      msLangSelect.innerHTML = "";
-
-      const languageCodes = Object.keys(microsoftVoicesByLang).sort();
-      languageCodes.forEach((lang) => {
-        const opt = document.createElement("option");
-        opt.value = lang;
-        opt.textContent = lang; // e.g. "en-US"
-        if (lang === "English (United States)") {
-          opt.selected = true;
-        }
-        msLangSelect.appendChild(opt);
-      });
-
-      // Trigger initial population
-      handleMicrosoftLangChange();
-    }
-
-    function handleMicrosoftLangChange() {
-      const lang = document.getElementById("microsoftLangSelect").value;
-      const voiceSelect = document.getElementById("microsoftVoiceSelect");
-      voiceSelect.innerHTML = "";
-
-      const voices = microsoftVoicesByLang[lang] || [];
-      voices.forEach((v) => {
-        const opt = document.createElement("option");
-        opt.value = v.shortName;
-        opt.textContent = `${v.friendlyName} (${v.shortName})`;
-        voiceSelect.appendChild(opt);
-      });
-    }
-
-    let params = {}; // Store key-value pairs
-
-    function addParamField() {
-        const container = document.getElementById("param-container");
-        const paramId = "param-" + Object.keys(params).length;
-
-        const div = document.createElement("div");
-        div.classList.add("flex", "gap-2", "items-center");
-        div.id = paramId;
-
-        div.innerHTML = `
-            <select class="border p-2 w-1/5 rounded bg-gray-800 text-white" onchange="updateParam('${paramId}', this, 'type')">
-                <option value="string">String</option>
-                <option value="number">Number</option>
-                <option value="array">Array</option>
-                <option value="object">Object</option>
-            </select>
-            <input type="text" placeholder="Key" class="border p-2 w-1/4 rounded bg-gray-800 text-white" oninput="updateParam('${paramId}', this, 'key')">
-            <input type="text" placeholder="Value" class="border p-2 w-2/5 rounded bg-gray-800 text-white" oninput="updateParam('${paramId}', this, 'value')" id="${paramId}-value">
-            <button onclick="removeParam('${paramId}')" class="text-red-500">❌</button>
-        `;
-
-        container.appendChild(div);
-        params[paramId] = { key: "", type: "string", value: "" };
-    }
-
-    function updateParam(id, input, fieldType) {
-        if (fieldType === "key") params[id].key = input.value;
-        
-        if (fieldType === "type") {
-            params[id].type = input.value;
-            let valueInput = document.getElementById(`${id}-value`);
-
-            if (input.value === "array") {
-                valueInput.placeholder = "Comma-separated values";
-            } else if (input.value === "object") {
-                valueInput.placeholder = "Enter JSON";
-                valueInput.value = "{}"; // Default JSON value
-            } else {
-                valueInput.placeholder = "Value";
-                valueInput.value = "";
-            }
-        }
-
-        if (fieldType === "value") {
-            let type = params[id].type;
-            if (type === "array") {
-                params[id].value = input.value.split(",").map(v => v.trim()); // Convert CSV input to array
-            } else if (type === "number") {
-                params[id].value = Number(input.value);
-            } else if (type === "object") {
-                try {
-                    params[id].value = JSON.parse(input.value); // Parse JSON
-                    input.style.borderColor = "green";
-                } catch (e) {
-                    input.style.borderColor = "red"; // Invalid JSON
-                }
-            } else {
-                params[id].value = input.value;
-            }
-        }
-    }
-
-    function removeParam(id) {
-        document.getElementById(id).remove();
-        delete params[id];
-    }
-
-    // Function to merge params into the final JSON payload
-    function getFinalPayload(basePayload) {
-        let finalParams = {};
-        for (let key in params) {
-            if (params[key].key && params[key].value !== "") {
-                finalParams[params[key].key] = params[key].value;
-            }
-        }
-        return { ...basePayload, ...finalParams };
-    }
-    /********************************************************
-     * 4) CREATE Agent
-     ********************************************************/
-    async function createAgent() {
-      const output = document.getElementById("agentResponse");
-      output.textContent = "Creating...";
-
-      // Required fields
-      uniqueName    = document.getElementById("uniqueName").value.trim();
-      channel       = document.getElementById("agoraChannelName").value.trim();
-      rtcUid        = document.getElementById("agoraRtcUid").value.trim();
-      llmApiKey     = document.getElementById("llmApiKey").value.trim();
-      llmUrl        = document.getElementById("llmUrl").value.trim();
-      ttsKey        = document.getElementById("ttsKey").value.trim();
-      gMsg    = document.getElementById("gMsg").value.trim();
-      fMsg    = document.getElementById("fMsg").value.trim();
-      sMsgContent = document.getElementById("sMsgContent").value.trim();
-
-
-      APP_ID = storedAppId;
-      CHANNEL_NAME = channel;
-      UID = null;
-      TOKEN = null;  // Replace with token if required
-
-      // Basic credentials check
-      if (!storedAppId) {
-          alert("App ID not set. Click 'Set API Credentials'.");
-          output.textContent = "Error: Missing App ID.";
-          return;
-      }
-
-      if (!uniqueName || !channel || !rtcUid || !llmApiKey || !llmUrl || !ttsKey) {
-        alert("Please fill out all required fields.");
-        output.textContent = "Error: Missing required fields.";
-        return;
-      }
-
-      const headers = getAuthHeaders();
-      if (!headers) {
-        output.textContent = "Error: Missing credentials.";
-        return;
-      }
-
-      // Additional fields
-      const token     = document.getElementById("agoraRtcToken").value.trim();
-      const asr       = document.getElementById("asrLang").value;
-      const vendor    = document.getElementById("ttsVendor").value;
-      const isStringUid = document.getElementById('enableStringUid').checked; // Read whether the box is checked
-      const llmModel  = document.getElementById("llmModel").value;
-      let customParams = getFinalPayload({});
-
-      // Build request
-      let reqBody = {
-        name: uniqueName,
-        properties: {
-          channel,
-          token,
-          agent_rtc_uid: rtcUid,
-          enable_string_uid: isStringUid,
-          idle_timeout: 120,
-          remote_rtc_uids: ["*"],
-          advanced_features: {
-            enable_bhvs: true,
-            enable_aivad: true
-          },
-          asr: {
-            language: asr
-          },
-          vad: {
-            silence_duration_ms: 480
-          },
-          llm: {
-            url: llmUrl,
-            api_key: llmApiKey,
-            system_messages: [
-              { role: "system", content: sMsgContent }
-            ],
-            greeting_message: gMsg,
-            failure_message: fMsg,
-            max_history: 10,
-            params: {
-              model: llmModel,
-              max_completion_tokens: 1000,
-              ...customParams
-            }
-          }
-        }
-      };
-
-      // TTS logic
-      if (vendor === "microsoft") {
-        const region = document.getElementById("ttsRegion").value;
-        const lang   = document.getElementById("microsoftLangSelect").value;
-        const voice  = document.getElementById("microsoftVoiceSelect").value;
-
-        reqBody.properties.tts = {
-          vendor: "microsoft",
-          params: {
-            key: ttsKey,
-            region,
-            voice_name: voice,
-            rate: 1,
-            volume: 70
-          }
-        };
-      } else {
-        // elevenlabs
-        const modelId = document.getElementById("elevenLabsModelId").value;
-        const voiceSel= document.getElementById("elevenLabsVoiceSelect").value;
-        let finalVoiceId = "";
-        if (voiceSel === "other") {
-          finalVoiceId = document.getElementById("elevenLabsVoiceId").value.trim();
-        } else {
-          finalVoiceId = voiceSel; // might be empty
-        }
-        reqBody.properties.tts = {
-          vendor: "elevenlabs",
-          params: {
-            key: ttsKey,
-            model_id: modelId,
-            voice_id: finalVoiceId,
-          }
-        };
-      }
-
-      // Example endpoint:
-      const url = `https://api.agora.io/api/conversational-ai-agent/v2/projects/${storedAppId}/join`;
-
-      try {
-        const resp = await fetch(url, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(reqBody)
-        });
-        const data = await resp.json();
-        output.textContent = JSON.stringify(data, null, 2);
-
-        // If success, fill agentId
-        if (data.agent_id) {
-          document.getElementById("agentId").value = data.agent_id;
-        }
-      } catch (err) {
-        output.textContent = "Error: " + err;
-      }
-    }
-
-    /********************************************************
-     * 5) UPDATE Agent
-     ********************************************************/
-    async function updateAgent() {
-      const output = document.getElementById("agentResponse");
-      output.textContent = "Updating...";
-
-      if (!storedAppId) {
-        alert("App ID not set. Click 'Set API Credentials'.");
-        output.textContent = "Error: Missing App ID.";
-        return;
-      }
-      const agentId = document.getElementById("agentId").value.trim();
-      if (!agentId) {
-        alert("Please enter an Agent ID to update.");
-        output.textContent = "Error: No agentId.";
-        return;
-      }
-
-      const token = document.getElementById("agoraRtcToken").value.trim();
-      const headers = getAuthHeaders();
-      if (!headers) {
-        output.textContent = "Error: Missing credentials.";
-        return;
-      }
-
-      const url = `https://api.agora.io/api/conversational-ai-agent/v2/projects/${storedAppId}/agents/${agentId}/update`;
-      const body = { token };
-
-      try {
-        const resp = await fetch(url, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(body)
-        });
-        const data = await resp.json();
-        output.textContent = JSON.stringify(data, null, 2);
-      } catch (err) {
-        output.textContent = "Error: " + err;
-      }
-    }
-
-    /********************************************************
-     * 6) STOP Agent
-     ********************************************************/
-    async function stopAgent() {
-      const output = document.getElementById("agentResponse");
-      output.textContent = "Stopping...";
-
-      if (!storedAppId) {
-        alert("App ID not set. Click 'Set API Credentials'.");
-        output.textContent = "Error: Missing App ID.";
-        return;
-      }
-      const agentId = document.getElementById("agentId").value.trim();
-      if (!agentId) {
-        alert("Please enter an Agent ID to stop.");
-        output.textContent = "Error: No agentId.";
-        return;
-      }
-
-      const headers = getAuthHeaders();
-      if (!headers) {
-        output.textContent = "Error: Missing credentials.";
-        return;
-      }
-
-      const url = `https://api.agora.io/api/conversational-ai-agent/v2/projects/${storedAppId}/agents/${agentId}/leave`;
-      try {
-        const resp = await fetch(url, { method: "POST", headers });
-        let data;
-        try {
-          data = await resp.json();
-        } catch {
-          data = { status: resp.status };
-        }
-
-        if (Object.keys(data).length === 0) {
-          output.textContent = "Agent stopped (empty JSON response).";
-        } else {
-          output.textContent = JSON.stringify(data, null, 2);
-        }
-      } catch (err) {
-        output.textContent = "Error: " + err;
-      }
-    }
-
-    /********************************************************
-     * 7) QUERY Agent
-     ********************************************************/
-    async function queryAgent() {
-      const outEl = document.getElementById("queryResponse");
-      outEl.textContent = "Querying agent status...";
-
-      if (!storedAppId) {
-        alert("App ID not set. Click 'Set API Credentials'.");
-        outEl.textContent = "Error: Missing App ID.";
-        return;
-      }
-      const agentId = document.getElementById("agentId").value.trim();
-      if (!agentId) {
-        alert("Please enter an Agent ID to query.");
-        outEl.textContent = "Error: No agentId.";
-        return;
-      }
-
-      const headers = getAuthHeaders();
-      if (!headers) {
-        outEl.textContent = "Error: Missing credentials.";
-        return;
-      }
-
-      const url = `https://api.agora.io/api/conversational-ai-agent/v2/projects/${storedAppId}/agents/${agentId}`;
-      try {
-        const resp = await fetch(url, { method: "GET", headers });
-        const data = await resp.json();
-        outEl.textContent = JSON.stringify(data, null, 2);
-      } catch (err) {
-        outEl.textContent = "Error: " + err;
-      }
-    }
-
-    /********************************************************
-     * 8) LIST Agents
-     ********************************************************/
-    async function listAgents() {
-      const outEl = document.getElementById("queryResponse");
-      outEl.textContent = "Retrieving agents...";
-
-      if (!storedAppId) {
-        alert("App ID not set. Click 'Set API Credentials'.");
-        outEl.textContent = "Error: Missing App ID.";
-        return;
-      }
-
-      const headers = getAuthHeaders();
-      if (!headers) {
-        outEl.textContent = "Error: Missing credentials.";
-        return;
-      }
-
-      const url = `https://api.agora.io/api/conversational-ai-agent/v2/projects/${storedAppId}/agents`;
-      try {
-        const resp = await fetch(url, { method: "GET", headers });
-        const data = await resp.json();
-        outEl.textContent = JSON.stringify(data, null, 2);
-      } catch (err) {
-        outEl.textContent = "Error: " + err;
-      }
-    }
-  </script>
+  <!-- GitHub Link -->
   <a
-  href="https://github.com/frank005/convo_ai"
-  target="_blank"
-  rel="noopener noreferrer"
-  class="fixed top-4 right-4 w-10 h-10 bg-gray-800 flex items-center justify-center rounded-full shadow-lg hover:bg-gray-700 transition"
-  title="View my GitHub"
+    href="https://github.com/frank005/convo_ai"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="github-link"
+    title="View my GitHub"
   >
-  <!-- Inline SVG for GitHub icon -->
-  <svg
-    class="w-5 h-5 text-white"
-    fill="currentColor"
-    viewBox="0 0 24 24"
-    aria-hidden="true"
-  >
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M12 .296a12 12 0 00-3.797 23.389c.6.111.82-.261.82-.58v-2.259c-3.338.725-4.042-1.61-4.042-1.61-.547-1.39-1.336-1.76-1.336-1.76-1.09-.746.082-.73.082-.73 1.205.084 1.84 1.237 1.84 1.237 1.07 1.835 2.807 1.305 3.492.998.107-.776.42-1.305.764-1.604-2.665-.305-5.467-1.333-5.467-5.93 0-1.31.469-2.381 1.24-3.221-.125-.303-.54-1.52.117-3.165 0 0 1.012-.324 3.317 1.23.96-.267 1.987-.399 3.009-.404 1.02.005 2.049.137 3.01.404 2.304-1.554 3.315-1.23 3.315-1.23.659 1.646.244 2.863.12 3.166.772.84 1.24 1.91 1.24 3.22 0 4.61-2.807 5.623-5.48 5.92.431.372.817 1.104.817 2.224v3.293c0 .319.218.694.824.576A12 12 0 0012 .296z"
-    ></path>
-  </svg>
+    <svg
+      class="github-icon"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        fill-rule="evenodd"
+        clip-rule="evenodd"
+        d="M12 .296a12 12 0 00-3.797 23.389c.6.111.82-.261.82-.58v-2.259c-3.338.725-4.042-1.61-4.042-1.61-.547-1.39-1.336-1.76-1.336-1.76-1.09-.746.082-.73.082-.73 1.205.084 1.84 1.237 1.84 1.237 1.07 1.835 2.807 1.305 3.492.998.107-.776.42-1.305.764-1.604-2.665-.305-5.467-1.333-5.467-5.93 0-1.31.469-2.381 1.24-3.221-.125-.303-.54-1.52.117-3.165 0 0 1.012-.324 3.317 1.23.96-.267 1.987-.399 3.009-.404 1.02.005 2.049.137 3.01.404 2.304-1.554 3.315-1.23 3.315-1.23.659 1.646.244 2.863.12 3.166.772.84 1.24 1.91 1.24 3.22 0 4.61-2.807 5.623-5.48 5.92.431.372.817 1.104.817 2.224v3.293c0 .319.218.694.824.576A12 12 0 0012 .296z"
+      ></path>
+    </svg>
   </a>
+
+  <!-- JavaScript Modules -->
+  <script type="module">
+    import { AgoraAPI } from './src/js/api.js';
+    import { AudioProcessor } from './src/js/audio.js';
+    import { UI } from './src/js/ui.js';
+    import { Utils } from './src/js/utils.js';
+
+    // Initialize components
+    const { appId } = Utils.getStoredCredentials();
+    const agoraAPI = new AgoraAPI(appId);
+    const audioProcessor = new AudioProcessor();
+    const ui = new UI();
+
+    // Initialize UI with dependencies
+    ui.initialize(audioProcessor, agoraAPI);
+
+    // Make UI available globally for event handlers
+    window.ui = ui;
+
+    // Initialize canvas size
+    const canvas = document.getElementById("audio-wave");
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    // Log any initialization errors
+    window.addEventListener('error', (event) => {
+      console.error('Error:', event.message);
+    });
+  </script>
 </body>
-</html>
+</html> 
