@@ -1,4 +1,4 @@
-# Conversational AI Agent Dashboard
+# Conversational AI Agent Playground
 
 A modern web dashboard for managing and interacting with Agora's Conversational AI Agents. This application provides a user-friendly interface for creating, updating, and monitoring AI agents that can engage in real-time conversations.
 
