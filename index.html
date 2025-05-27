@@ -8,6 +8,38 @@
   <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
   <script src="src/lib/microsoftVoicesByLang.js"></script>
   <link rel="stylesheet" href="src/css/styles.css">
+  <style>
+    .tooltip {
+      display: none;
+      position: absolute;
+      background: rgba(26, 32, 44, 0.95);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      z-index: 10000;
+      min-width: 200px;
+      max-width: 300px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      margin-left: 10px;
+    }
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 100%;
+      transform: translateY(-50%);
+      border-width: 5px;
+      border-style: solid;
+      border-color: transparent rgba(26, 32, 44, 0.95) transparent transparent;
+    }
+    .has-tooltip:hover .tooltip {
+      display: block;
+    }
+  </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen py-10 px-4">
   <div class="max-w-6xl mx-auto">
@@ -62,73 +94,106 @@
 
         <!-- Text fields (required fields indicated via placeholder) -->
         <div class="space-y-4">
-          <input
-            id="uniqueName"
-            class="w-full p-2 rounded bg-gray-700 text-white"
-            placeholder="The unique identifier of the agent (Required)"
-            value="agent zero"
-          />
-          <input
-            id="agoraChannelName"
-            class="w-full p-2 rounded bg-gray-700 text-white"
-            placeholder="Agora channel came (Required)"
-          />
-          <input
-            id="agoraRtcUid"
-            class="w-full p-2 rounded bg-gray-700 text-white"
-            placeholder="Agora RTC UID (Required)"
-            value="8888"
-          />
-          <div class="flex items-center mb-4">
+          <div class="has-tooltip relative">
             <input
-              type="checkbox"
-              id="enableStringUid"
-              class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded"
+              id="uniqueName"
+              class="w-full p-2 rounded bg-gray-700 text-white"
+              placeholder="The unique identifier of the agent (Required)"
+              value="agent zero"
             />
+            <div class="tooltip">A unique name to identify this agent instance</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="agoraChannelName"
+              class="w-full p-2 rounded bg-gray-700 text-white"
+              placeholder="Agora channel came (Required)"
+            />
+            <div class="tooltip">The Agora channel name where the agent will operate</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="agoraRtcUid"
+              class="w-full p-2 rounded bg-gray-700 text-white"
+              placeholder="Agora RTC UID (Required)"
+              value="8888"
+            />
+            <div class="tooltip">The unique identifier for this agent in the Agora channel</div>
+          </div>
+          <div class="flex items-center mb-4">
+            <div class="has-tooltip relative">
+              <input
+                type="checkbox"
+                id="enableStringUid"
+                class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded"
+              />
+              <div class="tooltip">Enable if you want to use string-based UIDs instead of numeric ones</div>
+            </div>
             <label for="enableStringUid" class="text-sm">
               Enable String UID
             </label>
           </div>
-          <input
-            id="agoraRtcToken"
-            class="w-full p-2 rounded bg-gray-700 text-white"
-            placeholder="Agora RTC token"
-          />
-          <input
-            id="llmModel"
-            class="w-full p-2 rounded bg-gray-700 text-white"
-            placeholder="llmModel"
-            value="gpt-4o-mini"
-          />
-          <input
-            id="llmApiKey"
-            class="w-full p-2 rounded bg-gray-700 text-white"
-            placeholder="LLM API Key (Required)"
-          />
-          <input
-            id="llmUrl"
-            class="w-full p-2 rounded bg-gray-700 text-white"
-            placeholder="LLM URL (Required)"
-            value="https://api.openai.com/v1/chat/completions"
-          />
-          <input
-            id="gMsg"
-            class="w-full p-2 rounded bg-gray-700 text-white"
-            placeholder="Greeting Message (Required)"
-            value="Hello, how can I help you?"
-          />
-          <input
-            id="fMsg"
-            class="w-full p-2 rounded bg-gray-700 text-white"
-            placeholder="Failure Message(Required)"
-            value="Sorry, I do not know how to answer this question."
-          />
-          <input
-            id="sMsgContent"
-            class="w-full p-2 rounded bg-gray-700 text-white"
-            placeholder="System Instructions (Required)"
-            value="You are a helpful chatbot."
-          />
+          <div class="has-tooltip relative">
+            <input
+              id="agoraRtcToken"
+              class="w-full p-2 rounded bg-gray-700 text-white"
+              placeholder="Agora RTC token"
+            />
+            <div class="tooltip">Authentication token for Agora RTC (if required)</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="llmModel"
+              class="w-full p-2 rounded bg-gray-700 text-white"
+              placeholder="llmModel"
+              value="gpt-4o-mini"
+            />
+            <div class="tooltip">The language model to use for generating responses</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="llmApiKey"
+              class="w-full p-2 rounded bg-gray-700 text-white"
+              placeholder="LLM API Key (Required)"
+            />
+            <div class="tooltip">Your API key for accessing the language model service</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="llmUrl"
+              class="w-full p-2 rounded bg-gray-700 text-white"
+              placeholder="LLM URL (Required)"
+              value="https://api.openai.com/v1/chat/completions"
+            />
+            <div class="tooltip">The endpoint URL for the language model API</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="gMsg"
+              class="w-full p-2 rounded bg-gray-700 text-white"
+              placeholder="Greeting Message (Required)"
+              value="Hello, how can I help you?"
+            />
+            <div class="tooltip">The initial greeting message the agent will use</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="fMsg"
+              class="w-full p-2 rounded bg-gray-700 text-white"
+              placeholder="Failure Message(Required)"
+              value="Sorry, I do not know how to answer this question."
+            />
+            <div class="tooltip">The message shown when the agent cannot answer a question</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="sMsgContent"
+              class="w-full p-2 rounded bg-gray-700 text-white"
+              placeholder="System Instructions (Required)"
+              value="You are a helpful chatbot."
+            />
+            <div class="tooltip">System instructions that define the agent's behavior and personality</div>
+          </div>
 
           <!-- Custom Parameters Section -->
           <div class="w-full p-4 bg-gray-700 rounded-lg">
@@ -269,11 +334,14 @@
             />
           </div>
 
-          <input
-            id="ttsKey"
-            class="w-full p-2 rounded bg-gray-700 text-white"
-            placeholder="ttsKey (Required)"
-          />
+          <div class="has-tooltip relative">
+            <input
+              id="ttsKey"
+              class="w-full p-2 rounded bg-gray-700 text-white"
+              placeholder="ttsKey (Required)"
+            />
+            <div class="tooltip">API key for the Text-to-Speech service</div>
+          </div>
         </div>
 
         <!-- Create/Update/Stop in one row -->
@@ -309,11 +377,14 @@
           Query / List Agents
         </h1>
         <div class="space-y-4">
-          <input
-            id="agentId"
-            class="w-full p-2 rounded bg-gray-700 text-white"
-            placeholder="Agent ID to Query"
-          />
+          <div class="has-tooltip relative">
+            <input
+              id="agentId"
+              class="w-full p-2 rounded bg-gray-700 text-white"
+              placeholder="Agent ID to Query"
+            />
+            <div class="tooltip">Enter the ID of the agent you want to query</div>
+          </div>
 
           <button
             id="queryAgentBtn"
@@ -345,22 +416,31 @@
   >
     <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-sm">
       <h2 class="text-lg font-bold mb-4">API Credentials</h2>
-      <input
-        id="customerId"
-        class="w-full p-2 mb-2 rounded bg-gray-700 text-white"
-        placeholder="Customer ID (Required)"
-      />
-      <input
-        id="customerSecret"
-        class="w-full p-2 mb-2 rounded bg-gray-700 text-white"
-        placeholder="Customer Secret (Required)"
-        type="password"
-      />
-      <input
-        id="appId"
-        class="w-full p-2 mb-4 rounded bg-gray-700 text-white"
-        placeholder="App ID (Required)"
-      />
+      <div class="has-tooltip relative">
+        <input
+          id="customerId"
+          class="w-full p-2 mb-2 rounded bg-gray-700 text-white"
+          placeholder="Customer ID (Required)"
+        />
+        <div class="tooltip">Your customer ID for API authentication</div>
+      </div>
+      <div class="has-tooltip relative">
+        <input
+          id="customerSecret"
+          class="w-full p-2 mb-2 rounded bg-gray-700 text-white"
+          placeholder="Customer Secret (Required)"
+          type="password"
+        />
+        <div class="tooltip">Your customer secret for API authentication</div>
+      </div>
+      <div class="has-tooltip relative">
+        <input
+          id="appId"
+          class="w-full p-2 mb-4 rounded bg-gray-700 text-white"
+          placeholder="App ID (Required)"
+        />
+        <div class="tooltip">Your application ID for API access</div>
+      </div>
       <button
         id="saveCredsBtn"
         class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold"
