@@ -1,6 +1,6 @@
 # Climb, Swing, Build: Exploring Agora’s Convo AI Developer Jungle Gym
 
-[![Watch the demo video](./src/media/comvoai_demo.mp4)
+![Watch the demo video](./src/media/comvoai_demo.mp4)
 
 Are you ready to dive headfirst into the fascinating world of real-time conversational AI, but find yourself overwhelmed by complex setups and steep learning curves? What if you could easily experiment with powerful speech-to-text, text-to-speech, and even integrate sophisticated large language models (LLMs) to build dynamic, interactive AI conversations right in your browser?
 
