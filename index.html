@@ -51,6 +51,41 @@
         class="mt-4 px-3 py-2 w-full rounded bg-gray-700 text-white"
         placeholder="Agora token  (if token required)"
       />
+      <!-- Broadcast Message Section (moved here) -->
+      <div class="w-full p-4 bg-gray-700 rounded-lg mt-4">
+        <div class="mb-2">
+          <input
+            id="broadcastText"
+            maxlength="512"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Enter broadcast message (max 512 bytes)"
+          />
+        </div>
+        <div class="mb-2 flex space-x-2">
+          <select id="broadcastPriority" class="p-2 rounded bg-gray-800 text-white border border-gray-500">
+            <option value="INTERRUPT">INTERRUPT</option>
+            <option value="APPEND">APPEND</option>
+            <option value="IGNORE">IGNORE</option>
+          </select>
+          <select id="broadcastInterruptable" class="p-2 rounded bg-gray-800 text-white border border-gray-500">
+            <option value="true">Interrupt</option>
+            <option value="false">No Interrupt</option>
+          </select>
+        </div>
+        <button
+          id="sendBroadcastBtn"
+          class="mt-2 px-3 py-2 bg-cyan-500 text-gray-900 rounded disabled:opacity-50 disabled:pointer-events-none hover:bg-cyan-400 w-full font-bold"
+        >
+          Send Msg
+        </button>
+        <button
+           id="interruptAgentBtn"
+           class="mt-2 px-3 py-2 bg-red-600 text-white rounded font-bold w-full hover:bg-red-500"
+        >
+           Interrupt Agent
+        </button>
+        <div id="broadcastMsgStatus" class="mt-2 text-sm max-h-16 overflow-y-auto break-words"></div>
+      </div>
     </div>
 
     <div class="grid md:grid-cols-2 gap-6">
@@ -173,6 +208,22 @@
                 />
                 <div class="tooltip">System instructions that define the agent's behavior and personality.</div>
               </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="llmVendor"
+                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                  placeholder="LLM Vendor (Optional)"
+                />
+                <div class="tooltip">LLM provider (optional). Supports: custom (for custom LLMs), openai, gemini, anthropic, etc. If set to 'custom', the agent includes turn_id and timestamp in requests. Leave blank to omit.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="llmStyle"
+                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                  placeholder="LLM Style (Optional, e.g. openai)"
+                />
+                <div class="tooltip">Request style for chat completion (optional). Use 'openai' for OpenAI-compatible APIs or custom LLM. Possible values: openai, gemini, anthropic. Leave blank to omit.</div>
+              </div>
             </div>
           </div>
 
@@ -286,12 +337,32 @@
                 />
                 <div class="tooltip">API key for the Text-to-Speech service.</div>
               </div>
+              <div class="has-tooltip relative">
+                <label for="skipPatterns" class="block text-sm mb-1">Skip Patterns (Optional)</label>
+                <select
+                  id="skipPatterns"
+                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                  multiple
+                >
+                  <option value="">None</option>
+                  <option value="1">1: Skip content in Chinese parentheses （）</option>
+                  <option value="2">2: Skip content in Chinese square brackets 【】</option>
+                  <option value="3">3: Skip content in parentheses ( )</option>
+                  <option value="4">4: Skip content in square brackets [ ]</option>
+                  <option value="5">5: Skip content in curly braces { }</option>
+                </select>
+                <div class="tooltip">
+                  Controls whether the TTS module skips bracketed content when reading LLM response text. This prevents the agent from vocalizing structural prompt information like tone indicators, action descriptions, and system prompts, creating a more natural and immersive listening experience.<br><br>
+                  Select 'None' to ensure this parameter is not sent. If 'None' is selected with other options, only the actual options will be sent.<br><br>
+                  Nested brackets: Only the outermost brackets are processed if multiple types are selected.
+                </div>
+              </div>
             </div>
           </div>
 
           <!-- Advanced Configuration Drawer Trigger -->
           <button id="advConfigBtn" class="drawer-btn flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500 relative">
-            <span>Advanced Configuration</span>
+            <span>Advanced Config</span>
             <span class="text-sm">VAD, Turn Detection & Parameters</span>
           </button>
           <!-- Advanced Config Drawer -->
@@ -556,10 +627,31 @@
             Retrieve Agent List
           </button>
 
-          <pre
-            id="queryResponse"
-            class="mt-4 p-2 bg-gray-700 rounded text-sm min-h-[100px]"
-          ></pre>
+          <button
+            id="getAgentHistoryBtn"
+            class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold"
+          >
+            Retrieve Agent History
+          </button>
+
+          <div class="relative mt-4">
+            <button
+              id="copyQueryResponseBtn"
+              class="absolute top-2 right-2 bg-transparent hover:bg-gray-600 rounded p-0.5 focus:outline-none"
+              title="Copy response"
+              style="z-index:10;width:24px;height:24px;display:flex;align-items:center;justify-content:center;"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <rect x="9" y="9" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                <rect x="3" y="3" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+            <span id="copyQueryResponseMsg" class="absolute top-2 right-10 text-green-400 text-xs hidden" style="z-index:10;">Copied!</span>
+            <pre
+              id="queryResponse"
+              class="p-2 bg-gray-700 rounded text-sm min-h-[100px] max-h-[60vh] overflow-auto"
+            ></pre>
+          </div>
         </div>
       </div>
     </div>
@@ -568,7 +660,7 @@
   <!-- Credentials Modal -->
   <div
     id="credsModal"
-    class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
   >
     <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-sm">
       <h2 class="text-lg font-bold mb-4">API Credentials</h2>
@@ -631,18 +723,18 @@
   <!-- JavaScript Modules -->
   <script type="module">
     import { AgoraAPI } from './src/js/api.js';
-    import { AudioProcessor } from './src/js/audio.js';
+    import { MediaProcessor } from './src/js/audio.js';
     import { UI } from './src/js/ui.js';
     import { Utils } from './src/js/utils.js';
 
     // Initialize components
     const { appId } = Utils.getStoredCredentials();
     const agoraAPI = new AgoraAPI(appId);
-    const audioProcessor = new AudioProcessor();
+    const mediaProcessor = new MediaProcessor();
     const ui = new UI();
 
     // Initialize UI with dependencies
-    ui.initialize(audioProcessor, agoraAPI);
+    ui.initialize(mediaProcessor, agoraAPI);
 
     // Make UI available globally for event handlers
     window.ui = ui;
@@ -726,6 +818,24 @@
       showCopyMsg();
     });
 
+    // Agent History button click handler
+    document.getElementById('getAgentHistoryBtn').addEventListener('click', async function() {
+      const agentId = document.getElementById('agentId').value;
+      const { customerId, customerSecret } = Utils.getStoredCredentials();
+      
+      if (!agentId) {
+        document.getElementById('queryResponse').textContent = 'Please enter an Agent ID first';
+        return;
+      }
+
+      try {
+        const response = await agoraAPI.getAgentHistory(customerId, customerSecret, agentId);
+        document.getElementById('queryResponse').textContent = JSON.stringify(response, null, 2);
+      } catch (error) {
+        document.getElementById('queryResponse').textContent = `Error: ${error.message}`;
+      }
+    });
+
     // TTS Settings collapsible logic and delayed population
     const ttsSettingsBtn = document.getElementById('ttsSettingsBtn');
     const ttsSettings = document.getElementById('ttsSettings');
@@ -742,6 +852,77 @@
       if (!ttsSettings.classList.contains('hidden') && this.value === 'microsoft') {
         window.ui && window.ui.populateMicrosoftLangList && window.ui.populateMicrosoftLangList();
       }
+    });
+
+    // Broadcast Message Logic
+    document.getElementById('sendBroadcastBtn').addEventListener('click', async function() {
+      const statusDiv = document.getElementById('broadcastMsgStatus');
+      statusDiv.textContent = '';
+      const text = document.getElementById('broadcastText').value.trim();
+      const priority = document.getElementById('broadcastPriority').value;
+      const interruptable = document.getElementById('broadcastInterruptable').value === 'true';
+      if (!text) {
+        statusDiv.textContent = 'Please enter a broadcast message.';
+        statusDiv.className = 'mt-2 text-sm text-red-400';
+        return;
+      }
+      if (text.length > 512) {
+        statusDiv.textContent = 'Message exceeds 512 bytes.';
+        statusDiv.className = 'mt-2 text-sm text-red-400';
+        return;
+      }
+      // Get App ID and Agent ID
+      const { appId, customerId, customerSecret } = Utils.getStoredCredentials();
+      const agentId = document.getElementById('agentId').value.trim();
+      if (!appId || !agentId || !customerId || !customerSecret) {
+        statusDiv.textContent = 'Missing App ID, Agent ID, or credentials.';
+        statusDiv.className = 'mt-2 text-sm text-red-400';
+        return;
+      }
+      try {
+        await agoraAPI.broadcastMessage(customerId, customerSecret, agentId, text, priority, interruptable);
+        statusDiv.textContent = 'Broadcast sent successfully!';
+        statusDiv.className = 'mt-2 text-sm text-green-400';
+        document.getElementById('broadcastText').value = '';
+      } catch (err) {
+        statusDiv.textContent = `Error: ${err.message}`;
+        statusDiv.className = 'mt-2 text-sm text-red-400 whitespace-pre-line break-words max-h-16 overflow-y-auto';
+      }
+    });
+
+    // Interrupt Agent Logic
+    document.getElementById('interruptAgentBtn').addEventListener('click', async function() {
+      const statusDiv = document.getElementById('broadcastMsgStatus');
+      statusDiv.textContent = '';
+      const { appId, customerId, customerSecret } = Utils.getStoredCredentials();
+      const agentId = document.getElementById('agentId').value.trim();
+      if (!appId || !agentId || !customerId || !customerSecret) {
+        statusDiv.textContent = 'Missing App ID, Agent ID, or credentials.';
+        statusDiv.className = 'mt-2 text-sm text-red-400';
+        return;
+      }
+      try {
+        await agoraAPI.interruptAgent(customerId, customerSecret, agentId);
+        statusDiv.textContent = 'Interrupt sent successfully!';
+        statusDiv.className = 'mt-2 text-sm text-green-400';
+      } catch (err) {
+        statusDiv.textContent = `Error: ${err.message}`;
+        statusDiv.className = 'mt-2 text-sm text-red-400 whitespace-pre-line break-words max-h-16 overflow-y-auto';
+      }
+    });
+
+    // Copy Query Response logic
+    document.getElementById('copyQueryResponseBtn').addEventListener('click', function(e) {
+      e.stopPropagation();
+      const pre = document.getElementById('queryResponse');
+      const msg = document.getElementById('copyQueryResponseMsg');
+      // Remove the button and span text from the copied content
+      let text = pre.innerText || pre.textContent;
+      // Remove the 'Copied!' message if present
+      text = text.replace(/Copied!\s*/, '');
+      navigator.clipboard.writeText(text.trim());
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 1200);
     });
   </script>
 </body>

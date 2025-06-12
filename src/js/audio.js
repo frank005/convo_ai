@@ -1,10 +1,10 @@
-// Audio Processing Module
-export class AudioProcessor {
+// Media Processing Module
+export class MediaProcessor {
     constructor() {
         this.audioContext = null;
         this.analyser = null;
         this.dataArray = null;
-        this.localTracks = { audioTrack: null };
+        this.localTracks = { audioTrack: null, videoTrack: null };
         this.client = null;
         this.animationFrameId = null;
     }
@@ -29,6 +29,15 @@ export class AudioProcessor {
         const ctx = canvas.getContext("2d");
 
         const drawWave = () => {
+            // Safety check - if analyser is null, stop the animation
+            if (!this.analyser) {
+                if (this.animationFrameId) {
+                    cancelAnimationFrame(this.animationFrameId);
+                    this.animationFrameId = null;
+                }
+                return;
+            }
+
             this.animationFrameId = requestAnimationFrame(drawWave);
             this.analyser.getByteFrequencyData(this.dataArray);
             let averageVolume = this.dataArray.reduce((a, b) => a + b, 0) / this.dataArray.length;
@@ -64,30 +73,39 @@ export class AudioProcessor {
                 const remoteAudioTrack = user.audioTrack;
                 remoteAudioTrack.play();
                 await this.setupAudioProcessing(remoteAudioTrack);
+            } else if (mediaType === "video") {
+                const remoteVideoTrack = user.videoTrack;
+                remoteVideoTrack.play();
             }
         });
 
         await this.client.join(appId, channelName, token, uid);
         
+        // Create and publish audio track
         if (!this.localTracks.audioTrack) {
             this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
                 encoderConfig: "music_standard"
             });
         }
-        
         await this.client.publish(this.localTracks.audioTrack);
+
+        // Create and publish video track if image input is enabled
+        const imageInputEnabled = document.getElementById("inputImage").checked;
+        if (imageInputEnabled && !this.localTracks.videoTrack) {
+            this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+            await this.client.publish(this.localTracks.videoTrack);
+        }
+
         return true;
     }
 
     async leaveChannel() {
         if (!this.client) return;
 
-        // Leave Agora Channel
-        await this.client.leave();
-
-        // Stop animations
+        // Stop animations first
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
         }
 
         // Reset UI effects
@@ -99,9 +117,18 @@ export class AudioProcessor {
         const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        // Leave Agora Channel
+        await this.client.leave();
+
         // Close AudioContext
         if (this.audioContext) {
             await this.audioContext.close();
+        }
+
+        // Stop and close video track if it exists
+        if (this.localTracks.videoTrack) {
+            this.localTracks.videoTrack.stop();
+            this.localTracks.videoTrack.close();
         }
 
         // Reset state
@@ -110,6 +137,6 @@ export class AudioProcessor {
         this.analyser = null;
         this.dataArray = null;
         this.localTracks.audioTrack = null;
-        this.animationFrameId = null;
+        this.localTracks.videoTrack = null;
     }
 } 

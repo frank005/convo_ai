@@ -53,8 +53,10 @@
   border-radius: 0.5rem;
   box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
   display: none; /* hidden by default */
-  z-index: 9999;
-  min-width: 250px; /* Ensure minimum width for the widget */
+  z-index: 20000; /* Increased from 9999 to be above settings buttons */
+  min-width: 250px;
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
 }
 
 #aiVolumeWidget h2 {
@@ -74,7 +76,7 @@
   border-radius: 9999px;
   box-shadow: 0 0 6px rgba(0,0,0,0.4);
   cursor: pointer;
-  z-index: 10000;
+  z-index: 20001; /* Increased from 10000 to be above the widget */
 }
 
 /* GitHub link */
@@ -164,28 +166,32 @@
   min-width: 340px;
   max-width: 400px;
   width: 100%;
-  background: #1f2937; /* Tailwind bg-gray-800 */
+  background: #1f2937;
   color: #fff;
   box-shadow: 0 4px 24px rgba(0,0,0,0.4);
   border-radius: 0.5rem;
-  z-index: 20000;
+  z-index: 20002;
   padding: 1.5rem 1.5rem 1rem 1.5rem;
-  border: 1px solid #374151; /* Tailwind border-gray-700 */
+  border: 1px solid #374151;
   transition: opacity 0.2s;
   opacity: 1;
   display: flex;
   flex-direction: column;
   overflow: visible;
+  max-height: calc(100vh - 2rem);
 }
+
 .drawer.hidden {
   display: none;
   opacity: 0;
 }
+
 .drawer-header {
   border-bottom: 1px solid #374151;
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
 }
+
 .drawer-close {
   background: none;
   border: none;
@@ -194,6 +200,7 @@
   cursor: pointer;
   line-height: 1;
 }
+
 .drawer-backdrop {
   position: fixed;
   top: 0;
@@ -203,15 +210,19 @@
   background: rgba(0,0,0,0.4);
   z-index: 10999;
 }
+
 .drawer-backdrop.hidden {
   display: none;
 }
+
 .drawer-content {
-  overflow-y: visible;
-  max-height: 70vh;
+  overflow-y: auto;
+  max-height: calc(70vh - 2rem);
   position: relative;
-  z-index: 21000;
+  z-index: 20003;
+  overflow: visible;
 }
+
 .drawer .tooltip {
   z-index: 12000;
 }
@@ -232,22 +243,17 @@ select, .drawer select {
   outline: none !important;
   box-shadow: none !important;
 }
+
 select:focus, .drawer select:focus {
   border-color: #3b82f6 !important; /* focus:border-blue-500 */
 }
 
-/* Tooltip fix for drawers */
-.drawer .has-tooltip .tooltip {
-  z-index: 12000;
-  pointer-events: auto;
-  display: none;
-}
-.drawer .has-tooltip:hover .tooltip {
-  display: block;
+/* Tooltip styles for both main page and drawers */
+.has-tooltip {
+  position: relative;
 }
 
-/* Restore original tooltip CSS for main page */
-.has-tooltip .tooltip {
+.tooltip {
   display: none;
   position: absolute;
   background: rgba(26, 32, 44, 0.95);
@@ -255,7 +261,8 @@ select:focus, .drawer select:focus {
   padding: 8px 12px;
   border-radius: 4px;
   font-size: 14px;
-  z-index: 10000;
+  font-weight: normal;
+  z-index: 25000;
   min-width: 200px;
   max-width: 300px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -263,17 +270,42 @@ select:focus, .drawer select:focus {
   top: 50%;
   transform: translateY(-50%);
   margin-left: 10px;
+  pointer-events: none;
+  white-space: normal;
 }
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  transform: translateY(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent rgba(26, 32, 44, 0.95) transparent transparent;
+}
+
 .has-tooltip:hover .tooltip {
   display: block;
+}
+
+/* Ensure tooltips in drawers are visible */
+.drawer .has-tooltip .tooltip {
+  z-index: 25000;
+  pointer-events: none;
+}
+
+/* Remove any conflicting tooltip styles */
+.drawer .has-tooltip .tooltip {
+  pointer-events: none;
 }
 
 /* Drawer-specific tooltips */
 .drawer-has-tooltip .drawer-tooltip {
   z-index: 22000;
-} 
+}
 
-/*Add style from index.html*/
+/* Add style from index.html */
 .tooltip {
   display: none;
   position: absolute;
@@ -291,6 +323,7 @@ select:focus, .drawer select:focus {
   transform: translateY(-50%);
   margin-left: 10px;
 }
+
 .tooltip::after {
   content: '';
   position: absolute;
@@ -301,9 +334,11 @@ select:focus, .drawer select:focus {
   border-style: solid;
   border-color: transparent rgba(26, 32, 44, 0.95) transparent transparent;
 }
+
 .has-tooltip:hover .tooltip {
   display: block;
 }
+
 .modal {
   position: fixed;
   z-index: 30000 !important;

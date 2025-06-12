@@ -124,6 +124,20 @@ export class Utils {
                 vad.threshold = parseFloat(formData.vadConfig.threshold);
             }
         }
+
+        // Prepare system messages
+        const systemMessages = [
+            { role: "system", content: formData.sMsgContent }
+        ];
+
+        // Add image handling system message if image input is enabled
+        if (formData.inputModalities.includes("image")) {
+            systemMessages.push({
+                role: "system",
+                content: "We will be sending you images so when you receive an image and the user specifically asks about it, comment on it based on the request from the user"
+            });
+        }
+
         const config = {
             name: formData.uniqueName,
             properties: {
@@ -146,9 +160,7 @@ export class Utils {
                 llm: {
                     url: formData.llmUrl,
                     api_key: formData.llmApiKey,
-                    system_messages: [
-                        { role: "system", content: formData.sMsgContent }
-                    ],
+                    system_messages: systemMessages,
                     greeting_message: formData.gMsg,
                     failure_message: formData.fMsg,
                     max_history: 10,
@@ -164,6 +176,12 @@ export class Utils {
         };
 
         // Add TTS configuration based on vendor
+        // Handle skipPatterns logic
+        const skipPatternsSelect = document.getElementById("skipPatterns");
+        let skipPatterns = Array.from(skipPatternsSelect.selectedOptions).map(opt => opt.value).filter(v => v !== "");
+        if (skipPatterns.length === 0) skipPatterns = null;
+        else skipPatterns = skipPatterns.map(Number);
+
         if (formData.vendor === "microsoft") {
             config.properties.tts = {
                 vendor: "microsoft",
@@ -172,7 +190,8 @@ export class Utils {
                     region: document.getElementById("ttsRegion").value,
                     voice_name: document.getElementById("microsoftVoiceSelect").value,
                     rate: 1,
-                    volume: 70
+                    volume: 70,
+                    ...(skipPatterns ? { skipPatterns } : {})
                 }
             };
         } else {
@@ -188,6 +207,7 @@ export class Utils {
                     key: formData.ttsKey,
                     model_id: modelId,
                     voice_id: finalVoiceId,
+                    ...(skipPatterns ? { skipPatterns } : {})
                 }
             };
         }

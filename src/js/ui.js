@@ -5,13 +5,13 @@ import { AgoraAPI } from './api.js';
 
 export class UI {
     constructor() {
-        this.audioProcessor = null;
+        this.mediaProcessor = null;
         this.agoraAPI = null;
         this.params = {};
     }
 
-    initialize(audioProcessor, agoraAPI) {
-        this.audioProcessor = audioProcessor;
+    initialize(mediaProcessor, agoraAPI) {
+        this.mediaProcessor = mediaProcessor;
         this.agoraAPI = agoraAPI;
         this.setupEventListeners();
         this.checkCredentials();
@@ -112,7 +112,7 @@ export class UI {
         try {
             // Convert empty string to null for token
             const token = clientRtcToken || null;
-            await this.audioProcessor.joinChannel(appId, channelName, token, clientRtcUid);
+            await this.mediaProcessor.joinChannel(appId, channelName, token, clientRtcUid);
             document.getElementById("joinChannel").disabled = true;
             document.getElementById("leaveChannel").disabled = false;
         } catch (error) {
@@ -122,7 +122,7 @@ export class UI {
 
     async leaveChannel() {
         try {
-            await this.audioProcessor.leaveChannel();
+            await this.mediaProcessor.leaveChannel();
             document.getElementById("joinChannel").disabled = false;
             document.getElementById("leaveChannel").disabled = true;
         } catch (error) {
