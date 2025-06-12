@@ -10,17 +10,28 @@ A modern web dashboard for managing and interacting with Agora's Conversational 
   - Stop running agents
   - Query agent status
   - List all active agents
+  - Retrieve agent conversation history
 
 - **Real-time Audio Visualization**
   - Live audio waveform visualization
   - Volume indicator with dynamic scaling
   - Toggle-able AI interaction widget
+  - Audio configuration for different vendors
 
 - **Flexible Configuration**
   - Support for multiple TTS vendors (Microsoft, ElevenLabs)
   - Customizable LLM parameters
   - Configurable ASR language settings
   - Token-based authentication
+  - Advanced VAD (Voice Activity Detection) settings
+  - Turn detection and interruption handling
+  - Custom parameter management
+
+- **Broadcast & Control**
+  - Send broadcast messages to agents
+  - Configure message priority and interruptability
+  - Interrupt agent responses
+  - Copy JSON configurations for create/update operations
 
 ## Project Structure
 
@@ -58,6 +69,7 @@ convo_ai/
    - Set the Agora channel name and RTC UID
    - Configure LLM settings (API key, URL, model)
    - Choose TTS vendor and voice settings
+   - Configure VAD and turn detection settings
    - Add any custom parameters as needed
 
 ## API Integration
@@ -69,6 +81,34 @@ The application integrates with Agora's Conversational AI API endpoints:
 - `POST /api/conversational-ai-agent/v2/projects/{appId}/agents/{agentId}/leave` - Stop agent
 - `GET /api/conversational-ai-agent/v2/projects/{appId}/agents/{agentId}` - Query agent status
 - `GET /api/conversational-ai-agent/v2/projects/{appId}/agents` - List all agents
+- `GET /api/conversational-ai-agent/v2/projects/{appId}/agents/{agentId}/history` - Get agent history
+- `POST /api/conversational-ai-agent/v2/projects/{appId}/agents/{agentId}/broadcast` - Send broadcast message
+- `POST /api/conversational-ai-agent/v2/projects/{appId}/agents/{agentId}/interrupt` - Interrupt agent
+
+## Advanced Features
+
+### Voice Activity Detection (VAD)
+- Configurable interrupt duration
+- Adjustable prefix padding
+- Customizable silence duration
+- Threshold sensitivity control
+
+### Turn Detection
+- Interrupt mode: Stop and process input immediately
+- Append mode: Complete current response before processing
+- Ignore mode: Discard interrupting input
+
+### Broadcast Messages
+- Support for different priority levels
+- Configurable interruptability
+- Maximum message size of 512 bytes
+- Real-time status feedback
+
+### Custom Parameters
+- Add custom key-value pairs for LLM configuration
+- Support for array and object parameter types
+- JSON configuration export
+- Parameter validation and formatting
 
 ## Architecture
 
@@ -78,21 +118,25 @@ The application follows a modular architecture:
    - Handles all communication with Agora's API
    - Manages authentication and request formatting
    - Provides clean interfaces for agent operations
+   - Supports broadcast and interrupt functionality
 
 2. **Audio Processing** (`audio.js`)
    - Manages real-time audio visualization
    - Handles audio context and analyzer setup
    - Provides smooth animations and visual feedback
+   - Supports multiple audio vendors
 
 3. **UI Components** (`ui.js`)
    - Manages all user interface interactions
    - Handles form validation and submission
    - Controls widget visibility and state
+   - Provides collapsible configuration sections
 
 4. **Utilities** (`utils.js`)
    - Provides helper functions for common operations
    - Manages parameter handling and validation
    - Handles data formatting and transformation
+   - Supports JSON configuration management
 
 ## Development
 
@@ -102,6 +146,7 @@ To modify or extend the application:
 2. Styles are centralized in `src/css/styles.css`
 3. Each module has clear responsibilities and interfaces
 4. The application uses modern JavaScript features and async/await for API calls
+5. UI components use Tailwind CSS for styling
 
 ## Contributing
 
