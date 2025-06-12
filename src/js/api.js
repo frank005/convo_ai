@@ -32,7 +32,7 @@ export class AgoraAPI {
         }
     }
 
-    async updateAgent(customerId, customerSecret, agentId, token) {
+    async updateAgent(customerId, customerSecret, agentId, updatePayload) {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/agents/${agentId}/update`;
 
@@ -40,7 +40,7 @@ export class AgoraAPI {
             const response = await fetch(url, {
                 method: "POST",
                 headers,
-                body: JSON.stringify({ token })
+                body: JSON.stringify(updatePayload)
             });
             return await response.json();
         } catch (error) {

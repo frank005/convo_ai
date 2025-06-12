@@ -32,7 +32,34 @@ export class Utils {
             asr: document.getElementById("asrLang").value,
             vendor: document.getElementById("ttsVendor").value,
             isStringUid: document.getElementById('enableStringUid').checked,
-            llmModel: document.getElementById("llmModel").value
+            llmModel: document.getElementById("llmModel").value,
+            inputModalities: [
+                "text",
+                ...(document.getElementById("inputImage").checked ? ["image"] : [])
+            ],
+            outputModalities: [
+                ...(document.getElementById("outputText").checked ? ["text"] : []),
+                ...(document.getElementById("outputAudio").checked ? ["audio"] : [])
+            ],
+            vadEnabled: document.getElementById("vadEnabled").checked,
+            turnDetectionEnabled: document.getElementById("turnDetectionEnabled").checked,
+            parametersEnabled: document.getElementById("parametersEnabled").checked,
+            vadConfig: {
+                interrupt_duration_ms: document.getElementById("vadInterruptDuration").value || null,
+                prefix_padding_ms: document.getElementById("vadPrefixPadding").value || null,
+                silence_duration_ms: document.getElementById("vadSilenceDuration").value || null,
+                threshold: document.getElementById("vadThreshold").value || null
+            },
+            turnDetection: {
+                interrupt_mode: document.getElementById("interruptMode").value
+            },
+            parameters: {
+                silence_config: {
+                    timeout_ms: document.getElementById("silenceTimeout").value || null,
+                    action: document.getElementById("silenceAction").value,
+                    content: document.getElementById("silenceContent").value || null
+                }
+            }
         };
     }
 
@@ -81,6 +108,22 @@ export class Utils {
     }
 
     static buildAgentConfig(formData, customParams) {
+        // Prepare VAD config: only include fields with values, always send silence_duration_ms
+        let vad = { silence_duration_ms: 480 };
+        if (formData.vadEnabled) {
+            if (formData.vadConfig.interrupt_duration_ms !== null && formData.vadConfig.interrupt_duration_ms !== "") {
+                vad.interrupt_duration_ms = parseInt(formData.vadConfig.interrupt_duration_ms, 10);
+            }
+            if (formData.vadConfig.prefix_padding_ms !== null && formData.vadConfig.prefix_padding_ms !== "") {
+                vad.prefix_padding_ms = parseInt(formData.vadConfig.prefix_padding_ms, 10);
+            }
+            if (formData.vadConfig.silence_duration_ms !== null && formData.vadConfig.silence_duration_ms !== "") {
+                vad.silence_duration_ms = parseInt(formData.vadConfig.silence_duration_ms, 10);
+            }
+            if (formData.vadConfig.threshold !== null && formData.vadConfig.threshold !== "") {
+                vad.threshold = parseFloat(formData.vadConfig.threshold);
+            }
+        }
         const config = {
             name: formData.uniqueName,
             properties: {
@@ -97,9 +140,9 @@ export class Utils {
                 asr: {
                     language: formData.asr
                 },
-                vad: {
-                    silence_duration_ms: 480
-                },
+                vad,
+                ...(formData.turnDetectionEnabled ? { turn_detection: formData.turnDetection } : {}),
+                ...(formData.parametersEnabled ? { parameters: formData.parameters } : {}),
                 llm: {
                     url: formData.llmUrl,
                     api_key: formData.llmApiKey,
@@ -109,6 +152,8 @@ export class Utils {
                     greeting_message: formData.gMsg,
                     failure_message: formData.fMsg,
                     max_history: 10,
+                    input_modalities: formData.inputModalities,
+                    output_modalities: formData.outputModalities,
                     params: {
                         model: formData.llmModel,
                         max_completion_tokens: 1000,
