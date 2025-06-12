@@ -53,8 +53,10 @@
   border-radius: 0.5rem;
   box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
   display: none; /* hidden by default */
-  z-index: 9999;
-  min-width: 250px; /* Ensure minimum width for the widget */
+  z-index: 20000; /* Increased from 9999 to be above settings buttons */
+  min-width: 250px;
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
 }
 
 #aiVolumeWidget h2 {
@@ -74,7 +76,7 @@
   border-radius: 9999px;
   box-shadow: 0 0 6px rgba(0,0,0,0.4);
   cursor: pointer;
-  z-index: 10000;
+  z-index: 20001; /* Increased from 10000 to be above the widget */
 }
 
 /* GitHub link */
@@ -153,4 +155,191 @@
   opacity: 1;
   visibility: visible;
   transform: translateX(-50%) translateY(0);
-} 
+}
+
+/* Drawer styles - improved for placement and color */
+.drawer {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  margin-left: 16px;
+  min-width: 340px;
+  max-width: 400px;
+  width: 100%;
+  background: #1f2937;
+  color: #fff;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  border-radius: 0.5rem;
+  z-index: 20002;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  border: 1px solid #374151;
+  transition: opacity 0.2s;
+  opacity: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  max-height: calc(100vh - 2rem);
+}
+
+.drawer.hidden {
+  display: none;
+  opacity: 0;
+}
+
+.drawer-header {
+  border-bottom: 1px solid #374151;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+.drawer-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.4);
+  z-index: 10999;
+}
+
+.drawer-backdrop.hidden {
+  display: none;
+}
+
+.drawer-content {
+  overflow-y: auto;
+  max-height: calc(70vh - 2rem);
+  position: relative;
+  z-index: 20003;
+  overflow: visible;
+}
+
+.drawer .tooltip {
+  z-index: 12000;
+}
+
+/* Ensure the parent of the button is relative for absolute drawer placement */
+.drawer-btn {
+  position: relative;
+  z-index: 11100;
+}
+
+select, .drawer select {
+  background-color: #1f2937 !important; /* bg-gray-800 */
+  color: #fff !important;
+  border: 1px solid #6b7280 !important; /* border-gray-500 */
+  border-radius: 0.375rem !important; /* rounded */
+  padding: 0.5rem !important;
+  font-size: 1rem;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+select:focus, .drawer select:focus {
+  border-color: #3b82f6 !important; /* focus:border-blue-500 */
+}
+
+/* Tooltip styles for both main page and drawers */
+.has-tooltip {
+  position: relative;
+}
+
+.tooltip {
+  display: none;
+  position: absolute;
+  background: rgba(26, 32, 44, 0.95);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: normal;
+  z-index: 25000;
+  min-width: 200px;
+  max-width: 300px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 10px;
+  pointer-events: none;
+  white-space: normal;
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  transform: translateY(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent rgba(26, 32, 44, 0.95) transparent transparent;
+}
+
+.has-tooltip:hover .tooltip {
+  display: block;
+}
+
+/* Ensure tooltips in drawers are visible */
+.drawer .has-tooltip .tooltip {
+  z-index: 25000;
+  pointer-events: none;
+}
+
+/* Remove any conflicting tooltip styles */
+.drawer .has-tooltip .tooltip {
+  pointer-events: none;
+}
+
+/* Drawer-specific tooltips */
+.drawer-has-tooltip .drawer-tooltip {
+  z-index: 22000;
+}
+
+/* Add style from index.html */
+.tooltip {
+  display: none;
+  position: absolute;
+  background: rgba(26, 32, 44, 0.95);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  z-index: 10000;
+  min-width: 200px;
+  max-width: 300px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 10px;
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  transform: translateY(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent rgba(26, 32, 44, 0.95) transparent transparent;
+}
+
+.has-tooltip:hover .tooltip {
+  display: block;
+}
+
+.modal {
+  position: fixed;
+  z-index: 30000 !important;
+}

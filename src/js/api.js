@@ -32,7 +32,7 @@ export class AgoraAPI {
         }
     }
 
-    async updateAgent(customerId, customerSecret, agentId, token) {
+    async updateAgent(customerId, customerSecret, agentId, updatePayload) {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/agents/${agentId}/update`;
 
@@ -40,7 +40,7 @@ export class AgoraAPI {
             const response = await fetch(url, {
                 method: "POST",
                 headers,
-                body: JSON.stringify({ token })
+                body: JSON.stringify(updatePayload)
             });
             return await response.json();
         } catch (error) {
@@ -90,6 +90,60 @@ export class AgoraAPI {
             return await response.json();
         } catch (error) {
             throw new Error(`Failed to list agents: ${error.message}`);
+        }
+    }
+
+    async getAgentHistory(customerId, customerSecret, agentId) {
+        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const url = `${this.baseUrl}/projects/${this.appId}/agents/${agentId}/history`;
+
+        try {
+            const response = await fetch(url, {
+                method: "GET",
+                headers
+            });
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Failed to get agent history: ${error.message}`);
+        }
+    }
+
+    async broadcastMessage(customerId, customerSecret, agentId, text, priority, interruptable) {
+        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const url = `${this.baseUrl}/projects/${this.appId}/agents/${encodeURIComponent(agentId)}/speak`;
+        const body = { text, priority, interruptable };
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers,
+                body: JSON.stringify(body)
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || response.statusText);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Failed to broadcast message: ${error.message}`);
+        }
+    }
+
+    async interruptAgent(customerId, customerSecret, agentId) {
+        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const url = `${this.baseUrl}/projects/${this.appId}/agents/${encodeURIComponent(agentId)}/interrupt`;
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({})
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || response.statusText);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Failed to interrupt agent: ${error.message}`);
         }
     }
 } 

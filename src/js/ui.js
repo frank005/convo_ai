@@ -5,17 +5,18 @@ import { AgoraAPI } from './api.js';
 
 export class UI {
     constructor() {
-        this.audioProcessor = null;
+        this.mediaProcessor = null;
         this.agoraAPI = null;
         this.params = {};
     }
 
-    initialize(audioProcessor, agoraAPI) {
-        this.audioProcessor = audioProcessor;
+    initialize(mediaProcessor, agoraAPI) {
+        this.mediaProcessor = mediaProcessor;
         this.agoraAPI = agoraAPI;
         this.setupEventListeners();
         this.checkCredentials();
         this.populateMicrosoftLangList();
+        this.setupDrawerListeners();
     }
 
     setupEventListeners() {
@@ -111,7 +112,7 @@ export class UI {
         try {
             // Convert empty string to null for token
             const token = clientRtcToken || null;
-            await this.audioProcessor.joinChannel(appId, channelName, token, clientRtcUid);
+            await this.mediaProcessor.joinChannel(appId, channelName, token, clientRtcUid);
             document.getElementById("joinChannel").disabled = true;
             document.getElementById("leaveChannel").disabled = false;
         } catch (error) {
@@ -121,7 +122,7 @@ export class UI {
 
     async leaveChannel() {
         try {
-            await this.audioProcessor.leaveChannel();
+            await this.mediaProcessor.leaveChannel();
             document.getElementById("joinChannel").disabled = false;
             document.getElementById("leaveChannel").disabled = true;
         } catch (error) {
@@ -287,10 +288,19 @@ export class UI {
         try {
             const { customerId, customerSecret } = Utils.getStoredCredentials();
             const agentId = document.getElementById("agentId").value.trim();
-            const token = document.getElementById("agoraRtcToken").value.trim();
-
-            const data = await this.agoraAPI.updateAgent(customerId, customerSecret, agentId, token);
-            output.textContent = JSON.stringify(data, null, 2);
+            const formData = Utils.getFormData();
+            const customParams = Utils.getCustomParams();
+            const config = Utils.buildAgentConfig(formData, customParams);
+            // Only include token, llm.system_messages, and llm.params (customParams)
+            const updatePayload = {
+                token: config.properties.token,
+                llm: {
+                    system_messages: config.properties.llm.system_messages,
+                    params: config.properties.llm.params
+                }
+            };
+            const data = await this.agoraAPI.updateAgent(customerId, customerSecret, agentId, updatePayload);
+            output.textContent = JSON.stringify(updatePayload, null, 2);
         } catch (error) {
             output.textContent = `Error: ${error.message}`;
         }
@@ -339,5 +349,68 @@ export class UI {
         } catch (error) {
             output.textContent = `Error: ${error.message}`;
         }
+    }
+
+    openDrawer(drawerId) {
+        // Close all drawers first
+        ['llmDrawer', 'advDrawer', 'ttsDrawer'].forEach(id => {
+            document.getElementById(id).classList.add('hidden');
+            document.getElementById(id + 'Backdrop').classList.add('hidden');
+        });
+        // Find the button that triggered this drawer
+        let btnId = '';
+        if (drawerId === 'llmDrawer') btnId = 'llmSettingsBtn';
+        if (drawerId === 'advDrawer') btnId = 'advConfigBtn';
+        if (drawerId === 'ttsDrawer') btnId = 'ttsSettingsBtn';
+        const btn = document.getElementById(btnId);
+        const drawer = document.getElementById(drawerId);
+        // Position the drawer absolutely next to the button
+        const btnRect = btn.getBoundingClientRect();
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        drawer.style.top = (btnRect.top + scrollTop) + 'px';
+        drawer.style.left = (btnRect.right + 16) + 'px';
+        drawer.classList.remove('hidden');
+        document.getElementById(drawerId + 'Backdrop').classList.remove('hidden');
+        // Special logic for TTS drawer
+        if (drawerId === 'ttsDrawer' && document.getElementById('ttsVendor').value === 'microsoft') {
+            this.populateMicrosoftLangList();
+        }
+    }
+
+    closeDrawer(drawerId) {
+        document.getElementById(drawerId).classList.add('hidden');
+        document.getElementById(drawerId + 'Backdrop').classList.add('hidden');
+    }
+
+    setupDrawerListeners() {
+        // LLM
+        document.getElementById('llmSettingsBtn').addEventListener('click', () => this.openDrawer('llmDrawer'));
+        document.getElementById('llmDrawerBackdrop').addEventListener('click', () => this.closeDrawer('llmDrawer'));
+        document.querySelector('#llmDrawer .drawer-close').addEventListener('click', () => this.closeDrawer('llmDrawer'));
+        // Advanced Config
+        document.getElementById('advConfigBtn').addEventListener('click', () => this.openDrawer('advDrawer'));
+        document.getElementById('advDrawerBackdrop').addEventListener('click', () => this.closeDrawer('advDrawer'));
+        document.querySelector('#advDrawer .drawer-close').addEventListener('click', () => this.closeDrawer('advDrawer'));
+        // TTS
+        document.getElementById('ttsSettingsBtn').addEventListener('click', () => this.openDrawer('ttsDrawer'));
+        document.getElementById('ttsDrawerBackdrop').addEventListener('click', () => this.closeDrawer('ttsDrawer'));
+        document.querySelector('#ttsDrawer .drawer-close').addEventListener('click', () => this.closeDrawer('ttsDrawer'));
+
+        // Advanced Config dynamic sections
+        const turnDetectionCheckbox = document.getElementById('turnDetectionEnabled');
+        const turnDetectionConfig = document.getElementById('turnDetectionConfig');
+        const parametersCheckbox = document.getElementById('parametersEnabled');
+        const parametersConfig = document.getElementById('parametersConfig');
+
+        // Initial state
+        turnDetectionConfig.classList.toggle('hidden', !turnDetectionCheckbox.checked);
+        parametersConfig.classList.toggle('hidden', !parametersCheckbox.checked);
+
+        turnDetectionCheckbox.addEventListener('change', () => {
+            turnDetectionConfig.classList.toggle('hidden', !turnDetectionCheckbox.checked);
+        });
+        parametersCheckbox.addEventListener('change', () => {
+            parametersConfig.classList.toggle('hidden', !parametersCheckbox.checked);
+        });
     }
 } 
