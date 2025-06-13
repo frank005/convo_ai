@@ -189,8 +189,10 @@ export class Utils {
                     key: formData.ttsKey,
                     region: document.getElementById("ttsRegion").value,
                     voice_name: document.getElementById("microsoftVoiceSelect").value,
-                    rate: 1,
-                    volume: 70,
+                    ...(document.getElementById("microsoftRate")?.value ? { rate: parseFloat(document.getElementById("microsoftRate").value) } : {}),
+                    ...(document.getElementById("microsoftSpeed")?.value ? { speed: parseFloat(document.getElementById("microsoftSpeed").value) } : {}),
+                    ...(document.getElementById("microsoftVolume")?.value ? { volume: parseFloat(document.getElementById("microsoftVolume").value) } : {}),
+                    ...(document.getElementById("microsoftSampleRate")?.value ? { sample_rate: parseInt(document.getElementById("microsoftSampleRate").value, 10) } : {}),
                     ...(skipPatterns ? { skipPatterns } : {})
                 }
             };
@@ -204,9 +206,14 @@ export class Utils {
             config.properties.tts = {
                 vendor: "elevenlabs",
                 params: {
-                    key: formData.ttsKey,
+                    key: document.getElementById("elevenLabsTtsKey").value,
                     model_id: modelId,
                     voice_id: finalVoiceId,
+                    ...(document.getElementById("elevenLabsSampleRate")?.value ? { sample_rate: parseInt(document.getElementById("elevenLabsSampleRate").value, 10) } : {}),
+                    ...(document.getElementById("elevenLabsStability")?.value ? { stability: parseFloat(document.getElementById("elevenLabsStability").value) } : {}),
+                    ...(document.getElementById("elevenLabsSimilarityBoost")?.value ? { similarity_boost: parseFloat(document.getElementById("elevenLabsSimilarityBoost").value) } : {}),
+                    ...(document.getElementById("elevenLabsStyle")?.value ? { style: parseFloat(document.getElementById("elevenLabsStyle").value) } : {}),
+                    ...(document.getElementById("elevenLabsUseSpeakerBoost")?.checked ? { use_speaker_boost: true } : {}),
                     ...(skipPatterns ? { skipPatterns } : {})
                 }
             };

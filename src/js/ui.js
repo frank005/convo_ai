@@ -132,8 +132,27 @@ export class UI {
 
     handleTtsVendorChange() {
         const vendor = document.getElementById("ttsVendor").value;
-        const msBlocks = ["microsoftRegionBlock", "microsoftLangBlock", "microsoftVoiceBlock"];
-        const elBlocks = ["elevenLabsModelBlock", "elevenLabsVoiceBlock", "elevenLabsVoiceIdBlock"];
+        const msBlocks = [
+            "microsoftRegionBlock", 
+            "microsoftLangBlock", 
+            "microsoftVoiceBlock",
+            "microsoftTtsKeyBlock",
+            "microsoftRateBlock",
+            "microsoftSpeedBlock",
+            "microsoftVolumeBlock",
+            "microsoftSampleRateBlock"
+        ];
+        const elBlocks = [
+            "elevenLabsModelBlock", 
+            "elevenLabsVoiceBlock", 
+            "elevenLabsVoiceIdBlock",
+            "elevenLabsTtsKeyBlock",
+            "elevenLabsSampleRateBlock",
+            "elevenLabsStabilityBlock",
+            "elevenLabsSimilarityBoostBlock",
+            "elevenLabsStyleBlock",
+            "elevenLabsUseSpeakerBoostBlock"
+        ];
 
         msBlocks.forEach(block => {
             document.getElementById(block).classList.toggle("hidden", vendor !== "microsoft");
