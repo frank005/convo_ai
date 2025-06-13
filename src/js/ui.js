@@ -171,6 +171,8 @@ export class UI {
 
     populateMicrosoftLangList() {
         const msLangSelect = document.getElementById("microsoftLangSelect");
+        const currentLang = msLangSelect.value;
+        const currentVoice = document.getElementById("microsoftVoiceSelect").value;
         msLangSelect.innerHTML = "";
 
         const languageCodes = Object.keys(microsoftVoicesByLang).sort();
@@ -178,18 +180,19 @@ export class UI {
             const opt = document.createElement("option");
             opt.value = lang;
             opt.textContent = lang;
-            if (lang === "English (United States)") {
+            if (lang === currentLang || (!currentLang && lang === "English (United States)")) {
                 opt.selected = true;
             }
             msLangSelect.appendChild(opt);
         });
 
-        this.handleMicrosoftLangChange();
+        this.handleMicrosoftLangChange(currentVoice);
     }
 
-    handleMicrosoftLangChange() {
+    handleMicrosoftLangChange(selectedVoice = null) {
         const lang = document.getElementById("microsoftLangSelect").value;
         const voiceSelect = document.getElementById("microsoftVoiceSelect");
+        const currentVoice = selectedVoice || voiceSelect.value;
         voiceSelect.innerHTML = "";
 
         const voices = microsoftVoicesByLang[lang] || [];
@@ -197,6 +200,9 @@ export class UI {
             const opt = document.createElement("option");
             opt.value = v.shortName;
             opt.textContent = `${v.friendlyName} (${v.shortName})`;
+            if (v.shortName === currentVoice) {
+                opt.selected = true;
+            }
             voiceSelect.appendChild(opt);
         });
     }
@@ -392,7 +398,17 @@ export class UI {
         document.getElementById(drawerId + 'Backdrop').classList.remove('hidden');
         // Special logic for TTS drawer
         if (drawerId === 'ttsDrawer' && document.getElementById('ttsVendor').value === 'microsoft') {
+            const currentLang = document.getElementById('microsoftLangSelect').value;
+            const currentVoice = document.getElementById('microsoftVoiceSelect').value;
             this.populateMicrosoftLangList();
+            // Restore the previously selected language and voice
+            if (currentLang) {
+                document.getElementById('microsoftLangSelect').value = currentLang;
+                this.handleMicrosoftLangChange();
+                if (currentVoice) {
+                    document.getElementById('microsoftVoiceSelect').value = currentVoice;
+                }
+            }
         }
     }
 

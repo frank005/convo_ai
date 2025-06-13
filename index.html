@@ -102,7 +102,6 @@
               id="uniqueName"
               class="w-full p-2 rounded bg-gray-700 text-white"
               placeholder="The unique identifier of the agent (Required)"
-              value="agent zero"
             />
             <div class="tooltip">A unique name to identify this agent instance</div>
           </div>
@@ -845,6 +844,9 @@
     const agoraAPI = new AgoraAPI(appId);
     const mediaProcessor = new MediaProcessor();
     const ui = new UI();
+
+    // Set random agent name
+    document.getElementById('uniqueName').value = `agent-${Math.random().toString(36).substring(2, 8)}`;
 
     // Initialize UI with dependencies
     ui.initialize(mediaProcessor, agoraAPI);
