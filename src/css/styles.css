@@ -157,6 +157,8 @@
   transform: translateX(-50%) translateY(0);
 }
 
+
+
 /* Drawer styles - improved for placement and color */
 .drawer {
   position: absolute;
@@ -254,23 +256,17 @@ select:focus, .drawer select:focus {
 }
 
 .tooltip {
-  display: none;
   position: absolute;
-  background: rgba(26, 32, 44, 0.95);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: normal;
-  z-index: 25000;
-  min-width: 200px;
+  left: 0;
+  top: 100%;
+  margin-top: 8px;
+  z-index: 9999;
   max-width: 300px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  left: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  margin-left: 10px;
-  pointer-events: none;
+  background: #222;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   white-space: normal;
 }
 
@@ -342,4 +338,20 @@ select:focus, .drawer select:focus {
 .modal {
   position: fixed;
   z-index: 30000 !important;
+}
+
+.tooltip-right {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 12px;
+  max-width: 300px;
+  z-index: 9999;
+  white-space: normal;
+  background: #222;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }

@@ -26,6 +26,7 @@ A modern web dashboard for managing and interacting with Agora's Conversational 
   - Advanced VAD (Voice Activity Detection) settings
   - Turn detection and interruption handling
   - Custom parameter management
+  - Advanced TTS parameter support (see below)
 
 - **Broadcast & Control**
   - Send broadcast messages to agents
@@ -69,6 +70,7 @@ convo_ai/
    - Set the Agora channel name and RTC UID
    - Configure LLM settings (API key, URL, model)
    - Choose TTS vendor and voice settings
+   - (Optional) Set advanced TTS parameters for Microsoft or ElevenLabs. Only filled fields are sent in the config.
    - Configure VAD and turn detection settings
    - Add any custom parameters as needed
 
@@ -158,4 +160,28 @@ To modify or extend the application:
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Advanced TTS Options
+
+The playground supports advanced, optional configuration for both Microsoft and ElevenLabs TTS vendors. Only fields you fill out are sent in the agent configuration (empty/blank fields are omitted from the JSON).
+
+**Microsoft TTS Optional Parameters:**
+- `rate`: Speaking rate (0.5–2.0, optional)
+- `speed`: Alternate speaking rate (0.5–2.0, optional)
+- `volume`: Audio volume (0–100, optional)
+- `sample_rate`: Audio sampling rate in Hz (e.g., 24000, optional)
+
+**ElevenLabs TTS Optional Parameters:**
+- `sample_rate`: Audio sampling rate in Hz (e.g., 24000, optional)
+- `stability`: Voice stability (0–1, optional)
+- `similarity_boost`: Similarity boost (0–1, optional)
+- `style`: Voice style (0–1, optional)
+- `use_speaker_boost`: Enable speaker boost (boolean, optional)
+
+**UI Improvements:**
+- Tooltips for all TTS fields, including new options
+- TTS key field is vendor-specific and only shown for the selected vendor
+- Skip Patterns tooltip is now concise and positioned to avoid overflow
+
+**Note:** Only the parameters you fill out are sent to the API. Defaults are not sent unless explicitly set. 
