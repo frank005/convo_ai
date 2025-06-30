@@ -832,6 +832,38 @@
     </svg>
   </a>
 
+  <!-- Camera Configuration Modal -->
+  <div id="cameraConfigModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-gray-800 p-6 rounded-lg max-w-lg w-full mx-4">
+      <h3 class="text-xl font-bold mb-4">Camera Configuration</h3>
+      <p class="mb-4">Enabling image input will:</p>
+      <ul class="list-disc list-inside mb-4 text-gray-300">
+        <li>Publish your camera feed to the agent</li>
+        <li>Take periodic screenshots of the camera feed</li>
+        <li>Send these images to the agent for processing</li>
+        <li>Ask the agent to analyze the images and respond to the user</li>
+      </ul>
+      <div class="mb-4">
+        <label for="cameraSelect" class="block text-sm font-medium mb-2">Select Camera:</label>
+        <select id="cameraSelect" class="w-full p-2 rounded bg-gray-700 text-white">
+          <option value="">Loading cameras...</option>
+        </select>
+      </div>
+      <div class="flex items-center mb-4">
+        <input type="checkbox" id="cameraAcknowledge" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+        <label for="cameraAcknowledge" class="text-sm">I understand and agree to share my camera feed</label>
+      </div>
+      <div class="flex space-x-2">
+        <button id="saveCameraConfig" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:pointer-events-none">
+          Save & Enable
+        </button>
+        <button id="cancelCameraConfig" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- JavaScript Modules -->
   <script type="module">
     import { AgoraAPI } from './src/js/api.js';
@@ -1038,6 +1070,75 @@
       navigator.clipboard.writeText(text.trim());
       msg.classList.remove('hidden');
       setTimeout(() => msg.classList.add('hidden'), 1200);
+    });
+
+    // Camera configuration logic
+    const cameraConfigModal = document.getElementById('cameraConfigModal');
+    const cameraSelect = document.getElementById('cameraSelect');
+    const cameraAcknowledge = document.getElementById('cameraAcknowledge');
+    const saveCameraConfig = document.getElementById('saveCameraConfig');
+    const cancelCameraConfig = document.getElementById('cancelCameraConfig');
+    const inputImage = document.getElementById('inputImage');
+
+    // Function to populate camera devices
+    async function populateCameraDevices() {
+      try {
+        const devices = await AgoraRTC.getCameras();
+        cameraSelect.innerHTML = devices.map(device => 
+          `<option value="${device.deviceId}">${device.label}</option>`
+        ).join('');
+        
+        // If no devices found, show message
+        if (devices.length === 0) {
+          cameraSelect.innerHTML = '<option value="">No cameras found</option>';
+        }
+      } catch (error) {
+        console.error('Error getting camera devices:', error);
+        cameraSelect.innerHTML = '<option value="">Error loading cameras</option>';
+      }
+    }
+
+    // Show camera config modal when image input is checked
+    inputImage.addEventListener('change', async function(e) {
+      if (this.checked) {
+        cameraConfigModal.classList.remove('hidden');
+        // Request camera permissions first
+        try {
+          await AgoraRTC.getCameras();
+          await populateCameraDevices();
+        } catch (error) {
+          console.error('Error accessing cameras:', error);
+          cameraSelect.innerHTML = '<option value="">Camera access denied</option>';
+        }
+      }
+    });
+
+    // Handle camera acknowledgment checkbox
+    cameraAcknowledge.addEventListener('change', function() {
+      saveCameraConfig.disabled = !this.checked;
+    });
+
+    // Save camera configuration
+    saveCameraConfig.addEventListener('click', function() {
+      if (cameraAcknowledge.checked) {
+        cameraConfigModal.classList.add('hidden');
+        // Store selected camera ID
+        localStorage.setItem('selectedCameraId', cameraSelect.value);
+      }
+    });
+
+    // Cancel camera configuration
+    cancelCameraConfig.addEventListener('click', function() {
+      cameraConfigModal.classList.add('hidden');
+      inputImage.checked = false;
+    });
+
+    // Close modal when clicking outside
+    cameraConfigModal.addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.add('hidden');
+        inputImage.checked = false;
+      }
     });
   </script>
 </body>
