@@ -2,7 +2,27 @@
 export class AgoraAPI {
     constructor(appId) {
         this.appId = appId;
-        this.baseUrl = 'https://api.agora.io/api/conversational-ai-agent/v2';
+        // Get base URL from localStorage or use default
+        this.baseUrl = localStorage.getItem('agoraBaseUrl') || 'https://api.agora.io/api/conversational-ai-agent/v2';
+    }
+
+    // Method to update base URL
+    updateBaseUrl(newBaseUrl) {
+        this.baseUrl = newBaseUrl;
+        localStorage.setItem('agoraBaseUrl', newBaseUrl);
+    }
+
+    // Method to get current base URL
+    getBaseUrl() {
+        return this.baseUrl;
+    }
+
+    // Method to reset to default base URL
+    resetBaseUrl() {
+        const defaultUrl = 'https://api.agora.io/api/conversational-ai-agent/v2';
+        this.baseUrl = defaultUrl;
+        localStorage.removeItem('agoraBaseUrl');
+        return defaultUrl;
     }
 
     getAuthHeaders(customerId, customerSecret) {
@@ -20,11 +40,19 @@ export class AgoraAPI {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/join`;
 
+        // If agentConfig.properties.advanced_features.enable_rtm is true and agentConfig.properties.agent_rtm_uid is set,
+        // also add agent_rtm_uid to the top-level of the request body (for compatibility)
+        let body = { ...agentConfig };
+        const adv = agentConfig.properties && agentConfig.properties.advanced_features;
+        if (adv && adv.enable_rtm && agentConfig.properties.agent_rtm_uid) {
+            body.agent_rtm_uid = agentConfig.properties.agent_rtm_uid;
+        }
+
         try {
             const response = await fetch(url, {
                 method: "POST",
                 headers,
-                body: JSON.stringify(agentConfig)
+                body: JSON.stringify(body)
             });
             return await response.json();
         } catch (error) {

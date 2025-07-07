@@ -157,8 +157,6 @@
   transform: translateX(-50%) translateY(0);
 }
 
-
-
 /* Drawer styles - improved for placement and color */
 .drawer {
   position: absolute;
@@ -166,7 +164,7 @@
   left: 100%;
   margin-left: 16px;
   min-width: 340px;
-  max-width: 400px;
+  max-width: 420px;
   width: 100%;
   background: #1f2937;
   color: #fff;
@@ -180,7 +178,7 @@
   display: flex;
   flex-direction: column;
   overflow: visible;
-  max-height: calc(100vh - 2rem);
+  max-height: 84vh;
 }
 
 .drawer.hidden {
@@ -219,13 +217,19 @@
 
 .drawer-content {
   overflow-y: auto;
-  max-height: calc(70vh - 2rem);
+  max-height: 70vh;
   position: relative;
   z-index: 20003;
-  overflow: visible;
 }
 
+.drawer-scroll {
+  overflow-y: auto;
+  max-height: 70vh;
+}
+
+/* Only tooltips inside drawers use position: fixed to escape overflow */
 .drawer .tooltip {
+  position: fixed;
   z-index: 12000;
 }
 
@@ -256,6 +260,7 @@ select:focus, .drawer select:focus {
 }
 
 .tooltip {
+  display: none;
   position: absolute;
   left: 0;
   top: 100%;
@@ -268,32 +273,11 @@ select:focus, .drawer select:focus {
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   white-space: normal;
-}
-
-.tooltip::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: 100%;
-  transform: translateY(-50%);
-  border-width: 5px;
-  border-style: solid;
-  border-color: transparent rgba(26, 32, 44, 0.95) transparent transparent;
+  font-size: 14px;
 }
 
 .has-tooltip:hover .tooltip {
   display: block;
-}
-
-/* Ensure tooltips in drawers are visible */
-.drawer .has-tooltip .tooltip {
-  z-index: 25000;
-  pointer-events: none;
-}
-
-/* Remove any conflicting tooltip styles */
-.drawer .has-tooltip .tooltip {
-  pointer-events: none;
 }
 
 /* Drawer-specific tooltips */
@@ -318,17 +302,6 @@ select:focus, .drawer select:focus {
   top: 50%;
   transform: translateY(-50%);
   margin-left: 10px;
-}
-
-.tooltip::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: 100%;
-  transform: translateY(-50%);
-  border-width: 5px;
-  border-style: solid;
-  border-color: transparent rgba(26, 32, 44, 0.95) transparent transparent;
 }
 
 .has-tooltip:hover .tooltip {

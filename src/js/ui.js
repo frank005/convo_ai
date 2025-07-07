@@ -17,6 +17,10 @@ export class UI {
         this.checkCredentials();
         this.populateMicrosoftLangList();
         this.setupDrawerListeners();
+        // Initialize TTS vendor blocks visibility
+        this.handleTtsVendorChange();
+        // Update base URL indicator
+        this.updateBaseUrlIndicator();
     }
 
     setupEventListeners() {
@@ -35,6 +39,8 @@ export class UI {
         // Credentials modal
         document.getElementById("setCredsBtn").addEventListener("click", () => this.openCredsModal());
         document.getElementById("saveCredsBtn").addEventListener("click", () => this.saveCreds());
+        
+
 
         // Volume widget
         document.getElementById("toggleVolumeBtn").addEventListener("click", () => this.toggleVolumeWidget());
@@ -63,6 +69,7 @@ export class UI {
         document.getElementById("customerId").value = customerId || '';
         document.getElementById("customerSecret").value = customerSecret || '';
         document.getElementById("appId").value = appId || '';
+        
         document.getElementById("credsModal").classList.remove("hidden");
     }
 
@@ -78,11 +85,35 @@ export class UI {
 
         try {
             Utils.saveCredentials(customerId, customerSecret, appId);
+            
             document.getElementById("credsModal").classList.add("hidden");
             // Update the AgoraAPI instance with new appId
             this.agoraAPI = new AgoraAPI(appId);
+            // Update base URL indicator
+            this.updateBaseUrlIndicator();
         } catch (error) {
             alert(error.message);
+        }
+    }
+
+    updateBaseUrlIndicator() {
+        const indicator = document.getElementById("baseUrlIndicator");
+        const currentUrl = this.agoraAPI.getBaseUrl();
+        const defaultUrl = 'https://api.agora.io/api/conversational-ai-agent/v2';
+        
+        if (currentUrl !== defaultUrl) {
+            // Extract domain from URL for display
+            try {
+                const url = new URL(currentUrl);
+                const domain = url.hostname;
+                indicator.textContent = `🔗 ${domain}`;
+                indicator.classList.remove("hidden");
+            } catch (e) {
+                indicator.textContent = "🔗 Custom URL";
+                indicator.classList.remove("hidden");
+            }
+        } else {
+            indicator.classList.add("hidden");
         }
     }
 
@@ -132,6 +163,7 @@ export class UI {
 
     handleTtsVendorChange() {
         const vendor = document.getElementById("ttsVendor").value;
+        
         const msBlocks = [
             "microsoftRegionBlock", 
             "microsoftLangBlock", 
@@ -153,14 +185,51 @@ export class UI {
             "elevenLabsStyleBlock",
             "elevenLabsUseSpeakerBoostBlock"
         ];
+        const cartesiaBlocks = [
+            "cartesiaTtsKeyBlock",
+            "cartesiaModelBlock",
+            "cartesiaVoiceBlock"
+        ];
+        const openaiBlocks = [
+            "openaiTtsKeyBlock",
+            "openaiModelBlock",
+            "openaiVoiceBlock",
+            "openaiInstructionsBlock",
+            "openaiSpeedBlock"
+        ];
 
         msBlocks.forEach(block => {
-            document.getElementById(block).classList.toggle("hidden", vendor !== "microsoft");
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "microsoft");
+            }
         });
 
         elBlocks.forEach(block => {
-            document.getElementById(block).classList.toggle("hidden", vendor !== "elevenlabs");
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "elevenlabs");
+            }
         });
+
+        cartesiaBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "cartesia");
+            }
+        });
+
+        openaiBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "openai");
+            }
+        });
+
+        // Handle Microsoft language population when vendor changes to Microsoft
+        if (vendor === "microsoft") {
+            this.populateMicrosoftLangList();
+        }
     }
 
     handleElevenLabsVoiceChange() {
@@ -316,14 +385,34 @@ export class UI {
             const formData = Utils.getFormData();
             const customParams = Utils.getCustomParams();
             const config = Utils.buildAgentConfig(formData, customParams);
-            // Only include token, llm.system_messages, and llm.params (customParams)
-            const updatePayload = {
-                token: config.properties.token,
-                llm: {
-                    system_messages: config.properties.llm.system_messages,
-                    params: config.properties.llm.params
-                }
-            };
+            
+            // Check if MLLM is enabled
+            const enableMllm = document.getElementById('enableMllm').checked;
+            
+            let updatePayload;
+            if (enableMllm) {
+                // Include token and mllm params (using custom parameters)
+                updatePayload = {
+                    properties: {
+                        token: config.properties.token,
+                        mllm: {
+                            ...(Object.keys(customParams).length > 0 ? { params: customParams } : {}) // Only include params if customParams is not empty
+                        }
+                    }
+                };
+            } else {
+                // Include token, llm.system_messages, and llm.params (customParams)
+                updatePayload = {
+                    properties: {
+                        token: config.properties.token,
+                        llm: {
+                            system_messages: config.properties.llm.system_messages,
+                            params: config.properties.llm.params
+                        }
+                    }
+                };
+            }
+            
             const data = await this.agoraAPI.updateAgent(customerId, customerSecret, agentId, updatePayload);
             output.textContent = JSON.stringify(updatePayload, null, 2);
         } catch (error) {
@@ -378,38 +467,44 @@ export class UI {
 
     openDrawer(drawerId) {
         // Close all drawers first
-        ['llmDrawer', 'advDrawer', 'ttsDrawer'].forEach(id => {
-            document.getElementById(id).classList.add('hidden');
-            document.getElementById(id + 'Backdrop').classList.add('hidden');
+        ['llmDrawer', 'advDrawer', 'ttsDrawer', 'mllmDrawer'].forEach(id => {
+            const drawer = document.getElementById(id);
+            const backdrop = document.getElementById(id + 'Backdrop');
+            if (drawer) drawer.classList.add('hidden');
+            if (backdrop) backdrop.classList.add('hidden');
         });
         // Find the button that triggered this drawer
         let btnId = '';
         if (drawerId === 'llmDrawer') btnId = 'llmSettingsBtn';
         if (drawerId === 'advDrawer') btnId = 'advConfigBtn';
         if (drawerId === 'ttsDrawer') btnId = 'ttsSettingsBtn';
+        if (drawerId === 'mllmDrawer') btnId = 'mllmSettingsBtn';
         const btn = document.getElementById(btnId);
         const drawer = document.getElementById(drawerId);
-        // Position the drawer absolutely next to the button
+        // Use the same absolute positioning logic for all drawers
         const btnRect = btn.getBoundingClientRect();
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
-        drawer.style.top = (btnRect.top + scrollTop) + 'px';
-        drawer.style.left = (btnRect.right + 16) + 'px';
+        const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+        let top = (btnRect.top + scrollTop);
+        // Default: right of button
+        let left = btnRect.right + 16 + scrollLeft;
+        drawer.style.position = 'absolute';
+        drawer.style.top = top + 'px';
+        drawer.style.left = left + 'px';
+        drawer.style.transform = '';
+        drawer.style.marginLeft = '0';
+        // Clamp if overflowing viewport
+        setTimeout(() => {
+            const drawerRect = drawer.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            if (drawerRect.right > viewportWidth) {
+                // Shift left so it fits
+                left = viewportWidth - drawerRect.width - 24;
+                drawer.style.left = left + 'px';
+            }
+        }, 0);
         drawer.classList.remove('hidden');
         document.getElementById(drawerId + 'Backdrop').classList.remove('hidden');
-        // Special logic for TTS drawer
-        if (drawerId === 'ttsDrawer' && document.getElementById('ttsVendor').value === 'microsoft') {
-            const currentLang = document.getElementById('microsoftLangSelect').value;
-            const currentVoice = document.getElementById('microsoftVoiceSelect').value;
-            this.populateMicrosoftLangList();
-            // Restore the previously selected language and voice
-            if (currentLang) {
-                document.getElementById('microsoftLangSelect').value = currentLang;
-                this.handleMicrosoftLangChange();
-                if (currentVoice) {
-                    document.getElementById('microsoftVoiceSelect').value = currentVoice;
-                }
-            }
-        }
     }
 
     closeDrawer(drawerId) {
