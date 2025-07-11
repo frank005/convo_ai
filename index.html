@@ -1762,32 +1762,21 @@
     function populateMicrosoftAsrLangList() {
         const langSelect = document.getElementById('microsoftAsrLangSelect');
         langSelect.innerHTML = '';
-        
-        // Get unique language codes from the voices data
-        const languages = new Set();
         Object.keys(microsoftVoicesByLang).forEach(langName => {
-            // Extract language code from the first voice in each language group
             const voices = microsoftVoicesByLang[langName];
             if (voices && voices.length > 0) {
                 const shortName = voices[0].shortName;
-                // Extract language code (e.g., "en-US-AdriNeural" -> "en-US")
                 const langCode = shortName.split('-').slice(0, 2).join('-');
                 if (langCode) {
-                    languages.add(langCode);
+                    const option = document.createElement('option');
+                    option.value = langCode;
+                    option.textContent = langName + ' (' + langCode + ')'; // Show display name and code
+                    langSelect.appendChild(option);
                 }
             }
         });
-        
-        // Add options to dropdown
-        Array.from(languages).sort().forEach(langCode => {
-            const option = document.createElement('option');
-            option.value = langCode;
-            option.textContent = langCode;
-            langSelect.appendChild(option);
-        });
-        
         // Set default to en-US if available
-        if (languages.has('en-US')) {
+        if ([...langSelect.options].some(opt => opt.value === 'en-US')) {
             langSelect.value = 'en-US';
         }
     }
