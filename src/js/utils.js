@@ -325,9 +325,9 @@ export class Utils {
     static buildAsrConfig(formData) {
         const vendor = formData.asrVendor;
         
-        if (vendor === 'agora') {
+        if (vendor === 'ares') {
             return {
-                vendor: 'agora',
+                vendor: 'ares',
                 language: document.getElementById('agoraAsrLang').value
             };
         } else if (vendor === 'microsoft') {
@@ -351,9 +351,9 @@ export class Utils {
             };
         }
         
-        // Default to Agora if vendor is not recognized
+        // Default to ARES if vendor is not recognized
         return {
-            vendor: 'agora',
+            vendor: 'ares',
             language: document.getElementById('agoraAsrLang').value
         };
     }

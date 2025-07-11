@@ -883,7 +883,7 @@
                 id="asrVendor"
                 class="w-full p-2 rounded bg-gray-700 text-white mb-2"
               >
-                <option value="agora">Agora</option>
+                <option value="ares">ARES (Default)</option>
                 <option value="microsoft">Microsoft</option>
                 <option value="deepgram">Deepgram</option>
               </select>
@@ -896,12 +896,38 @@
                 id="agoraAsrLang"
                 class="w-full p-2 rounded bg-gray-700 text-white"
               >
-                <option value="en-US">en-US (Default)</option>
-                <option value="es-ES">es-ES</option>
-                <option value="ja-JP">ja-JP</option>
-                <option value="ko-KR">ko-KR</option>
-                <option value="ar-AE">ar-AE</option>
-                <option value="hi-IN">hi-IN</option>
+                <option value="ar-EG">Arabic (Egypt) (ar-EG)</option>
+                <option value="ar-JO">Arabic (Jordan) (ar-JO)</option>
+                <option value="ar-SA">Arabic (Saudi Arabia) (ar-SA)</option>
+                <option value="ar-AE">Arabic (UAE) (ar-AE)</option>
+                <option value="bn-IN">Bengali (India) (bn-IN)</option>
+                <option value="zh-CN">Chinese (Mainland) (zh-CN)</option>
+                <option value="zh-HK">Chinese (Hong Kong) (zh-HK)</option>
+                <option value="zh-TW">Chinese (Taiwan) (zh-TW)</option>
+                <option value="nl-NL">Dutch (Netherlands) (nl-NL)</option>
+                <option value="en-IN">English (India) (en-IN)</option>
+                <option value="en-US" selected>English (US) (en-US)</option>
+                <option value="fil-PH">Filipino (Philippines) (fil-PH)</option>
+                <option value="fr-FR">French (France) (fr-FR)</option>
+                <option value="de-DE">German (Germany) (de-DE)</option>
+                <option value="gu-IN">Gujarati (India) (gu-IN)</option>
+                <option value="he-IL">Hebrew (Israel) (he-IL)</option>
+                <option value="hi-IN">Hindi (India) (hi-IN)</option>
+                <option value="id-ID">Indonesian (Indonesia) (id-ID)</option>
+                <option value="it-IT">Italian (Italy) (it-IT)</option>
+                <option value="ja-JP">Japanese (Japan) (ja-JP)</option>
+                <option value="kn-IN">Kannada (India) (kn-IN)</option>
+                <option value="ko-KR">Korean (Korea) (ko-KR)</option>
+                <option value="ms-MY">Malay (Malaysia) (ms-MY)</option>
+                <option value="fa-IR">Persian (Iran) (fa-IR)</option>
+                <option value="pt-PT">Portuguese (Portugal) (pt-PT)</option>
+                <option value="ru-RU">Russian (Russia) (ru-RU)</option>
+                <option value="es-ES">Spanish (Spain) (es-ES)</option>
+                <option value="ta-IN">Tamil (India) (ta-IN)</option>
+                <option value="te-IN">Telugu (India) (te-IN)</option>
+                <option value="th-TH">Thai (Thailand) (th-TH)</option>
+                <option value="tr-TR">Turkish (Turkey) (tr-TR)</option>
+                <option value="vi-VN">Vietnamese (Vietnam) (vi-VN)</option>
               </select>
               <div class="tooltip">Select the language for Agora Automatic Speech Recognition (ASR).</div>
             </div>
@@ -1719,7 +1745,7 @@
         deepgramAsrConfig.classList.add('hidden');
         
         // Show the selected config section
-        if (selectedVendor === 'agora') {
+        if (selectedVendor === 'ares') {
             agoraAsrConfig.classList.remove('hidden');
         } else if (selectedVendor === 'microsoft') {
             microsoftAsrConfig.classList.remove('hidden');
