@@ -506,7 +506,7 @@ export class Utils {
                 } : {}),
                 //add chorus scenario for websdk fix for now
                 parameters: {
-                    audio_scenario: chorus
+                    audio_scenario: "chorus"
                 }
             }
         };
