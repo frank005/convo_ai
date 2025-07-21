@@ -503,7 +503,11 @@ export class Utils {
                         output_modalities: ["text", "audio"], // MLLM always outputs text and audio
                         ...(Object.keys(customParams).length > 0 ? { params: customParams } : {}) // Only include params if customParams is not empty
                     }
-                } : {})
+                } : {}),
+                //add chorus scenario for websdk fix for now
+                parameters: {
+                    audio_scenario: chorus
+                }
             }
         };
 
