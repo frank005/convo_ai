@@ -306,6 +306,15 @@ The application integrates with Agora's Conversational AI API endpoints:
   - `speed`: Speaking rate (0.25–4.0)
 - **Features:** High-quality neural synthesis, multiple voice options
 
+### Hume AI TTS
+- **Required Fields:** API Key, Voice ID
+- **Default Values:** Provider "HUME_AI", Speed 1.0, Trailing Silence 0.35
+- **Optional Parameters:**
+  - `provider`: Provider name (default: "HUME_AI")
+  - `speed`: Speaking rate (0.1–5.0)
+  - `trailing_silence`: Trailing silence duration in seconds (0–2.0)
+- **Features:** High-quality voice synthesis with customizable speed and silence control
+
 ## ASR Vendor Support
 
 ### Agora ASR

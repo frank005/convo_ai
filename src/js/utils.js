@@ -579,6 +579,18 @@ export class Utils {
                         ...(skipPatterns ? { skipPatterns } : {})
                     }
                 };
+            } else if (formData.vendor === "humeai") {
+                config.properties.tts = {
+                    vendor: "humeai",
+                    params: {
+                        key: document.getElementById("humeaiTtsKey").value,
+                        voice_id: document.getElementById("humeaiVoiceId").value,
+                        provider: document.getElementById("humeaiProvider").value || "HUME_AI",
+                        ...(document.getElementById("humeaiSpeed")?.value ? { speed: parseFloat(document.getElementById("humeaiSpeed").value) } : {}),
+                        ...(document.getElementById("humeaiTrailingSilence")?.value ? { trailing_silence: parseFloat(document.getElementById("humeaiTrailingSilence").value) } : {}),
+                        ...(skipPatterns ? { skipPatterns } : {})
+                    }
+                };
             }
         }
 

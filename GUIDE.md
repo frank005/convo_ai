@@ -246,6 +246,11 @@ Agora ConversationalAI Backend v1.6 adds two new TTS vendors to the existing Mic
 #### OpenAI TTS
 - **High-quality neural voice synthesis** with multiple voice options
 - **Voice options**: coral, alloy, echo, fable, onyx, nova, shimmer
+
+#### Hume AI TTS
+- **High-quality voice synthesis** with customizable speed and silence control
+- **Features**: Configurable speaking rate and trailing silence duration
+- **Provider**: HUME_AI (default)
 - **Required fields**: API Key, Model (default: "gpt-4o-mini-tts"), Voice (default: "coral")
 - **Optional parameters**: Instructions for voice control, Speed (0.25-4.0)
 

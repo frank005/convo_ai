@@ -268,8 +268,9 @@
                 >
                   <option value="microsoft">Microsoft</option>
                   <option value="elevenlabs">ElevenLabs</option>
-                  <option value="cartesia">Cartesia</option>
-                  <option value="openai">OpenAI</option>
+                  <option value="cartesia">Cartesia (Beta)</option>
+                  <option value="openai">OpenAI (Beta)</option>
+                  <option value="humeai">Hume AI (Beta)</option>
                 </select>
                 <div class="tooltip">Select the Text-to-Speech vendor to use for voice output.</div>
               </div>
@@ -549,6 +550,57 @@
                   value="1.0"
                 />
                 <div class="tooltip">Speaking rate of the text. Range: 0.25-4.0 times the original audio speed.</div>
+              </div>
+              <div id="humeaiTtsKeyBlock" class="has-tooltip relative hidden">
+                <input
+                  id="humeaiTtsKey"
+                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                  placeholder="Hume AI API Key (Required)"
+                />
+                <div class="tooltip">API key for the Hume AI TTS service.</div>
+              </div>
+              <div id="humeaiVoiceIdBlock" class="has-tooltip relative hidden">
+                <input
+                  id="humeaiVoiceId"
+                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                  placeholder="Hume AI Voice ID (Required)"
+                />
+                <div class="tooltip">Enter the Hume AI voice ID for speech synthesis.</div>
+              </div>
+              <div id="humeaiProviderBlock" class="has-tooltip relative hidden">
+                <input
+                  id="humeaiProvider"
+                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                  placeholder="Provider (Optional)"
+                  value="HUME_AI"
+                />
+                <div class="tooltip">Provider for Hume AI TTS service. Default: HUME_AI</div>
+              </div>
+              <div id="humeaiSpeedBlock" class="has-tooltip relative hidden">
+                <input
+                  id="humeaiSpeed"
+                  type="number"
+                  step="0.1"
+                  min="0.1"
+                  max="5.0"
+                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                  placeholder="Speed (Optional, 0.1-5.0)"
+                  value="1.0"
+                />
+                <div class="tooltip">Speaking rate of the text. Range: 0.1-5.0 times the original audio speed.</div>
+              </div>
+              <div id="humeaiTrailingSilenceBlock" class="has-tooltip relative hidden">
+                <input
+                  id="humeaiTrailingSilence"
+                  type="number"
+                  step="0.05"
+                  min="0"
+                  max="2.0"
+                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                  placeholder="Trailing Silence (Optional, 0-2.0)"
+                  value="0.35"
+                />
+                <div class="tooltip">Trailing silence duration in seconds. Range: 0-2.0 seconds.</div>
               </div>
               <div class="has-tooltip relative">
                 <label for="skipPatterns" class="block text-sm mb-1">Skip Patterns (Optional)</label>

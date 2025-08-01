@@ -197,6 +197,13 @@ export class UI {
             "openaiInstructionsBlock",
             "openaiSpeedBlock"
         ];
+        const humeaiBlocks = [
+            "humeaiTtsKeyBlock",
+            "humeaiVoiceIdBlock",
+            "humeaiProviderBlock",
+            "humeaiSpeedBlock",
+            "humeaiTrailingSilenceBlock"
+        ];
 
         msBlocks.forEach(block => {
             const element = document.getElementById(block);
@@ -223,6 +230,13 @@ export class UI {
             const element = document.getElementById(block);
             if (element) {
                 element.classList.toggle("hidden", vendor !== "openai");
+            }
+        });
+
+        humeaiBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "humeai");
             }
         });
 
