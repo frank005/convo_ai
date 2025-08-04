@@ -91,6 +91,17 @@ export class Utils {
             ...(document.getElementById("outputAudio").checked ? ["audio"] : [])
         ];
 
+        // Get AI Avatar settings
+        const enableAvatar = document.getElementById("enableAvatar").checked;
+        const avatarVendor = document.getElementById("avatarVendor").value;
+        const avatarApiKey = document.getElementById("avatarApiKey").value.trim();
+        const avatarId = document.getElementById("avatarId").value.trim();
+        const avatarRtcUid = document.getElementById("avatarRtcUid").value.trim();
+        const avatarRtcToken = document.getElementById("avatarRtcToken").value.trim();
+        const heygenQuality = document.getElementById("heygenQuality").value;
+        const heygenDisableIdleTimeout = document.getElementById("heygenDisableIdleTimeout").checked;
+        const heygenActivityIdleTimeout = document.getElementById("heygenActivityIdleTimeout").value || null;
+
         return {
             uniqueName: document.getElementById("uniqueName").value.trim(),
             channel: document.getElementById("agoraChannelName").value.trim(),
@@ -154,7 +165,17 @@ export class Utils {
             transcriptEnableWordsSet: transcriptEnableWordsSet,
             transcriptEnableWords: transcriptEnableWords,
             transcriptRedundantSet: transcriptRedundantSet,
-            transcriptRedundant: transcriptRedundant
+            transcriptRedundant: transcriptRedundant,
+            // AI Avatar settings
+            enableAvatar: enableAvatar,
+            avatarVendor: avatarVendor,
+            avatarApiKey: avatarApiKey,
+            avatarId: avatarId,
+            avatarRtcUid: avatarRtcUid,
+            avatarRtcToken: avatarRtcToken,
+            heygenQuality: heygenQuality,
+            heygenDisableIdleTimeout: heygenDisableIdleTimeout,
+            heygenActivityIdleTimeout: heygenActivityIdleTimeout
         };
     }
 
@@ -173,7 +194,42 @@ export class Utils {
             if (!data.mllmApiKey) {
                 throw new Error('MLLM API Key is required when MLLM is enabled');
             }
+            // AI Avatar is not compatible with MLLM
+            if (data.enableAvatar) {
+                throw new Error('AI Avatar is not compatible with MLLM. Please disable one of them.');
+            }
         } else {
+            // Validate AI Avatar configuration if enabled
+            if (data.enableAvatar) {
+                if (!data.avatarApiKey) {
+                    throw new Error('Avatar API Key is required when AI Avatar is enabled');
+                }
+                if (!data.avatarId) {
+                    throw new Error('Avatar ID is required when AI Avatar is enabled');
+                }
+                if (!data.avatarRtcUid) {
+                    throw new Error('Avatar RTC UID is required when AI Avatar is enabled');
+                }
+                // Avatar RTC Token is optional - no validation needed since it's already trimmed
+                
+                // AI Avatar requires TTS to be enabled
+                const ttsVendor = data.vendor;
+                if (!ttsVendor) {
+                    throw new Error('TTS vendor is required when AI Avatar is enabled');
+                }
+                
+                // AI Avatar requires client UID to be set
+                const clientRtcUid = document.getElementById('clientRtcUid').value.trim();
+                if (!clientRtcUid) {
+                    throw new Error('Client RTC UID is required when AI Avatar is enabled');
+                }
+                
+                // AI Avatar requires remote RTC UIDs to not be "*"
+                const remoteRtcUids = data.remoteRtcUids;
+                if (remoteRtcUids === '*' || remoteRtcUids === '') {
+                    throw new Error('Remote RTC UIDs cannot be "*" when AI Avatar is enabled. Please set specific UIDs.');
+                }
+            }
             // Validate LLM configuration if MLLM is not enabled
             if (!data.llmApiKey) {
                 throw new Error('LLM API Key is required');
@@ -504,12 +560,46 @@ export class Utils {
                         ...(Object.keys(customParams).length > 0 ? { params: customParams } : {}) // Only include params if customParams is not empty
                     }
                 } : {}),
-                //add chorus scenario for websdk fix for now
+                        //add chorus scenario for websdk fix for now
                 parameters: {
                     audio_scenario: "chorus"
                 }
             }
         };
+
+        // Add AI Avatar configuration if enabled
+        if (formData.enableAvatar) {
+            if (!formData.avatarApiKey) {
+                throw new Error('Avatar API Key is required when AI Avatar is enabled');
+            }
+            if (!formData.avatarId) {
+                throw new Error('Avatar ID is required when AI Avatar is enabled');
+            }
+            if (!formData.avatarRtcUid) {
+                throw new Error('Avatar RTC UID is required when AI Avatar is enabled');
+            }
+            // Avatar RTC Token is optional - no validation needed
+
+            config.properties.avatar = {
+                vendor: formData.avatarVendor,
+                enable: true,
+                params: {
+                    api_key: formData.avatarApiKey,
+                    agora_uid: formData.avatarRtcUid,
+                    avatar_id: formData.avatarId,
+                    ...(formData.avatarRtcToken && formData.avatarRtcToken !== '' ? { agora_token: formData.avatarRtcToken } : {})
+                }
+            };
+
+            // Add HeyGen specific parameters
+            if (formData.avatarVendor === 'heygen') {
+                config.properties.avatar.params.quality = formData.heygenQuality;
+                config.properties.avatar.params.disable_idle_timeout = formData.heygenDisableIdleTimeout;
+                if (formData.heygenActivityIdleTimeout) {
+                    config.properties.avatar.params.activity_idle_timeout = parseInt(formData.heygenActivityIdleTimeout, 10);
+                }
+            }
+        }
 
         // Add TTS configuration based on vendor (only if MLLM is not enabled)
         if (!formData.enableMllm) {

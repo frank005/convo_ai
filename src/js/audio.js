@@ -75,7 +75,65 @@ export class MediaProcessor {
                 await this.setupAudioProcessing(remoteAudioTrack);
             } else if (mediaType === "video") {
                 const remoteVideoTrack = user.videoTrack;
-                remoteVideoTrack.play();
+                // Check if AI Avatar is enabled
+                const enableAvatar = document.getElementById('enableAvatar').checked;
+                if (enableAvatar) {
+                    // Hide placeholder and show video element
+                    const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+                    const avatarVideo = document.getElementById('avatarVideo');
+                    
+                    // Hide placeholder
+                    avatarPlaceholder.style.display = 'none';
+                    avatarPlaceholder.innerHTML = '';
+                    
+                    // Show and configure video element
+                    avatarVideo.style.display = 'block';
+                    avatarVideo.style.background = '';
+                    avatarVideo.style.alignItems = '';
+                    avatarVideo.style.justifyContent = '';
+                    
+                    // Play video in the video element
+                    remoteVideoTrack.play(avatarVideo);
+                } else {
+                    // Play video normally (for image input)
+                    remoteVideoTrack.play();
+                }
+            }
+        });
+
+        this.client.on("user-unpublished", async (user, mediaType) => {
+            console.log(`User ${user.uid} unpublished ${mediaType}`);
+            if (mediaType === "video") {
+                // Reset avatar display if AI Avatar is enabled
+                const enableAvatar = document.getElementById('enableAvatar');
+                if (enableAvatar && enableAvatar.checked) {
+                    const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+                    if (avatarPlaceholder) {
+                        avatarPlaceholder.style.display = 'flex';
+                        avatarPlaceholder.innerHTML = `
+                          <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Background circle -->
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="#00ffff" stroke-width="2" opacity="0.3"/>
+                            <!-- AI Icon -->
+                            <g transform="translate(60, 45)">
+                              <!-- Brain/Neural network representation -->
+                              <circle cx="0" cy="0" r="8" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+                              <circle cx="-12" cy="-8" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+                              <circle cx="12" cy="-8" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+                              <circle cx="-8" cy="12" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+                              <circle cx="8" cy="12" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+                              <!-- Connection lines -->
+                              <line x1="-12" y1="-8" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+                              <line x1="12" y1="-8" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+                              <line x1="-8" y1="12" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+                              <line x1="8" y1="12" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+                            </g>
+                            <!-- Text -->
+                            <text x="60" y="95" text-anchor="middle" fill="#00ffff" font-family="Arial, sans-serif" font-size="12" font-weight="bold">AI AVATAR</text>
+                          </svg>
+                        `;
+                    }
+                }
             }
         });
 
@@ -138,5 +196,45 @@ export class MediaProcessor {
         this.dataArray = null;
         this.localTracks.audioTrack = null;
         this.localTracks.videoTrack = null;
+
+        // Reset avatar display
+        const avatarImage = document.getElementById('avatarImage');
+        const avatarVideo = document.getElementById('avatarVideo');
+        const enableAvatar = document.getElementById('enableAvatar');
+        
+        if (enableAvatar && enableAvatar.checked) {
+            // Show loading state for AI Avatar
+            avatarImage.style.display = 'none';
+            avatarVideo.style.display = 'none';
+            const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+            avatarPlaceholder.style.display = 'flex';
+            avatarPlaceholder.innerHTML = `
+              <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                <!-- Background circle -->
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#00ffff" stroke-width="2" opacity="0.3"/>
+                <!-- AI Icon -->
+                <g transform="translate(60, 45)">
+                  <!-- Brain/Neural network representation -->
+                  <circle cx="0" cy="0" r="8" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+                  <circle cx="-12" cy="-8" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+                  <circle cx="12" cy="-8" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+                  <circle cx="-8" cy="12" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+                  <circle cx="8" cy="12" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+                  <!-- Connection lines -->
+                  <line x1="-12" y1="-8" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+                  <line x1="12" y1="-8" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+                  <line x1="-8" y1="12" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+                  <line x1="8" y1="12" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+                </g>
+                <!-- Text -->
+                <text x="60" y="95" text-anchor="middle" fill="#00ffff" font-family="Arial, sans-serif" font-size="12" font-weight="bold">AI AVATAR</text>
+              </svg>
+            `;
+        } else {
+            // Show image
+            avatarImage.style.display = 'block';
+            avatarVideo.style.display = 'none';
+            avatarVideo.innerHTML = '';
+        }
     }
 } 

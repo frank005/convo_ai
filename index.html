@@ -31,7 +31,9 @@
       <h2>AI Agent</h2>
       <div class="ai-volume-indicator">
         <div class="ai-avatar">
-          <img src="https://mouseattack.s3.us-west-2.amazonaws.com/gi2.jpg" alt="AI Avatar">
+          <img id="avatarImage" src="https://mouseattack.s3.us-west-2.amazonaws.com/gi2.jpg" alt="AI Avatar">
+          <video id="avatarVideo" class="avatar-video" autoplay muted playsinline style="display: none;"></video>
+          <div id="avatarPlaceholder" class="avatar-placeholder" style="display: none;"></div>
           <div class="volume-ring"></div>
         </div>
         <canvas id="audio-wave"></canvas>
@@ -48,6 +50,9 @@
           class="mt-4 px-3 py-2 w-full rounded bg-gray-700 text-white"
           placeholder="Client UID (if token required)"
         />
+        <div id="clientUidNote" class="text-xs text-cyan-400 mt-1 hidden">
+          Required when AI Avatar is enabled
+        </div>
       </div>
       <input
         id="clientRtcToken"
@@ -156,6 +161,9 @@
               value="*"
             />
             <div class="tooltip">A list of user IDs that the agent subscribes to. Use * to subscribe to all users, or comma-separated UIDs like "1001,1002"</div>
+            <div id="avatarUidNote" class="text-xs text-cyan-400 mt-1 hidden">
+              AI Avatar enabled: Remote UIDs set to Client UID for agent configuration
+            </div>
           </div>
           
           <div class="has-tooltip relative">
@@ -383,7 +391,7 @@
                   max="48000"
                   class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
                   placeholder="Sample Rate (Optional, Hz)"
-                />
+                  value = "24000"/>
                 <div class="tooltip">Audio sampling rate in Hz. Default: 24000</div>
               </div>
               <div id="elevenLabsModelBlock" class="has-tooltip relative hidden">
@@ -429,6 +437,7 @@
                   max="48000"
                   class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
                   placeholder="Sample Rate (Optional,Hz)"
+                  value = "24000"
                 />
                 <div class="tooltip">Audio sampling rate in Hz. Default: 24000</div>
               </div>
@@ -618,6 +627,99 @@
                 </select>
                 <div class="tooltip">
                   Skips bracketed content in LLM responses for more natural speech. Select 'None' to disable. If multiple types are selected, only the outermost brackets are processed.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Avatar Settings Drawer Trigger -->
+          <button id="avatarSettingsBtn" class="drawer-btn flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500 relative">
+            <span class="flex items-center">
+              <input type="checkbox" id="enableAvatar" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+              AI Avatar Settings
+            </span>
+            <span class="text-sm">Avatar Configuration</span>
+          </button>
+          <!-- AI Avatar Drawer -->
+          <div id="avatarDrawerBackdrop" class="drawer-backdrop hidden"></div>
+          <div id="avatarDrawer" class="drawer hidden">
+            <button class="drawer-close absolute top-2 right-2" data-drawer="avatarDrawer">&times;</button>
+            <div class="drawer-content space-y-4">
+              <div class="has-tooltip relative">
+                <select
+                  id="avatarVendor"
+                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                >
+                  <option value="akool">Akool</option>
+                  <option value="heygen">HeyGen</option>
+                </select>
+                <div class="tooltip">Select the AI Avatar vendor to use for video generation.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="avatarApiKey"
+                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                  placeholder="Avatar API Key (Required)"
+                />
+                <div class="tooltip">API key for the AI Avatar service.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="avatarId"
+                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                  placeholder="Avatar ID (Required)"
+                />
+                <div class="tooltip">The unique identifier for the avatar to use.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="avatarRtcUid"
+                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                  placeholder="Avatar RTC UID (Required)"
+                />
+                <div class="tooltip">The RTC UID for the avatar in the channel.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="avatarRtcToken"
+                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                  placeholder="Avatar RTC Token (Optional)"
+                />
+                <div class="tooltip">The RTC token for the avatar to join the channel. Optional if your app doesn't require tokens.</div>
+              </div>
+              <!-- HeyGen specific settings -->
+              <div id="heygenSettings" class="hidden space-y-2">
+                <div class="has-tooltip relative">
+                  <select
+                    id="heygenQuality"
+                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                  >
+                    <option value="medium">Medium (480p)</option>
+                    <option value="high">High (720p)</option>
+                    <option value="low">Low (360p)</option>
+                  </select>
+                  <div class="tooltip">Video quality setting for HeyGen avatar.</div>
+                </div>
+                <div class="has-tooltip relative">
+                  <div class="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="heygenDisableIdleTimeout"
+                      class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded"
+                    />
+                    <label for="heygenDisableIdleTimeout" class="text-sm">Disable Idle Timeout</label>
+                  </div>
+                  <div class="tooltip">Whether to disable idle timeout for HeyGen avatar.</div>
+                </div>
+                <div class="has-tooltip relative">
+                  <input
+                    id="heygenActivityIdleTimeout"
+                    type="number"
+                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                    placeholder="Activity Idle Timeout (seconds)"
+                    value="60"
+                  />
+                  <div class="tooltip">Activity idle timeout in seconds for HeyGen avatar.</div>
                 </div>
               </div>
             </div>
@@ -1910,6 +2012,143 @@
 
     // v1.6 New Features Logic
     
+    // AI Avatar Settings drawer logic
+    const avatarSettingsBtn = document.getElementById('avatarSettingsBtn');
+    const avatarDrawer = document.getElementById('avatarDrawer');
+    const avatarDrawerBackdrop = document.getElementById('avatarDrawerBackdrop');
+    const enableAvatar = document.getElementById('enableAvatar');
+    const avatarVendor = document.getElementById('avatarVendor');
+    const heygenSettings = document.getElementById('heygenSettings');
+    
+    // AI Avatar drawer functionality
+    avatarSettingsBtn.addEventListener('click', function(e) {
+      if (e.target.type === 'checkbox') return;
+      // Use the same drawer logic as the others
+      if (window.ui && typeof window.ui.openDrawer === 'function') {
+        window.ui.openDrawer('avatarDrawer');
+      }
+    });
+    
+    // Close AI Avatar drawer
+    document.querySelector('[data-drawer="avatarDrawer"]').addEventListener('click', function() {
+      avatarDrawer.classList.add('hidden');
+      avatarDrawerBackdrop.classList.add('hidden');
+    });
+    
+    avatarDrawerBackdrop.addEventListener('click', function() {
+      avatarDrawer.classList.add('hidden');
+      avatarDrawerBackdrop.classList.add('hidden');
+    });
+
+    // Handle avatar vendor change
+    avatarVendor.addEventListener('change', function() {
+      if (this.value === 'heygen') {
+        heygenSettings.classList.remove('hidden');
+      } else {
+        heygenSettings.classList.add('hidden');
+      }
+    });
+
+    // Handle UID changes when AI Avatar is enabled
+    function updateRemoteRtcUids() {
+      const enableAvatar = document.getElementById('enableAvatar');
+      if (enableAvatar && enableAvatar.checked) {
+        const clientRtcUid = document.getElementById('clientRtcUid');
+        const remoteRtcUids = document.getElementById('remoteRtcUids');
+        
+        const clientUid = clientRtcUid.value.trim() || '1001';
+        remoteRtcUids.value = clientUid;
+        
+        // Show note about automatic UID setting
+        document.getElementById('avatarUidNote').classList.remove('hidden');
+      }
+    }
+
+    // Add event listener for client UID changes
+    document.getElementById('clientRtcUid').addEventListener('input', updateRemoteRtcUids);
+
+    // Handle AI Avatar enable/disable
+    enableAvatar.addEventListener('change', function() {
+      const avatarImage = document.getElementById('avatarImage');
+      const avatarVideo = document.getElementById('avatarVideo');
+      const clientRtcUid = document.getElementById('clientRtcUid');
+      const remoteRtcUids = document.getElementById('remoteRtcUids');
+      const agoraRtcUid = document.getElementById('agoraRtcUid');
+      const avatarRtcUid = document.getElementById('avatarRtcUid');
+      
+      if (this.checked) {
+        // Show placeholder, hide image when AI Avatar is enabled
+        avatarImage.style.display = 'none';
+        avatarVideo.style.display = 'none';
+        const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+        avatarPlaceholder.style.display = 'flex';
+        avatarPlaceholder.innerHTML = `
+          <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+            <!-- Background circle -->
+            <circle cx="60" cy="60" r="50" fill="none" stroke="#00ffff" stroke-width="2" opacity="0.3"/>
+            <!-- AI Icon -->
+            <g transform="translate(60, 45)">
+              <!-- Brain/Neural network representation -->
+              <circle cx="0" cy="0" r="8" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+              <circle cx="-12" cy="-8" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+              <circle cx="12" cy="-8" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+              <circle cx="-8" cy="12" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+              <circle cx="8" cy="12" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+              <!-- Connection lines -->
+              <line x1="-12" y1="-8" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+              <line x1="12" y1="-8" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+              <line x1="-8" y1="12" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+              <line x1="8" y1="12" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+            </g>
+            <!-- Text -->
+            <text x="60" y="95" text-anchor="middle" fill="#00ffff" font-family="Arial, sans-serif" font-size="12" font-weight="bold">AI AVATAR</text>
+          </svg>
+        `;
+        console.log('AI Avatar enabled - SVG should be visible');
+        
+        // Disable MLLM when AI Avatar is enabled
+        enableMllm.checked = false;
+        enableMllm.disabled = true;
+        mllmSettingsBtn.disabled = true;
+        mllmSettingsBtn.classList.add('opacity-50');
+        
+        // Set required UIDs for AI Avatar
+        if (!clientRtcUid.value.trim()) {
+          clientRtcUid.value = '1001'; // Default client UID
+        }
+        
+        // Show note about client UID requirement
+        document.getElementById('clientUidNote').classList.remove('hidden');
+        
+        // Set remote RTC UIDs to include only the client UID (for agent configuration)
+        const clientUid = clientRtcUid.value.trim() || '1001';
+        remoteRtcUids.value = clientUid;
+        
+        // Show note about automatic UID setting
+        document.getElementById('avatarUidNote').classList.remove('hidden');
+        
+      } else {
+        // Show image, hide placeholder when AI Avatar is disabled
+        avatarImage.style.display = 'block';
+        avatarVideo.style.display = 'none';
+        const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+        avatarPlaceholder.style.display = 'none';
+        avatarPlaceholder.innerHTML = '';
+        
+        // Re-enable MLLM when AI Avatar is disabled
+        enableMllm.disabled = false;
+        mllmSettingsBtn.disabled = false;
+        mllmSettingsBtn.classList.remove('opacity-50');
+        
+        // Reset remote RTC UIDs to default
+        remoteRtcUids.value = '*';
+        
+        // Hide note about automatic UID setting
+        document.getElementById('avatarUidNote').classList.add('hidden');
+        document.getElementById('clientUidNote').classList.add('hidden');
+      }
+    });
+
     // MLLM Settings drawer logic
     const mllmSettingsBtn = document.getElementById('mllmSettingsBtn');
     const mllmDrawer = document.getElementById('mllmDrawer');
@@ -1948,6 +2187,7 @@
       const llmSettingsBtn = document.getElementById('llmSettingsBtn');
       const ttsSettingsBtn = document.getElementById('ttsSettingsBtn');
       const asrConfigBox = document.getElementById('asrConfigBox');
+      const avatarSettingsBtn = document.getElementById('avatarSettingsBtn');
       const inputText = document.getElementById('inputText');
       const inputAudio = document.getElementById('inputAudio');
       const inputImage = document.getElementById('inputImage');
@@ -1973,9 +2213,20 @@
         inputModalities.style.pointerEvents = 'auto';
         outputModalities.style.pointerEvents = 'none';
         
-        // Disable AIVAD when MLLM is enabled
+        // Disable AIVAD and AI Avatar when MLLM is enabled
         document.getElementById('enableAivad').checked = false;
         document.getElementById('enableAivad').disabled = true;
+        enableAvatar.checked = false;
+        enableAvatar.disabled = true;
+        avatarSettingsBtn.disabled = true;
+        avatarSettingsBtn.classList.add('opacity-50');
+        
+        // Update avatar display to show image
+        const avatarImage = document.getElementById('avatarImage');
+        const avatarVideo = document.getElementById('avatarVideo');
+        avatarImage.style.display = 'block';
+        avatarVideo.style.display = 'none';
+        avatarVideo.innerHTML = '';
       } else {
         // Re-enable LLM, TTS, ASR sections
         llmSettingsBtn.disabled = false;
@@ -1995,8 +2246,18 @@
         inputModalities.style.pointerEvents = 'auto';
         outputModalities.style.pointerEvents = 'auto';
         
-        // Re-enable AIVAD
+        // Re-enable AIVAD and AI Avatar
         document.getElementById('enableAivad').disabled = false;
+        enableAvatar.disabled = false;
+        avatarSettingsBtn.disabled = false;
+        avatarSettingsBtn.classList.remove('opacity-50');
+        
+        // Update avatar display to show image (since AI Avatar is disabled by default)
+        const avatarImage = document.getElementById('avatarImage');
+        const avatarVideo = document.getElementById('avatarVideo');
+        avatarImage.style.display = 'block';
+        avatarVideo.style.display = 'none';
+        avatarVideo.innerHTML = '';
         // Restore previous output modalities (do this last)
         outputText.checked = prevOutputModalities.text;
         outputAudio.checked = prevOutputModalities.audio;

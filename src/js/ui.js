@@ -139,11 +139,22 @@ export class UI {
         const channelName = document.getElementById("agoraChannelName").value.trim();
         const clientRtcUid = document.getElementById("clientRtcUid").value.trim();
         const clientRtcToken = document.getElementById("clientRtcToken").value.trim();
+        const enableStringUid = document.getElementById("enableStringUid").checked;
 
         try {
             // Convert empty string to null for token
             const token = clientRtcToken || null;
-            await this.mediaProcessor.joinChannel(appId, channelName, token, clientRtcUid);
+            
+            // Convert UID to integer unless string UID is enabled
+            let uid = clientRtcUid;
+            if (!enableStringUid && clientRtcUid) {
+                uid = parseInt(clientRtcUid, 10);
+                if (isNaN(uid)) {
+                    throw new Error('Client UID must be a valid number when String UID is disabled');
+                }
+            }
+            
+            await this.mediaProcessor.joinChannel(appId, channelName, token, uid);
             document.getElementById("joinChannel").disabled = true;
             document.getElementById("leaveChannel").disabled = false;
         } catch (error) {
@@ -243,6 +254,13 @@ export class UI {
         // Handle Microsoft language population when vendor changes to Microsoft
         if (vendor === "microsoft") {
             this.populateMicrosoftLangList();
+        }
+
+        // Check if AI Avatar is enabled and disable it if TTS is not configured
+        const enableAvatar = document.getElementById('enableAvatar');
+        if (enableAvatar && enableAvatar.checked && !vendor) {
+            enableAvatar.checked = false;
+            enableAvatar.dispatchEvent(new Event('change'));
         }
     }
 
@@ -481,7 +499,7 @@ export class UI {
 
     openDrawer(drawerId) {
         // Close all drawers first
-        ['llmDrawer', 'advDrawer', 'ttsDrawer', 'mllmDrawer'].forEach(id => {
+        ['llmDrawer', 'advDrawer', 'ttsDrawer', 'mllmDrawer', 'avatarDrawer'].forEach(id => {
             const drawer = document.getElementById(id);
             const backdrop = document.getElementById(id + 'Backdrop');
             if (drawer) drawer.classList.add('hidden');
@@ -493,6 +511,7 @@ export class UI {
         if (drawerId === 'advDrawer') btnId = 'advConfigBtn';
         if (drawerId === 'ttsDrawer') btnId = 'ttsSettingsBtn';
         if (drawerId === 'mllmDrawer') btnId = 'mllmSettingsBtn';
+        if (drawerId === 'avatarDrawer') btnId = 'avatarSettingsBtn';
         const btn = document.getElementById(btnId);
         const drawer = document.getElementById(drawerId);
         // Use the same absolute positioning logic for all drawers
@@ -539,6 +558,10 @@ export class UI {
         document.getElementById('ttsSettingsBtn').addEventListener('click', () => this.openDrawer('ttsDrawer'));
         document.getElementById('ttsDrawerBackdrop').addEventListener('click', () => this.closeDrawer('ttsDrawer'));
         document.querySelector('#ttsDrawer .drawer-close').addEventListener('click', () => this.closeDrawer('ttsDrawer'));
+        // AI Avatar
+        document.getElementById('avatarSettingsBtn').addEventListener('click', () => this.openDrawer('avatarDrawer'));
+        document.getElementById('avatarDrawerBackdrop').addEventListener('click', () => this.closeDrawer('avatarDrawer'));
+        document.querySelector('#avatarDrawer .drawer-close').addEventListener('click', () => this.closeDrawer('avatarDrawer'));
 
         // Advanced Config dynamic sections
         const turnDetectionCheckbox = document.getElementById('turnDetectionEnabled');

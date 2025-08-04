@@ -40,6 +40,14 @@ A modern web dashboard for managing and interacting with Agora's Conversational 
   - Privacy-aware camera configuration
   - Image-based visual analysis (not video streaming)
 
+- **AI Avatar Support** ⭐ **NEW**
+  - Visual AI avatar representation with neural network design
+  - Professional SVG placeholder with brain/neural network icon
+  - Seamless transition from placeholder to live video stream
+  - Support for Akool and HeyGen avatar vendors
+  - Real-time video subscription and playback
+  - Automatic placeholder restoration when video stream ends
+
 ### Comprehensive TTS Support
 - **Microsoft TTS**
   - Global region selection (30+ regions)
@@ -84,6 +92,14 @@ A modern web dashboard for managing and interacting with Agora's Conversational 
   - Configurable interrupt modes: interrupt, append, ignore
   - Advanced parameters: interrupt duration, prefix padding, silence duration, threshold
   - MLLM-specific options: create response, interrupt response, eagerness
+
+- **AI Avatar Configuration** ⭐ **NEW**
+  - Vendor selection: Akool and HeyGen support
+  - API key and avatar ID configuration
+  - RTC UID and token management for avatar channel access
+  - HeyGen-specific settings: quality, idle timeout, activity timeout
+  - Automatic client UID configuration for avatar-agent communication
+  - Visual placeholder with professional neural network design
 
 - **Advanced Features**
   - AIVAD (AI Voice Activity Detection) for intelligent interruption handling
@@ -131,6 +147,13 @@ A modern web dashboard for managing and interacting with Agora's Conversational 
   - Conversation history retrieval
   - Performance metrics (with RTM enabled)
   - Error message collection
+
+- **Visual Enhancements** ⭐ **NEW**
+  - Professional SVG placeholder design for AI Avatar
+  - Neural network icon with connection lines
+  - Smooth transitions between placeholder and live video
+  - Responsive design with proper element sizing
+  - Enhanced user experience with clear visual feedback
 
 ## Project Structure
 
@@ -189,6 +212,14 @@ convo_ai/
    - Set up turn detection and VAD parameters
    - Configure silence management
    - Add custom parameters for advanced model control
+
+7. **AI Avatar setup (optional):** ⭐ **NEW**
+   - Enable AI Avatar checkbox in AI Avatar Settings
+   - Select avatar vendor (Akool or HeyGen)
+   - Configure API key and avatar ID
+   - Set RTC UID and token for avatar channel access
+   - Configure vendor-specific settings (quality, timeouts)
+   - Visual placeholder will appear until video stream is active
 
 ## API Integration
 
@@ -315,6 +346,22 @@ The application integrates with Agora's Conversational AI API endpoints:
   - `trailing_silence`: Trailing silence duration in seconds (0–2.0)
 - **Features:** High-quality voice synthesis with customizable speed and silence control
 
+## AI Avatar Vendor Support ⭐ **NEW**
+
+### Akool Avatar
+- **Required Fields:** API Key, Avatar ID, Avatar RTC UID
+- **Optional Fields:** Avatar RTC Token
+- **Features:** High-quality AI avatar generation with real-time video streaming
+
+### HeyGen Avatar
+- **Required Fields:** API Key, Avatar ID, Avatar RTC UID
+- **Optional Fields:** Avatar RTC Token
+- **Optional Parameters:**
+  - `quality`: Video quality (low: 360p, medium: 480p, high: 720p)
+  - `disable_idle_timeout`: Whether to disable idle timeout (boolean)
+  - `activity_idle_timeout`: Activity idle timeout in seconds (default: 60)
+- **Features:** Advanced avatar generation with quality control and timeout management
+
 ## ASR Vendor Support
 
 ### Agora ASR
@@ -387,4 +434,4 @@ For issues and questions:
 
 ---
 
-**Agora ConversationalAI Backend v1.6** - Enhanced with MLLM support, advanced configuration options, new TTS/ASR vendors, and comprehensive real-time multimodal capabilities. 
+**Agora ConversationalAI Backend v1.6** - Enhanced with MLLM support, AI Avatar functionality, advanced configuration options, new TTS/ASR vendors, and comprehensive real-time multimodal capabilities. Features professional SVG placeholders and seamless video stream integration. 
