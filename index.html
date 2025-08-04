@@ -236,7 +236,8 @@
                   id="sMsgContent"
                   class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
                   placeholder="System Instructions (Required)"
-                  value="You are a helpful chatbot."
+                  value="You are Avi Tar, a smart, friendly voice assistant designed for natural conversations. You always reference yourself by your full name. 
+                  The user speaks to you directly — treat each input as part of a live, spoken dialogue.  Keep your responses clear, concise, and conversational. Speak as if you're part of a real-time exchange. Avoid overly long explanations unless the user asks for more detail.  Maintain a warm, helpful tone. You can answer questions, translate, tell jokes, explain concepts, or help with everyday tasks.  Never refer to yourself as an AI or describe how the system works. Don't mention text, typing, or messages — act as if this is a purely spoken interaction.  Only ask follow-up questions when absolutely necessary. Keep the flow natural and human-like. You appears as a visible, expressive avatar — the user can see your face, gestures, and reactions during the conversation."
                 />
                 <div class="tooltip">System instructions that define the agent's behavior and personality.</div>
               </div>
@@ -1470,6 +1471,43 @@
     </div>
   </div>
 
+  <!-- Agora Token Requirement Modal -->
+  <div id="agoraTokenModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md mx-4">
+      <div class="flex items-center mb-4">
+        <div class="flex-shrink-0">
+          <svg class="h-8 w-8 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-lg font-bold text-white">Agora Token Required</h3>
+        </div>
+      </div>
+      <div class="mb-6">
+        <p class="text-gray-300 mb-3">
+          The AI Avatar feature requires Agora tokens to be enabled in your Agora project. You cannot use an AppID that does not have tokens turned on.
+        </p>
+        <div class="bg-gray-700 p-3 rounded border-l-4 border-yellow-400">
+          <p class="text-sm text-gray-300">
+            <strong>To enable tokens:</strong>
+          </p>
+          <ul class="text-sm text-gray-300 mt-2 list-disc list-inside">
+            <li>Go to your Agora Console</li>
+            <li>Navigate to your project settings</li>
+            <li>Enable "Primary Certificate"</li>
+            <li>Generate tokens for your users</li>
+          </ul>
+        </div>
+      </div>
+      <div class="flex justify-end">
+        <button id="closeAgoraTokenModal" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          I Understand
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Experimental Features Modal (hidden, triggered by Konami code) -->
   <div id="experimentalFeaturesModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
     <div class="bg-gray-800 p-4 rounded-lg max-w-xl w-full mx-4 overflow-y-auto max-h-[90vh] text-base" style="font-size: 14px;">
@@ -2077,6 +2115,10 @@
       const avatarRtcUid = document.getElementById('avatarRtcUid');
       
       if (this.checked) {
+        // Show Agora token requirement alert
+        const agoraTokenModal = document.getElementById('agoraTokenModal');
+        agoraTokenModal.classList.remove('hidden');
+        
         // Show placeholder, hide image when AI Avatar is enabled
         avatarImage.style.display = 'none';
         avatarVideo.style.display = 'none';
@@ -2487,6 +2529,18 @@
       // Collect values for all checked fields
       // ... (integration logic to update config goes here) ...
       document.getElementById('experimentalFeaturesModal').classList.add('hidden');
+    });
+
+    // Agora Token Modal event listeners
+    document.getElementById('closeAgoraTokenModal').addEventListener('click', function() {
+      document.getElementById('agoraTokenModal').classList.add('hidden');
+    });
+
+    // Close Agora token modal when clicking outside
+    document.getElementById('agoraTokenModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.add('hidden');
+      }
     });
 
     // Drawer-style tooltips for experimental modal
