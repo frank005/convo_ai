@@ -129,7 +129,7 @@ export class MediaProcessor {
                               <line x1="8" y1="12" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
                             </g>
                             <!-- Text -->
-                            <text x="60" y="95" text-anchor="middle" fill="#00ffff" font-family="Arial, sans-serif" font-size="12" font-weight="bold">AI AVATAR</text>
+                            <text x="60" y="85" text-anchor="middle" fill="#00ffff" font-family="Arial, sans-serif" font-size="12" font-weight="bold">AI AVATAR</text>
                           </svg>
                         `;
                     }
