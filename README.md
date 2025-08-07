@@ -48,13 +48,16 @@ A modern web dashboard for managing and interacting with Agora's Conversational 
   - Real-time video subscription and playback
   - Automatic placeholder restoration when video stream ends
 
-- **Enhanced Chat Interface** ⭐ **NEW**
+- **Live Subtitles & Chat History** ⭐ **NEW**
+  - Real-time subtitle display with overlay functionality
+  - Live chat history with message timestamps
   - Improved chat message display with proper overflow handling
   - Timestamps always visible and properly positioned
   - Responsive design that adapts to different screen sizes
   - Better text wrapping for long messages
   - Optimized spacing and margins for improved readability
   - Copy and clear functionality for chat history management
+  - Demo and test subtitle functionality
 
 ### Comprehensive TTS Support
 - **Microsoft TTS**
@@ -108,17 +111,25 @@ A modern web dashboard for managing and interacting with Agora's Conversational 
   - HeyGen-specific settings: quality, idle timeout, activity timeout
   - Automatic client UID configuration for avatar-agent communication
   - Visual placeholder with professional neural network design
+  - Token requirement validation and setup guidance
 
 - **Advanced Features**
   - AIVAD (AI Voice Activity Detection) for intelligent interruption handling
   - RTM (Real-Time Messaging) for advanced signaling and custom data delivery
   - Metrics collection and error message handling
   - Data channel configuration (RTC datastream or RTM)
+  - Experimental features modal with advanced RTC parameters
 
 - **Silence Management** ⭐ **NEW**
   - Configurable silence timeout with speak/think actions
   - Custom silence reminder messages
   - Automatic agent prompting for continued interaction
+
+- **Camera Integration** ⭐ **NEW**
+  - Multi-camera device selection and configuration
+  - Privacy-aware camera setup with user consent
+  - Periodic screenshot capture for image analysis
+  - Integration with MLLM image processing capabilities
 
 ### Broadcast & Communication
 - **Message Broadcasting**
@@ -149,12 +160,14 @@ A modern web dashboard for managing and interacting with Agora's Conversational 
   - Custom parameter management with type validation
   - Copy-to-clipboard functionality
   - Form validation and error handling
+  - Experimental features modal (Konami code: ↑↑↓↓←→←→BA)
 
 - **Real-time Monitoring**
   - Agent status tracking
   - Conversation history retrieval
   - Performance metrics (with RTM enabled)
   - Error message collection
+  - Signaling requirements validation
 
 - **Visual Enhancements** ⭐ **NEW**
   - Professional SVG placeholder design for AI Avatar
@@ -162,8 +175,10 @@ A modern web dashboard for managing and interacting with Agora's Conversational 
   - Smooth transitions between placeholder and live video
   - Responsive design with proper element sizing
   - Enhanced user experience with clear visual feedback
-  - Improved chat interface with proper overflow handling
+  - Live subtitles and chat history with proper overflow handling
   - Optimized message display and timestamp visibility
+  - Camera configuration modal with privacy controls
+  - Agora token requirement modal for AI Avatar setup
 
 ## Project Structure
 
@@ -171,20 +186,22 @@ A modern web dashboard for managing and interacting with Agora's Conversational 
 convo_ai/
 ├── src/
 │   ├── js/
-│   │   ├── api.js         # API integration with Agora
-│   │   ├── audio.js       # Audio processing and visualization
-│   │   ├── ui.js          # UI components and event handlers
-│   │   └── utils.js       # Utility functions
+│   │   ├── api.js                    # Core API integration with Agora
+│   │   ├── audio.js                  # Audio processing and visualization
+│   │   ├── conversational-ai-api.js  # Conversational AI API handling
+│   │   ├── subtitles.js              # Live subtitles and chat history
+│   │   ├── ui.js                     # UI components and event handlers
+│   │   └── utils.js                  # Utility functions and helpers
 │   ├── css/
-│   │   └── styles.css     # Application styles
+│   │   └── styles.css                # Application styles
 │   ├── lib/
-│   │   └── microsoftVoicesByLang.js  # Microsoft TTS voice definitions
+│   │   └── microsoftVoicesByLang.js # Microsoft TTS voice definitions
 │   └── media/
-│       ├── comvoai_demo.mp4  # Demo video
-│       └── *.png            # Screenshots
-├── index.html              # Main application interface
-├── README.md               # This file
-└── GUIDE.md                # Detailed usage guide
+│       ├── comvoai_demo.mp4         # Demo video
+│       └── *.png                     # Screenshots
+├── index.html                        # Main application interface
+├── README.md                         # This file
+└── GUIDE.md                          # Detailed usage guide
 ```
 
 ## Setup
@@ -230,6 +247,18 @@ convo_ai/
    - Set RTC UID and token for avatar channel access
    - Configure vendor-specific settings (quality, timeouts)
    - Visual placeholder will appear until video stream is active
+
+8. **Camera setup (optional):** ⭐ **NEW**
+   - Enable image input modality for camera integration
+   - Select camera device from available options
+   - Acknowledge privacy terms for camera access
+   - Configure periodic screenshot capture for image analysis
+
+9. **Live subtitles setup (optional):** ⭐ **NEW**
+   - Enable live subtitles in the AI Interaction widget
+   - Ensure signaling (RTM) is enabled on your Agora AppID
+   - Configure subtitle overlay and chat history display
+   - Test subtitle functionality with demo and test buttons
 
 ## API Integration
 
@@ -393,32 +422,49 @@ The application integrates with Agora's Conversational AI API endpoints:
 
 The application follows a modular architecture:
 
-1. **API Layer** (`api.js`)
+1. **Core API Layer** (`api.js`)
    - Handles all communication with Agora's API
    - Manages authentication and request formatting
    - Provides clean interfaces for agent operations
    - Supports broadcast, interrupt, and history functionality
 
-2. **Audio Processing** (`audio.js`)
+2. **Conversational AI API** (`conversational-ai-api.js`)
+   - Manages real-time messaging and transcription handling
+   - Handles RTM (Real-Time Messaging) communication
+   - Processes transcription updates and chat history
+   - Manages message types and conversation flow
+   - Handles MLLM WebSocket connections and data processing
+
+3. **Subtitles & Chat** (`subtitles.js`)
+   - Manages live subtitle display and overlay
+   - Handles chat history rendering and updates
+   - Processes transcription data for display
+   - Manages copy/clear functionality for chat history
+   - Handles temporary and final message states
+
+4. **Audio Processing** (`audio.js`)
    - Manages real-time audio visualization
    - Handles audio context and analyzer setup
    - Provides smooth animations and visual feedback
    - Supports multiple audio vendors
+   - Manages volume indicators and waveform display
 
-3. **UI Components** (`ui.js`)
+5. **UI Components** (`ui.js`)
    - Manages all user interface interactions
    - Handles form validation and submission
    - Controls widget visibility and state
    - Provides collapsible configuration sections
    - Manages vendor-specific field visibility
    - Handles MLLM mode switching and configuration
+   - Manages AI Avatar integration and video streams
 
-4. **Utilities** (`utils.js`)
+6. **Utilities** (`utils.js`)
    - Provides helper functions for common operations
    - Manages parameter handling and validation
    - Handles data formatting and transformation
    - Supports JSON configuration management
    - Manages credential storage and retrieval
+   - Handles camera integration and image processing
 
 ## Browser Compatibility
 
