@@ -157,9 +157,30 @@ export class AgoraAPI {
     }
 
     async interruptAgent(customerId, customerSecret, agentId) {
+        // Try to use Conversational AI toolkit first if available and subtitles are enabled
+        if (window.subtitleManager && window.subtitleManager.isEnabled && window.ConversationalAIAPI) {
+            try {
+                const conversationalAI = window.ConversationalAIAPI.getInstance();
+                if (conversationalAI && conversationalAI.isReady()) {
+                    console.log('Using Conversational AI toolkit interrupt method');
+                    await conversationalAI.interrupt(agentId);
+                    return { 
+                        success: true, 
+                        method: 'conversational-ai-toolkit',
+                        agent_id: agentId,
+                        timestamp: Date.now()
+                    };
+                }
+            } catch (toolkitError) {
+                console.warn('Conversational AI toolkit interrupt failed, falling back to REST API:', toolkitError);
+            }
+        }
+
+        // Fallback to REST API method
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/agents/${encodeURIComponent(agentId)}/interrupt`;
         try {
+            console.log('Using REST API interrupt method');
             const response = await fetch(url, {
                 method: "POST",
                 headers,
@@ -169,7 +190,9 @@ export class AgoraAPI {
                 const errorText = await response.text();
                 throw new Error(errorText || response.statusText);
             }
-            return await response.json();
+            const result = await response.json();
+            result.method = 'rest-api';
+            return result;
         } catch (error) {
             throw new Error(`Failed to interrupt agent: ${error.message}`);
         }

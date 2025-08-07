@@ -6,6 +6,7 @@
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/agora-rtm-sdk@2.2.2/agora-rtm.js"></script>
   <script type="module" src="src/lib/microsoftVoicesByLang.js"></script>
   <link rel="stylesheet" href="src/css/styles.css">
 </head>
@@ -59,6 +60,49 @@
         class="mt-4 px-3 py-2 w-full rounded bg-gray-700 text-white"
         placeholder="Agora token  (if token required)"
       />
+      <!-- Live Subtitles Section -->
+      <div class="w-full p-4 bg-gray-700 rounded-lg mt-4">
+        <h3 class="text-lg font-semibold mb-3 text-cyan-400">Live Subtitles</h3>
+        
+        <div class="space-y-3">
+          <!-- Subtitle Controls -->
+          <div class="flex items-center space-x-2">
+            <input type="checkbox" id="enableSubtitles" class="rounded">
+            <label for="enableSubtitles" class="text-sm">Enable Live Subtitles</label>
+          </div>
+          
+          <div class="flex space-x-2">
+            <button id="toggleSubtitleOverlay" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50" disabled>
+              Show Overlay
+            </button>
+            <!--<button id="demoSubtitles" class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-50" disabled>
+              Demo Subtitles
+            </button>
+            <button id="testSubtitle" class="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 disabled:opacity-50" disabled>
+              Test Subtitle
+            </button> -->
+          </div>
+        </div>
+        
+        <!-- Chat History Section -->
+        <div class="mt-4">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-sm font-medium text-gray-300">Chat History</h4>
+            <div class="space-x-2">
+              <button id="copyChatBtn" class="px-2 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-500">
+                Copy
+              </button>
+              <button id="clearChatBtn" class="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-500">
+                Clear
+              </button>
+            </div>
+          </div>
+          <div id="chatHistory" class="h-64 bg-gray-800 rounded p-2 overflow-y-auto text-sm">
+            <!-- Chat messages will appear here -->
+          </div>
+        </div>
+      </div>
+
       <!-- Broadcast Message Section (moved here) -->
       <div class="w-full p-4 bg-gray-700 rounded-lg mt-4">
         <div class="mb-2">
@@ -964,8 +1008,8 @@
                       </select>
                       <div class="tooltip">Agent data transmission channel. RTM option only takes effect when advanced_features.enable_rtm is true.</div>
                     </div>
-                    <div class="has-tooltip relative mt-2" id="agentRtmUidBlock" style="display:none;">
-                      <label for="agentRtmUid" class="text-sm">RTM UID</label>
+                    <div class="has-tooltip relative mt-2" id="agentRtmUidBlock" style="display:none;" hidden>
+                      <label for="agentRtmUid" class="text-sm" hidden>RTM UID</label>
                       <input type="text" id="agentRtmUid" class="w-full p-2 rounded bg-gray-600 param-field text-white" placeholder="RTM UID (auto-filled from RTC UID)" />
                       <div class="tooltip">The RTM UID for the agent. Defaults to the RTC UID but can be changed. Only used if RTM is enabled.</div>
                     </div>
@@ -1708,16 +1752,18 @@
     const { appId } = Utils.getStoredCredentials();
     const agoraAPI = new AgoraAPI(appId);
     const mediaProcessor = new MediaProcessor();
+    const subtitleManager = new SubtitleManager();
     const ui = new UI();
 
     // Set random agent name
     document.getElementById('uniqueName').value = `agent-${Math.random().toString(36).substring(2, 8)}`;
 
     // Initialize UI with dependencies
-    ui.initialize(mediaProcessor, agoraAPI);
+    ui.initialize(mediaProcessor, agoraAPI, subtitleManager);
 
     // Make UI available globally for event handlers
     window.ui = ui;
+    window.subtitleManager = subtitleManager;
 
     // Initialize canvas size
     const canvas = document.getElementById("audio-wave");
@@ -2742,5 +2788,88 @@
   }
   attachDrawerTooltipListeners();
   </script>
+
+  <!-- Non-module scripts -->
+  <script src="src/js/utils.js?v=1.1"></script>
+  <script src="src/js/api.js?v=1.1"></script>
+  <script src="src/js/audio.js?v=1.1"></script>
+  <script src="src/js/conversational-ai-api.js?v=1.1"></script>
+  <script src="src/js/subtitles.js?v=1.1"></script>
+  <script src="src/js/ui.js?v=1.1"></script>
+
+  <!-- Subtitle Overlay -->
+  <div id="subtitleOverlay" class="fixed inset-0 pointer-events-none hidden" style="z-index: 20001;">
+    <div class="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 text-white p-4 rounded-lg max-w-4xl w-full mx-4">
+      <div id="subtitleText" class="text-center text-xl font-medium leading-relaxed">
+        <!-- Subtitle content will be inserted here -->
+      </div>
+      <div id="subtitleSpeaker" class="text-center text-sm text-gray-300 mt-2">
+        <!-- Speaker name will be inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Signaling Requirements Modal -->
+  <div id="signalingRequirementsModal">
+    <div class="signaling-modal-content">
+      <button class="signaling-modal-close" id="closeSignalingModal">&times;</button>
+      
+      <div class="signaling-modal-header">
+        <svg class="signaling-modal-icon" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+        </svg>
+        <h2 class="signaling-modal-title">Signaling Requirements for Live Subtitles</h2>
+      </div>
+      
+      <div class="signaling-modal-body">
+        <div class="signaling-modal-section">
+          <h3>Why Signaling is Required</h3>
+          <p>Live subtitles require <strong>signaling (RTM)</strong> to be enabled on your Agora AppID. This is because transcription data needs to be transmitted between the client and agent through Agora's Real-Time Messaging service.</p>
+        </div>
+
+        <div class="signaling-modal-requirements">
+          <h4>Setup Requirements</h4>
+          <ul>
+            <li><strong>Enable Signaling:</strong> Your Agora AppID must have signaling (RTM) enabled</li>
+            <li><strong>Dual Tokens:</strong> Both client and agent need a single token that works for both RTC and RTM</li>
+            <li><strong>Token Authentication:</strong> Signaling requires token-based authentication</li>
+            <li><strong>Channel Access:</strong> Both users must join the same RTM channel</li>
+          </ul>
+        </div>
+
+        <div class="signaling-modal-section">
+          <h3>What Happens Without Signaling</h3>
+          <p>If signaling is not properly configured:</p>
+          <ul>
+            <li>Transcription data cannot be transmitted</li>
+            <li>Live subtitles will not appear</li>
+            <li>The agent cannot receive speech recognition results</li>
+            <li>Real-time conversation features will be limited</li>
+          </ul>
+        </div>
+
+        <div class="signaling-modal-note">
+          <h4>Important Note</h4>
+          <p>Both the client and agent need to be configured with a single token that works for both RTC and RTM for live subtitles to work properly. The transcription system relies on RTM to deliver real-time speech recognition data.</p>
+        </div>
+
+        <div class="signaling-modal-section">
+          <h3>How to Enable Signaling</h3>
+          <ol>
+            <li>Go to your Agora Console</li>
+            <li>Navigate to your project settings</li>
+            <li>Enable "Signaling" or "RTM" service</li>
+            <li>Generate a single token that works for both RTC and RTM</li>
+            <li>Configure your client application to use this dual-purpose token</li>
+          </ol>
+        </div>
+      </div>
+      
+      <div class="signaling-modal-footer">
+        <button class="signaling-modal-btn signaling-modal-btn-secondary" id="cancelSignalingModal">Cancel</button>
+        <button class="signaling-modal-btn signaling-modal-btn-primary" id="enableSignalingModal">Enable Subtitles Anyway</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html> 

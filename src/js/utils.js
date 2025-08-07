@@ -484,14 +484,12 @@ export class Utils {
                 };
             }
             
-            // Add RTM metrics if RTM is enabled
-            if (formData.enableRtm) {
-                if (formData.enableMetrics) {
-                    parameters.enable_metrics = true;
-                }
-                if (formData.enableErrorMessage) {
-                    parameters.enable_error_message = true;
-                }
+            // Add RTM metrics if enabled
+            if (formData.enableMetrics) {
+                parameters.enable_metrics = true;
+            }
+            if (formData.enableErrorMessage) {
+                parameters.enable_error_message = true;
             }
             // Add transcript config if any field is set
             const transcript = {};
@@ -560,9 +558,10 @@ export class Utils {
                         ...(Object.keys(customParams).length > 0 ? { params: customParams } : {}) // Only include params if customParams is not empty
                     }
                 } : {}),
-                        //add chorus scenario for websdk fix for now
+                        //add chorus scenario for websdk fix for now, merge with dynamic parameters
                 parameters: {
-                    audio_scenario: "chorus"
+                    audio_scenario: "chorus",
+                    ...(parameters || {})
                 }
             }
         };

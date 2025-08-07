@@ -64,8 +64,14 @@ export class MediaProcessor {
         drawWave();
     }
 
-    async joinChannel(appId, channelName, token, uid) {
+    async joinChannel(appId, channelName, token, uid, subtitleManager = null, agentId = null) {
         this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+        this.subtitleManager = subtitleManager;
+
+        // Initialize Conversational AI for subtitles if enabled
+        if (this.subtitleManager && this.subtitleManager.isEnabled) {
+            await this.initializeConversationalAI(appId, channelName, token, uid, agentId);
+        }
         
         this.client.on("user-published", async (user, mediaType) => {
             await this.client.subscribe(user, mediaType);
@@ -175,6 +181,9 @@ export class MediaProcessor {
         const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        // Cleanup Conversational AI if initialized
+        await this.cleanupConversationalAI();
+
         // Leave Agora Channel
         await this.client.leave();
 
@@ -235,6 +244,28 @@ export class MediaProcessor {
             avatarImage.style.display = 'block';
             avatarVideo.style.display = 'none';
             avatarVideo.innerHTML = '';
+        }
+    }
+
+    async initializeConversationalAI(appId, channelName, token, uid, agentId = null) {
+        try {
+            if (this.subtitleManager && window.ConversationalAIAPI) {
+                await this.subtitleManager.initializeConversationalAI(appId, channelName, token, uid, agentId);
+                console.log('Conversational AI initialized for subtitles');
+            }
+        } catch (error) {
+            console.error('Failed to initialize Conversational AI:', error);
+        }
+    }
+
+    async cleanupConversationalAI() {
+        try {
+            if (this.subtitleManager) {
+                await this.subtitleManager.cleanupConversationalAI();
+                console.log('Conversational AI cleaned up');
+            }
+        } catch (error) {
+            console.error('Error cleaning up Conversational AI:', error);
         }
     }
 } 

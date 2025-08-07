@@ -7,12 +7,14 @@ export class UI {
     constructor() {
         this.mediaProcessor = null;
         this.agoraAPI = null;
+        this.subtitleManager = null;
         this.params = {};
     }
 
-    initialize(mediaProcessor, agoraAPI) {
+    initialize(mediaProcessor, agoraAPI, subtitleManager = null) {
         this.mediaProcessor = mediaProcessor;
         this.agoraAPI = agoraAPI;
+        this.subtitleManager = subtitleManager;
         this.setupEventListeners();
         this.checkCredentials();
         this.populateMicrosoftLangList();
@@ -140,6 +142,7 @@ export class UI {
         const clientRtcUid = document.getElementById("clientRtcUid").value.trim();
         const clientRtcToken = document.getElementById("clientRtcToken").value.trim();
         const enableStringUid = document.getElementById("enableStringUid").checked;
+        const agentId = document.getElementById("agentId").value.trim(); // Get agent ID from UI
 
         try {
             // Convert empty string to null for token
@@ -154,7 +157,7 @@ export class UI {
                 }
             }
             
-            await this.mediaProcessor.joinChannel(appId, channelName, token, uid);
+            await this.mediaProcessor.joinChannel(appId, channelName, token, uid, this.subtitleManager, agentId);
             document.getElementById("joinChannel").disabled = true;
             document.getElementById("leaveChannel").disabled = false;
         } catch (error) {

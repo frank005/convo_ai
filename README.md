@@ -48,6 +48,14 @@ A modern web dashboard for managing and interacting with Agora's Conversational 
   - Real-time video subscription and playback
   - Automatic placeholder restoration when video stream ends
 
+- **Enhanced Chat Interface** ⭐ **NEW**
+  - Improved chat message display with proper overflow handling
+  - Timestamps always visible and properly positioned
+  - Responsive design that adapts to different screen sizes
+  - Better text wrapping for long messages
+  - Optimized spacing and margins for improved readability
+  - Copy and clear functionality for chat history management
+
 ### Comprehensive TTS Support
 - **Microsoft TTS**
   - Global region selection (30+ regions)
@@ -154,6 +162,8 @@ A modern web dashboard for managing and interacting with Agora's Conversational 
   - Smooth transitions between placeholder and live video
   - Responsive design with proper element sizing
   - Enhanced user experience with clear visual feedback
+  - Improved chat interface with proper overflow handling
+  - Optimized message display and timestamp visibility
 
 ## Project Structure
 
@@ -416,6 +426,7 @@ The application follows a modular architecture:
 - **Required APIs:** Web Audio API, WebRTC, localStorage
 - **Camera Support:** For image input functionality
 - **WebSocket Support:** For MLLM real-time communication
+- **Responsive Design:** Optimized for various screen sizes and orientations
 
 ## Contributing
 
@@ -434,4 +445,4 @@ For issues and questions:
 
 ---
 
-**Agora ConversationalAI Backend v1.6** - Enhanced with MLLM support, AI Avatar functionality, advanced configuration options, new TTS/ASR vendors, and comprehensive real-time multimodal capabilities. Features professional SVG placeholders and seamless video stream integration. 
+**Agora ConversationalAI Backend v1.6** - Enhanced with MLLM support, AI Avatar functionality, advanced configuration options, new TTS/ASR vendors, and comprehensive real-time multimodal capabilities. Features professional SVG placeholders, seamless video stream integration, and improved chat interface with proper overflow handling and responsive design. 
