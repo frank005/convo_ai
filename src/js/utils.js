@@ -1,5 +1,5 @@
 // Utilities Module
-export class Utils {
+window.Utils = class Utils {
     static getStoredCredentials() {
         return {
             customerId: localStorage.getItem("customerId") || "",

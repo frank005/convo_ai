@@ -8,8 +8,8 @@
 
 .ai-avatar {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 375px;
+  height: 375px;
   border-radius: 50%;
   overflow: hidden;
   box-shadow: 0px 0px 20px rgba(0, 255, 255, 0.5);
@@ -55,10 +55,10 @@
 
 .volume-ring {
   position: absolute;
-  top: -8px;
-  left: -8px;
-  width: 136px;
-  height: 136px;
+  top: 0px;
+  left: 0px;
+  width: 375px;
+  height: 375px;
   border-radius: 50%;
   border: 4px solid rgba(0, 255, 255, 0.3);
   box-shadow: 0px 0px 20px rgba(0, 255, 255, 0.8);
@@ -66,8 +66,8 @@
 }
 
 .ai-volume-indicator canvas {
-  width: 200px;
-  height: 60px;
+  width: 375px;
+  height: 50px;
   margin-top: 16px;
   background: linear-gradient(90deg, rgba(0, 255, 255, 0.3), rgba(0, 255, 255, 0.8), rgba(0, 255, 255, 0.3));
   box-shadow: 0px 0px 15px rgba(0, 255, 255, 0.6);
@@ -75,8 +75,25 @@
   display: block;
 }
 
-/* Floating widget in the top‐right */
-#aiVolumeWidget {
+/* Main AI interaction widget */
+#aiVolumeWidget.main-ai-widget {
+  position: static;
+  background: #111;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+  display: block; /* always visible */
+  margin: 2rem 0;
+  width: 100%;
+  max-width: none;
+  min-width: auto;
+  max-height: none;
+  overflow: visible;
+  box-sizing: border-box;
+}
+
+/* Floating widget in the top‐right (for backward compatibility) */
+#aiVolumeWidget:not(.main-ai-widget) {
   position: fixed;
   top: 6.5rem;
   right: 1rem;
@@ -86,15 +103,15 @@
   box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
   display: none; /* hidden by default */
   z-index: 20000; /* Increased from 9999 to be above settings buttons */
-  min-width: 250px;
-  max-width: 350px;
-  width: 350px;
+  min-width: 400px;
+  max-width: 600px;
+  width: 600px;
   max-height: calc(100vh - 6rem);
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
   /* Ensure proper width constraints */
-  width: min(350px, calc(100vw - 2rem)) !important;
+  width: min(600px, calc(100vw - 2rem)) !important;
 }
 
 #aiVolumeWidget h2 {
@@ -103,18 +120,75 @@
   color: cyan;
 }
 
-/* Toggle button in the top‐right corner */
+/* Message input area styles */
+.message-input-area {
+  background: #1f2937;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.message-input-area input[type="text"] {
+  background: #374151;
+  border: 1px solid #4b5563;
+  color: white;
+  transition: border-color 0.2s;
+}
+
+.message-input-area input[type="text"]:focus {
+  border-color: #60a5fa;
+  outline: none;
+}
+
+.message-input-area button {
+  transition: background-color 0.2s;
+}
+
+.message-input-area button:hover {
+  background-color: #4b5563;
+}
+
+/* Microphone button styles */
+#toggleMicBtn {
+  transition: all 0.2s;
+}
+
+#toggleMicBtn.muted {
+  background-color: #ef4444;
+}
+
+#toggleMicBtn.muted:hover {
+  background-color: #dc2626;
+}
+
+#toggleMicBtn:hover {
+  background-color: #4b5563;
+}
+
+/* Mic icon styles */
+.mic-icon, .mic-off-icon {
+  transition: opacity 0.2s;
+}
+
+.mic-off-icon {
+  position: relative;
+}
+
+.mic-off-icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background-color: currentColor;
+  transform: translate(-50%, -50%) rotate(45deg);
+  opacity: 0.8;
+}
+
+/* Toggle button in the top‐right corner (hidden for main layout) */
 #toggleVolumeBtn {
-  position: fixed;
-  top: 1rem;
-  right: 8rem;
-  background: cyan;
-  color: #111;
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
-  box-shadow: 0 0 6px rgba(0,0,0,0.4);
-  cursor: pointer;
-  z-index: 20001; /* Increased from 10000 to be above the widget */
+  display: none;
 }
 
 /* GitHub link */
@@ -197,13 +271,13 @@
 
 /* Drawer styles - improved for placement and color */
 .drawer {
-  position: absolute;
-  top: 0;
-  left: 100%;
-  margin-left: 16px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   min-width: 340px;
-  max-width: 420px;
-  width: 100%;
+  max-width: 90vw;
+  width: auto;
   background: #1f2937;
   color: #fff;
   box-shadow: 0 4px 24px rgba(0,0,0,0.4);
@@ -216,7 +290,36 @@
   display: flex;
   flex-direction: column;
   overflow: visible;
-  max-height: 84vh;
+  max-height: 90vh;
+  /* Ensure proper centering */
+  margin: 0;
+  /* Prevent any positioning conflicts */
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Modal-specific drawer styles */
+#agentSettingsModal .drawer {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin-left: 0;
+  max-width: 90vw;
+  max-height: 90vh;
+  z-index: 20003;
+  background: #374151;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow-y: auto;
+  /* Ensure proper centering within modal */
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
 }
 
 .drawer.hidden {
@@ -237,6 +340,10 @@
   font-size: 1.5rem;
   cursor: pointer;
   line-height: 1;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 20004;
 }
 
 .drawer-backdrop {
@@ -247,6 +354,23 @@
   height: 100vh;
   background: rgba(0,0,0,0.4);
   z-index: 10999;
+  /* Ensure backdrop covers entire viewport */
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+/* Modal-specific drawer backdrop */
+#agentSettingsModal .drawer-backdrop {
+  z-index: 20002;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .drawer-backdrop.hidden {
@@ -258,6 +382,11 @@
   max-height: 70vh;
   position: relative;
   z-index: 20003;
+  /* Ensure proper scrolling */
+  padding-right: 0.5rem;
+  /* Prevent horizontal overflow */
+  overflow-x: hidden;
+  word-wrap: break-word;
 }
 
 .drawer-scroll {
@@ -348,7 +477,6 @@ select:focus, .drawer select:focus {
 
 .modal {
   position: fixed;
-  z-index: 30000 !important;
 }
 
 .tooltip-right {
@@ -364,7 +492,7 @@ select:focus, .drawer select:focus {
   color: #fff;
   padding: 8px 12px;
   border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Subtitle Overlay Styles */
@@ -742,4 +870,75 @@ select:focus, .drawer select:focus {
 .signaling-modal-note p {
   color: #dbeafe;
   margin: 0;
+}
+
+
+
+/* Ensure drawer content doesn't overflow */
+.drawer-content {
+  overflow-y: auto;
+  max-height: 70vh;
+  position: relative;
+  z-index: 20003;
+  /* Ensure proper scrolling */
+  padding-right: 0.5rem;
+  /* Prevent horizontal overflow */
+  overflow-x: hidden;
+  word-wrap: break-word;
+}
+
+/* Ensure all form elements in drawers are properly styled */
+.drawer input:not([type="checkbox"]),
+.drawer select,
+.drawer textarea {
+  background-color: #1f2937 !important;
+  color: #fff !important;
+  border: 1px solid #6b7280 !important;
+  border-radius: 0.375rem !important;
+  padding: 0.5rem !important;
+  font-size: 1rem;
+  outline: none !important;
+  box-shadow: none !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.drawer input:focus,
+.drawer select:focus,
+.drawer textarea:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 1px #3b82f6 !important;
+}
+
+.drawer label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #e5e7eb;
+}
+
+/* Simple checkbox alignment fix */
+.drawer label.flex,
+.drawer .flex.items-center {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.drawer input[type="checkbox"] {
+  flex: none;
+  margin-right: 0.5rem;
+}
+
+
+
+
+
+
+
+.drawer .space-y-4 > div {
+  margin-bottom: 1rem;
+}
+
+.drawer .space-y-4 > div:last-child {
+  margin-bottom: 0;
 }

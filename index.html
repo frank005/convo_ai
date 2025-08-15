@@ -12,7 +12,7 @@
 </head>
 <body class="bg-gray-900 text-white min-h-screen py-10 px-4">
   <div class="max-w-6xl mx-auto">
-    <!-- Button to open credentials modal -->
+    <!-- Top Bar with API Credentials and Settings -->
     <div class="mb-6 flex items-center space-x-2">
       <button
         id="setCredsBtn"
@@ -20,15 +20,70 @@
       >
         Set API Credentials
       </button>
+      <button
+        id="agentSettingsBtn"
+        class="bg-gray-600 hover:bg-gray-700 p-2 rounded font-bold"
+      >
+        Agent Settings
+      </button>
       <span id="baseUrlIndicator" class="text-xs text-gray-400 hidden"></span>
     </div>
 
-    <button id="toggleVolumeBtn">
-      Show AI Interaction
-    </button>
-  
-    <!-- The floating volume widget in top‐right -->
-    <div id="aiVolumeWidget">
+    <!-- Agent Control Buttons -->
+    <div class="mb-6 flex gap-2">
+      <button
+        id="createAgentBtn"
+        class="bg-green-600 hover:bg-green-700 p-2 rounded font-bold"
+      >
+        Create Agent
+      </button>
+      <button
+        id="copyCreateJson"
+        class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+        title="Copy Create JSON"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8m2 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2z"></path>
+        </svg>
+      </button>
+      <button
+        id="updateAgentBtn"
+        class="bg-yellow-600 hover:bg-yellow-700 p-2 rounded font-bold"
+      >
+        Update Agent
+      </button>
+      <button
+        id="copyUpdateJson"
+        class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+        title="Copy Update JSON"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8m2 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2z"></path>
+        </svg>
+      </button>
+      <button
+        id="stopAgentBtn"
+        class="bg-red-600 hover:bg-red-700 p-2 rounded font-bold"
+      >
+        Stop Agent
+      </button>
+    </div>
+    
+    <!-- Agent Status Messages -->
+    <div class="mb-4 space-y-2">
+      <div id="createAgentStatus" class="text-sm text-green-400 bg-green-900 bg-opacity-50 p-3 rounded border border-green-600 hidden fixed top-4 right-4 z-50 max-w-md"></div>
+      <div id="updateAgentStatus" class="text-sm text-yellow-400 bg-yellow-900 bg-opacity-50 p-3 rounded border border-yellow-600 hidden fixed top-4 right-4 z-50 max-w-md"></div>
+      <div id="stopAgentStatus" class="text-sm text-red-400 bg-red-900 bg-opacity-50 p-3 rounded border border-red-600 hidden fixed top-4 right-4 z-50 max-w-md"></div>
+    </div>
+    
+    <!-- Copy Message -->
+    <div id="copyJsonMsg" class="text-green-400 text-sm hidden">Copied to clipboard!</div>
+    
+    <!-- Agent Response Display -->
+    <div id="agentResponse" class="bg-gray-800 p-4 rounded-lg text-sm font-mono text-gray-300 min-h-[100px] max-h-[300px] overflow-auto hidden"></div>
+
+    <!-- The main AI interaction widget -->
+    <div id="aiVolumeWidget" class="main-ai-widget">
       <h2>AI Agent</h2>
       <div class="ai-volume-indicator">
         <div class="ai-avatar">
@@ -39,48 +94,63 @@
         </div>
         <canvas id="audio-wave"></canvas>
       </div>
-      <button id="joinChannel" class="mt-4 px-3 py-2 bg-cyan-500 text-gray-900 rounded disabled:opacity-50 disabled:pointer-events-none hover:bg-cyan-400">
-        Join Channel
-      </button>
-      <button id="leaveChannel" class="mt-4 px-3 py-2 bg-cyan-500 text-gray-900 rounded hover:bg-cyan-400 disabled:opacity-50 disabled:pointer-events-none" disabled>
-        Leave Channel
-      </button>
-      <div>
+      
+      <!-- Channel controls with mic button -->
+      <div class="flex items-center gap-2 mt-4">
+        <button id="joinChannel" class="flex-1 px-3 py-2 bg-cyan-500 text-gray-900 rounded disabled:opacity-50 disabled:pointer-events-none hover:bg-cyan-400">
+          Join Channel
+        </button>
+        <button id="toggleMicBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-2 rounded flex items-center justify-center flex-shrink-0" title="Mute Microphone">
+          <svg class="w-4 h-4 mic-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0019 10a1 1 0 10-2 0A5 5 0 015 10a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd"></path>
+          </svg>
+          <svg class="w-4 h-4 mic-off-icon hidden" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0019 10a1 1 0 10-2 0A5 5 0 015 10a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd"></path>
+            <path d="M3.707 2.293a1 1 0 00-1.414 1.414l6.921 6.922a1 1 0 001.414-1.414l-6.921-6.922zM15.5 10a1 1 0 00-1 1v1a1 1 0 01-1 1H6a1 1 0 01-1-1v-1a1 1 0 00-2 0v1a3 3 0 003 3h7.5a3 3 0 003-3v-1a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+          </svg>
+        </button>
+        <button id="leaveChannel" class="flex-1 px-3 py-2 bg-cyan-500 text-gray-900 rounded hover:bg-cyan-400 disabled:opacity-50 disabled:pointer-events-none" disabled>
+          Leave Channel
+        </button>
+      </div>
+      
+      <!-- Client UID and Token on same line -->
+      <div class="flex gap-2 mt-4">
+        <div class="flex-1">
         <input
           id="clientRtcUid"
-          class="mt-4 px-3 py-2 w-full rounded bg-gray-700 text-white"
+            class="w-full px-3 py-2 rounded bg-gray-700 text-white"
           placeholder="Client UID (if token required)"
         />
         <div id="clientUidNote" class="text-xs text-cyan-400 mt-1 hidden">
           Required when AI Avatar is enabled
         </div>
+        <div id="avatarUidNote" class="text-xs text-cyan-400 mt-1 hidden">
+          Note: Remote RTC UIDs have been automatically set to match your Client RTC UID.
+        </div>
       </div>
+        <div class="flex-1">
       <input
         id="clientRtcToken"
-        class="mt-4 px-3 py-2 w-full rounded bg-gray-700 text-white"
-        placeholder="Agora token  (if token required)"
-      />
+            class="w-full px-3 py-2 rounded bg-gray-700 text-white"
+            placeholder="Agora token (if token required)"
+          />
+        </div>
+      </div>
+
+      <!-- Split layout: Left and Right sections -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+        <!-- Left Section: Live Subtitles and Query -->
+        <div class="space-y-4">
       <!-- Live Subtitles Section -->
-      <div class="w-full p-4 bg-gray-700 rounded-lg mt-4">
+          <div class="w-full p-4 bg-gray-700 rounded-lg">
         <h3 class="text-lg font-semibold mb-3 text-cyan-400">Live Subtitles</h3>
         
         <div class="space-y-3">
-          <!-- Subtitle Controls -->
-          <div class="flex items-center space-x-2">
-            <input type="checkbox" id="enableSubtitles" class="rounded">
-            <label for="enableSubtitles" class="text-sm">Enable Live Subtitles</label>
-          </div>
-          
           <div class="flex space-x-2">
             <button id="toggleSubtitleOverlay" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50" disabled>
               Show Overlay
             </button>
-            <!--<button id="demoSubtitles" class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-50" disabled>
-              Demo Subtitles
-            </button>
-            <button id="testSubtitle" class="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 disabled:opacity-50" disabled>
-              Test Subtitle
-            </button> -->
           </div>
         </div>
         
@@ -103,8 +173,88 @@
         </div>
       </div>
 
-      <!-- Broadcast Message Section (moved here) -->
-      <div class="w-full p-4 bg-gray-700 rounded-lg mt-4">
+          <!-- Query Section -->
+          <div class="w-full p-4 bg-gray-700 rounded-lg">
+            <h3 class="text-sm font-semibold mb-3 text-gray-300">Query Agents</h3>
+            <div class="space-y-3">
+              <div class="has-tooltip relative">
+                <input
+                  id="agentId"
+                  class="w-full p-2 rounded bg-gray-800 text-white"
+                  placeholder="Agent ID to Query"
+                />
+                <div class="tooltip">Enter the ID of the agent you want to query</div>
+              </div>
+
+              <div class="grid grid-cols-1 gap-2">
+                <button
+                  id="queryAgentBtn"
+                  class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+                >
+                  Query Agent Status
+                </button>
+
+                <button
+                  id="listAgentsBtn"
+                  class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+                >
+                  Retrieve Agent List
+                </button>
+
+                <button
+                  id="getAgentHistoryBtn"
+                  class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+                >
+                  Retrieve Agent History
+                </button>
+              </div>
+
+              <div class="relative mt-4">
+                <button
+                  id="copyQueryResponseBtn"
+                  class="absolute top-2 right-2 bg-transparent hover:bg-gray-600 rounded p-0.5 focus:outline-none"
+                  title="Copy response"
+                  style="z-index:10;width:24px;height:24px;display:flex;align-items:center;justify-content:center;"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <rect x="9" y="9" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <rect x="3" y="3" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                </button>
+                <span id="copyQueryResponseMsg" class="absolute top-2 right-10 text-green-400 text-xs hidden" style="z-index:10;">Copied!</span>
+                <pre
+                  id="queryResponse"
+                  class="p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto"
+                ></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Section: Send Messages and Broadcast -->
+        <div class="space-y-4">
+      <!-- Message input area -->
+          <div class="w-full p-4 bg-gray-700 rounded-lg">
+        <h3 class="text-sm font-semibold mb-3 text-gray-300">Send Messages</h3>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <input type="text" id="messageInput" placeholder="Type a message..." class="flex-grow bg-gray-800 text-white px-2 py-1 rounded text-sm">
+            <button id="sendTextBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm">
+              <span class="material-icons text-sm">send</span>
+            </button>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" id="imageUrlInput" placeholder="Enter image URL..." class="flex-grow bg-gray-800 text-white px-2 py-1 rounded text-sm">
+            <button id="sendImageBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm flex items-center">
+              <span class="material-icons text-sm">send</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+          <!-- Broadcast Message Section -->
+          <div class="w-full p-4 bg-gray-700 rounded-lg">
+            <h3 class="text-sm font-semibold mb-3 text-gray-300">Broadcast Messages</h3>
         <div class="mb-2">
           <input
             id="broadcastText"
@@ -139,1291 +289,17 @@
         <div id="broadcastMsgStatus" class="mt-2 text-sm max-h-16 overflow-y-auto break-words"></div>
       </div>
     </div>
-
-    <div class="grid md:grid-cols-2 gap-6">
-      <!-- Left panel: Create/Update/Stop -->
-      <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-        <h1 class="text-xl font-bold mb-4 text-center">
-          Conversational AI Agent
-        </h1>
-
-        <!-- Text fields (required fields indicated via placeholder) -->
-        <div class="space-y-4">
-          <div class="has-tooltip relative">
-            <input
-              id="uniqueName"
-              class="w-full p-2 rounded bg-gray-700 text-white"
-              placeholder="The unique identifier of the agent (Required)"
-            />
-            <div class="tooltip">A unique name to identify this agent instance</div>
           </div>
-          <div class="has-tooltip relative">
-            <input
-              id="agoraChannelName"
-              class="w-full p-2 rounded bg-gray-700 text-white"
-              placeholder="Agora channel came (Required)"
-            />
-            <div class="tooltip">The Agora channel name where the agent will operate</div>
-          </div>
-          <div class="has-tooltip relative">
-            <input
-              id="agoraRtcUid"
-              class="w-full p-2 rounded bg-gray-700 text-white"
-              placeholder="Agora RTC UID (Required)"
-              value="8888"
-            />
-            <div class="tooltip">The unique identifier for this agent in the Agora channel</div>
-          </div>
-          <div class="flex items-center mb-4">
-            <div class="has-tooltip relative">
-              <input
-                type="checkbox"
-                id="enableStringUid"
-                class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded"
-              />
-              <div class="tooltip">Enable if you want to use string-based UIDs instead of numeric ones</div>
-            </div>
-            <label for="enableStringUid" class="text-sm">
-              Enable String UID
-            </label>
-          </div>
-          <div class="has-tooltip relative">
-            <input
-              id="agoraRtcToken"
-              class="w-full p-2 rounded bg-gray-700 text-white"
-              placeholder="Agora RTC token"
-            />
-            <div class="tooltip">Authentication token for Agora RTC (if required)</div>
           </div>
           
-          <!-- New v1.6 fields -->
-          <div class="has-tooltip relative">
-            <input
-              id="remoteRtcUids"
-              class="w-full p-2 rounded bg-gray-700 text-white"
-              placeholder="Remote RTC UIDs (Required, comma-separated or * for all)"
-              value="*"
-            />
-            <div class="tooltip">A list of user IDs that the agent subscribes to. Use * to subscribe to all users, or comma-separated UIDs like "1001,1002"</div>
-            <div id="avatarUidNote" class="text-xs text-cyan-400 mt-1 hidden">
-              AI Avatar enabled: Remote UIDs set to Client UID for agent configuration
-            </div>
-          </div>
-          
-          <div class="has-tooltip relative">
-            <input
-              id="idleTimeout"
-              type="number"
-              class="w-full p-2 rounded bg-gray-700 text-white"
-              placeholder="Idle Timeout (seconds, 0 = no timeout)"
-              value="30"
-            />
-            <div class="tooltip">Timeout after all users leave the channel. 0 means the agent doesn't exit until stopped manually. Default: 30</div>
-          </div>
 
-          <!-- LLM Settings Drawer Trigger -->
-          <button id="llmSettingsBtn" class="drawer-btn flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500 relative">
-            <span>LLM Settings</span>
-            <span class="text-sm">Language Model & Prompts</span>
-          </button>
-          <!-- LLM Drawer -->
-          <div id="llmDrawerBackdrop" class="drawer-backdrop hidden"></div>
-          <div id="llmDrawer" class="drawer hidden">
-            <button class="drawer-close absolute top-2 right-2" data-drawer="llmDrawer">&times;</button>
-            <div class="drawer-content space-y-4">
-              <div class="has-tooltip relative">
-                <input
-                  id="llmModel"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="llmModel"
-                  value="gpt-4o-mini"
-                />
-                <div class="tooltip">The language model to use for generating responses.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <input
-                  id="llmApiKey"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="LLM API Key (Required)"
-                />
-                <div class="tooltip">Your API key for accessing the language model service.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <input
-                  id="llmUrl"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="LLM URL (Required)"
-                  value="https://api.openai.com/v1/chat/completions"
-                />
-                <div class="tooltip">The endpoint URL for the language model API.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <input
-                  id="gMsg"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Greeting Message (Required)"
-                  value="Hello, how can I help you?"
-                />
-                <div class="tooltip">The initial greeting message the agent will use.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <input
-                  id="fMsg"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Failure Message(Required)"
-                  value="Sorry, I do not know how to answer this question."
-                />
-                <div class="tooltip">The message shown when the agent cannot answer a question.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <input
-                  id="sMsgContent"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="System Instructions (Required)"
-                  value="You are Avi Tar, a smart, friendly voice assistant designed for natural conversations. You always reference yourself by your full name. 
-                  The user speaks to you directly — treat each input as part of a live, spoken dialogue.  Keep your responses clear, concise, and conversational. Speak as if you're part of a real-time exchange. Avoid overly long explanations unless the user asks for more detail.  Maintain a warm, helpful tone. You can answer questions, translate, tell jokes, explain concepts, or help with everyday tasks.  Never refer to yourself as an AI or describe how the system works. Don't mention text, typing, or messages — act as if this is a purely spoken interaction.  Only ask follow-up questions when absolutely necessary. Keep the flow natural and human-like. You appears as a visible, expressive avatar — the user can see your face, gestures, and reactions during the conversation."
-                />
-                <div class="tooltip">System instructions that define the agent's behavior and personality.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <input
-                  id="llmVendor"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="LLM Vendor (Optional)"
-                />
-                <div class="tooltip">LLM provider (optional). Supports: custom (for custom LLMs), openai, gemini, anthropic, etc. If set to 'custom', the agent includes turn_id and timestamp in requests. Leave blank to omit.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <input
-                  id="llmStyle"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="LLM Style (Optional, e.g. openai)"
-                />
-                <div class="tooltip">Request style for chat completion (optional). Use 'openai' for OpenAI-compatible APIs or custom LLM. Possible values: openai, gemini, anthropic. Leave blank to omit.</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- TTS Settings Drawer Trigger -->
-          <button id="ttsSettingsBtn" class="drawer-btn flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500 relative">
-            <span>TTS Settings</span>
-            <span class="text-sm">Voice & API Configuration</span>
-          </button>
-          <!-- TTS Drawer -->
-          <div id="ttsDrawerBackdrop" class="drawer-backdrop hidden"></div>
-          <div id="ttsDrawer" class="drawer hidden">
-            <button class="drawer-close absolute top-2 right-2" data-drawer="ttsDrawer">&times;</button>
-            <div class="drawer-content space-y-4">
-              <div class="has-tooltip relative">
-                <select
-                  id="ttsVendor"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                >
-                  <option value="microsoft">Microsoft</option>
-                  <option value="elevenlabs">ElevenLabs</option>
-                  <option value="cartesia">Cartesia (Beta)</option>
-                  <option value="openai">OpenAI (Beta)</option>
-                  <option value="humeai">Hume AI (Beta)</option>
-                </select>
-                <div class="tooltip">Select the Text-to-Speech vendor to use for voice output.</div>
-              </div>
-              <div id="microsoftRegionBlock" class="has-tooltip relative">
-                <select
-                  id="ttsRegion"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                >
-                  <option value="australiaeast">australia east</option>
-                  <option value="brazilsouth">brazil south</option>
-                  <option value="canadacentral">canada central</option>
-                  <option value="centralindia">central india</option>
-                  <option value="centralus">central us</option>
-                  <option value="eastasia">east asia</option>
-                  <option value="eastus" selected>east us</option>
-                  <option value="eastus2">east us2</option>
-                  <option value="francecentral">France Central</option>
-                  <option value="germanywestcentral">Germany West Central</option>
-                  <option value="japaneast">japan east</option>
-                  <option value="japanwest">japan west</option>
-                  <option value="koreacentral">korea central</option>
-                  <option value="northcentralus">north central us</option>
-                  <option value="northeurope">north europe</option>
-                  <option value="norwayeast">norway east</option>
-                  <option value="qatarcentral">qatar central</option>
-                  <option value="southafricanorth">south africa north</option>
-                  <option value="southcentralus">south central us</option>
-                  <option value="southeastasia">south east asia</option>
-                  <option value="swedencentral">sweden central</option>
-                  <option value="switzerlandnorth">switzerland north</option>
-                  <option value="switzerlandwest">switzerland west</option>
-                  <option value="uaenorth">uae north</option>
-                  <option value="uksouth">uk south</option>
-                  <option value="westcentralus">west central us</option>
-                  <option value="westeurope">west europe</option>
-                  <option value="westus">west us</option>
-                  <option value="westus2">west us2</option>
-                  <option value="westus3">west us3</option>
-                </select>
-                <div class="tooltip">Select the Microsoft TTS region for voice synthesis.</div>
-              </div>
-              <div id="microsoftLangBlock" class="has-tooltip relative">
-                <select
-                  id="microsoftLangSelect"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                >
-                  <!-- Populated by JavaScript -->
-                </select>
-                <div class="tooltip">Select the language for Microsoft TTS voices.</div>
-              </div>
-              <div id="microsoftVoiceBlock" class="has-tooltip relative">
-                <select
-                  id="microsoftVoiceSelect"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                >
-                  <!-- Populated by JavaScript -->
-                </select>
-                <div class="tooltip">Select the Microsoft TTS voice for speech output.</div>
-              </div>
-              <div id="microsoftTtsKeyBlock" class="has-tooltip relative">
-                <input
-                  id="ttsKey"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="ttsKey (Required)"
-                />
-                <div class="tooltip">API key for the Text-to-Speech service.</div>
-              </div>
-              <div id="microsoftRateBlock" class="has-tooltip relative">
-                <input
-                  id="microsoftRate"
-                  type="number"
-                  step="0.1"
-                  min="0.5"
-                  max="2.0"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Rate (Optional, 0.5-2.0)"
-                />
-                <div class="tooltip">Speaking rate of the text. Range: 0.5-2.0 times the original audio speed.</div>
-              </div>
-              <div id="microsoftSpeedBlock" class="has-tooltip relative">
-                <input
-                  id="microsoftSpeed"
-                  type="number"
-                  step="0.1"
-                  min="0.5"
-                  max="2.0"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Speed (Optional, 0.5-2.0)"
-                />
-                <div class="tooltip">Speaking rate of the text. Range: 0.5-2.0 times the original audio speed.</div>
-              </div>
-              <div id="microsoftVolumeBlock" class="has-tooltip relative">
-                <input
-                  id="microsoftVolume"
-                  type="number"
-                  step="1"
-                  min="0"
-                  max="100"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Volume (Optional, 0-100)"
-                />
-                <div class="tooltip">Audio volume (0.0-100.0). 0.0 is quietest, 100.0 is loudest.</div>
-              </div>
-              <div id="microsoftSampleRateBlock" class="has-tooltip relative">
-                <input
-                  id="microsoftSampleRate"
-                  type="number"
-                  step="1000"
-                  min="8000"
-                  max="48000"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Sample Rate (Optional, Hz)"
-                  value = "24000"/>
-                <div class="tooltip">Audio sampling rate in Hz. Default: 24000</div>
-              </div>
-              <div id="elevenLabsModelBlock" class="has-tooltip relative hidden">
-                <input
-                  id="elevenLabsModelId"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="ElevenLabs Model ID"
-                />
-                <div class="tooltip">Enter the ElevenLabs model ID for voice synthesis.</div>
-              </div>
-              <div id="elevenLabsVoiceBlock" class="has-tooltip relative hidden">
-                <select
-                  id="elevenLabsVoiceSelect"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                >
-                  <option value="">—</option>
-                  <option value="other">Other</option>
-                </select>
-                <div class="tooltip">Select the ElevenLabs voice for speech output.</div>
-              </div>
-              <div id="elevenLabsVoiceIdBlock" class="has-tooltip relative hidden">
-                <input
-                  id="elevenLabsVoiceId"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Custom ElevenLabs Voice ID"
-                />
-                <div class="tooltip">Enter a custom ElevenLabs voice ID if "Other" is selected.</div>
-              </div>
-              <div class="has-tooltip relative hidden" id="elevenLabsTtsKeyBlock">
-                <input
-                  id="elevenLabsTtsKey"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="ttsKey (Required)"
-                />
-                <div class="tooltip">API key for the Text-to-Speech service.</div>
-              </div>
-              <div id="elevenLabsSampleRateBlock" class="has-tooltip relative hidden">
-                <input
-                  id="elevenLabsSampleRate"
-                  type="number"
-                  step="1000"
-                  min="8000"
-                  max="48000"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Sample Rate (Optional,Hz)"
-                  value = "24000"
-                />
-                <div class="tooltip">Audio sampling rate in Hz. Default: 24000</div>
-              </div>
-              <div id="elevenLabsStabilityBlock" class="has-tooltip relative hidden">
-                <input
-                  id="elevenLabsStability"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="1"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Stability (Optional, 0-1)"
-                />
-                <div class="tooltip">Voice stability setting. Range: 0-1</div>
-              </div>
-              <div id="elevenLabsSimilarityBoostBlock" class="has-tooltip relative hidden">
-                <input
-                  id="elevenLabsSimilarityBoost"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="1"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Similarity Boost (Optional, 0-1)"
-                />
-                <div class="tooltip">Voice similarity boost setting. Range: 0-1</div>
-              </div>
-              <div id="elevenLabsStyleBlock" class="has-tooltip relative hidden">
-                <input
-                  id="elevenLabsStyle"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="1"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Style (Optional, 0-1)"
-                />
-                <div class="tooltip">Voice style setting. Range: 0-1</div>
-              </div>
-              <div id="elevenLabsUseSpeakerBoostBlock" class="has-tooltip relative hidden">
-                <div class="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="elevenLabsUseSpeakerBoost"
-                    class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded"
-                  />
-                  <label for="elevenLabsUseSpeakerBoost" class="text-sm">Use Speaker Boost</label>
-                </div>
-                <div class="tooltip">Enable speaker boost for enhanced voice quality</div>
-              </div>
-              <div id="cartesiaTtsKeyBlock" class="has-tooltip relative hidden">
-                <input
-                  id="cartesiaTtsKey"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Cartesia API Key (Required)"
-                />
-                <div class="tooltip">API key for the Cartesia TTS service.</div>
-              </div>
-              <div id="cartesiaModelBlock" class="has-tooltip relative hidden">
-                <input
-                  id="cartesiaModelId"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Cartesia Model ID (Required)"
-                  value="sonic-2"
-                />
-                <div class="tooltip">Enter the Cartesia model ID for voice synthesis.</div>
-              </div>
-              <div id="cartesiaVoiceBlock" class="has-tooltip relative hidden">
-                <input
-                  id="cartesiaVoiceId"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Cartesia Voice ID (Required)"
-                />
-                <div class="tooltip">Enter the identifier of the selected voice for speech synthesis. This will be used with mode 'id' in the voice configuration object.</div>
-              </div>
-              <div id="openaiTtsKeyBlock" class="has-tooltip relative hidden">
-                <input
-                  id="openaiTtsKey"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="OpenAI API Key (Required)"
-                />
-                <div class="tooltip">API key for the OpenAI TTS service.</div>
-              </div>
-              <div id="openaiModelBlock" class="has-tooltip relative hidden">
-                <input
-                  id="openaiModel"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="OpenAI Model (Required)"
-                  value="gpt-4o-mini-tts"
-                />
-                <div class="tooltip">Enter the OpenAI model for voice synthesis.</div>
-              </div>
-              <div id="openaiVoiceBlock" class="has-tooltip relative hidden">
-                <input
-                  id="openaiVoice"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="OpenAI Voice (Required)"
-                  value="coral"
-                />
-                <div class="tooltip">Enter the OpenAI voice for speech output.</div>
-              </div>
-              <div id="openaiInstructionsBlock" class="has-tooltip relative hidden">
-                <input
-                  id="openaiInstructions"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="OpenAI Instructions (Optional)"
-                />
-                <div class="tooltip">Control the voice of your generated audio with additional instructions. Does not work with tts-1 or tts-1-hd.</div>
-              </div>
-              <div id="openaiSpeedBlock" class="has-tooltip relative hidden">
-                <input
-                  id="openaiSpeed"
-                  type="number"
-                  step="0.1"
-                  min="0.25"
-                  max="4.0"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Speed (Optional, 0.25-4.0)"
-                  value="1.0"
-                />
-                <div class="tooltip">Speaking rate of the text. Range: 0.25-4.0 times the original audio speed.</div>
-              </div>
-              <div id="humeaiTtsKeyBlock" class="has-tooltip relative hidden">
-                <input
-                  id="humeaiTtsKey"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Hume AI API Key (Required)"
-                />
-                <div class="tooltip">API key for the Hume AI TTS service.</div>
-              </div>
-              <div id="humeaiVoiceIdBlock" class="has-tooltip relative hidden">
-                <input
-                  id="humeaiVoiceId"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Hume AI Voice ID (Required)"
-                />
-                <div class="tooltip">Enter the Hume AI voice ID for speech synthesis.</div>
-              </div>
-              <div id="humeaiProviderBlock" class="has-tooltip relative hidden">
-                <input
-                  id="humeaiProvider"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Provider (Optional)"
-                  value="HUME_AI"
-                />
-                <div class="tooltip">Provider for Hume AI TTS service. Default: HUME_AI</div>
-              </div>
-              <div id="humeaiSpeedBlock" class="has-tooltip relative hidden">
-                <input
-                  id="humeaiSpeed"
-                  type="number"
-                  step="0.1"
-                  min="0.1"
-                  max="5.0"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Speed (Optional, 0.1-5.0)"
-                  value="1.0"
-                />
-                <div class="tooltip">Speaking rate of the text. Range: 0.1-5.0 times the original audio speed.</div>
-              </div>
-              <div id="humeaiTrailingSilenceBlock" class="has-tooltip relative hidden">
-                <input
-                  id="humeaiTrailingSilence"
-                  type="number"
-                  step="0.05"
-                  min="0"
-                  max="2.0"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Trailing Silence (Optional, 0-2.0)"
-                  value="0.35"
-                />
-                <div class="tooltip">Trailing silence duration in seconds. Range: 0-2.0 seconds.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <label for="skipPatterns" class="block text-sm mb-1">Skip Patterns (Optional)</label>
-                <select
-                  id="skipPatterns"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  multiple
-                >
-                  <option value="">None</option>
-                  <option value="1">1: Skip content in Chinese parentheses （）</option>
-                  <option value="2">2: Skip content in Chinese square brackets 【】</option>
-                  <option value="3">3: Skip content in parentheses ( )</option>
-                  <option value="4">4: Skip content in square brackets [ ]</option>
-                  <option value="5">5: Skip content in curly braces { }</option>
-                </select>
-                <div class="tooltip">
-                  Skips bracketed content in LLM responses for more natural speech. Select 'None' to disable. If multiple types are selected, only the outermost brackets are processed.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- AI Avatar Settings Drawer Trigger -->
-          <button id="avatarSettingsBtn" class="drawer-btn flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500 relative">
-            <span class="flex items-center">
-              <input type="checkbox" id="enableAvatar" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-              AI Avatar Settings
-            </span>
-            <span class="text-sm">Avatar Configuration</span>
-          </button>
-          <!-- AI Avatar Drawer -->
-          <div id="avatarDrawerBackdrop" class="drawer-backdrop hidden"></div>
-          <div id="avatarDrawer" class="drawer hidden">
-            <button class="drawer-close absolute top-2 right-2" data-drawer="avatarDrawer">&times;</button>
-            <div class="drawer-content space-y-4">
-              <div class="has-tooltip relative">
-                <select
-                  id="avatarVendor"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                >
-                  <option value="akool">Akool</option>
-                  <option value="heygen">HeyGen</option>
-                </select>
-                <div class="tooltip">Select the AI Avatar vendor to use for video generation.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <input
-                  id="avatarApiKey"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Avatar API Key (Required)"
-                />
-                <div class="tooltip">API key for the AI Avatar service.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <input
-                  id="avatarId"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Avatar ID (Required)"
-                />
-                <div class="tooltip">The unique identifier for the avatar to use.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <input
-                  id="avatarRtcUid"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Avatar RTC UID (Required)"
-                />
-                <div class="tooltip">The RTC UID for the avatar in the channel.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <input
-                  id="avatarRtcToken"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Avatar RTC Token (Optional)"
-                />
-                <div class="tooltip">The RTC token for the avatar to join the channel. Optional if your app doesn't require tokens.</div>
-              </div>
-              <!-- HeyGen specific settings -->
-              <div id="heygenSettings" class="hidden space-y-2">
-                <div class="has-tooltip relative">
-                  <select
-                    id="heygenQuality"
-                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  >
-                    <option value="medium">Medium (480p)</option>
-                    <option value="high">High (720p)</option>
-                    <option value="low">Low (360p)</option>
-                  </select>
-                  <div class="tooltip">Video quality setting for HeyGen avatar.</div>
-                </div>
-                <div class="has-tooltip relative">
-                  <div class="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="heygenDisableIdleTimeout"
-                      class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded"
-                    />
-                    <label for="heygenDisableIdleTimeout" class="text-sm">Disable Idle Timeout</label>
-                  </div>
-                  <div class="tooltip">Whether to disable idle timeout for HeyGen avatar.</div>
-                </div>
-                <div class="has-tooltip relative">
-                  <input
-                    id="heygenActivityIdleTimeout"
-                    type="number"
-                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                    placeholder="Activity Idle Timeout (seconds)"
-                    value="60"
-                  />
-                  <div class="tooltip">Activity idle timeout in seconds for HeyGen avatar.</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- MLLM Settings Drawer Trigger -->
-          <button id="mllmSettingsBtn" class="drawer-btn flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500 relative" style="min-width:200px">
-            <span class="flex items-center">
-              <input type="checkbox" id="enableMllm" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-              MLLM Settings
-            </span>
-            <span class="text-sm">Multimodal Large Language Model</span>
-          </button>
-          <!-- MLLM Drawer -->
-          <div id="mllmDrawerBackdrop" class="drawer-backdrop hidden"></div>
-          <div id="mllmDrawer" class="drawer hidden">
-            <button class="drawer-close absolute top-2 right-2" data-drawer="mllmDrawer">&times;</button>
-            <div class="drawer-content space-y-4">
-              <div class="has-tooltip relative">
-                <input
-                  id="mllmUrl"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="MLLM WebSocket URL (Required)"
-                  value="wss://api.openai.com/v1/realtime"
-                />
-                <div class="tooltip">The MLLM WebSocket URL for real-time communication.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <input
-                  id="mllmApiKey"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="MLLM API Key (Required)"
-                />
-                <div class="tooltip">The API key used for MLLM authentication.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <input
-                  id="mllmGreetingMessage"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="MLLM Greeting Message (Optional)"
-                  value="Hello, how can I help you?"
-                />
-                <div class="tooltip">Agent greeting message for MLLM. If provided, the first user in the channel is automatically greeted.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <select
-                  id="mllmVendor"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                >
-                  <option value="openai">OpenAI</option>
-                </select>
-                <div class="tooltip">MLLM provider. Currently supports OpenAI Realtime API.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <select
-                  id="mllmStyle"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                >
-                  <option value="openai">OpenAI</option>
-                </select>
-                <div class="tooltip">The request style for MLLM completion. Currently supports OpenAI Realtime API format.</div>
-              </div>
-              <div class="has-tooltip relative">
-                <input
-                  id="mllmMaxHistory"
-                  type="number"
-                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder="Max History (Optional, default: 32)"
-                  value="32"
-                  min="1"
-                />
-                <div class="tooltip">The number of conversation history messages cached in the MLLM. Minimum value is 1.</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Advanced Configuration Drawer Trigger -->
-          <button id="advConfigBtn" class="drawer-btn flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500 relative">
-            <span>Advanced Config</span>
-            <span class="text-sm">Advanced Features, Turn Detection & Parameters</span>
-          </button>
-          <!-- Advanced Config Drawer -->
-          <div id="advDrawerBackdrop" class="drawer-backdrop hidden"></div>
-          <div id="advDrawer" class="drawer hidden">
-            <button class="drawer-close absolute top-2 right-2" data-drawer="advDrawer">&times;</button>
-            <div class="drawer-content space-y-4">
-              <!-- Advanced Features -->
-              <div class="mb-4">
-                <button id="advancedFeaturesBtn" class="flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500">
-                  <span class="flex items-center">
-                    <span>Advanced Features</span>
-                  </span>
-                  <span class="text-sm">AIVAD, MLLM, RTM</span>
-                </button>
-                <div id="advancedFeaturesConfig" class="mt-2 space-y-2">
-                  <div class="flex items-center space-x-4">
-                    <label class="flex items-center has-tooltip relative">
-                      <input type="checkbox" id="enableAivad" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-                      <span>Enable AIVAD</span>
-                      <div class="tooltip">Enable intelligent interruption handling function (AIVAD). Currently available only for English.</div>
-                    </label>
-                    <label class="flex items-center has-tooltip relative">
-                      <input type="checkbox" id="enableRtm" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-                      <span>Enable RTM</span>
-                      <div class="tooltip">Enable Signaling (RTM) service for advanced functions like delivering custom information.</div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Turn Detection -->
-              <div class="mb-4">
-                <button id="turnDetectionBtn" class="flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500">
-                  <span class="flex items-center">
-                    <input type="checkbox" id="turnDetectionEnabled" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-                    Turn Detection
-                  </span>
-                  <span class="text-sm">Default: agora_vad</span>
-                </button>
-                <div id="turnDetectionConfig" class="hidden mt-2 space-y-2">
-                  <div class="has-tooltip relative">
-                    <label class="text-sm">Turn Detection Type</label>
-                    <select id="turnDetectionType" class="w-full p-2 rounded bg-gray-600 turn-field">
-                      <option value="agora_vad">Agora VAD</option>
-                      <option value="server_vad">Server VAD (MLLM + OpenAI only)</option>
-                      <option value="semantic_vad">Semantic VAD (MLLM + OpenAI only)</option>
-                    </select>
-                    <div class="tooltip">Turn detection mechanism. Server VAD and Semantic VAD are only available when MLLM is enabled and OpenAI is selected.</div>
-                  </div>
-                  <div class="has-tooltip relative">
-                    <label class="text-sm">Interrupt Mode</label>
-                    <select id="interruptMode" class="w-full p-2 rounded bg-gray-600 turn-field">
-                      <option value="interrupt">Interrupt (Stop and process input)</option>
-                      <option value="append">Append (Complete current, then process)</option>
-                      <option value="ignore">Ignore (Discard input)</option>
-                    </select>
-                    <div class="tooltip">Sets the agent's behavior when human voice interrupts the agent while it is interacting. Only interrupt mode is supported when MLLM is enabled.</div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div class="has-tooltip relative">
-                      <label class="text-sm">Interrupt Duration (ms)</label>
-                      <div class="tooltip">The amount of time in milliseconds that the user's voice must exceed the VAD threshold before an interruption is triggered. Default: 160</div>
-                    </div>
-                    <input type="number" id="turnInterruptDuration" class="p-1 rounded bg-gray-600 turn-field" placeholder="160">
-                    <div class="has-tooltip relative">
-                      <label class="text-sm">Prefix Padding (ms)</label>
-                      <div class="tooltip">The extra forward padding time in milliseconds before the processing system starts to process the speech input. Helps capture the beginning of speech. Default: 800</div>
-                    </div>
-                    <input type="number" id="turnPrefixPadding" class="p-1 rounded bg-gray-600 turn-field" placeholder="800">
-                    <div class="has-tooltip relative">
-                      <label class="text-sm">Silence Duration (ms)</label>
-                      <div class="tooltip">The duration of audio silence in milliseconds. If no voice activity is detected during this period, the agent assumes the user has stopped speaking. Default: 640</div>
-                    </div>
-                    <input type="number" id="turnSilenceDuration" class="p-1 rounded bg-gray-600 turn-field" placeholder="640">
-                    <div class="has-tooltip relative">
-                      <label class="text-sm">Threshold (0.0-1.0)</label>
-                      <div class="tooltip">Identification sensitivity. Determines the level of sound considered voice activity. Lower values make it easier to detect speech. Range: (0.0, 1.0). Default: 0.5</div>
-                    </div>
-                    <input type="number" id="turnThreshold" class="p-1 rounded bg-gray-600 turn-field" placeholder="0.5" step="0.1" min="0" max="1">
-                  </div>
-                  <!-- MLLM-specific options (server_vad and semantic_vad) -->
-                  <div id="mllmOptionsContainer" class="hidden">
-                    <div class="grid grid-cols-2 gap-2">
-                      <div class="has-tooltip relative">
-                        <label class="text-sm">Create Response</label>
-                        <div class="tooltip">Whether to automatically generate a response when a VAD stop event occurs. Only available in server_vad and semantic_vad modes when using OpenAI Realtime API.</div>
-                      </div>
-                      <select id="turnCreateResponse" class="p-1 rounded bg-gray-600 turn-field">
-                        <option value="true">True</option>
-                        <option value="false">False</option>
-                      </select>
-                      <div class="has-tooltip relative">
-                        <label class="text-sm">Interrupt Response</label>
-                        <div class="tooltip">Whether to automatically interrupt any ongoing response when a VAD start event occurs. Only available in server_vad and semantic_vad modes when using OpenAI Realtime API.</div>
-                      </div>
-                      <select id="turnInterruptResponse" class="p-1 rounded bg-gray-600 turn-field">
-                        <option value="true">True</option>
-                        <option value="false">False</option>
-                      </select>
-                    </div>
-                    <!-- Eagerness option (semantic_vad only) -->
-                    <div id="eagernessContainer" class="hidden mt-2">
-                      <div class="grid grid-cols-2 gap-2">
-                        <div class="has-tooltip relative">
-                          <label class="text-sm">Eagerness</label>
-                          <div class="tooltip">The eagerness of the model to respond. Only available in semantic_vad mode when using OpenAI Realtime API.</div>
-                        </div>
-                        <select id="turnEagerness" class="p-1 rounded bg-gray-600 turn-field">
-                          <option value="auto">Auto (Medium)</option>
-                          <option value="low">Low</option>
-                          <option value="high">High</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <!-- Parameters -->
-              <div class="mb-4">
-                <button id="parametersBtn" class="flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500">
-                  <span class="flex items-center">
-                    <input type="checkbox" id="parametersEnabled" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-                    Parameters
-                  </span>
-                  <span class="text-sm">Silence Config, Data Channel & Metrics</span>
-                </button>
-                <div id="parametersConfig" class="hidden mt-2 space-y-2">
-                  <!-- Silence Configuration -->
-                  <div class="mb-4">
-                    <h4 class="text-sm font-semibold mb-2">Silence Configuration</h4>
-                    <div class="grid grid-cols-2 gap-2">
-                      <div class="has-tooltip relative">
-                        <label class="text-sm">Silence Timeout (ms)</label>
-                        <div class="tooltip">Specifies the maximum duration (in ms) the agent can remain silent. 0 disables the silent reminder. (0, 60000] enables it. Default: 0. Note: Does not apply when MLLM is enabled.</div>
-                      </div>
-                      <input type="number" id="silenceTimeout" class="p-1 rounded bg-gray-600 param-field" placeholder="0" min="0" max="60000">
-                      <div class="has-tooltip relative">
-                        <label class="text-sm">Action</label>
-                        <div class="tooltip">Specifies how the agent behaves when the silent timeout is reached. <br>speak: Uses TTS to announce the silent prompt. <br>think: Appends the silent prompt to the context and passes it to the LLM.</div>
-                      </div>
-                      <select id="silenceAction" class="p-1 rounded bg-gray-600 param-field">
-                        <option value="speak">Speak</option>
-                        <option value="think">Think</option>
-                      </select>
-                      <div class="has-tooltip relative">
-                        <label class="text-sm">Content</label>
-                        <div class="tooltip">Specifies the silent prompt message. The message use depends on the value of the action parameter.</div>
-                      </div>
-                      <input type="text" id="silenceContent" class="p-1 rounded bg-gray-600 param-field" placeholder="Silence reminder message">
-                    </div>
-                  </div>
-                  
-                  <!-- Data Channel Configuration -->
-                  <div class="mb-4">
-                    <h4 class="text-sm font-semibold mb-2">Data Channel Configuration</h4>
-                    <div class="has-tooltip relative">
-                      <label class="text-sm">Data Channel</label>
-                      <select id="dataChannel" class="w-full p-2 rounded bg-gray-600 param-field">
-                        <option value="datastream">Data Stream (RTC)</option>
-                        <option value="rtm">RTM (Requires RTM enabled)</option>
-                      </select>
-                      <div class="tooltip">Agent data transmission channel. RTM option only takes effect when advanced_features.enable_rtm is true.</div>
-                    </div>
-                    <div class="has-tooltip relative mt-2" id="agentRtmUidBlock" style="display:none;" hidden>
-                      <label for="agentRtmUid" class="text-sm" hidden>RTM UID</label>
-                      <input type="text" id="agentRtmUid" class="w-full p-2 rounded bg-gray-600 param-field text-white" placeholder="RTM UID (auto-filled from RTC UID)" />
-                      <div class="tooltip">The RTM UID for the agent. Defaults to the RTC UID but can be changed. Only used if RTM is enabled.</div>
-                    </div>
-                  </div>
-                  
-                  <!-- Transcript Configuration (always visible when Parameters enabled) -->
-                  <div class="mb-4 hidden" id="transcriptConfig">
-                    <h4 class="text-sm font-semibold mb-2">Transcript Configuration</h4>
-                    <div class="grid grid-cols-2 gap-2 text-sm">
-                      <div class="flex items-center">
-                        <input type="checkbox" id="transcriptEnableSet" class="h-4 w-4 text-blue-400 bg-gray-700 border-gray-600 rounded mr-2" aria-label="Set Enable Transcript">
-                        <span class="text-sm">Enable Transcript</span>
-                      </div>
-                      <select id="transcriptEnable" class="w-full p-1 rounded bg-gray-700 text-white border border-gray-500 focus:border-blue-500 text-sm" disabled aria-label="Enable Transcript Value">
-                        <option value="true">True</option>
-                        <option value="false">False</option>
-                      </select>
-
-                      <div class="flex items-center">
-                        <input type="checkbox" id="transcriptProtocolVersionSet" class="h-4 w-4 text-blue-400 bg-gray-700 border-gray-600 rounded mr-2" aria-label="Set Protocol Version">
-                        <span class="text-sm">Protocol Version</span>
-                      </div>
-                      <input type="text" id="transcriptProtocolVersion" value="v2" class="w-full p-1 rounded bg-gray-700 text-white border border-gray-500 focus:border-blue-500 text-sm" disabled aria-label="Protocol Version Value">
-
-                      <div class="flex items-center">
-                        <input type="checkbox" id="transcriptEnableWordsSet" class="h-4 w-4 text-blue-400 bg-gray-700 border-gray-600 rounded mr-2" aria-label="Set Enable Words">
-                        <span class="text-sm">Enable Words</span>
-                      </div>
-                      <select id="transcriptEnableWords" class="w-full p-1 rounded bg-gray-700 text-white border border-gray-500 focus:border-blue-500 text-sm" disabled aria-label="Enable Words Value">
-                        <option value="true">True</option>
-                        <option value="false">False</option>
-                      </select>
-
-                      <div class="flex items-center">
-                        <input type="checkbox" id="transcriptRedundantSet" class="h-4 w-4 text-blue-400 bg-gray-700 border-gray-600 rounded mr-2" aria-label="Set Redundant Transcript">
-                        <span class="text-sm">Redundant Transcript</span>
-                      </div>
-                      <select id="transcriptRedundant" class="w-full p-1 rounded bg-gray-700 text-white border border-gray-500 focus:border-blue-500 text-sm" disabled aria-label="Redundant Transcript Value">
-                        <option value="true">True</option>
-                        <option value="false">False</option>
-                      </select>
-                    </div>
-                  </div>
-                  <!-- Move RTM Metrics Configuration to the bottom of Parameters -->
-                  <div class="mb-4 hidden text-sm" id="rtmMetricsConfig">
-                    <h4 class="text-sm font-semibold mb-2">RTM Metrics Configuration</h4>
-                    <div class="flex items-center space-x-4 text-sm">
-                      <label class="flex items-center has-tooltip relative text-sm">
-                        <input type="checkbox" id="enableMetrics" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-                        <span>Enable Metrics</span>
-                        <div class="tooltip text-xs">Whether to receive agent performance data. Only takes effect when RTM is enabled.</div>
-                      </label>
-                      <label class="flex items-center has-tooltip relative text-sm">
-                        <input type="checkbox" id="enableErrorMessage" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-                        <span>Enable Error Messages</span>
-                        <div class="tooltip text-xs">Whether to receive agent error events. Only takes effect when RTM is enabled.</div>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ASR Configuration -->
-          <div class="w-full p-2 rounded bg-gray-700 text-white relative" id="asrConfigBox">
-            <span class="block mb-1 font-semibold">ASR Configuration</span>
-            <div class="has-tooltip relative">
-              <select
-                id="asrVendor"
-                class="w-full p-2 rounded bg-gray-700 text-white mb-2"
-              >
-                <option value="ares">ARES (Default)</option>
-                <option value="microsoft">Microsoft</option>
-                <option value="deepgram">Deepgram</option>
-              </select>
-              <div class="tooltip">Select the Automatic Speech Recognition (ASR) vendor to use for speech recognition.</div>
-            </div>
-
-            <!-- Agora ASR Configuration -->
-            <div id="agoraAsrConfig" class="has-tooltip relative">
-              <select
-                id="agoraAsrLang"
-                class="w-full p-2 rounded bg-gray-700 text-white"
-              >
-                <option value="ar-EG">Arabic (Egypt) (ar-EG)</option>
-                <option value="ar-JO">Arabic (Jordan) (ar-JO)</option>
-                <option value="ar-SA">Arabic (Saudi Arabia) (ar-SA)</option>
-                <option value="ar-AE">Arabic (UAE) (ar-AE)</option>
-                <option value="bn-IN">Bengali (India) (bn-IN)</option>
-                <option value="zh-CN">Chinese (Mainland) (zh-CN)</option>
-                <option value="zh-HK">Chinese (Hong Kong) (zh-HK)</option>
-                <option value="zh-TW">Chinese (Taiwan) (zh-TW)</option>
-                <option value="nl-NL">Dutch (Netherlands) (nl-NL)</option>
-                <option value="en-IN">English (India) (en-IN)</option>
-                <option value="en-US" selected>English (US) (en-US)</option>
-                <option value="fil-PH">Filipino (Philippines) (fil-PH)</option>
-                <option value="fr-FR">French (France) (fr-FR)</option>
-                <option value="de-DE">German (Germany) (de-DE)</option>
-                <option value="gu-IN">Gujarati (India) (gu-IN)</option>
-                <option value="he-IL">Hebrew (Israel) (he-IL)</option>
-                <option value="hi-IN">Hindi (India) (hi-IN)</option>
-                <option value="id-ID">Indonesian (Indonesia) (id-ID)</option>
-                <option value="it-IT">Italian (Italy) (it-IT)</option>
-                <option value="ja-JP">Japanese (Japan) (ja-JP)</option>
-                <option value="kn-IN">Kannada (India) (kn-IN)</option>
-                <option value="ko-KR">Korean (Korea) (ko-KR)</option>
-                <option value="ms-MY">Malay (Malaysia) (ms-MY)</option>
-                <option value="fa-IR">Persian (Iran) (fa-IR)</option>
-                <option value="pt-PT">Portuguese (Portugal) (pt-PT)</option>
-                <option value="ru-RU">Russian (Russia) (ru-RU)</option>
-                <option value="es-ES">Spanish (Spain) (es-ES)</option>
-                <option value="ta-IN">Tamil (India) (ta-IN)</option>
-                <option value="te-IN">Telugu (India) (te-IN)</option>
-                <option value="th-TH">Thai (Thailand) (th-TH)</option>
-                <option value="tr-TR">Turkish (Turkey) (tr-TR)</option>
-                <option value="vi-VN">Vietnamese (Vietnam) (vi-VN)</option>
-              </select>
-              <div class="tooltip">Select the language for Agora Automatic Speech Recognition (ASR).</div>
-            </div>
-
-            <!-- Microsoft ASR Configuration -->
-            <div id="microsoftAsrConfig" class="hidden">
-              <div class="space-y-2">
-                <div class="has-tooltip relative">
-                  <input
-                    id="microsoftAsrKey"
-                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                    placeholder="Microsoft ASR Key (Required)"
-                  />
-                  <div class="tooltip">API key for Microsoft Speech Services.</div>
-                </div>
-                <div class="has-tooltip relative">
-                  <select
-                    id="microsoftAsrRegion"
-                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  >
-                    <option value="australiaeast">australia east</option>
-                    <option value="brazilsouth">brazil south</option>
-                    <option value="canadacentral">canada central</option>
-                    <option value="centralindia">central india</option>
-                    <option value="centralus">central us</option>
-                    <option value="eastasia">east asia</option>
-                    <option value="eastus" selected>east us</option>
-                    <option value="eastus2">east us2</option>
-                    <option value="francecentral">France Central</option>
-                    <option value="germanywestcentral">Germany West Central</option>
-                    <option value="japaneast">japan east</option>
-                    <option value="japanwest">japan west</option>
-                    <option value="koreacentral">korea central</option>
-                    <option value="northcentralus">north central us</option>
-                    <option value="northeurope">north europe</option>
-                    <option value="norwayeast">norway east</option>
-                    <option value="qatarcentral">qatar central</option>
-                    <option value="southafricanorth">south africa north</option>
-                    <option value="southcentralus">south central us</option>
-                    <option value="southeastasia">south east asia</option>
-                    <option value="swedencentral">sweden central</option>
-                    <option value="switzerlandnorth">switzerland north</option>
-                    <option value="switzerlandwest">switzerland west</option>
-                    <option value="uaenorth">uae north</option>
-                    <option value="uksouth">uk south</option>
-                    <option value="westcentralus">west central us</option>
-                    <option value="westeurope">west europe</option>
-                    <option value="westus">west us</option>
-                    <option value="westus2">west us2</option>
-                    <option value="westus3">west us3</option>
-                  </select>
-                  <div class="tooltip">Select the Microsoft Speech Services region.</div>
-                </div>
-                <div class="has-tooltip relative">
-                  <select
-                    id="microsoftAsrLangSelect"
-                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                  >
-                    <!-- Populated by JavaScript -->
-                  </select>
-                  <div class="tooltip">Select the language for Microsoft ASR.</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Deepgram ASR Configuration -->
-            <div id="deepgramAsrConfig" class="hidden">
-              <div class="space-y-2">
-                <div class="has-tooltip relative">
-                  <input
-                    id="deepgramAsrUrl"
-                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                    placeholder="Deepgram URL (Required)"
-                    value="wss://api.deepgram.com/v1/listen"
-                  />
-                  <div class="tooltip">WebSocket URL for Deepgram ASR service.</div>
-                </div>
-                <div class="has-tooltip relative">
-                  <input
-                    id="deepgramAsrKey"
-                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                    placeholder="Deepgram API Key (Required)"
-                  />
-                  <div class="tooltip">API key for Deepgram ASR service.</div>
-                </div>
-                <div class="has-tooltip relative">
-                  <input
-                    id="deepgramAsrModel"
-                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                    placeholder="Deepgram Model (Required)"
-                    value="nova-2"
-                  />
-                  <div class="tooltip">Model to use for Deepgram ASR (e.g., nova-2).</div>
-                </div>
-                <div class="has-tooltip relative">
-                  <input
-                    id="deepgramAsrLang"
-                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-                    placeholder="Deepgram Language (Required)"
-                    value="en"
-                  />
-                  <div class="tooltip">Language code for Deepgram ASR (e.g., en, es, fr).</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Input Modalities -->
-          <div class="w-full p-2 rounded bg-gray-700 text-white">
-            <span class="block mb-1 font-semibold">Input Modalities</span>
-            <div class="flex items-center space-x-4">
-              <label class="flex items-center has-tooltip relative">
-                <input type="checkbox" id="inputText" checked disabled class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-                <span>Text</span>
-                <div class="tooltip">Enable text input for the agent. This is always required unless MLLM is enabled.</div>
-              </label>
-              <label class="flex items-center has-tooltip relative">
-                <input type="checkbox" id="inputAudio" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded" disabled>
-                <span>Audio</span>
-                <div class="tooltip">Enable audio input for the agent. Only available when MLLM is enabled.</div>
-              </label>
-              <label class="flex items-center has-tooltip relative">
-                <input type="checkbox" id="inputImage" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-                <span>Image</span>
-                <div class="tooltip">Allow the agent to accept image input in addition to text. Only available when MLLM is disabled.</div>
-              </label>
-            </div>
-          </div>
-
-          <!-- Output Modalities -->
-          <div class="w-full p-2 rounded bg-gray-700 text-white">
-            <span class="block mb-1 font-semibold">Output Modalities</span>
-            <div class="flex items-center space-x-4">
-              <label class="flex items-center has-tooltip relative">
-                <input type="checkbox" id="outputText" checked class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-                <span>Text</span>
-                <div class="tooltip">Enable text output from the agent (responses will be shown as text).</div>
-              </label>
-              <label class="flex items-center has-tooltip relative">
-                <input type="checkbox" id="outputAudio" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-                <span>Audio</span>
-                <div class="tooltip">Enable audio output from the agent (responses will be spoken aloud).</div>
-              </label>
-            </div>
-            <p class="text-sm text-gray-400 mt-1">At least one output modality must be selected</p>
-          </div>
-
-          <!-- Custom Parameters Section (moved below advanced config) -->
-          <div class="w-full p-4 bg-gray-700 rounded-lg mt-4">
-            <div class="flex justify-between items-center">
-              <div class="has-tooltip relative text-xl">
-                <span class="font-bold">Custom Parameters</span>
-                <div class="tooltip">Add custom key-value parameters for the LLM or MLLM. These are passed directly to the LLM/MLLM API and can control advanced model behavior. <br>For LLM: parameters are included in llm.params. For MLLM: parameters are included in mllm.params.</div>
-              </div>
-              <span class="has-tooltip relative">
-                <button
-                  id="addParamBtn"
-                  class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold"
-                >
-                  Add Parameter
-                </button>
-                <div class="tooltip">Add a new custom parameter row.</div>
-              </span>
-            </div>
-            <div id="param-container" class="space-y-2"></div>
-          </div>
-
-          <!-- Create/Update/Stop in one row -->
-          <div class="mt-6 grid grid-cols-3 gap-2">
-            <button
-              id="createAgentBtn"
-              class="bg-green-600 hover:bg-green-700 p-2 rounded font-bold"
-            >
-              Create
-            </button>
-            <button
-              id="updateAgentBtn"
-              class="bg-yellow-600 hover:bg-yellow-700 p-2 rounded font-bold"
-            >
-              Update
-            </button>
-            <button
-              id="stopAgentBtn"
-              class="bg-red-600 hover:bg-red-700 p-2 rounded font-bold"
-            >
-              Stop
-            </button>
-          </div>
-
-          <!-- Copy JSON Actions (moved below create/update/stop) -->
-          <div class="flex items-center space-x-4 mt-4 mb-4">
-            <div class="has-tooltip relative flex items-center">
-              <button id="copyCreateJson" class="p-2 bg-gray-700 rounded hover:bg-gray-600 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8m2 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2z" /></svg>
-              </button>
-              <div class="tooltip">Copy Create JSON</div>
-            </div>
-            <div class="has-tooltip relative flex items-center">
-              <button id="copyUpdateJson" class="p-2 bg-gray-700 rounded hover:bg-gray-600 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8m2 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2z" /></svg>
-              </button>
-              <div class="tooltip">Copy Update JSON</div>
-            </div>
-            <span id="copyJsonMsg" class="ml-2 text-green-400 text-sm hidden">Copied!</span>
-          </div>
-
-          <!-- Audio Configuration Modal -->
-          <div id="audioConfigModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
-            <div class="bg-gray-800 p-6 rounded-lg max-w-lg w-full mx-4">
-              <h3 class="text-xl font-bold mb-4">Audio Configuration Required</h3>
-              <p class="mb-4">For audio from the LLM, make sure to add custom parameters for modalities and audio. Example:</p>
-              <div class="bg-gray-700 p-4 rounded mb-4">
-                <p class="mb-2">Select array and enter:</p>
-                <p class="text-blue-400">key: modalities</p>
-                <p class="text-blue-400">value: audio</p>
-              </div>
-              <div class="bg-gray-700 p-4 rounded mb-4">
-                <p class="mb-2">Select object and enter:</p>
-                <p class="text-blue-400">key: audio</p>
-                <p class="text-blue-400">value: { "voice": "alloy", "format": "pcm16" }</p>
-              </div>
-              <button id="closeAudioModal" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Got it
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <pre
-          id="agentResponse"
-          class="mt-4 p-2 bg-gray-700 rounded text-sm min-h-[100px] max-h-[60vh] overflow-auto"
-        ></pre>
-      </div>
-
-      <!-- Right panel: Query / List Agents -->
-      <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-        <h1 class="text-xl font-bold mb-4 text-center">
-          Query / List Agents
-        </h1>
-        <div class="space-y-4">
-          <div class="has-tooltip relative">
-            <input
-              id="agentId"
-              class="w-full p-2 rounded bg-gray-700 text-white"
-              placeholder="Agent ID to Query"
-            />
-            <div class="tooltip">Enter the ID of the agent you want to query</div>
-          </div>
-
-          <button
-            id="queryAgentBtn"
-            class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold"
-          >
-            Query Agent Status
-          </button>
-
-          <button
-            id="listAgentsBtn"
-            class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold"
-          >
-            Retrieve Agent List
-          </button>
-
-          <button
-            id="getAgentHistoryBtn"
-            class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold"
-          >
-            Retrieve Agent History
-          </button>
-
-          <div class="relative mt-4">
-            <button
-              id="copyQueryResponseBtn"
-              class="absolute top-2 right-2 bg-transparent hover:bg-gray-600 rounded p-0.5 focus:outline-none"
-              title="Copy response"
-              style="z-index:10;width:24px;height:24px;display:flex;align-items:center;justify-content:center;"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <rect x="9" y="9" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
-                <rect x="3" y="3" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
-              </svg>
-            </button>
-            <span id="copyQueryResponseMsg" class="absolute top-2 right-10 text-green-400 text-xs hidden" style="z-index:10;">Copied!</span>
-            <pre
-              id="queryResponse"
-              class="p-2 bg-gray-700 rounded text-sm min-h-[100px] max-h-[60vh] overflow-auto"
-            ></pre>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- Credentials Modal -->
   <div
     id="credsModal"
-    class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+
   >
     <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-sm">
       <h2 class="text-lg font-bold mb-4">API Credentials</h2>
@@ -1483,8 +359,32 @@
     </svg>
   </a>
 
+  <!-- Audio Configuration Modal -->
+  <div id="audioConfigModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 101;">
+    <div class="bg-gray-800 p-6 rounded-lg max-w-lg w-full mx-4">
+      <h3 class="text-xl font-bold mb-4">Audio Configuration Required</h3>
+      <p class="text-gray-300 mb-4">For audio from the LLM, make sure to add custom parameters for modalities and audio. Example:</p>
+      
+      <div class="bg-gray-700 p-4 rounded mb-4">
+        <p class="text-sm font-semibold mb-2">Select array and enter:</p>
+        <p class="text-blue-400 text-sm">key: modalities</p>
+        <p class="text-blue-400 text-sm">value: audio</p>
+      </div>
+      
+      <div class="bg-gray-700 p-4 rounded mb-4">
+        <p class="text-sm font-semibold mb-2">Select object and enter:</p>
+        <p class="text-blue-400 text-sm">key: audio</p>
+        <p class="text-blue-400 text-sm">value: { "voice": "alloy", "format": "pcm16" }</p>
+      </div>
+      
+      <div class="flex justify-end">
+        <button id="closeAudioModal" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Got it</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Camera Configuration Modal -->
-  <div id="cameraConfigModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+  <div id="cameraConfigModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 101;">
     <div class="bg-gray-800 p-6 rounded-lg max-w-lg w-full mx-4">
       <h3 class="text-xl font-bold mb-4">Camera Configuration</h3>
       <p class="mb-4">Enabling image input will:</p>
@@ -1516,7 +416,7 @@
   </div>
 
   <!-- Agora Token Requirement Modal -->
-  <div id="agoraTokenModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+  <div id="agoraTokenModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 101;">
     <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md mx-4">
       <div class="flex items-center mb-4">
         <div class="flex-shrink-0">
@@ -1553,7 +453,7 @@
   </div>
 
   <!-- Experimental Features Modal (hidden, triggered by Konami code) -->
-  <div id="experimentalFeaturesModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+  <div id="experimentalFeaturesModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
     <div class="bg-gray-800 p-4 rounded-lg max-w-xl w-full mx-4 overflow-y-auto max-h-[90vh] text-base" style="font-size: 14px;">
       <h3 class="text-lg font-bold mb-2">Experimental Features</h3>
       <form id="experimentalFeaturesForm" class="space-y-3">
@@ -1741,22 +641,20 @@
   </div>
 
   <!-- JavaScript Modules -->
-  <script type="module">
-    import { AgoraAPI } from './src/js/api.js';
-    import { MediaProcessor } from './src/js/audio.js';
-    import { UI } from './src/js/ui.js';
-    import { Utils } from './src/js/utils.js';
-    import { microsoftVoicesByLang } from './src/lib/microsoftVoicesByLang.js';
-
-    // Initialize components
-    const { appId } = Utils.getStoredCredentials();
-    const agoraAPI = new AgoraAPI(appId);
-    const mediaProcessor = new MediaProcessor();
+  <script>
+    // Initialize components after all scripts are loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      const { appId } = window.Utils.getStoredCredentials();
+      const agoraAPI = new window.AgoraAPI(appId);
+      const mediaProcessor = new window.MediaProcessor();
     const subtitleManager = new SubtitleManager();
-    const ui = new UI();
+      const ui = new window.UI();
 
     // Set random agent name
-    document.getElementById('uniqueName').value = `agent-${Math.random().toString(36).substring(2, 8)}`;
+      const uniqueNameElement = document.getElementById('uniqueName');
+      if (uniqueNameElement) {
+        uniqueNameElement.value = `agent-${Math.random().toString(36).substring(2, 8)}`;
+      }
 
     // Initialize UI with dependencies
     ui.initialize(mediaProcessor, agoraAPI, subtitleManager);
@@ -1767,79 +665,111 @@
 
     // Initialize canvas size
     const canvas = document.getElementById("audio-wave");
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+    if (canvas) {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    }
 
     // Log any initialization errors
     window.addEventListener('error', (event) => {
       console.error('Error:', event.message);
     });
 
-    document.getElementById('inputText').addEventListener('change', function(e) {
+    // Input text change handler
+    const inputTextElement = document.getElementById('inputText');
+    if (inputTextElement) {
+      inputTextElement.addEventListener('change', function(e) {
         // Only prevent unchecking text when MLLM is not enabled
-        const enableMllm = document.getElementById('enableMllm').checked;
-        if (!this.checked && !enableMllm) {
-            this.checked = true; // Prevent unchecking text only when not in MLLM mode
+        const enableMllm = document.getElementById('enableMllm');
+        if (enableMllm && !this.checked && !enableMllm.checked) {
+          this.checked = true; // Prevent unchecking text only when not in MLLM mode
         }
-    });
+      });
+    }
 
     // Update the event listeners for output modalities
-    document.getElementById('outputText').addEventListener('change', function(e) {
+    const outputTextElement = document.getElementById('outputText');
+    if (outputTextElement) {
+      outputTextElement.addEventListener('change', function(e) {
         const audioCheckbox = document.getElementById('outputAudio');
-        if (!this.checked && !audioCheckbox.checked) {
+        if (audioCheckbox && !this.checked && !audioCheckbox.checked) {
             this.checked = true; // Prevent unchecking if it's the last selected option
         }
     });
+    }
 
-    document.getElementById('outputAudio').addEventListener('change', function(e) {
+    const outputAudioElement = document.getElementById('outputAudio');
+    if (outputAudioElement) {
+      outputAudioElement.addEventListener('change', function(e) {
         const textCheckbox = document.getElementById('outputText');
-        if (!this.checked && !textCheckbox.checked) {
+        if (textCheckbox && !this.checked && !textCheckbox.checked) {
             this.checked = true; // Prevent unchecking if it's the last selected option
         }
         
         // Show modal when audio is checked
         if (this.checked) {
-            document.getElementById('audioConfigModal').classList.remove('hidden');
+          const audioConfigModal = document.getElementById('audioConfigModal');
+          if (audioConfigModal) {
+            audioConfigModal.classList.remove('hidden');
+          }
         }
     });
+    }
 
     // Close modal when clicking the button
-    document.getElementById('closeAudioModal').addEventListener('click', function() {
-        document.getElementById('audioConfigModal').classList.add('hidden');
-    });
+    const closeAudioModalBtn = document.getElementById('closeAudioModal');
+    if (closeAudioModalBtn) {
+      closeAudioModalBtn.addEventListener('click', function() {
+        const audioConfigModal = document.getElementById('audioConfigModal');
+        if (audioConfigModal) {
+          audioConfigModal.classList.add('hidden');
+        }
+      });
+    }
 
     // Close modal when clicking outside
-    document.getElementById('audioConfigModal').addEventListener('click', function(e) {
+    const audioConfigModal = document.getElementById('audioConfigModal');
+    if (audioConfigModal) {
+      audioConfigModal.addEventListener('click', function(e) {
         if (e.target === this) {
             this.classList.add('hidden');
         }
     });
+    }
 
     // Copy JSON logic
     function showCopyMsg() {
       const msg = document.getElementById('copyJsonMsg');
+      if (msg) {
       msg.classList.remove('hidden');
       setTimeout(() => msg.classList.add('hidden'), 1200);
+      }
     }
 
-    document.getElementById('copyCreateJson').addEventListener('click', function() {
-      const formData = Utils.getFormData();
-      const customParams = Utils.getCustomParams();
-      const config = Utils.buildAgentConfig(formData, customParams);
-      navigator.clipboard.writeText(JSON.stringify(config, null, 2));
-      showCopyMsg();
-    });
+    const copyCreateJsonBtn = document.getElementById('copyCreateJson');
+    if (copyCreateJsonBtn && window.Utils) {
+      copyCreateJsonBtn.addEventListener('click', function() {
+        const formData = window.Utils.getFormData();
+        const customParams = window.Utils.getCustomParams();
+        const config = window.Utils.buildAgentConfig(formData, customParams);
+        navigator.clipboard.writeText(JSON.stringify(config, null, 2));
+        showCopyMsg();
+      });
+    }
 
-    document.getElementById('copyUpdateJson').addEventListener('click', function() {
-      const formData = Utils.getFormData();
-      const customParams = Utils.getCustomParams();
-      const config = Utils.buildAgentConfig(formData, customParams);
+    const copyUpdateJsonBtn = document.getElementById('copyUpdateJson');
+    if (copyUpdateJsonBtn && window.Utils) {
+      copyUpdateJsonBtn.addEventListener('click', function() {
+        const formData = window.Utils.getFormData();
+        const customParams = window.Utils.getCustomParams();
+        const config = window.Utils.buildAgentConfig(formData, customParams);
       
       // Check if MLLM is enabled
-      const enableMllm = document.getElementById('enableMllm').checked;
+        const enableMllm = document.getElementById('enableMllm');
+        const isMllmEnabled = enableMllm ? enableMllm.checked : false;
       
       let updateJson;
-      if (enableMllm) {
+        if (isMllmEnabled) {
         // Include token and mllm params (using custom parameters)
         updateJson = {
           properties: {
@@ -1865,39 +795,54 @@
       navigator.clipboard.writeText(JSON.stringify(updateJson, null, 2));
       showCopyMsg();
     });
+    }
 
     // Agent History button click handler
-    document.getElementById('getAgentHistoryBtn').addEventListener('click', async function() {
-      const agentId = document.getElementById('agentId').value;
-      const { customerId, customerSecret } = Utils.getStoredCredentials();
-      
-      if (!agentId) {
-        document.getElementById('queryResponse').textContent = 'Please enter an Agent ID first';
+    const getAgentHistoryBtn = document.getElementById('getAgentHistoryBtn');
+    if (getAgentHistoryBtn) {
+      getAgentHistoryBtn.addEventListener('click', async function() {
+        const agentId = document.getElementById('agentId');
+        const queryResponse = document.getElementById('queryResponse');
+        
+        if (!agentId || !agentId.value) {
+          if (queryResponse) {
+            queryResponse.textContent = 'Please enter an Agent ID first';
+          }
         return;
       }
 
       try {
-        const response = await agoraAPI.getAgentHistory(customerId, customerSecret, agentId);
-        document.getElementById('queryResponse').textContent = JSON.stringify(response, null, 2);
+          const { customerId, customerSecret } = window.Utils.getStoredCredentials();
+          const response = await agoraAPI.getAgentHistory(customerId, customerSecret, agentId.value);
+          if (queryResponse) {
+            queryResponse.textContent = JSON.stringify(response, null, 2);
+          }
       } catch (error) {
-        document.getElementById('queryResponse').textContent = `Error: ${error.message}`;
+          if (queryResponse) {
+            queryResponse.textContent = `Error: ${error.message}`;
+          }
       }
     });
+    }
 
     // TTS Settings collapsible logic and delayed population
     const ttsSettingsBtn = document.getElementById('ttsSettingsBtn');
 
+    if (ttsSettingsBtn) {
     ttsSettingsBtn.addEventListener('click', function() {
         // Only populate if not already done and vendor is microsoft
         if (document.getElementById('ttsVendor').value === 'microsoft') {
           window.ui && window.ui.populateMicrosoftLangList && window.ui.populateMicrosoftLangList();
         }
     });
+    }
 
     // TTS vendor change is handled in UI.js
 
     // Broadcast Message Logic
-    document.getElementById('sendBroadcastBtn').addEventListener('click', async function() {
+    const sendBroadcastBtn = document.getElementById('sendBroadcastBtn');
+    if (sendBroadcastBtn) {
+      sendBroadcastBtn.addEventListener('click', async function() {
       const statusDiv = document.getElementById('broadcastMsgStatus');
       statusDiv.textContent = '';
       const text = document.getElementById('broadcastText').value.trim();
@@ -1914,7 +859,7 @@
         return;
       }
       // Get App ID and Agent ID
-      const { appId, customerId, customerSecret } = Utils.getStoredCredentials();
+      const { appId, customerId, customerSecret } = window.Utils ? window.Utils.getStoredCredentials() : {};
       const agentId = document.getElementById('agentId').value.trim();
       if (!appId || !agentId || !customerId || !customerSecret) {
         statusDiv.textContent = 'Missing App ID, Agent ID, or credentials.';
@@ -1931,12 +876,15 @@
         statusDiv.className = 'mt-2 text-sm text-red-400 whitespace-pre-line break-words max-h-16 overflow-y-auto';
       }
     });
+    }
 
     // Interrupt Agent Logic
-    document.getElementById('interruptAgentBtn').addEventListener('click', async function() {
+    const interruptAgentBtn = document.getElementById('interruptAgentBtn');
+    if (interruptAgentBtn) {
+      interruptAgentBtn.addEventListener('click', async function() {
       const statusDiv = document.getElementById('broadcastMsgStatus');
       statusDiv.textContent = '';
-      const { appId, customerId, customerSecret } = Utils.getStoredCredentials();
+      const { appId, customerId, customerSecret } = window.Utils ? window.Utils.getStoredCredentials() : {};
       const agentId = document.getElementById('agentId').value.trim();
       if (!appId || !agentId || !customerId || !customerSecret) {
         statusDiv.textContent = 'Missing App ID, Agent ID, or credentials.';
@@ -1952,9 +900,12 @@
         statusDiv.className = 'mt-2 text-sm text-red-400 whitespace-pre-line break-words max-h-16 overflow-y-auto';
       }
     });
+    }
 
     // Copy Query Response logic
-    document.getElementById('copyQueryResponseBtn').addEventListener('click', function(e) {
+    const copyQueryResponseBtn = document.getElementById('copyQueryResponseBtn');
+    if (copyQueryResponseBtn) {
+      copyQueryResponseBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       const pre = document.getElementById('queryResponse');
       const msg = document.getElementById('copyQueryResponseMsg');
@@ -1966,12 +917,15 @@
       msg.classList.remove('hidden');
       setTimeout(() => msg.classList.add('hidden'), 1200);
     });
+    }
 
     // ASR vendor selection logic
     const asrVendor = document.getElementById('asrVendor');
     const agoraAsrConfig = document.getElementById('agoraAsrConfig');
     const microsoftAsrConfig = document.getElementById('microsoftAsrConfig');
     const deepgramAsrConfig = document.getElementById('deepgramAsrConfig');
+
+    if (asrVendor && agoraAsrConfig && microsoftAsrConfig && deepgramAsrConfig) {
 
     // Function to show/hide ASR config sections
     function updateAsrConfigVisibility() {
@@ -2024,6 +978,7 @@
 
     // Initialize ASR config visibility
     updateAsrConfigVisibility();
+    }
 
     // Camera configuration logic
     const cameraConfigModal = document.getElementById('cameraConfigModal');
@@ -2032,6 +987,8 @@
     const saveCameraConfig = document.getElementById('saveCameraConfig');
     const cancelCameraConfig = document.getElementById('cancelCameraConfig');
     const inputImage = document.getElementById('inputImage');
+
+    if (cameraConfigModal && cameraSelect && cameraAcknowledge && saveCameraConfig && cancelCameraConfig && inputImage) {
 
     // Function to populate camera devices
     async function populateCameraDevices() {
@@ -2093,6 +1050,7 @@
         inputImage.checked = false;
       }
     });
+    }
 
     // v1.6 New Features Logic
     
@@ -2105,6 +1063,7 @@
     const heygenSettings = document.getElementById('heygenSettings');
     
     // AI Avatar drawer functionality
+    if (avatarSettingsBtn) {
     avatarSettingsBtn.addEventListener('click', function(e) {
       if (e.target.type === 'checkbox') return;
       // Use the same drawer logic as the others
@@ -2112,19 +1071,26 @@
         window.ui.openDrawer('avatarDrawer');
       }
     });
+    }
     
     // Close AI Avatar drawer
-    document.querySelector('[data-drawer="avatarDrawer"]').addEventListener('click', function() {
+    const avatarDrawerCloseBtn = document.querySelector('[data-drawer="avatarDrawer"]');
+    if (avatarDrawerCloseBtn && avatarDrawer && avatarDrawerBackdrop) {
+      avatarDrawerCloseBtn.addEventListener('click', function() {
       avatarDrawer.classList.add('hidden');
       avatarDrawerBackdrop.classList.add('hidden');
     });
+    }
     
+    if (avatarDrawerBackdrop && avatarDrawer) {
     avatarDrawerBackdrop.addEventListener('click', function() {
       avatarDrawer.classList.add('hidden');
       avatarDrawerBackdrop.classList.add('hidden');
     });
+    }
 
     // Handle avatar vendor change
+    if (avatarVendor && heygenSettings) {
     avatarVendor.addEventListener('change', function() {
       if (this.value === 'heygen') {
         heygenSettings.classList.remove('hidden');
@@ -2132,6 +1098,7 @@
         heygenSettings.classList.add('hidden');
       }
     });
+    }
 
     // Handle UID changes when AI Avatar is enabled
     function updateRemoteRtcUids() {
@@ -2149,9 +1116,13 @@
     }
 
     // Add event listener for client UID changes
-    document.getElementById('clientRtcUid').addEventListener('input', updateRemoteRtcUids);
+    const clientRtcUid = document.getElementById('clientRtcUid');
+    if (clientRtcUid) {
+      clientRtcUid.addEventListener('input', updateRemoteRtcUids);
+    }
 
     // Handle AI Avatar enable/disable
+    if (enableAvatar) {
     enableAvatar.addEventListener('change', function() {
       const avatarImage = document.getElementById('avatarImage');
       const avatarVideo = document.getElementById('avatarVideo');
@@ -2236,6 +1207,7 @@
         document.getElementById('clientUidNote').classList.add('hidden');
       }
     });
+    }
 
     // MLLM Settings drawer logic
     const mllmSettingsBtn = document.getElementById('mllmSettingsBtn');
@@ -2244,6 +1216,7 @@
     const enableMllm = document.getElementById('enableMllm');
     
     // MLLM drawer functionality
+    if (mllmSettingsBtn) {
     mllmSettingsBtn.addEventListener('click', function(e) {
       if (e.target.type === 'checkbox') return;
       // Use the same drawer logic as the others
@@ -2251,17 +1224,23 @@
         window.ui.openDrawer('mllmDrawer');
       }
     });
+    }
     
     // Close MLLM drawer
-    document.querySelector('[data-drawer="mllmDrawer"]').addEventListener('click', function() {
+    const mllmDrawerCloseBtn = document.querySelector('[data-drawer="mllmDrawer"]');
+    if (mllmDrawerCloseBtn && mllmDrawer && mllmDrawerBackdrop) {
+      mllmDrawerCloseBtn.addEventListener('click', function() {
       mllmDrawer.classList.add('hidden');
       mllmDrawerBackdrop.classList.add('hidden');
     });
+    }
     
+    if (mllmDrawerBackdrop && mllmDrawer) {
     mllmDrawerBackdrop.addEventListener('click', function() {
       mllmDrawer.classList.add('hidden');
       mllmDrawerBackdrop.classList.add('hidden');
     });
+    }
 
     // Advanced Features Logic
     const enableRtm = document.getElementById('enableRtm');
@@ -2271,6 +1250,7 @@
     const clientRtmUid = document.getElementById('clientRtmUid');
     
     // Handle MLLM enable/disable
+    if (enableMllm) {
     enableMllm.addEventListener('change', function() {
       const llmSettingsBtn = document.getElementById('llmSettingsBtn');
       const ttsSettingsBtn = document.getElementById('ttsSettingsBtn');
@@ -2354,8 +1334,10 @@
       document.getElementById('uniqueName').style.pointerEvents = 'auto';
       document.getElementById('agoraChannelName').style.pointerEvents = 'auto';
     });
+    }
     
     // Handle RTM enable/disable
+    if (enableRtm) {
     enableRtm.addEventListener('change', function() {
       if (this.checked) {
         // Enable RTM option in data channel
@@ -2378,14 +1360,17 @@
         document.getElementById('transcriptRedundant').checked = false;
       }
     });
+    }
     
     // Handle data channel change
+    if (dataChannel) {
     dataChannel.addEventListener('change', function() {
       if (this.value === 'rtm' && !enableRtm.checked) {
         alert('RTM must be enabled in Advanced Features to use RTM data channel');
         this.value = 'datastream';
       }
     });
+    }
 
     // Turn Detection Logic
     const turnDetectionEnabled = document.getElementById('turnDetectionEnabled');
@@ -2396,6 +1381,7 @@
     const turnEagerness = document.getElementById('turnEagerness');
     
     // Show/hide turn detection config
+    if (turnDetectionEnabled) {
     turnDetectionEnabled.addEventListener('change', function() {
       if (this.checked) {
         turnDetectionConfig.classList.remove('hidden');
@@ -2403,8 +1389,10 @@
         turnDetectionConfig.classList.add('hidden');
       }
     });
+    }
     
     // Handle turn detection type changes
+    if (turnDetectionType) {
     turnDetectionType.addEventListener('change', function() {
       const isServerVad = this.value === 'server_vad';
       const isSemanticVad = this.value === 'semantic_vad';
@@ -2427,36 +1415,49 @@
         eagernessContainer.classList.add('hidden');
       }
     });
+    }
 
     // Input/Output Modalities Logic for v1.6
     // Update input modalities validation
-    document.getElementById('inputText').addEventListener('change', function(e) {
+    const inputText = document.getElementById('inputText');
+    if (inputText) {
+      inputText.addEventListener('change', function(e) {
       // Only prevent unchecking text when MLLM is not enabled
-      const enableMllm = document.getElementById('enableMllm').checked;
-      if (!this.checked && !enableMllm) {
+        const enableMllm = document.getElementById('enableMllm');
+        if (enableMllm && !this.checked && !enableMllm.checked) {
         this.checked = true; // Prevent unchecking text only when not in MLLM mode
       }
     });
+    }
 
     // Update output modalities validation
-    document.getElementById('outputText').addEventListener('change', function(e) {
+    const outputText = document.getElementById('outputText');
+    if (outputText) {
+      outputText.addEventListener('change', function(e) {
       const audioCheckbox = document.getElementById('outputAudio');
-      if (!this.checked && !audioCheckbox.checked) {
+        if (audioCheckbox && !this.checked && !audioCheckbox.checked) {
         this.checked = true; // Prevent unchecking if it's the last selected option
       }
     });
+    }
 
-    document.getElementById('outputAudio').addEventListener('change', function(e) {
+    const outputAudio = document.getElementById('outputAudio');
+    if (outputAudio) {
+      outputAudio.addEventListener('change', function(e) {
       const textCheckbox = document.getElementById('outputText');
-      if (!this.checked && !textCheckbox.checked) {
+        if (textCheckbox && !this.checked && !textCheckbox.checked) {
         this.checked = true; // Prevent unchecking if it's the last selected option
       }
       
       // Show modal when audio is checked
       if (this.checked) {
-        document.getElementById('audioConfigModal').classList.remove('hidden');
+          const audioConfigModal = document.getElementById('audioConfigModal');
+          if (audioConfigModal) {
+            audioConfigModal.classList.remove('hidden');
+          }
       }
     });
+    }
 
     let prevOutputModalities = { text: true, audio: false };
     
@@ -2464,29 +1465,33 @@
     const transcriptRedundant = document.getElementById('transcriptRedundant');
     // Use already declared parametersEnabled
     const transcriptConfig = document.getElementById('transcriptConfig');
-    parametersEnabled.addEventListener('change', function() {
-      if (this.checked) {
+    if (parametersEnabled && transcriptConfig) {
+      parametersEnabled.addEventListener('change', function() {
+        if (this.checked) {
+          transcriptConfig.classList.remove('hidden');
+        } else {
+          transcriptConfig.classList.add('hidden');
+        }
+      });
+      // On load, set initial state
+      if (parametersEnabled.checked) {
         transcriptConfig.classList.remove('hidden');
       } else {
         transcriptConfig.classList.add('hidden');
       }
-    });
-    // On load, set initial state
-    if (parametersEnabled.checked) {
-      transcriptConfig.classList.remove('hidden');
-    } else {
-      transcriptConfig.classList.add('hidden');
     }
 
     // Transcript Set logic
     function setupTranscriptSet(setId, valueId) {
       const setEl = document.getElementById(setId);
       const valueEl = document.getElementById(valueId);
-      setEl.addEventListener('change', function() {
-        valueEl.disabled = !this.checked;
-      });
-      // On load
-      valueEl.disabled = !setEl.checked;
+      if (setEl && valueEl) {
+        setEl.addEventListener('change', function() {
+          valueEl.disabled = !this.checked;
+        });
+        // On load
+        valueEl.disabled = !setEl.checked;
+      }
     }
     setupTranscriptSet('transcriptEnableSet', 'transcriptEnable');
     setupTranscriptSet('transcriptProtocolVersionSet', 'transcriptProtocolVersion');
@@ -2495,20 +1500,24 @@
 
     // RTM Metrics show/hide logic
     // Use already declared enableRtm and rtmMetricsConfig
-    enableRtm.addEventListener('change', function() {
-      if (this.checked) {
+    if (enableRtm && rtmMetricsConfig) {
+      enableRtm.addEventListener('change', function() {
+        if (this.checked) {
+          rtmMetricsConfig.classList.remove('hidden');
+        } else {
+          rtmMetricsConfig.classList.add('hidden');
+          const enableMetrics = document.getElementById('enableMetrics');
+          const enableErrorMessage = document.getElementById('enableErrorMessage');
+          if (enableMetrics) enableMetrics.checked = false;
+          if (enableErrorMessage) enableErrorMessage.checked = false;
+        }
+      });
+      // On load
+      if (enableRtm.checked) {
         rtmMetricsConfig.classList.remove('hidden');
       } else {
         rtmMetricsConfig.classList.add('hidden');
-        document.getElementById('enableMetrics').checked = false;
-        document.getElementById('enableErrorMessage').checked = false;
       }
-    });
-    // On load
-    if (enableRtm.checked) {
-      rtmMetricsConfig.classList.remove('hidden');
-    } else {
-      rtmMetricsConfig.classList.add('hidden');
     }
 
     // --- Experimental Features Modal Logic ---
@@ -2531,11 +1540,13 @@
     function setupExpCheckbox(setId, fieldId) {
       const setEl = document.getElementById(setId);
       const fieldEl = document.getElementById(fieldId);
-      setEl.addEventListener('change', function() {
-        fieldEl.disabled = !this.checked;
-      });
-      // On load
-      fieldEl.disabled = !setEl.checked;
+      if (setEl && fieldEl) {
+        setEl.addEventListener('change', function() {
+          fieldEl.disabled = !this.checked;
+        });
+        // On load
+        fieldEl.disabled = !setEl.checked;
+      }
     }
     // List of [setId, fieldId] pairs
     [
@@ -2560,34 +1571,61 @@
     ].forEach(([setId, fieldId]) => setupExpCheckbox(setId, fieldId));
 
     // Reset Base URL logic
-    document.getElementById('expResetBaseUrlBtn').addEventListener('click', function() {
-      document.getElementById('expBaseUrl').value = '';
-    });
+    const expResetBaseUrlBtn = document.getElementById('expResetBaseUrlBtn');
+    if (expResetBaseUrlBtn) {
+      expResetBaseUrlBtn.addEventListener('click', function() {
+        const expBaseUrl = document.getElementById('expBaseUrl');
+        if (expBaseUrl) {
+          expBaseUrl.value = '';
+        }
+      });
+    }
 
     // Cancel button
-    document.getElementById('expFeaturesCancel').addEventListener('click', function() {
-      document.getElementById('experimentalFeaturesModal').classList.add('hidden');
-    });
+    const expFeaturesCancel = document.getElementById('expFeaturesCancel');
+    if (expFeaturesCancel) {
+      expFeaturesCancel.addEventListener('click', function() {
+        const experimentalFeaturesModal = document.getElementById('experimentalFeaturesModal');
+        if (experimentalFeaturesModal) {
+          experimentalFeaturesModal.classList.add('hidden');
+        }
+      });
+    }
 
     // Save button (collects all checked fields and values)
-    document.getElementById('experimentalFeaturesForm').addEventListener('submit', function(e) {
+    const experimentalFeaturesForm = document.getElementById('experimentalFeaturesForm');
+    if (experimentalFeaturesForm) {
+      experimentalFeaturesForm.addEventListener('submit', function(e) {
       e.preventDefault();
       // Collect values for all checked fields
       // ... (integration logic to update config goes here) ...
-      document.getElementById('experimentalFeaturesModal').classList.add('hidden');
+        const experimentalFeaturesModal = document.getElementById('experimentalFeaturesModal');
+        if (experimentalFeaturesModal) {
+          experimentalFeaturesModal.classList.add('hidden');
+        }
     });
+    }
 
     // Agora Token Modal event listeners
-    document.getElementById('closeAgoraTokenModal').addEventListener('click', function() {
-      document.getElementById('agoraTokenModal').classList.add('hidden');
-    });
+    const closeAgoraTokenModal = document.getElementById('closeAgoraTokenModal');
+    if (closeAgoraTokenModal) {
+      closeAgoraTokenModal.addEventListener('click', function() {
+        const agoraTokenModal = document.getElementById('agoraTokenModal');
+        if (agoraTokenModal) {
+          agoraTokenModal.classList.add('hidden');
+        }
+      });
+    }
 
     // Close Agora token modal when clicking outside
-    document.getElementById('agoraTokenModal').addEventListener('click', function(e) {
+    const agoraTokenModal = document.getElementById('agoraTokenModal');
+    if (agoraTokenModal) {
+      agoraTokenModal.addEventListener('click', function(e) {
       if (e.target === this) {
         this.classList.add('hidden');
       }
     });
+    }
 
     // Drawer-style tooltips for experimental modal
     function showDrawerTooltip(e) {
@@ -2703,8 +1741,9 @@
     }
 
     // Patch buildAgentConfig to merge experimental params
-    const origBuildAgentConfig = Utils.buildAgentConfig;
-    Utils.buildAgentConfig = function(formData, customParams) {
+    if (window.Utils) {
+      const origBuildAgentConfig = window.Utils.buildAgentConfig;
+      window.Utils.buildAgentConfig = function(formData, customParams) {
       const config = origBuildAgentConfig.call(this, formData, customParams);
       const exp = getExperimentalParams();
       // Base URL
@@ -2722,6 +1761,7 @@
       if (exp.transcript) config.properties.parameters.transcript = exp.transcript;
       return config;
     };
+    }
 
     // Add to the main script (after similar logic for enableRtm)
     const agentRtmUidBlock = document.getElementById('agentRtmUidBlock');
@@ -2729,29 +1769,45 @@
     const agoraRtcUid = document.getElementById('agoraRtcUid');
 
     function updateAgentRtmUidVisibility() {
-      if (enableRtm.checked) {
+      const enableRtm = document.getElementById('enableRtm');
+      const agentRtmUidBlock = document.getElementById('agentRtmUidBlock');
+      const agentRtmUid = document.getElementById('agentRtmUid');
+      const agoraRtcUid = document.getElementById('agoraRtcUid');
+      
+      if (enableRtm && enableRtm.checked && agentRtmUidBlock) {
         agentRtmUidBlock.style.display = '';
         // Only auto-fill if the field is empty or matches the previous RTC UID
-        if (!agentRtmUid.value || agentRtmUid.value === agentRtmUid.dataset.lastRtcUid) {
+        if (agentRtmUid && agoraRtcUid && (!agentRtmUid.value || agentRtmUid.value === agentRtmUid.dataset.lastRtcUid)) {
           agentRtmUid.value = agoraRtcUid.value;
           agentRtmUid.dataset.lastRtcUid = agoraRtcUid.value;
         }
-      } else {
+      } else if (agentRtmUidBlock) {
         agentRtmUidBlock.style.display = 'none';
       }
     }
 
     // Show/hide RTM UID field when RTM is toggled
-    enableRtm.addEventListener('change', updateAgentRtmUidVisibility);
+    const enableRtmElement = document.getElementById('enableRtm');
+    if (enableRtmElement) {
+      enableRtmElement.addEventListener('change', updateAgentRtmUidVisibility);
+    }
     // Auto-update RTM UID when RTC UID changes and RTM is enabled
-    agoraRtcUid.addEventListener('input', function() {
-      if (enableRtm.checked) {
-        agentRtmUid.value = agoraRtcUid.value;
-        agentRtmUid.dataset.lastRtcUid = agoraRtcUid.value;
-      }
-    });
+    const agoraRtcUidElement = document.getElementById('agoraRtcUid');
+    const agentRtmUidElement = document.getElementById('agentRtmUid');
+    if (agoraRtcUidElement && agentRtmUidElement) {
+      agoraRtcUidElement.addEventListener('input', function() {
+        const enableRtmCheck = document.getElementById('enableRtm');
+        if (enableRtmCheck && enableRtmCheck.checked) {
+          agentRtmUidElement.value = agoraRtcUidElement.value;
+          agentRtmUidElement.dataset.lastRtcUid = agoraRtcUidElement.value;
+        }
+      });
+    }
     // On load
-    updateAgentRtmUidVisibility();
+    if (enableRtmElement) {
+      updateAgentRtmUidVisibility();
+    }
+  });
   </script>
 
   <!-- Portal tooltip for drawers -->
@@ -2787,15 +1843,167 @@
     });
   }
   attachDrawerTooltipListeners();
+
+
+
+  // Agent Settings Modal Drawer Functionality
+  function openDrawer(drawerId) {
+    const drawer = document.getElementById(drawerId);
+    const backdrop = document.getElementById(drawerId + 'Backdrop');
+    console.log(`Opening drawer: ${drawerId}`, { drawer: !!drawer, backdrop: !!backdrop });
+    if (drawer && backdrop) {
+      drawer.classList.remove('hidden');
+      backdrop.classList.remove('hidden');
+    } else {
+      console.error(`Missing elements for drawer: ${drawerId}`);
+    }
+  }
+
+  function closeDrawer(drawerId) {
+    const drawer = document.getElementById(drawerId);
+    const backdrop = document.getElementById(drawerId + 'Backdrop');
+    console.log(`Closing drawer: ${drawerId}`, { drawer: !!drawer, backdrop: !!backdrop });
+    if (drawer && backdrop) {
+      drawer.classList.add('hidden');
+      backdrop.classList.add('hidden');
+    } else {
+      console.error(`Missing elements for closing drawer: ${drawerId}`);
+    }
+  }
+
+  // Add drawer event listeners for Agent Settings modal
+  document.addEventListener('DOMContentLoaded', function() {
+    // LLM Settings
+    const llmSettingsBtn = document.getElementById('llmSettingsBtn');
+    if (llmSettingsBtn) {
+      llmSettingsBtn.addEventListener('click', function(e) {
+        if (e.target.type === 'checkbox') return;
+        openDrawer('llmDrawer');
+      });
+    }
+
+    // TTS Settings
+    const ttsSettingsBtn = document.getElementById('ttsSettingsBtn');
+    if (ttsSettingsBtn) {
+      ttsSettingsBtn.addEventListener('click', function(e) {
+        if (e.target.type === 'checkbox') return;
+        openDrawer('ttsDrawer');
+      });
+    }
+
+    // AI Avatar Settings
+    const avatarSettingsBtn = document.getElementById('avatarSettingsBtn');
+    if (avatarSettingsBtn) {
+      avatarSettingsBtn.addEventListener('click', function(e) {
+        if (e.target.type === 'checkbox') return;
+        openDrawer('avatarDrawer');
+      });
+    }
+
+    // MLLM Settings
+    const mllmSettingsBtn = document.getElementById('mllmSettingsBtn');
+    if (mllmSettingsBtn) {
+      mllmSettingsBtn.addEventListener('click', function(e) {
+        if (e.target.type === 'checkbox') return;
+        openDrawer('mllmDrawer');
+      });
+    }
+
+    // Advanced Config
+    const advConfigBtn = document.getElementById('advConfigBtn');
+    if (advConfigBtn) {
+      advConfigBtn.addEventListener('click', function(e) {
+        if (e.target.type === 'checkbox') return;
+        openDrawer('advDrawer');
+      });
+    }
+
+    // Agent Settings Modal Event Handlers
+    const agentSettingsBtn = document.getElementById('agentSettingsBtn');
+    const closeAgentSettingsBtn = document.getElementById('closeAgentSettingsBtn');
+    const agentSettingsModal = document.getElementById('agentSettingsModal');
+    const uniqueName = document.getElementById('uniqueName');
+
+    if (agentSettingsBtn) {
+      agentSettingsBtn.addEventListener('click', function() {
+        if (agentSettingsModal) {
+          agentSettingsModal.classList.remove('hidden');
+        }
+        if (uniqueName) {
+          uniqueName.value = `agent-${Math.random().toString(36).substring(2, 8)}`;
+        }
+      });
+    }
+
+    if (closeAgentSettingsBtn) {
+      closeAgentSettingsBtn.addEventListener('click', function() {
+        if (agentSettingsModal) {
+          agentSettingsModal.classList.add('hidden');
+        }
+      });
+    }
+
+    // Close Agent Settings modal when clicking outside
+    if (agentSettingsModal) {
+      agentSettingsModal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.classList.add('hidden');
+        }
+      });
+    }
+
+    // Close drawer buttons
+    document.querySelectorAll('[data-drawer]').forEach(button => {
+      button.addEventListener('click', function() {
+        const drawerId = this.getAttribute('data-drawer');
+        closeDrawer(drawerId);
+      });
+    });
+
+    // Close drawer backdrops
+    document.querySelectorAll('.drawer-backdrop').forEach(backdrop => {
+      backdrop.addEventListener('click', function() {
+        const drawerId = this.id.replace('Backdrop', '');
+        closeDrawer(drawerId);
+      });
+    });
+
+    // Advanced Features toggle
+    const advancedFeaturesBtn = document.getElementById('advancedFeaturesBtn');
+    if (advancedFeaturesBtn) {
+      advancedFeaturesBtn.addEventListener('click', function() {
+        const config = document.getElementById('advancedFeaturesConfig');
+        if (config) config.classList.toggle('hidden');
+      });
+    }
+
+    // Turn Detection toggle
+    const turnDetectionBtn = document.getElementById('turnDetectionBtn');
+    if (turnDetectionBtn) {
+      turnDetectionBtn.addEventListener('click', function() {
+        const config = document.getElementById('turnDetectionConfig');
+        if (config) config.classList.toggle('hidden');
+      });
+    }
+
+    // Parameters toggle
+    const parametersBtn = document.getElementById('parametersBtn');
+    if (parametersBtn) {
+      parametersBtn.addEventListener('click', function() {
+        const config = document.getElementById('parametersConfig');
+        if (config) config.classList.toggle('hidden');
+      });
+    }
+  });
   </script>
 
   <!-- Non-module scripts -->
-  <script src="src/js/utils.js?v=1.1"></script>
-  <script src="src/js/api.js?v=1.1"></script>
-  <script src="src/js/audio.js?v=1.1"></script>
-  <script src="src/js/conversational-ai-api.js?v=1.1"></script>
-  <script src="src/js/subtitles.js?v=1.1"></script>
-  <script src="src/js/ui.js?v=1.1"></script>
+  <script src="src/js/utils.js?v=1.2"></script>
+  <script src="src/js/api.js?v=1.2"></script>
+  <script src="src/js/audio.js?v=1.2"></script>
+  <script src="src/js/conversational-ai-api.js?v=1.2"></script>
+  <script src="src/js/subtitles.js?v=1.2"></script>
+  <script src="src/js/ui.js?v=1.2"></script>
 
   <!-- Subtitle Overlay -->
   <div id="subtitleOverlay" class="fixed inset-0 pointer-events-none hidden" style="z-index: 20001;">
@@ -2805,6 +2013,1114 @@
       </div>
       <div id="subtitleSpeaker" class="text-center text-sm text-gray-300 mt-2">
         <!-- Speaker name will be inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent Settings Modal -->
+  <div id="agentSettingsModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 100;">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Agent Settings</h2>
+        <button id="closeAgentSettingsBtn" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+      </div>
+      
+      <div class="space-y-6">
+        <!-- Basic Configuration -->
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <h3 class="text-lg font-semibold mb-3">Basic Configuration</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="has-tooltip relative">
+              <input
+                id="uniqueName"
+                class="w-full p-2 rounded bg-gray-600 text-white"
+                placeholder="The unique identifier of the agent (Required)"
+              />
+              <div class="tooltip">A unique name to identify this agent instance</div>
+            </div>
+            <div class="has-tooltip relative">
+              <input
+                id="agoraChannelName"
+                class="w-full p-2 rounded bg-gray-600 text-white"
+                placeholder="Agora channel name (Required)"
+              />
+              <div class="tooltip">The Agora channel name where the agent will operate</div>
+            </div>
+            <div class="has-tooltip relative">
+              <input
+                id="agoraRtcUid"
+                class="w-full p-2 rounded bg-gray-600 text-white"
+                placeholder="Agora RTC UID (Required)"
+                value="8888"
+              />
+              <div class="tooltip">The unique identifier for this agent in the Agora channel</div>
+            </div>
+            <div class="has-tooltip relative">
+              <input
+                id="agoraRtcToken"
+                class="w-full p-2 rounded bg-gray-600 text-white"
+                placeholder="Agora RTC token"
+              />
+              <div class="tooltip">Authentication token for Agora RTC (if required)</div>
+            </div>
+            <div class="has-tooltip relative">
+              <input
+                id="remoteRtcUids"
+                class="w-full p-2 rounded bg-gray-600 text-white"
+                placeholder="Remote RTC UIDs (Required, comma-separated or * for all)"
+                value="*"
+              />
+              <div class="tooltip">A list of user IDs that the agent subscribes to. Use * to subscribe to all users, or comma-separated UIDs like "1001,1002"</div>
+            </div>
+            <div class="has-tooltip relative">
+              <input
+                id="idleTimeout"
+                type="number"
+                class="w-full p-2 rounded bg-gray-600 text-white"
+                placeholder="Idle Timeout (seconds, 0 = no timeout)"
+                value="30"
+              />
+              <div class="tooltip">Timeout after all users leave the channel. 0 means the agent doesn't exit until stopped manually. Default: 30</div>
+            </div>
+            <div class="flex items-center">
+              <input
+                type="checkbox"
+                id="enableStringUid"
+                class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded"
+              />
+              <label for="enableStringUid" class="text-sm">Enable String UID</label>
+            </div>
+            <div id="agentRtmUidBlock" class="has-tooltip relative" style="display: none;">
+              <input
+                id="agentRtmUid"
+                class="w-full p-2 rounded bg-gray-600 text-white"
+                placeholder="Agent RTM UID (Required when RTM enabled)"
+              />
+              <div class="tooltip">The RTM UID for the agent when RTM is enabled.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Categories -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- LLM Settings -->
+          <button id="llmSettingsBtn" class="drawer-btn flex items-center justify-between w-full p-3 bg-gray-600 rounded hover:bg-gray-500 relative">
+            <span>LLM Settings</span>
+            <span class="text-sm">Language Model & Prompts</span>
+          </button>
+
+          <!-- TTS Settings -->
+          <button id="ttsSettingsBtn" class="drawer-btn flex items-center justify-between w-full p-3 bg-gray-600 rounded hover:bg-gray-500 relative">
+            <span>TTS Settings</span>
+            <span class="text-sm">Voice & API Configuration</span>
+          </button>
+
+          <!-- AI Avatar Settings -->
+          <button id="avatarSettingsBtn" class="drawer-btn flex items-center justify-between w-full p-3 bg-gray-600 rounded hover:bg-gray-500 relative">
+            <span class="flex items-center">
+              <input type="checkbox" id="enableAvatar" class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
+              AI Avatar Settings
+            </span>
+            <span class="text-sm">Avatar Configuration</span>
+          </button>
+
+          <!-- MLLM Settings -->
+          <button id="mllmSettingsBtn" class="drawer-btn flex items-center justify-between w-full p-3 bg-gray-600 rounded hover:bg-gray-500 relative" style="min-width:200px">
+            <span class="flex items-center">
+              <input type="checkbox" id="enableMllm" class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
+              MLLM Settings
+            </span>
+            <span class="text-sm">Multimodal Large Language Model</span>
+          </button>
+
+          <!-- Advanced Config -->
+          <button id="advConfigBtn" class="drawer-btn flex items-center justify-between w-full p-3 bg-gray-600 rounded hover:bg-gray-500 relative">
+            <span>Advanced Config</span>
+            <span class="text-sm">Advanced Features, Turn Detection & Parameters</span>
+          </button>
+        </div>
+
+        <!-- Live Subtitles Settings -->
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <h3 class="text-lg font-semibold mb-3">Live Subtitles</h3>
+          <div class="flex items-center space-x-2 mb-3">
+            <input type="checkbox" id="enableSubtitles" class="rounded">
+            <label for="enableSubtitles" class="text-sm">Enable Live Subtitles</label>
+          </div>
+          <div class="flex space-x-2">
+            <button id="diagnoseTranscription" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+              Diagnose
+            </button>
+            <button id="testTranscription" class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700">
+              Test
+            </button>
+          </div>
+        </div>
+
+        <!-- ASR Configuration -->
+        <div id="asrConfigBox" class="bg-gray-700 p-4 rounded-lg">
+          <h3 class="text-lg font-semibold mb-3">ASR Configuration</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="has-tooltip relative">
+              <select
+                id="asrVendor"
+                class="w-full p-2 rounded bg-gray-600 text-white"
+              >
+                <option value="ares">ARES (Default)</option>
+                <option value="microsoft">Microsoft</option>
+                <option value="deepgram">Deepgram</option>
+              </select>
+              <div class="tooltip">Select the Automatic Speech Recognition (ASR) vendor to use for speech recognition.</div>
+            </div>
+            <div class="has-tooltip relative">
+              <select
+                id="agoraAsrLang"
+                class="w-full p-2 rounded bg-gray-600 text-white"
+              >
+                <option value="en-US" selected>English (US) (en-US)</option>
+                <!-- Other language options will be populated by JavaScript -->
+              </select>
+              <div class="tooltip">Select the language for Agora Automatic Speech Recognition (ASR).</div>
+            </div>
+          </div>
+          
+          <!-- Microsoft ASR Configuration -->
+          <div id="microsoftAsrConfig" class="hidden mt-4">
+            <h4 class="text-sm font-semibold mb-2">Microsoft ASR Settings</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="has-tooltip relative">
+                <input
+                  id="microsoftAsrKey"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="Microsoft ASR API Key (Required)"
+                />
+                <div class="tooltip">API key for Microsoft Speech Services.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <select
+                  id="microsoftAsrLangSelect"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                >
+                  <option value="en-US">English (US) (en-US)</option>
+                  <!-- Other language options will be populated by JavaScript -->
+                </select>
+                <div class="tooltip">Select the language for Microsoft ASR.</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Deepgram ASR Configuration -->
+          <div id="deepgramAsrConfig" class="hidden mt-4">
+            <h4 class="text-sm font-semibold mb-2">Deepgram ASR Settings</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="has-tooltip relative">
+                <input
+                  id="deepgramAsrKey"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="Deepgram API Key (Required)"
+                />
+                <div class="tooltip">API key for Deepgram ASR service.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="deepgramAsrUrl"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="Deepgram URL (Optional)"
+                  value="wss://api.deepgram.com/v1/listen"
+                />
+                <div class="tooltip">WebSocket URL for Deepgram ASR service.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <select
+                  id="deepgramAsrModel"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                >
+                  <option value="nova-2">Nova-2</option>
+                  <option value="nova">Nova</option>
+                  <option value="enhanced">Enhanced</option>
+                  <option value="base">Base</option>
+                </select>
+                <div class="tooltip">Select the Deepgram ASR model.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <select
+                  id="deepgramAsrLang"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                >
+                  <option value="en">English</option>
+                  <option value="es">Spanish</option>
+                  <option value="fr">French</option>
+                  <option value="de">German</option>
+                  <option value="it">Italian</option>
+                  <option value="pt">Portuguese</option>
+                  <option value="ru">Russian</option>
+                  <option value="ja">Japanese</option>
+                  <option value="ko">Korean</option>
+                  <option value="zh">Chinese</option>
+                </select>
+                <div class="tooltip">Select the language for Deepgram ASR.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input/Output Modalities -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-gray-700 p-4 rounded-lg">
+            <h3 class="text-lg font-semibold mb-3">Input Modalities</h3>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="checkbox" id="inputText" checked disabled class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
+                <span>Text</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" id="inputAudio" class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded" disabled>
+                <span>Audio</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" id="inputImage" class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
+                <span>Image</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="bg-gray-700 p-4 rounded-lg">
+            <h3 class="text-lg font-semibold mb-3">Output Modalities</h3>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="checkbox" id="outputText" checked class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
+                <span>Text</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" id="outputAudio" class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
+                <span>Audio</span>
+              </label>
+            </div>
+            <p class="text-sm text-gray-400 mt-2">At least one output modality must be selected</p>
+          </div>
+        </div>
+
+        <!-- Custom Parameters -->
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-lg font-semibold">Custom Parameters</h3>
+            <button id="addParamBtn" class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm">
+              Add Parameter
+            </button>
+          </div>
+          <div id="param-container" class="space-y-2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drawer Containers for Settings -->
+    <!-- LLM Drawer -->
+    <div id="llmDrawerBackdrop" class="drawer-backdrop hidden"></div>
+    <div id="llmDrawer" class="drawer hidden">
+      <button class="drawer-close absolute top-2 right-2" data-drawer="llmDrawer">&times;</button>
+      <div class="drawer-content space-y-4">
+        <div class="has-tooltip relative">
+          <input
+            id="llmModel"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="llmModel"
+            value="gpt-4o-mini"
+          />
+          <div class="tooltip">The language model to use for generating responses.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="llmApiKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="LLM API Key (Required)"
+          />
+          <div class="tooltip">Your API key for accessing the language model service.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="llmUrl"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="LLM URL (Required)"
+            value="https://api.openai.com/v1/chat/completions"
+          />
+          <div class="tooltip">The endpoint URL for the language model API.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="gMsg"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Greeting Message (Required)"
+            value="Hello, how can I help you?"
+          />
+          <div class="tooltip">The initial greeting message the agent will use.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="fMsg"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Failure Message(Required)"
+            value="Sorry, I do not know how to answer this question."
+          />
+          <div class="tooltip">The message shown when the agent cannot answer a question.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="sMsgContent"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="System Instructions (Required)"
+            value="You are Avi Tar, a smart, friendly voice assistant designed for natural conversations. You always reference yourself by your full name. 
+            The user speaks to you directly — treat each input as part of a live, spoken dialogue.  Keep your responses clear, concise, and conversational. Speak as if you're part of a real-time exchange. Avoid overly long explanations unless the user asks for more detail.  Maintain a warm, helpful tone. You can answer questions, translate, tell jokes, explain concepts, or help with everyday tasks.  Never refer to yourself as an AI or describe how the system works. Don't mention text, typing, or messages — act as if this is a purely spoken interaction.  Only ask follow-up questions when absolutely necessary. Keep the flow natural and human-like. You appears as a visible, expressive avatar — the user can see your face, gestures, and reactions during the conversation."
+          />
+          <div class="tooltip">System instructions that define the agent's behavior and personality.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="llmVendor"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="LLM Vendor (Optional)"
+          />
+          <div class="tooltip">LLM provider (optional). Supports: custom (for custom LLMs), openai, gemini, anthropic, etc. If set to 'custom', the agent includes turn_id and timestamp in requests. Leave blank to omit.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="llmStyle"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="LLM Style (Optional, e.g. openai)"
+          />
+          <div class="tooltip">Request style for chat completion (optional). Use 'openai' for OpenAI-compatible APIs or custom LLM. Possible values: openai, gemini, anthropic. Leave blank to omit.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TTS Drawer -->
+    <div id="ttsDrawerBackdrop" class="drawer-backdrop hidden"></div>
+    <div id="ttsDrawer" class="drawer hidden">
+      <button class="drawer-close absolute top-2 right-2" data-drawer="ttsDrawer">&times;</button>
+      <div class="drawer-content space-y-4">
+        <div class="has-tooltip relative">
+          <select
+            id="ttsVendor"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="microsoft">Microsoft</option>
+            <option value="elevenlabs">ElevenLabs</option>
+            <option value="cartesia">Cartesia (Beta)</option>
+            <option value="openai">OpenAI (Beta)</option>
+            <option value="humeai">Hume AI (Beta)</option>
+          </select>
+          <div class="tooltip">Select the Text-to-Speech vendor to use for voice output.</div>
+        </div>
+        
+        <!-- Microsoft TTS Settings -->
+        <div id="microsoftRegionBlock" class="has-tooltip relative">
+          <select
+            id="ttsRegion"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="eastus" selected>east us</option>
+            <!-- Other regions will be populated by JavaScript -->
+          </select>
+          <div class="tooltip">Select the Microsoft TTS region for voice synthesis.</div>
+        </div>
+        <div id="microsoftLangBlock" class="has-tooltip relative">
+          <select
+            id="microsoftLangSelect"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <!-- Populated by JavaScript -->
+          </select>
+          <div class="tooltip">Select the language for Microsoft TTS voices.</div>
+        </div>
+        <div id="microsoftVoiceBlock" class="has-tooltip relative">
+          <select
+            id="microsoftVoiceSelect"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <!-- Populated by JavaScript -->
+          </select>
+          <div class="tooltip">Select the Microsoft TTS voice for speech output.</div>
+        </div>
+        <div id="microsoftTtsKeyBlock" class="has-tooltip relative">
+          <input
+            id="ttsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="ttsKey (Required)"
+          />
+          <div class="tooltip">API key for the Text-to-Speech service.</div>
+        </div>
+        <div id="microsoftRateBlock" class="has-tooltip relative">
+          <input
+            id="microsoftRate"
+            type="number"
+            step="0.1"
+            min="0.5"
+            max="2.0"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Rate (Optional, 0.5-2.0)"
+          />
+          <div class="tooltip">Speech rate for Microsoft TTS (0.5-2.0).</div>
+        </div>
+        <div id="microsoftSpeedBlock" class="has-tooltip relative">
+          <input
+            id="microsoftSpeed"
+            type="number"
+            step="0.1"
+            min="0.5"
+            max="2.0"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Speed (Optional, 0.5-2.0)"
+          />
+          <div class="tooltip">Speech speed for Microsoft TTS (0.5-2.0).</div>
+        </div>
+        <div id="microsoftVolumeBlock" class="has-tooltip relative">
+          <input
+            id="microsoftVolume"
+            type="number"
+            min="0"
+            max="100"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Volume (Optional, 0-100)"
+          />
+          <div class="tooltip">Volume level for Microsoft TTS (0-100).</div>
+        </div>
+        <div id="microsoftSampleRateBlock" class="has-tooltip relative">
+          <input
+            id="microsoftSampleRate"
+            type="number"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Sample Rate (Optional)"
+            value="24000"
+          />
+          <div class="tooltip">Sample rate for Microsoft TTS audio output.</div>
+        </div>
+        
+        <!-- ElevenLabs TTS Settings -->
+        <div id="elevenLabsModelBlock" class="has-tooltip relative hidden">
+          <input
+            id="elevenLabsModelId"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="ElevenLabs Model ID (Required)"
+            value="eleven_multilingual_v2"
+          />
+          <div class="tooltip">Enter the ElevenLabs model ID for voice synthesis.</div>
+        </div>
+        <div id="elevenLabsVoiceBlock" class="has-tooltip relative hidden">
+          <select
+            id="elevenLabsVoiceSelect"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="21m00Tcm4TlvDq8ikWAM">Rachel</option>
+            <option value="AZnzlk1XvdvUeBnXmlld">Domi</option>
+            <option value="EXAVITQu4vr4xnSDxMaL">Bella</option>
+            <option value="ErXwobaYiN019PkySvjV">Antoni</option>
+            <option value="MF3mGyEYCl7XYWbV9V6O">Elli</option>
+            <option value="TxGEqnHWrfWFTfGW9XjX">Josh</option>
+            <option value="VR6AewLTigWG4xSOukaG">Arnold</option>
+            <option value="pNInz6obpgDQGcFmaJgB">Adam</option>
+            <option value="yoZ06aMxZJJ28mfd3POQ">Sam</option>
+            <option value="other">Other (Custom Voice ID)</option>
+          </select>
+          <div class="tooltip">Select the ElevenLabs voice for speech output.</div>
+        </div>
+        <div id="elevenLabsVoiceIdBlock" class="has-tooltip relative hidden">
+          <input
+            id="elevenLabsVoiceId"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Custom Voice ID"
+          />
+          <div class="tooltip">Enter a custom ElevenLabs voice ID.</div>
+        </div>
+        <div id="elevenLabsTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="elevenLabsTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="ElevenLabs API Key (Required)"
+          />
+          <div class="tooltip">API key for ElevenLabs TTS service.</div>
+        </div>
+        <div id="elevenLabsSampleRateBlock" class="has-tooltip relative hidden">
+          <input
+            id="elevenLabsSampleRate"
+            type="number"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Sample Rate (Optional)"
+            value="44100"
+          />
+          <div class="tooltip">Sample rate for ElevenLabs TTS audio output.</div>
+        </div>
+        <div id="elevenLabsStabilityBlock" class="has-tooltip relative hidden">
+          <input
+            id="elevenLabsStability"
+            type="number"
+            step="0.01"
+            min="0"
+            max="1"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Stability (Optional, 0-1)"
+            value="0.5"
+          />
+          <div class="tooltip">Stability setting for ElevenLabs voice (0-1).</div>
+        </div>
+        <div id="elevenLabsSimilarityBoostBlock" class="has-tooltip relative hidden">
+          <input
+            id="elevenLabsSimilarityBoost"
+            type="number"
+            step="0.01"
+            min="0"
+            max="1"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Similarity Boost (Optional, 0-1)"
+            value="0.75"
+          />
+          <div class="tooltip">Similarity boost setting for ElevenLabs voice (0-1).</div>
+        </div>
+        <div id="elevenLabsStyleBlock" class="has-tooltip relative hidden">
+          <input
+            id="elevenLabsStyle"
+            type="number"
+            step="0.01"
+            min="0"
+            max="1"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Style (Optional, 0-1)"
+            value="0"
+          />
+          <div class="tooltip">Style setting for ElevenLabs voice (0-1).</div>
+        </div>
+        <div id="elevenLabsUseSpeakerBoostBlock" class="has-tooltip relative hidden">
+          <select
+            id="elevenLabsUseSpeakerBoost"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="true">Enable Speaker Boost</option>
+            <option value="false">Disable Speaker Boost</option>
+          </select>
+          <div class="tooltip">Enable or disable speaker boost for ElevenLabs voice.</div>
+        </div>
+        
+        <!-- Cartesia TTS Settings -->
+        <div id="cartesiaTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="cartesiaTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Cartesia API Key (Required)"
+          />
+          <div class="tooltip">API key for Cartesia TTS service.</div>
+        </div>
+        <div id="cartesiaModelBlock" class="has-tooltip relative hidden">
+          <input
+            id="cartesiaModelId"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Cartesia Model ID (Required)"
+            value="sonic-2"
+          />
+          <div class="tooltip">Enter the Cartesia model ID for voice synthesis.</div>
+        </div>
+        <div id="cartesiaVoiceBlock" class="has-tooltip relative hidden">
+          <input
+            id="cartesiaVoiceId"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Cartesia Voice ID (Required)"
+            value="coral"
+          />
+          <div class="tooltip">Enter the Cartesia voice ID for speech output.</div>
+        </div>
+        
+        <!-- OpenAI TTS Settings -->
+        <div id="openaiTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="openaiTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="OpenAI API Key (Required)"
+          />
+          <div class="tooltip">API key for OpenAI TTS service.</div>
+        </div>
+        <div id="openaiModelBlock" class="has-tooltip relative hidden">
+          <select
+            id="openaiModel"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="tts-1">TTS-1</option>
+            <option value="tts-1-hd">TTS-1-HD</option>
+          </select>
+          <div class="tooltip">Select the OpenAI TTS model.</div>
+        </div>
+        <div id="openaiVoiceBlock" class="has-tooltip relative hidden">
+          <select
+            id="openaiVoice"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="alloy">Alloy</option>
+            <option value="echo">Echo</option>
+            <option value="fable">Fable</option>
+            <option value="onyx">Onyx</option>
+            <option value="nova">Nova</option>
+            <option value="shimmer">Shimmer</option>
+          </select>
+          <div class="tooltip">Select the OpenAI TTS voice.</div>
+        </div>
+        <div id="openaiInstructionsBlock" class="has-tooltip relative hidden">
+          <textarea
+            id="openaiInstructions"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Voice Instructions (Optional)"
+            rows="3"
+          ></textarea>
+          <div class="tooltip">Optional instructions for OpenAI TTS voice behavior.</div>
+        </div>
+        <div id="openaiSpeedBlock" class="has-tooltip relative hidden">
+          <input
+            id="openaiSpeed"
+            type="number"
+            step="0.1"
+            min="0.25"
+            max="4.0"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Speed (Optional, 0.25-4.0)"
+            value="1.0"
+          />
+          <div class="tooltip">Speed setting for OpenAI TTS (0.25-4.0).</div>
+        </div>
+        
+        <!-- Hume AI TTS Settings -->
+        <div id="humeaiTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="humeaiTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Hume AI API Key (Required)"
+          />
+          <div class="tooltip">API key for Hume AI TTS service.</div>
+        </div>
+        <div id="humeaiVoiceIdBlock" class="has-tooltip relative hidden">
+          <input
+            id="humeaiVoiceId"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Hume AI Voice ID (Required)"
+          />
+          <div class="tooltip">Voice ID for Hume AI TTS service.</div>
+        </div>
+        <div id="humeaiProviderBlock" class="has-tooltip relative hidden">
+          <select
+            id="humeaiProvider"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="hume">Hume</option>
+            <option value="azure">Azure</option>
+            <option value="aws">AWS</option>
+            <option value="gcp">GCP</option>
+          </select>
+          <div class="tooltip">Select the Hume AI TTS provider.</div>
+        </div>
+        <div id="humeaiSpeedBlock" class="has-tooltip relative hidden">
+          <input
+            id="humeaiSpeed"
+            type="number"
+            step="0.1"
+            min="0.5"
+            max="2.0"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Speed (Optional, 0.5-2.0)"
+            value="1.0"
+          />
+          <div class="tooltip">Speed setting for Hume AI TTS (0.5-2.0).</div>
+        </div>
+        <div id="humeaiTrailingSilenceBlock" class="has-tooltip relative hidden">
+          <input
+            id="humeaiTrailingSilence"
+            type="number"
+            min="0"
+            max="5000"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Trailing Silence (Optional, 0-5000ms)"
+            value="0"
+          />
+          <div class="tooltip">Trailing silence duration for Hume AI TTS (0-5000ms).</div>
+        </div>
+        
+        <!-- Skip Patterns Section -->
+        <div class="has-tooltip relative">
+          <label class="text-sm font-medium mb-2 block">Skip Patterns (Optional)</label>
+          <select
+            id="skipPatterns"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            multiple
+            size="8"
+          >
+            <option value="">None</option>
+            <option value="1">1: Skip content in Chinese parentheses ()</option>
+            <option value="2">2: Skip content in Chinese square brackets 【】</option>
+            <option value="3">3: Skip content in parentheses ()</option>
+            <option value="4">4: Skip content in square brackets []</option>
+            <option value="5">5: Skip content in curly braces {}</option>
+            <option value="6">6: Skip content in angle brackets &lt;&gt;</option>
+            <option value="7">7: Skip content in quotes ""</option>
+            <option value="8">8: Skip content in single quotes ''</option>
+            <option value="9">9: Skip content in backticks ``</option>
+            <option value="10">10: Custom pattern</option>
+          </select>
+          <div class="tooltip">Select patterns to skip during TTS processing. These patterns will be excluded from speech synthesis.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Avatar Drawer -->
+    <div id="avatarDrawerBackdrop" class="drawer-backdrop hidden"></div>
+    <div id="avatarDrawer" class="drawer hidden">
+      <button class="drawer-close absolute top-2 right-2" data-drawer="avatarDrawer">&times;</button>
+      <div class="drawer-content space-y-4">
+        <div class="has-tooltip relative">
+          <select
+            id="avatarVendor"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="akool">Akool</option>
+            <option value="heygen">HeyGen</option>
+          </select>
+          <div class="tooltip">Select the AI Avatar vendor to use for video generation.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="avatarApiKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Avatar API Key (Required)"
+          />
+          <div class="tooltip">API key for the AI Avatar service.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="avatarId"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Avatar ID (Required)"
+          />
+          <div class="tooltip">The unique identifier for the avatar to use.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="avatarRtcUid"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Avatar RTC UID (Required)"
+          />
+          <div class="tooltip">The RTC UID for the avatar in the channel.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="avatarRtcToken"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Avatar RTC Token (Optional)"
+          />
+          <div class="tooltip">The RTC token for the avatar to join the channel. Optional if your app doesn't require tokens.</div>
+        </div>
+        
+        <!-- HeyGen-specific settings -->
+        <div id="heygenSettings" class="hidden">
+          <div class="has-tooltip relative">
+            <select
+              id="heygenQuality"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            >
+              <option value="low">Low (360p)</option>
+              <option value="medium">Medium (480p)</option>
+              <option value="high">High (720p)</option>
+            </select>
+            <div class="tooltip">Select the video quality for HeyGen avatar generation.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                id="heygenDisableIdleTimeout"
+                class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded"
+              />
+              <span class="text-sm">Disable Idle Timeout</span>
+            </label>
+            <div class="tooltip">Whether to disable idle timeout for HeyGen avatar.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="heygenActivityIdleTimeout"
+              type="number"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Activity Idle Timeout (seconds, default: 60)"
+              value="60"
+              min="1"
+            />
+            <div class="tooltip">Activity idle timeout in seconds for HeyGen avatar.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MLLM Drawer -->
+    <div id="mllmDrawerBackdrop" class="drawer-backdrop hidden"></div>
+    <div id="mllmDrawer" class="drawer hidden">
+      <button class="drawer-close absolute top-2 right-2" data-drawer="mllmDrawer">&times;</button>
+      <div class="drawer-content space-y-4">
+        <div class="has-tooltip relative">
+          <input
+            id="mllmUrl"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="MLLM WebSocket URL (Required)"
+            value="wss://api.openai.com/v1/realtime"
+          />
+          <div class="tooltip">The MLLM WebSocket URL for real-time communication.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="mllmApiKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="MLLM API Key (Required)"
+          />
+          <div class="tooltip">The API key used for MLLM authentication.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="mllmGreetingMessage"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="MLLM Greeting Message (Optional)"
+            value="Hello, how can I help you?"
+          />
+          <div class="tooltip">Agent greeting message for MLLM. If provided, the first user in the channel is automatically greeted.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <select
+            id="mllmVendor"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="openai">OpenAI</option>
+          </select>
+          <div class="tooltip">MLLM provider. Currently supports OpenAI Realtime API.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <select
+            id="mllmStyle"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="openai">OpenAI</option>
+          </select>
+          <div class="tooltip">The request style for MLLM completion. Currently supports OpenAI Realtime API format.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="mllmMaxHistory"
+            type="number"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Max History (Optional, default: 32)"
+            value="32"
+            min="1"
+          />
+          <div class="tooltip">The number of conversation history messages cached in the MLLM. Minimum value is 1.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced Config Drawer -->
+    <div id="advDrawerBackdrop" class="drawer-backdrop hidden"></div>
+    <div id="advDrawer" class="drawer hidden">
+      <button class="drawer-close absolute top-2 right-2" data-drawer="advDrawer">&times;</button>
+      <div class="drawer-content space-y-4">
+        <!-- Advanced Features -->
+        <div class="mb-4">
+          <button id="advancedFeaturesBtn" class="flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500">
+            <span class="flex items-center">
+              <span>Advanced Features</span>
+            </span>
+            <span class="text-sm">AIVAD, MLLM, RTM</span>
+          </button>
+          <div id="advancedFeaturesConfig" class="mt-2 space-y-2">
+            <div class="flex items-center space-x-4">
+              <label class="flex items-center has-tooltip relative">
+                <input type="checkbox" id="enableAivad" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+                <span>Enable AIVAD</span>
+                <div class="tooltip">Enable intelligent interruption handling function (AIVAD). Currently available only for English.</div>
+              </label>
+              <label class="flex items-center has-tooltip relative">
+                <input type="checkbox" id="enableRtm" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+                <span>Enable RTM</span>
+                <div class="tooltip">Enable Signaling (RTM) service for advanced functions like delivering custom information.</div>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Turn Detection -->
+        <div class="mb-4">
+          <button id="turnDetectionBtn" class="flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500">
+            <span class="flex items-center">
+              <input type="checkbox" id="turnDetectionEnabled" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+              Turn Detection
+            </span>
+            <span class="text-sm">Default: agora_vad</span>
+          </button>
+          <div id="turnDetectionConfig" class="hidden mt-2 space-y-2">
+            <div class="has-tooltip relative">
+              <label class="text-sm">Turn Detection Type</label>
+              <select id="turnDetectionType" class="w-full p-2 rounded bg-gray-600 turn-field">
+                <option value="agora_vad">Agora VAD</option>
+                <option value="server_vad">Server VAD (MLLM + OpenAI only)</option>
+                <option value="semantic_vad">Semantic VAD (MLLM + OpenAI only)</option>
+              </select>
+              <div class="tooltip">Turn detection mechanism. Server VAD and Semantic VAD are only available when MLLM is enabled and OpenAI is selected.</div>
+            </div>
+            <div class="has-tooltip relative">
+              <label class="text-sm">Interrupt Mode</label>
+              <select id="interruptMode" class="w-full p-2 rounded bg-gray-600 turn-field">
+                <option value="interrupt">Interrupt (Stop and process input)</option>
+                <option value="append">Append (Complete current, then process)</option>
+                <option value="ignore">Ignore (Discard input)</option>
+              </select>
+              <div class="tooltip">Sets the agent's behavior when human voice interrupts the agent while it is interacting. Only interrupt mode is supported when MLLM is enabled.</div>
+            </div>
+            
+            <!-- Turn Detection Parameters -->
+            <div class="has-tooltip relative">
+              <label class="text-sm">Interrupt Duration (ms)</label>
+              <input type="number" id="turnInterruptDuration" class="w-full p-2 rounded bg-gray-600 turn-field" placeholder="160" min="0">
+              <div class="tooltip">Time before interruption triggers (default: 160ms).</div>
+            </div>
+            <div class="has-tooltip relative">
+              <label class="text-sm">Prefix Padding (ms)</label>
+              <input type="number" id="turnPrefixPadding" class="w-full p-2 rounded bg-gray-600 turn-field" placeholder="800" min="0">
+              <div class="tooltip">Forward padding for speech capture (default: 800ms).</div>
+            </div>
+            <div class="has-tooltip relative">
+              <label class="text-sm">Silence Duration (ms)</label>
+              <input type="number" id="turnSilenceDuration" class="w-full p-2 rounded bg-gray-600 turn-field" placeholder="640" min="0">
+              <div class="tooltip">Time before assuming speech end (default: 640ms).</div>
+            </div>
+            <div class="has-tooltip relative">
+              <label class="text-sm">Threshold</label>
+              <input type="number" id="turnThreshold" class="w-full p-2 rounded bg-gray-600 turn-field" placeholder="0.5" min="0" max="1" step="0.1">
+              <div class="tooltip">Voice detection sensitivity (0.0-1.0, default: 0.5).</div>
+            </div>
+            
+            <!-- MLLM-specific options -->
+            <div id="mllmOptionsContainer" class="hidden">
+              <div class="has-tooltip relative">
+                <label class="text-sm">Create Response</label>
+                <select id="turnCreateResponse" class="w-full p-2 rounded bg-gray-600 turn-field">
+                  <option value="true">Auto-generate response on VAD stop</option>
+                  <option value="false">Manual response generation</option>
+                </select>
+                <div class="tooltip">Automatically generate response when voice activity detection stops.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <label class="text-sm">Interrupt Response</label>
+                <select id="turnInterruptResponse" class="w-full p-2 rounded bg-gray-600 turn-field">
+                  <option value="true">Auto-interrupt ongoing responses</option>
+                  <option value="false">Manual interruption only</option>
+                </select>
+                <div class="tooltip">Automatically interrupt ongoing responses when new input is detected.</div>
+              </div>
+            </div>
+            
+            <!-- Eagerness setting (only for semantic_vad) -->
+            <div id="eagernessContainer" class="hidden">
+              <div class="has-tooltip relative">
+                <label class="text-sm">Eagerness</label>
+                <select id="turnEagerness" class="w-full p-2 rounded bg-gray-600 turn-field">
+                  <option value="low">Low</option>
+                  <option value="auto">Auto</option>
+                  <option value="high">High</option>
+                </select>
+                <div class="tooltip">Response timing control for semantic VAD. Low: conservative, High: aggressive, Auto: balanced.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Parameters -->
+        <div class="mb-4">
+          <button id="parametersBtn" class="flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500">
+            <span class="flex items-center">
+              <input type="checkbox" id="parametersEnabled" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+              Parameters
+            </span>
+            <span class="text-sm">Silence Config, Data Channel & Metrics</span>
+          </button>
+          <div id="parametersConfig" class="hidden mt-2 space-y-2">
+            <!-- Silence Configuration -->
+            <div class="mb-4">
+              <h4 class="text-sm font-semibold mb-2">Silence Configuration</h4>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="has-tooltip relative">
+                  <label class="text-sm">Silence Timeout (ms)</label>
+                  <div class="tooltip">Specifies the maximum duration (in ms) the agent can remain silent. 0 disables the silent reminder. (0, 60000] enables it. Default: 0. Note: Does not apply when MLLM is enabled.</div>
+                </div>
+                <input type="number" id="silenceTimeout" class="p-1 rounded bg-gray-600 param-field" placeholder="0" min="0" max="60000">
+                <div class="has-tooltip relative">
+                  <label class="text-sm">Action</label>
+                  <div class="tooltip">Specifies how the agent behaves when the silent timeout is reached. <br>speak: Uses TTS to announce the silent prompt. <br>think: Appends the silent prompt to the context and passes it to the LLM.</div>
+                </div>
+                <select id="silenceAction" class="p-1 rounded bg-gray-600 param-field">
+                  <option value="speak">Speak</option>
+                  <option value="think">Think</option>
+                </select>
+                <div class="has-tooltip relative">
+                  <label class="text-sm">Content</label>
+                  <div class="tooltip">Specifies the silent prompt message. The message use depends on the value of the action parameter.</div>
+                </div>
+                <input type="text" id="silenceContent" class="p-1 rounded bg-gray-600 param-field" placeholder="Silence reminder message">
+              </div>
+            </div>
+            
+            <!-- Data Channel Configuration -->
+            <div class="mb-4">
+              <h4 class="text-sm font-semibold mb-2">Data Channel Configuration</h4>
+              <div class="has-tooltip relative">
+                <label class="text-sm">Data Channel</label>
+                <select id="dataChannel" class="w-full p-2 rounded bg-gray-600 param-field">
+                  <option value="datastream">Data Stream (RTC)</option>
+                  <option value="rtm">RTM (Requires RTM enabled)</option>
+                </select>
+                <div class="tooltip">Agent data transmission channel. RTM option only takes effect when advanced_features.enable_rtm is true.</div>
+              </div>
+              <div class="has-tooltip relative mt-2">
+                <label class="text-sm">Client RTM UID</label>
+                <input id="clientRtmUid" class="w-full p-2 rounded bg-gray-600 param-field" placeholder="Client RTM UID (Required when RTM enabled)">
+                <div class="tooltip">The RTM UID for the client when RTM is enabled.</div>
+              </div>
+            </div>
+            
+            <!-- RTM Metrics Configuration -->
+            <div id="rtmMetricsConfig" class="mb-4 hidden">
+              <h4 class="text-sm font-semibold mb-2">RTM Metrics Configuration</h4>
+              <div class="space-y-2">
+                <div class="flex items-center has-tooltip relative">
+                  <input type="checkbox" id="enableMetrics" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded" style="flex-shrink: 0;">
+                  <label for="enableMetrics" class="text-sm">Enable Metrics</label>
+                  <div class="tooltip">Enable metrics collection for RTM communication.</div>
+                </div>
+                <div class="flex items-center has-tooltip relative">
+                  <input type="checkbox" id="enableErrorMessage" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded" style="flex-shrink: 0;">
+                  <label for="enableErrorMessage" class="text-sm">Enable Error Messages</label>
+                  <div class="tooltip">Enable error message collection for RTM communication.</div>
+                </div>
+              </div>
+                        </div>
+            
+            <!-- Hidden transcript elements for JavaScript compatibility -->
+            <div style="display: none;">
+              <input type="checkbox" id="transcriptEnableSet">
+              <input type="checkbox" id="transcriptProtocolVersionSet">
+              <input type="checkbox" id="transcriptEnableWordsSet">
+              <input type="checkbox" id="transcriptRedundantSet">
+              <select id="transcriptEnable">
+                <option value="true">True</option>
+                <option value="false">False</option>
+              </select>
+              <input id="transcriptProtocolVersion" value="1">
+              <select id="transcriptEnableWords">
+                <option value="true">True</option>
+                <option value="false">False</option>
+              </select>
+              <select id="transcriptRedundant">
+                <option value="true">True</option>
+                <option value="false">False</option>
+              </select>
+            </div>
+ 
+          </div>
+        </div>
       </div>
     </div>
   </div>

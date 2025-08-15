@@ -1,9 +1,8 @@
 // UI Module
-import { Utils } from './utils.js';
-import { microsoftVoicesByLang } from '../lib/microsoftVoicesByLang.js';
-import { AgoraAPI } from './api.js';
+// UI Module
+// UI Module
 
-export class UI {
+window.UI = class UI {
     constructor() {
         this.mediaProcessor = null;
         this.agoraAPI = null;
@@ -27,36 +26,199 @@ export class UI {
 
     setupEventListeners() {
         // TTS Vendor change handler
-        document.getElementById("ttsVendor").addEventListener("change", () => this.handleTtsVendorChange());
+        const ttsVendor = document.getElementById("ttsVendor");
+        if (ttsVendor) {
+            ttsVendor.addEventListener("change", () => this.handleTtsVendorChange());
+        }
         
         // Microsoft language change handler
-        document.getElementById("microsoftLangSelect").addEventListener("change", () => this.handleMicrosoftLangChange());
+        const microsoftLangSelect = document.getElementById("microsoftLangSelect");
+        if (microsoftLangSelect) {
+            microsoftLangSelect.addEventListener("change", () => this.handleMicrosoftLangChange());
+        }
         
         // ElevenLabs voice change handler
-        document.getElementById("elevenLabsVoiceSelect").addEventListener("change", () => this.handleElevenLabsVoiceChange());
+        const elevenLabsVoiceSelect = document.getElementById("elevenLabsVoiceSelect");
+        if (elevenLabsVoiceSelect) {
+            elevenLabsVoiceSelect.addEventListener("change", () => this.handleElevenLabsVoiceChange());
+        }
 
         // Add parameter field button
-        document.getElementById("addParamBtn").addEventListener("click", () => this.addParamField());
+        const addParamBtn = document.getElementById("addParamBtn");
+        if (addParamBtn) {
+            addParamBtn.addEventListener("click", () => this.addParamField());
+        }
 
         // Credentials modal
-        document.getElementById("setCredsBtn").addEventListener("click", () => this.openCredsModal());
-        document.getElementById("saveCredsBtn").addEventListener("click", () => this.saveCreds());
-        
+        const setCredsBtn = document.getElementById("setCredsBtn");
+        if (setCredsBtn) {
+            setCredsBtn.addEventListener("click", () => this.openCredsModal());
+        }
+        const saveCredsBtn = document.getElementById("saveCredsBtn");
+        if (saveCredsBtn) {
+            saveCredsBtn.addEventListener("click", () => this.saveCreds());
+        }
 
-
-        // Volume widget
-        document.getElementById("toggleVolumeBtn").addEventListener("click", () => this.toggleVolumeWidget());
+        // Volume widget (hidden in new layout)
+        const toggleVolumeBtn = document.getElementById("toggleVolumeBtn");
+        if (toggleVolumeBtn) {
+            toggleVolumeBtn.addEventListener("click", () => this.toggleVolumeWidget());
+        }
 
         // Channel controls
-        document.getElementById("joinChannel").addEventListener("click", () => this.joinChannel());
-        document.getElementById("leaveChannel").addEventListener("click", () => this.leaveChannel());
+        const joinChannel = document.getElementById("joinChannel");
+        if (joinChannel) {
+            joinChannel.addEventListener("click", () => this.joinChannel());
+        }
+        const leaveChannel = document.getElementById("leaveChannel");
+        if (leaveChannel) {
+            leaveChannel.addEventListener("click", () => this.leaveChannel());
+        }
 
         // Agent controls
-        document.getElementById("createAgentBtn").addEventListener("click", () => this.createAgent());
-        document.getElementById("updateAgentBtn").addEventListener("click", () => this.updateAgent());
-        document.getElementById("stopAgentBtn").addEventListener("click", () => this.stopAgent());
-        document.getElementById("queryAgentBtn").addEventListener("click", () => this.queryAgent());
-        document.getElementById("listAgentsBtn").addEventListener("click", () => this.listAgents());
+        const createAgentBtn = document.getElementById("createAgentBtn");
+        if (createAgentBtn) {
+            createAgentBtn.addEventListener("click", () => this.createAgent());
+        }
+        const updateAgentBtn = document.getElementById("updateAgentBtn");
+        if (updateAgentBtn) {
+            updateAgentBtn.addEventListener("click", () => this.updateAgent());
+        }
+        const stopAgentBtn = document.getElementById("stopAgentBtn");
+        if (stopAgentBtn) {
+            stopAgentBtn.addEventListener("click", () => this.stopAgent());
+        }
+        const queryAgentBtn = document.getElementById("queryAgentBtn");
+        if (queryAgentBtn) {
+            queryAgentBtn.addEventListener("click", () => this.queryAgent());
+        }
+        const listAgentsBtn = document.getElementById("listAgentsBtn");
+        if (listAgentsBtn) {
+            listAgentsBtn.addEventListener("click", () => this.listAgents());
+        }
+
+        // Microphone control
+        const toggleMicBtn = document.getElementById("toggleMicBtn");
+        if (toggleMicBtn) {
+            toggleMicBtn.addEventListener("click", () => this.toggleMicrophone());
+        }
+
+        // Message sending controls
+        const sendTextBtn = document.getElementById("sendTextBtn");
+        if (sendTextBtn) {
+            sendTextBtn.addEventListener("click", () => this.sendTextMessage());
+        }
+        const sendImageBtn = document.getElementById("sendImageBtn");
+        if (sendImageBtn) {
+            sendImageBtn.addEventListener("click", () => this.sendImageMessage());
+        }
+        
+        // Handle Enter key in message inputs
+        const messageInput = document.getElementById("messageInput");
+        if (messageInput) {
+            messageInput.addEventListener("keypress", (e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendTextMessage();
+                }
+            });
+        }
+        const imageUrlInput = document.getElementById("imageUrlInput");
+        if (imageUrlInput) {
+            imageUrlInput.addEventListener("keypress", (e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendImageMessage();
+                }
+            });
+        }
+    }
+
+    async toggleMicrophone() {
+        if (!this.mediaProcessor || !this.mediaProcessor.localTracks.audioTrack) return;
+
+        const audioTrack = this.mediaProcessor.localTracks.audioTrack;
+        const micBtn = document.getElementById("toggleMicBtn");
+        const micIcon = micBtn.querySelector(".mic-icon");
+        const micOffIcon = micBtn.querySelector(".mic-off-icon");
+        
+        try {
+            if (micBtn.classList.contains("muted")) {
+                // Currently muted, unmute it
+                await audioTrack.setEnabled(true);
+                micBtn.classList.remove("muted");
+                micBtn.title = "Mute Microphone";
+                micIcon.classList.remove("hidden");
+                micOffIcon.classList.add("hidden");
+            } else {
+                // Currently unmuted, mute it
+                await audioTrack.setEnabled(false);
+                micBtn.classList.add("muted");
+                micBtn.title = "Unmute Microphone";
+                micIcon.classList.add("hidden");
+                micOffIcon.classList.remove("hidden");
+            }
+        } catch (error) {
+            console.error('Failed to toggle microphone:', error);
+        }
+    }
+
+    async sendTextMessage() {
+        const messageInput = document.getElementById("messageInput");
+        const text = messageInput.value.trim();
+        if (!text) return;
+
+        try {
+            const agoraRtcUid = document.getElementById("agoraRtcUid").value.trim();
+            if (!agoraRtcUid) {
+                alert("Please enter an agent RTC UID first");
+                return;
+            }
+
+            if (window.ConversationalAIAPI) {
+                const conversationalAI = window.ConversationalAIAPI.getInstance();
+                if (conversationalAI && conversationalAI.isReady()) {
+                    await conversationalAI.chat(agoraRtcUid, {
+                        messageType: 'TEXT',
+                        text: text,
+                        uuid: Date.now().toString() + Math.random().toString(36).substring(2)
+                    });
+                    messageInput.value = "";
+                }
+            }
+        } catch (error) {
+            console.error("Failed to send text message:", error);
+            alert("Failed to send message: " + error.message);
+        }
+    }
+
+    async sendImageMessage() {
+        const imageUrlInput = document.getElementById("imageUrlInput");
+        const url = imageUrlInput.value.trim();
+        if (!url) return;
+
+        try {
+            const agoraRtcUid = document.getElementById("agoraRtcUid").value.trim();
+            if (!agoraRtcUid) {
+                alert("Please enter an agent RTC UID first");
+                return;
+            }
+
+            if (window.ConversationalAIAPI) {
+                const conversationalAI = window.ConversationalAIAPI.getInstance();
+                if (conversationalAI && conversationalAI.isReady()) {
+                    await conversationalAI.chat(agoraRtcUid, {
+                        messageType: 'IMAGE',
+                        url: url,
+                        uuid: Date.now().toString() + Math.random().toString(36).substring(2)
+                    });
+                    imageUrlInput.value = "";
+                }
+            }
+        } catch (error) {
+            console.error("Failed to send image:", error);
+            alert("Failed to send image: " + error.message);
+        }
     }
 
     checkCredentials() {
@@ -176,7 +338,10 @@ export class UI {
     }
 
     handleTtsVendorChange() {
-        const vendor = document.getElementById("ttsVendor").value;
+        const ttsVendorElement = document.getElementById("ttsVendor");
+        if (!ttsVendorElement) return;
+        
+        const vendor = ttsVendorElement.value;
         
         const msBlocks = [
             "microsoftRegionBlock", 
@@ -268,18 +433,37 @@ export class UI {
     }
 
     handleElevenLabsVoiceChange() {
-        const voiceSel = document.getElementById("elevenLabsVoiceSelect").value;
+        const elevenLabsVoiceSelect = document.getElementById("elevenLabsVoiceSelect");
         const voiceIdBlk = document.getElementById("elevenLabsVoiceIdBlock");
+        
+        if (!elevenLabsVoiceSelect || !voiceIdBlk) {
+            console.warn('ElevenLabs TTS elements not found');
+            return;
+        }
+        
+        const voiceSel = elevenLabsVoiceSelect.value;
         voiceIdBlk.classList.toggle("hidden", voiceSel !== "other");
     }
 
     populateMicrosoftLangList() {
         const msLangSelect = document.getElementById("microsoftLangSelect");
+        const microsoftVoiceSelect = document.getElementById("microsoftVoiceSelect");
+        
+        if (!msLangSelect || !microsoftVoiceSelect) {
+            console.warn('Microsoft TTS elements not found');
+            return;
+        }
+        
+        if (!window.microsoftVoicesByLang) {
+            console.warn('Microsoft voices data not loaded');
+            return;
+        }
+        
         const currentLang = msLangSelect.value;
-        const currentVoice = document.getElementById("microsoftVoiceSelect").value;
+        const currentVoice = microsoftVoiceSelect.value;
         msLangSelect.innerHTML = "";
 
-        const languageCodes = Object.keys(microsoftVoicesByLang).sort();
+        const languageCodes = Object.keys(window.microsoftVoicesByLang).sort();
         languageCodes.forEach((lang) => {
             const opt = document.createElement("option");
             opt.value = lang;
@@ -294,12 +478,24 @@ export class UI {
     }
 
     handleMicrosoftLangChange(selectedVoice = null) {
-        const lang = document.getElementById("microsoftLangSelect").value;
+        const microsoftLangSelect = document.getElementById("microsoftLangSelect");
         const voiceSelect = document.getElementById("microsoftVoiceSelect");
+        
+        if (!microsoftLangSelect || !voiceSelect) {
+            console.warn('Microsoft TTS elements not found');
+            return;
+        }
+        
+        if (!window.microsoftVoicesByLang) {
+            console.warn('Microsoft voices data not loaded');
+            return;
+        }
+        
+        const lang = microsoftLangSelect.value;
         const currentVoice = selectedVoice || voiceSelect.value;
         voiceSelect.innerHTML = "";
 
-        const voices = microsoftVoicesByLang[lang] || [];
+        const voices = window.microsoftVoicesByLang[lang] || [];
         voices.forEach((v) => {
             const opt = document.createElement("option");
             opt.value = v.shortName;
@@ -390,7 +586,16 @@ export class UI {
 
     async createAgent() {
         const output = document.getElementById("agentResponse");
-        output.textContent = "Creating...";
+        const status = document.getElementById("createAgentStatus");
+        
+        if (output) {
+            output.classList.remove('hidden');
+            output.textContent = "Creating...";
+        }
+        if (status) {
+            status.classList.remove('hidden');
+            status.textContent = "Creating agent...";
+        }
 
         try {
             const formData = Utils.getFormData();
@@ -401,28 +606,64 @@ export class UI {
             const { customerId, customerSecret } = Utils.getStoredCredentials();
             const data = await this.agoraAPI.createAgent(customerId, customerSecret, agentConfig);
             
-            output.textContent = JSON.stringify(data, null, 2);
+            if (output) {
+                output.textContent = JSON.stringify(data, null, 2);
+            }
+            if (status) {
+                status.textContent = `Agent created successfully! ID: ${data.agent_id || 'N/A'}`;
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    status.classList.add('hidden');
+                }, 5000);
+            }
             if (data.agent_id) {
-                document.getElementById("agentId").value = data.agent_id;
+                const agentIdElement = document.getElementById("agentId");
+                if (agentIdElement) {
+                    agentIdElement.value = data.agent_id;
+                }
             }
         } catch (error) {
-            output.textContent = `Error: ${error.message}`;
+            const errorMsg = `Error: ${error.message}`;
+            if (output) {
+                output.textContent = errorMsg;
+            }
+            if (status) {
+                status.textContent = errorMsg;
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    status.classList.add('hidden');
+                }, 5000);
+            }
         }
     }
 
     async updateAgent() {
         const output = document.getElementById("agentResponse");
-        output.textContent = "Updating...";
+        const status = document.getElementById("updateAgentStatus");
+        
+        if (output) {
+            output.classList.remove('hidden');
+            output.textContent = "Updating...";
+        }
+        if (status) {
+            status.classList.remove('hidden');
+            status.textContent = "Updating agent...";
+        }
 
         try {
             const { customerId, customerSecret } = Utils.getStoredCredentials();
-            const agentId = document.getElementById("agentId").value.trim();
+            const agentIdElement = document.getElementById("agentId");
+            if (!agentIdElement || !agentIdElement.value.trim()) {
+                throw new Error("Agent ID is required for update");
+            }
+            const agentId = agentIdElement.value.trim();
             const formData = Utils.getFormData();
             const customParams = Utils.getCustomParams();
             const config = Utils.buildAgentConfig(formData, customParams);
             
             // Check if MLLM is enabled
-            const enableMllm = document.getElementById('enableMllm').checked;
+            const enableMllmElement = document.getElementById('enableMllm');
+            const enableMllm = enableMllmElement ? enableMllmElement.checked : false;
             
             let updatePayload;
             if (enableMllm) {
@@ -449,26 +690,79 @@ export class UI {
             }
             
             const data = await this.agoraAPI.updateAgent(customerId, customerSecret, agentId, updatePayload);
-            output.textContent = JSON.stringify(updatePayload, null, 2);
+            if (output) {
+                output.textContent = JSON.stringify(updatePayload, null, 2);
+            }
+            if (status) {
+                status.textContent = "Agent updated successfully!";
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    status.classList.add('hidden');
+                }, 5000);
+            }
         } catch (error) {
-            output.textContent = `Error: ${error.message}`;
+            const errorMsg = `Error: ${error.message}`;
+            if (output) {
+                output.textContent = errorMsg;
+            }
+            if (status) {
+                status.textContent = errorMsg;
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    status.classList.add('hidden');
+                }, 5000);
+            }
         }
     }
 
     async stopAgent() {
         const output = document.getElementById("agentResponse");
-        output.textContent = "Stopping...";
+        const status = document.getElementById("stopAgentStatus");
+        
+        if (output) {
+            output.classList.remove('hidden');
+            output.textContent = "Stopping...";
+        }
+        if (status) {
+            status.classList.remove('hidden');
+            status.textContent = "Stopping agent...";
+        }
 
         try {
             const { customerId, customerSecret } = Utils.getStoredCredentials();
-            const agentId = document.getElementById("agentId").value.trim();
+            const agentIdElement = document.getElementById("agentId");
+            if (!agentIdElement || !agentIdElement.value.trim()) {
+                throw new Error("Agent ID is required for stop");
+            }
+            const agentId = agentIdElement.value.trim();
 
             const data = await this.agoraAPI.stopAgent(customerId, customerSecret, agentId);
-            output.textContent = Object.keys(data).length === 0 
+            const responseText = Object.keys(data).length === 0 
                 ? "Agent stopped (empty JSON response)."
                 : JSON.stringify(data, null, 2);
+            
+            if (output) {
+                output.textContent = responseText;
+            }
+            if (status) {
+                status.textContent = "Agent stopped successfully!";
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    status.classList.add('hidden');
+                }, 5000);
+            }
         } catch (error) {
-            output.textContent = `Error: ${error.message}`;
+            const errorMsg = `Error: ${error.message}`;
+            if (output) {
+                output.textContent = errorMsg;
+            }
+            if (status) {
+                status.textContent = errorMsg;
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    status.classList.add('hidden');
+                }, 5000);
+            }
         }
     }
 

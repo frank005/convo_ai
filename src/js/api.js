@@ -1,5 +1,5 @@
 // API Module for Agora Conversational AI
-export class AgoraAPI {
+window.AgoraAPI = class AgoraAPI {
     constructor(appId) {
         this.appId = appId;
         // Get base URL from localStorage or use default

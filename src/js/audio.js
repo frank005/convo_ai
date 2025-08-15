@@ -1,5 +1,5 @@
 // Media Processing Module
-export class MediaProcessor {
+window.MediaProcessor = class MediaProcessor {
     constructor() {
         this.audioContext = null;
         this.analyser = null;

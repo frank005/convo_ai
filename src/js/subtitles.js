@@ -82,6 +82,21 @@ class SubtitleManager {
             });
         }
 
+        // Diagnostic buttons
+        const diagnoseBtn = document.getElementById('diagnoseTranscription');
+        if (diagnoseBtn) {
+            diagnoseBtn.addEventListener('click', () => {
+                this.diagnoseTranscriptionConfig();
+            });
+        }
+
+        const testBtn = document.getElementById('testTranscription');
+        if (testBtn) {
+            testBtn.addEventListener('click', () => {
+                this.testTranscription();
+            });
+        }
+
         // Chat history buttons
         if (this.elements.copyChatBtn) {
             this.elements.copyChatBtn.addEventListener('click', () => {
@@ -270,6 +285,12 @@ class SubtitleManager {
         const enableRtm = this.elements.enableRtm;
         const dataChannel = this.elements.dataChannel;
         const parametersEnabled = this.elements.parametersEnabled;
+
+        // Add null checks for all elements
+        if (!transcriptEnable || !transcriptEnableSet || !enableRtm || !dataChannel || !parametersEnabled) {
+            console.warn('Some subtitle configuration elements are missing');
+            return;
+        }
 
         if (enabled) {
             // Auto-enable parameters section (required for RTM parameters)
@@ -504,15 +525,33 @@ class SubtitleManager {
         // Store the agent ID for use in speaker identification
         this.expectedAgentId = agentId;
         try {
+            // Check SDK availability
             if (!window.AgoraRTC || !window.AgoraRTM) {
+                const errorMsg = `Agora SDKs are required for transcription. Available: RTC=${!!window.AgoraRTC}, RTM=${!!window.AgoraRTM}`;
                 console.error('Agora SDKs availability check:', {
                     AgoraRTC: typeof window.AgoraRTC,
                     AgoraRTM: typeof window.AgoraRTM
                 });
-                throw new Error(`Agora RTC and RTM SDKs are required for subtitles. Available: RTC=${!!window.AgoraRTC}, RTM=${!!window.AgoraRTM}`);
+                this.showNotification(errorMsg, 'error');
+                throw new Error(errorMsg);
+            }
+
+            // Check configuration
+            if (!this.isConfigurationValid()) {
+                console.warn('Invalid transcription configuration detected, attempting to auto-configure...');
+                this.configureRTMSettings(true);
+                
+                // Verify configuration was applied
+                if (!this.isConfigurationValid()) {
+                    const errorMsg = 'Failed to auto-configure transcription settings. Please check RTM and transcript settings.';
+                    console.error(errorMsg);
+                    this.showNotification(errorMsg, 'error');
+                    return;
+                }
             }
 
             console.log('RTM SDK v2.x detected and ready');
+            console.log('Transcription configuration is valid');
 
             // Initialize the Conversational AI toolkit
             if (typeof ConversationalAIAPI !== 'undefined') {
@@ -522,17 +561,21 @@ class SubtitleManager {
                     validUid = Math.floor(Math.random() * 1000000) + 1000;
                 }
                 
-                console.log('RTM UID:', validUid);
+                console.log('Initializing RTM with UID:', validUid);
+                console.log('Channel:', channelName);
+                console.log('Expected Agent ID:', this.expectedAgentId);
+                
                 // Use RTM v2.x API based on the official documentation
-                console.log('Using RTM v2.x API');
                 const rtmEngine = new window.AgoraRTM.RTM(appId, validUid.toString(), {
                     token: token || undefined, // Use token if available
                     logUpload: true,
                     logLevel: 'INFO'
                 });
                 
-                // Login to RTM v2.x (no parameters needed as UID and token are in constructor)
+                // Login to RTM v2.x
+                console.log('Logging into RTM...');
                 await rtmEngine.login({token});
+                console.log('RTM login successful');
                 
                 ConversationalAIAPI.init({
                     rtcEngine: window.mediaProcessor?.client || window.AgoraRTC.createClient({mode: "rtc", codec: "vp8"}),
@@ -546,6 +589,7 @@ class SubtitleManager {
                 
                 // Subscribe to transcription events using the correct event system
                 this.conversationalAIAPI.on(window.EConversationalAIAPIEvents.TRANSCRIPTION_UPDATED, (chatHistory) => {
+                    console.log('Received transcription update:', chatHistory);
                     this.handleTranscriptionUpdate(chatHistory);
                 });
 
@@ -557,15 +601,26 @@ class SubtitleManager {
                     console.log('ConversationalAI Debug:', message);
                 });
 
+                this.conversationalAIAPI.on(window.EConversationalAIAPIEvents.AGENT_ERROR, (agentUserId, error) => {
+                    console.error('ConversationalAI Agent Error:', agentUserId, error);
+                    this.showNotification(`Agent Error: ${error.message || 'Unknown error'}`, 'error');
+                });
+
                 // Subscribe to the channel for messages
+                console.log('Subscribing to RTM channel for transcription messages...');
                 await this.conversationalAIAPI.subscribeMessage(channelName);
 
-                console.log('Conversational AI API initialized for subtitles');
+                console.log('Conversational AI API initialized successfully for subtitles');
+                this.showNotification('Transcription service connected successfully', 'success');
             } else {
-                console.warn('ConversationalAIAPI not available, using fallback subtitle implementation');
+                const errorMsg = 'ConversationalAIAPI not available. Please ensure the API is loaded.';
+                console.error(errorMsg);
+                this.showNotification(errorMsg, 'error');
             }
         } catch (error) {
+            const errorMsg = `Failed to initialize transcription: ${error.message}`;
             console.error('Failed to initialize Conversational AI for subtitles:', error);
+            this.showNotification(errorMsg, 'error');
         }
     }
 
@@ -775,6 +830,89 @@ class SubtitleManager {
                 }
             };
         }
+    }
+
+    // Diagnostic method to check transcription configuration
+    diagnoseTranscriptionConfig() {
+        console.log('=== TRANSCRIPTION DIAGNOSTIC ===');
+        
+        // Check SDK availability
+        console.log('SDK Availability:');
+        console.log('  AgoraRTC:', !!window.AgoraRTC);
+        console.log('  AgoraRTM:', !!window.AgoraRTM);
+        console.log('  ConversationalAIAPI:', typeof ConversationalAIAPI !== 'undefined');
+        
+        // Check subtitle manager state
+        console.log('Subtitle Manager State:');
+        console.log('  isEnabled:', this.isEnabled);
+        console.log('  conversationalAIAPI:', !!this.conversationalAIAPI);
+        console.log('  expectedAgentId:', this.expectedAgentId);
+        
+        // Check configuration elements
+        console.log('Configuration Elements:');
+        const elements = [
+            'transcriptEnable', 'transcriptEnableSet', 'enableRtm', 
+            'dataChannel', 'parametersEnabled', 'enableMetrics', 'enableErrorMessage'
+        ];
+        
+        elements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                const value = element.type === 'checkbox' ? element.checked : element.value;
+                console.log(`  ${id}:`, value);
+            } else {
+                console.log(`  ${id}: MISSING`);
+            }
+        });
+        
+        // Check configuration validity
+        console.log('Configuration Valid:', this.isConfigurationValid());
+        
+        // Check ConversationalAI API state
+        if (this.conversationalAIAPI) {
+            console.log('ConversationalAI API Config:', this.conversationalAIAPI.getConfig());
+        }
+        
+        console.log('=== END DIAGNOSTIC ===');
+        
+        return {
+            sdksAvailable: !!window.AgoraRTC && !!window.AgoraRTM,
+            apiAvailable: typeof ConversationalAIAPI !== 'undefined',
+            isEnabled: this.isEnabled,
+            hasAPI: !!this.conversationalAIAPI,
+            configValid: this.isConfigurationValid()
+        };
+    }
+
+    // Public method to test transcription manually
+    testTranscription() {
+        if (!this.isEnabled) {
+            console.warn('Subtitles are not enabled. Enable them first.');
+            this.showNotification('Please enable subtitles first', 'warning');
+            return;
+        }
+        
+        console.log('Testing transcription system...');
+        const diagnosis = this.diagnoseTranscriptionConfig();
+        
+        if (!diagnosis.sdksAvailable) {
+            this.showNotification('Agora SDKs not available', 'error');
+            return;
+        }
+        
+        if (!diagnosis.apiAvailable) {
+            this.showNotification('ConversationalAI API not available', 'error');
+            return;
+        }
+        
+        if (!diagnosis.configValid) {
+            this.showNotification('Configuration invalid - attempting to fix...', 'warning');
+            this.configureRTMSettings(true);
+        }
+        
+        // Test subtitle display
+        this.updateSubtitle('This is a test transcription message', 'Test User', true);
+        this.showNotification('Test transcription sent - check subtitle overlay', 'info');
     }
 
     // Destroy method for cleanup

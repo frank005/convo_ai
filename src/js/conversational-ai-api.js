@@ -29,7 +29,9 @@ const EMessageType = {
     MSG_METRICS: 'message.metrics',
     MSG_ERROR: 'message.error',
     IMAGE_UPLOAD: 'image.upload',
-    MESSAGE_INFO: 'message.info'
+    MESSAGE_INFO: 'message.info',
+    IMAGE: 'IMAGE',
+    TEXT: 'TEXT'
 };
 
 const ERTCEvents = {
@@ -150,6 +152,9 @@ class CovSubRenderController {
                 this.handleMetricsMessage(message, context);
             } else if (message.type === EMessageType.MSG_ERROR || message.object === 'message.error') {
                 this.handleErrorMessage(message, context);
+            } else if (message.type === 'message.receipt' || message.object === 'message.receipt') {
+                // Handle message receipts (success/failure of sent messages)
+                this.handleMessageReceipt(message, context);
             } else if (message.type === EMessageType.MSG_INTERRUPTED || message.object === 'message.interrupt') {
                 // When an interrupt occurs, finalize any pending messages
                 this.finalizeAllPendingTranscriptions();
@@ -157,6 +162,11 @@ class CovSubRenderController {
                 if (this.onAgentInterrupted) {
                     this.onAgentInterrupted({ message, context });
                 }
+            } else if (message.messageType === 'TEXT' || message.messageType === 'IMAGE') {
+                // Handle our custom text and image messages - these should be sent to the agent, not treated as transcriptions
+                console.log('Found message to send to agent:', message);
+                // Don't treat these as transcriptions - they're messages TO the agent
+                // The agent should process these and respond accordingly
             } else if (message.text || message.content) {
                 // Handle any message with text content as potential transcription
                 console.log('Found message with text content, treating as transcription:', message);
@@ -497,6 +507,30 @@ class CovSubRenderController {
             this.onAgentError(context.publisher, message);
         }
     }
+
+    handleMessageReceipt(message, context) {
+        console.log('Message receipt received:', message, context);
+        
+        // Parse the receipt message to get UUID and status
+        try {
+            const receiptData = typeof message.message === 'string' ? JSON.parse(message.message) : message.message;
+            const uuid = receiptData.uuid;
+            const status = receiptData.status || 'unknown';
+            
+            console.log(`Message receipt for UUID ${uuid}: ${status}`);
+            
+            // Emit the message receipt event
+            if (this.onMessageReceipt) {
+                this.onMessageReceipt(context.publisher, {
+                    uuid: uuid,
+                    status: status,
+                    message: receiptData
+                });
+            }
+        } catch (error) {
+            console.error('Failed to parse message receipt:', error);
+        }
+    }
 }
 
 /**
@@ -646,12 +680,13 @@ class ConversationalAIAPI extends EventHelper {
         });
 
         try {
-            // RTM v2.x publish API based on official documentation
+            // Use correct RTM format: publish to agent rtc uid (8888) with correct options
             const publishOptions = {
-                customType: EMessageType.MSG_INTERRUPTED
+                channelType: "USER",
+                customType: "user.transcription"
             };
-            const result = await rtmEngine.publish(channel, messageStr, publishOptions);
-            console.log('Successfully sent interrupt message to agent:', agentUserId, 'in channel:', channel);
+            const result = await rtmEngine.publish("8888", messageStr, publishOptions);
+            console.log('Successfully sent interrupt message to agent RTC UID 8888');
             return result;
         } catch (error) {
             console.error('Failed to send interrupt message:', error);
@@ -708,9 +743,7 @@ class ConversationalAIAPI extends EventHelper {
     }
 
     handleRtmMessage(eventArgs) {
-        if (this.enableLog) {
-            console.log('RTM message received:', eventArgs);
-        }
+        console.log('TRANSCRIPTION DEBUG - RTM message received:', eventArgs);
 
         try {
             // RTM v2.x event structure is different
@@ -719,14 +752,17 @@ class ConversationalAIAPI extends EventHelper {
             let messageData = message;
             let parsedMessage;
 
+            console.log('TRANSCRIPTION DEBUG - Message data type:', typeof messageData);
+            console.log('TRANSCRIPTION DEBUG - Publisher:', publisher);
+
             // Handle different message data types
             if (typeof messageData === 'string') {
                 try {
                     parsedMessage = JSON.parse(messageData);
-                    console.log('Parsed JSON message:', parsedMessage);
+                    console.log('TRANSCRIPTION DEBUG - Parsed JSON message:', parsedMessage);
                 } catch (parseError) {
                     // If it's not JSON, treat as plain text transcription
-                    console.log('Plain text message received:', messageData);
+                    console.log('TRANSCRIPTION DEBUG - Plain text message received:', messageData);
                     parsedMessage = {
                         type: 'transcription',
                         text: messageData,
@@ -738,11 +774,12 @@ class ConversationalAIAPI extends EventHelper {
             } else if (messageData instanceof Uint8Array) {
                 const decoder = new TextDecoder('utf-8');
                 const messageString = decoder.decode(messageData);
+                console.log('TRANSCRIPTION DEBUG - Decoded binary message:', messageString);
                 try {
                     parsedMessage = JSON.parse(messageString);
-                    console.log('Parsed binary message:', parsedMessage);
+                    console.log('TRANSCRIPTION DEBUG - Parsed binary message:', parsedMessage);
                 } catch (parseError) {
-                    console.log('Plain text from binary:', messageString);
+                    console.log('TRANSCRIPTION DEBUG - Plain text from binary:', messageString);
                     parsedMessage = {
                         type: 'transcription',
                         text: messageString,
@@ -752,15 +789,16 @@ class ConversationalAIAPI extends EventHelper {
                     };
                 }
             } else {
-                console.warn('Unsupported message type received:', typeof messageData, messageData);
+                console.warn('TRANSCRIPTION DEBUG - Unsupported message type received:', typeof messageData, messageData);
                 return;
             }
 
+            console.log('TRANSCRIPTION DEBUG - Sending to controller:', parsedMessage);
             this.covSubRenderController.handleMessage(parsedMessage, {
                 publisher: publisher
             });
         } catch (error) {
-            console.error('Failed to parse RTM message:', error);
+            console.error('TRANSCRIPTION DEBUG - Failed to parse RTM message:', error);
         }
     }
 
@@ -845,6 +883,67 @@ class ConversationalAIAPI extends EventHelper {
             hasRtmEngine: !!this.rtmEngine,
             channel: this.channel
         };
+    }
+
+    async chat(agentUserId, message) {
+        const { rtmEngine, channel } = this.getCfg();
+        
+        // Validate message based on type
+        if (message.messageType === 'TEXT') {
+            if (!message.text || message.text.trim() === '') {
+                console.error('TEXT message validation failed: text is empty');
+                throw new Error('Text message cannot be empty');
+            }
+        } else if (message.messageType === 'IMAGE') {
+            if (!message.url || message.url.trim() === '') {
+                console.error('IMAGE message validation failed: url is empty');
+                throw new Error('Image URL cannot be empty');
+            }
+        } else {
+            console.error('Unknown message type:', message.messageType);
+            throw new Error('Unknown message type: ' + message.messageType);
+        }
+        
+        // Generate a unique ID for the message if not provided
+        const uuid = message.uuid || Date.now().toString() + Math.random().toString(36).substring(2);
+        
+        // Build message data based on type - only include relevant fields
+        let messageData;
+        if (message.messageType === 'TEXT') {
+            messageData = {
+                messageType: message.messageType,
+                message: message.text,
+                uuid: uuid
+            };
+        } else if (message.messageType === 'IMAGE') {
+            messageData = {
+                messageType: message.messageType,
+                url: message.url,
+                uuid: uuid
+            };
+        }
+
+        console.log('📤 Preparing to send message:', {
+            type: message.messageType,
+            data: messageData,
+            agentRtcUid: '8888'
+        });
+
+        const messageStr = JSON.stringify(messageData);
+
+        try {
+            // Use correct RTM format: publish to agent rtc uid (8888) with correct options
+            const publishOptions = {
+                channelType: "USER",
+                customType: "user.transcription"
+            };
+            const result = await rtmEngine.publish("8888", messageStr, publishOptions);
+            console.log('✅ Successfully sent', message.messageType, 'message to agent RTC UID 8888:', messageData);
+            return result;
+        } catch (error) {
+            console.error('❌ Failed to send message:', error);
+            throw new Error('Failed to send message: ' + error.message);
+        }
     }
 }
 
