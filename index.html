@@ -8,7 +8,7 @@
   <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/agora-rtm-sdk@2.2.2/agora-rtm.js"></script>
   <script type="module" src="src/lib/microsoftVoicesByLang.js"></script>
-  <link rel="stylesheet" href="src/css/styles.css">
+  <link rel="stylesheet" href="src/css/styles.css?v=1.3">
 </head>
 <body class="bg-gray-900 text-white min-h-screen py-10 px-4">
   <div class="max-w-6xl mx-auto">
@@ -37,30 +37,34 @@
       >
         Create Agent
       </button>
-      <button
-        id="copyCreateJson"
-        class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
-        title="Copy Create JSON"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8m2 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2z"></path>
-        </svg>
-      </button>
+      <div class="has-tooltip relative">
+        <button
+          id="copyCreateJson"
+          class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8m2 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2z"></path>
+          </svg>
+        </button>
+        <div class="tooltip">Copy Create JSON - Copy the complete agent configuration JSON to clipboard for creating a new agent</div>
+      </div>
       <button
         id="updateAgentBtn"
         class="bg-yellow-600 hover:bg-yellow-700 p-2 rounded font-bold"
       >
         Update Agent
       </button>
-      <button
-        id="copyUpdateJson"
-        class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
-        title="Copy Update JSON"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8m2 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2z"></path>
-        </svg>
-      </button>
+      <div class="has-tooltip relative">
+        <button
+          id="copyUpdateJson"
+          class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8m2 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2z"></path>
+          </svg>
+        </button>
+        <div class="tooltip">Copy Update JSON - Copy the update configuration JSON to clipboard for updating an existing agent</div>
+      </div>
       <button
         id="stopAgentBtn"
         class="bg-red-600 hover:bg-red-700 p-2 rounded font-bold"
@@ -116,12 +120,13 @@
       
       <!-- Client UID and Token on same line -->
       <div class="flex gap-2 mt-4">
-        <div class="flex-1">
+        <div class="flex-1 has-tooltip relative">
         <input
           id="clientRtcUid"
             class="w-full px-3 py-2 rounded bg-gray-700 text-white"
           placeholder="Client UID (if token required)"
         />
+        <div class="tooltip">Your unique identifier in the Agora channel. Required when using tokens or AI Avatar.</div>
         <div id="clientUidNote" class="text-xs text-cyan-400 mt-1 hidden">
           Required when AI Avatar is enabled
         </div>
@@ -129,12 +134,13 @@
           Note: Remote RTC UIDs have been automatically set to match your Client RTC UID.
         </div>
       </div>
-        <div class="flex-1">
+        <div class="flex-1 has-tooltip relative">
       <input
         id="clientRtcToken"
             class="w-full px-3 py-2 rounded bg-gray-700 text-white"
             placeholder="Agora token (if token required)"
           />
+        <div class="tooltip">Authentication token for Agora RTC. Required if your project has token authentication enabled.</div>
         </div>
       </div>
 
@@ -147,24 +153,29 @@
         <h3 class="text-lg font-semibold mb-3 text-cyan-400">Live Subtitles</h3>
         
         <div class="space-y-3">
-          <div class="flex space-x-2">
+          <div class="flex space-x-2 has-tooltip relative">
             <button id="toggleSubtitleOverlay" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50" disabled>
               Show Overlay
             </button>
+            <div class="tooltip">Toggle the subtitle overlay to show real-time transcription of the conversation</div>
           </div>
         </div>
         
         <!-- Chat History Section -->
         <div class="mt-4">
           <div class="flex justify-between items-center mb-2">
-            <h4 class="text-sm font-medium text-gray-300">Chat History</h4>
-            <div class="space-x-2">
+            <div class="has-tooltip relative">
+              <h4 class="text-sm font-medium text-gray-300">Chat History</h4>
+              <div class="tooltip">Real-time conversation history between you and the AI agent. Messages are displayed as they occur.</div>
+            </div>
+            <div class="space-x-2 has-tooltip relative">
               <button id="copyChatBtn" class="px-2 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-500">
                 Copy
               </button>
               <button id="clearChatBtn" class="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-500">
                 Clear
               </button>
+              <div class="tooltip">Copy or clear the chat history. Copy saves the conversation to clipboard, Clear removes all messages.</div>
             </div>
           </div>
           <div id="chatHistory" class="h-64 bg-gray-800 rounded p-2 overflow-y-auto text-sm">
@@ -187,26 +198,35 @@
               </div>
 
               <div class="grid grid-cols-1 gap-2">
-                <button
-                  id="queryAgentBtn"
-                  class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
-                >
-                  Query Agent Status
-                </button>
+                <div class="has-tooltip relative">
+                  <button
+                    id="queryAgentBtn"
+                    class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+                  >
+                    Query Agent Status
+                  </button>
+                  <div class="tooltip">Get the current status of the specified Conversational AI agent instance. Shows status like IDLE, STARTING, RUNNING, STOPPING, STOPPED, RECOVERING, or FAILED.</div>
+                </div>
 
-                <button
-                  id="listAgentsBtn"
-                  class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
-                >
-                  Retrieve Agent List
-                </button>
+                <div class="has-tooltip relative">
+                  <button
+                    id="listAgentsBtn"
+                    class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+                  >
+                    Retrieve Agent List
+                  </button>
+                  <div class="tooltip">Get a list of Conversational AI agents that meet the specified conditions. Can filter by channel, time range, state, and limit results.</div>
+                </div>
 
-                <button
-                  id="getAgentHistoryBtn"
-                  class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
-                >
-                  Retrieve Agent History
-                </button>
+                <div class="has-tooltip relative">
+                  <button
+                    id="getAgentHistoryBtn"
+                    class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+                  >
+                    Retrieve Agent History
+                  </button>
+                  <div class="tooltip">Retrieve the conversation history between the user and the Conversational AI agent while the agent is running. Shows messages with role (user/assistant) and content.</div>
+                </div>
               </div>
 
               <div class="relative mt-4">
@@ -238,13 +258,19 @@
         <h3 class="text-sm font-semibold mb-3 text-gray-300">Send Messages</h3>
         <div class="space-y-2">
           <div class="flex items-center gap-2">
-            <input type="text" id="messageInput" placeholder="Type a message..." class="flex-grow bg-gray-800 text-white px-2 py-1 rounded text-sm">
+            <div class="flex-grow has-tooltip relative">
+              <input type="text" id="messageInput" placeholder="Type a message..." class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm">
+              <div class="tooltip">Type a text message to send to the agent. Press Enter or click Send to submit.</div>
+            </div>
             <button id="sendTextBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm">
               <span class="material-icons text-sm">send</span>
             </button>
           </div>
           <div class="flex items-center gap-2">
-            <input type="text" id="imageUrlInput" placeholder="Enter image URL..." class="flex-grow bg-gray-800 text-white px-2 py-1 rounded text-sm">
+            <div class="flex-grow has-tooltip relative">
+              <input type="text" id="imageUrlInput" placeholder="Enter image URL..." class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm">
+              <div class="tooltip">Enter a URL to an image to send to the agent for analysis. Press Enter or click Send to submit.</div>
+            </div>
             <button id="sendImageBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm flex items-center">
               <span class="material-icons text-sm">send</span>
             </button>
@@ -255,24 +281,31 @@
           <!-- Broadcast Message Section -->
           <div class="w-full p-4 bg-gray-700 rounded-lg">
             <h3 class="text-sm font-semibold mb-3 text-gray-300">Broadcast Messages</h3>
-        <div class="mb-2">
+        <div class="mb-2 has-tooltip relative">
           <input
             id="broadcastText"
             maxlength="512"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Enter broadcast message (max 512 bytes)"
           />
+          <div class="tooltip">Enter a message to broadcast to all users in the channel. Maximum 512 characters.</div>
         </div>
         <div class="mb-2 flex space-x-2">
-          <select id="broadcastPriority" class="p-2 rounded bg-gray-800 text-white border border-gray-500">
-            <option value="INTERRUPT">INTERRUPT</option>
-            <option value="APPEND">APPEND</option>
-            <option value="IGNORE">IGNORE</option>
-          </select>
-          <select id="broadcastInterruptable" class="p-2 rounded bg-gray-800 text-white border border-gray-500">
-            <option value="true">Interrupt</option>
-            <option value="false">No Interrupt</option>
-          </select>
+          <div class="has-tooltip relative">
+            <select id="broadcastPriority" class="p-2 rounded bg-gray-800 text-white border border-gray-500">
+              <option value="INTERRUPT">INTERRUPT</option>
+              <option value="APPEND">APPEND</option>
+              <option value="IGNORE">IGNORE</option>
+            </select>
+            <div class="tooltip">Message priority: INTERRUPT (stop current activity), APPEND (add to queue), IGNORE (skip if busy)</div>
+          </div>
+          <div class="has-tooltip relative">
+            <select id="broadcastInterruptable" class="p-2 rounded bg-gray-800 text-white border border-gray-500">
+              <option value="true">Interrupt</option>
+              <option value="false">No Interrupt</option>
+            </select>
+            <div class="tooltip">Whether this message can interrupt the agent's current activity</div>
+          </div>
         </div>
         <button
           id="sendBroadcastBtn"
@@ -1636,8 +1669,31 @@
       portal.style.display = 'block';
       // Get bounding rect of the hovered field
       const rect = e.currentTarget.getBoundingClientRect();
-      portal.style.left = rect.left + 'px';
-      portal.style.top = (rect.bottom + 8) + 'px';
+      
+      // Calculate initial position (to the right of the element)
+      let left = rect.right + 8;
+      let top = rect.top + (rect.height / 2);
+      
+      // Check if tooltip would go off the right edge
+      const portalWidth = 260; // max-width
+      const viewportWidth = window.innerWidth;
+      if (left + portalWidth > viewportWidth - 16) {
+        // Position to the left instead
+        left = rect.left - portalWidth - 8;
+      }
+      
+      // Check if tooltip would go off the top or bottom
+      const portalHeight = 80; // approximate height
+      const viewportHeight = window.innerHeight;
+      if (top + portalHeight > viewportHeight - 16) {
+        top = viewportHeight - portalHeight - 16;
+      }
+      if (top < 16) {
+        top = 16;
+      }
+      
+      portal.style.left = left + 'px';
+      portal.style.top = top + 'px';
       portal.style.background = '#222';
       portal.style.color = '#fff';
       portal.style.padding = '6px 10px';
@@ -1645,6 +1701,7 @@
       portal.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
       portal.style.maxWidth = '260px';
       portal.style.fontSize = '13px';
+      portal.style.transform = 'translateY(-50%)';
     }
     function hideDrawerTooltip() {
       const portal = document.getElementById('portal-tooltip');
@@ -1811,19 +1868,67 @@
   </script>
 
   <!-- Portal tooltip for drawers -->
-  <div id="portal-tooltip" style="display:none;position:fixed;z-index:99999;"></div>
+  <div id="portal-tooltip" style="display:none;position:fixed;z-index:99999;pointer-events:none;"></div>
 
   <script>
   function showPortalTooltip(e) {
     const tooltip = e.currentTarget.querySelector('.tooltip');
-    if (!tooltip) return;
+    if (!tooltip) {
+      console.warn('No tooltip found for element:', e.currentTarget);
+      return;
+    }
     const portal = document.getElementById('portal-tooltip');
+    if (!portal) {
+      console.error('Portal tooltip element not found');
+      return;
+    }
     portal.innerHTML = tooltip.innerHTML;
     portal.style.display = 'block';
     // Get bounding rect of the hovered field
     const rect = e.currentTarget.getBoundingClientRect();
-    portal.style.left = rect.left + 'px';
-    portal.style.top = (rect.bottom + 8) + 'px';
+    
+    // Set portal to visible temporarily to measure its actual size
+    portal.style.visibility = 'hidden';
+    portal.style.display = 'block';
+    const portalRect = portal.getBoundingClientRect();
+    const portalWidth = portalRect.width;
+    const portalHeight = portalRect.height;
+    
+    // Calculate optimal position
+    let left, top;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const margin = 16;
+    
+    // Try positioning to the right first
+    left = rect.right + 8;
+    if (left + portalWidth > viewportWidth - margin) {
+      // If right doesn't fit, try left
+      left = rect.left - portalWidth - 8;
+      if (left < margin) {
+        // If left doesn't fit, center it over the element
+        left = rect.left + (rect.width / 2) - (portalWidth / 2);
+        // Ensure it doesn't go off screen
+        if (left < margin) left = margin;
+        if (left + portalWidth > viewportWidth - margin) {
+          left = viewportWidth - portalWidth - margin;
+        }
+      }
+    }
+    
+    // Vertical positioning - center vertically with the element
+    top = rect.top + (rect.height / 2) - (portalHeight / 2);
+    
+    // Ensure it doesn't go off the top or bottom
+    if (top < margin) {
+      top = margin;
+    }
+    if (top + portalHeight > viewportHeight - margin) {
+      top = viewportHeight - portalHeight - margin;
+    }
+    
+    portal.style.left = left + 'px';
+    portal.style.top = top + 'px';
     portal.style.background = '#222';
     portal.style.color = '#fff';
     portal.style.padding = '8px 12px';
@@ -1831,6 +1936,8 @@
     portal.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
     portal.style.maxWidth = '300px';
     portal.style.fontSize = '14px';
+    portal.style.transform = 'none'; // Remove transform since we're calculating exact position
+    portal.style.visibility = 'visible';
   }
   function hidePortalTooltip() {
     const portal = document.getElementById('portal-tooltip');
@@ -1842,7 +1949,60 @@
       el.addEventListener('mouseleave', hidePortalTooltip);
     });
   }
+  
+  // Attach tooltip listeners when drawers are opened
+  function attachTooltipListenersToDrawer(drawerId) {
+    const drawer = document.getElementById(drawerId);
+    if (drawer) {
+      const tooltipElements = drawer.querySelectorAll('.has-tooltip');
+      console.log(`Attaching tooltip listeners to ${tooltipElements.length} elements in drawer: ${drawerId}`);
+      tooltipElements.forEach(el => {
+        // Remove existing listeners to prevent duplicates
+        el.removeEventListener('mouseenter', showPortalTooltip);
+        el.removeEventListener('mouseleave', hidePortalTooltip);
+        // Add new listeners
+        el.addEventListener('mouseenter', showPortalTooltip);
+        el.addEventListener('mouseleave', hidePortalTooltip);
+      });
+    } else {
+      console.warn(`Drawer not found: ${drawerId}`);
+    }
+  }
+  
+  // Attach tooltip listeners to modal content
+  function attachTooltipListenersToModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      const tooltipElements = modal.querySelectorAll('.has-tooltip');
+      console.log(`Attaching tooltip listeners to ${tooltipElements.length} elements in modal: ${modalId}`);
+      tooltipElements.forEach(el => {
+        // Remove existing listeners to prevent duplicates
+        el.removeEventListener('mouseenter', showPortalTooltip);
+        el.removeEventListener('mouseleave', hidePortalTooltip);
+        // Add new listeners
+        el.addEventListener('mouseenter', showPortalTooltip);
+        el.addEventListener('mouseleave', hidePortalTooltip);
+      });
+    } else {
+      console.warn(`Modal not found: ${modalId}`);
+    }
+  }
+  
+  // Make functions available globally
+  window.attachTooltipListenersToDrawer = attachTooltipListenersToDrawer;
+  window.attachTooltipListenersToModal = attachTooltipListenersToModal;
+  
+  // Attach portal tooltips to all tooltip elements on the main page as well
+  function attachMainPageTooltipListeners() {
+    document.querySelectorAll('.has-tooltip:not(.drawer .has-tooltip)').forEach(el => {
+      el.addEventListener('mouseenter', showPortalTooltip);
+      el.addEventListener('mouseleave', hidePortalTooltip);
+    });
+  }
+  
+  // Initial attachment
   attachDrawerTooltipListeners();
+  attachMainPageTooltipListeners();
 
 
 
@@ -1854,6 +2014,8 @@
     if (drawer && backdrop) {
       drawer.classList.remove('hidden');
       backdrop.classList.remove('hidden');
+      // Attach tooltip listeners to this drawer
+      attachTooltipListenersToDrawer(drawerId);
     } else {
       console.error(`Missing elements for drawer: ${drawerId}`);
     }
@@ -1928,6 +2090,8 @@
       agentSettingsBtn.addEventListener('click', function() {
         if (agentSettingsModal) {
           agentSettingsModal.classList.remove('hidden');
+          // Attach tooltip listeners to modal content
+          attachTooltipListenersToModal('agentSettingsModal');
         }
         if (uniqueName) {
           uniqueName.value = `agent-${Math.random().toString(36).substring(2, 8)}`;
@@ -2143,17 +2307,24 @@
         <!-- Live Subtitles Settings -->
         <div class="bg-gray-700 p-4 rounded-lg">
           <h3 class="text-lg font-semibold mb-3">Live Subtitles</h3>
-          <div class="flex items-center space-x-2 mb-3">
+          <div class="flex items-center space-x-2 mb-3 has-tooltip relative">
             <input type="checkbox" id="enableSubtitles" class="rounded">
             <label for="enableSubtitles" class="text-sm">Enable Live Subtitles</label>
+            <div class="tooltip">Enable real-time transcription of audio conversations. Shows subtitles during the conversation.</div>
           </div>
           <div class="flex space-x-2">
-            <button id="diagnoseTranscription" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
-              Diagnose
-            </button>
-            <button id="testTranscription" class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700">
-              Test
-            </button>
+            <div class="has-tooltip relative">
+              <button id="diagnoseTranscription" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                Diagnose
+              </button>
+              <div class="tooltip">Diagnose transcription issues and check ASR configuration</div>
+            </div>
+            <div class="has-tooltip relative">
+              <button id="testTranscription" class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700">
+                Test
+              </button>
+              <div class="tooltip">Test the transcription system with sample audio</div>
+            </div>
           </div>
         </div>
 
@@ -2269,17 +2440,20 @@
           <div class="bg-gray-700 p-4 rounded-lg">
             <h3 class="text-lg font-semibold mb-3">Input Modalities</h3>
             <div class="space-y-2">
-              <label class="flex items-center">
+              <label class="flex items-center has-tooltip relative">
                 <input type="checkbox" id="inputText" checked disabled class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
                 <span>Text</span>
+                <div class="tooltip">Enable text input for the agent. This is always required unless MLLM is enabled.</div>
               </label>
-              <label class="flex items-center">
+              <label class="flex items-center has-tooltip relative">
                 <input type="checkbox" id="inputAudio" class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded" disabled>
                 <span>Audio</span>
+                <div class="tooltip">Enable audio input for the agent. Only available when MLLM is enabled.</div>
               </label>
-              <label class="flex items-center">
+              <label class="flex items-center has-tooltip relative">
                 <input type="checkbox" id="inputImage" class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
                 <span>Image</span>
+                <div class="tooltip">Allow the agent to accept image input in addition to text. Only available when MLLM is disabled.</div>
               </label>
             </div>
           </div>
@@ -2287,13 +2461,15 @@
           <div class="bg-gray-700 p-4 rounded-lg">
             <h3 class="text-lg font-semibold mb-3">Output Modalities</h3>
             <div class="space-y-2">
-              <label class="flex items-center">
+              <label class="flex items-center has-tooltip relative">
                 <input type="checkbox" id="outputText" checked class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
                 <span>Text</span>
+                <div class="tooltip">Enable text output from the agent (responses will be shown as text).</div>
               </label>
-              <label class="flex items-center">
+              <label class="flex items-center has-tooltip relative">
                 <input type="checkbox" id="outputAudio" class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
                 <span>Audio</span>
+                <div class="tooltip">Enable audio output from the agent (responses will be spoken aloud).</div>
               </label>
             </div>
             <p class="text-sm text-gray-400 mt-2">At least one output modality must be selected</p>
@@ -2303,10 +2479,16 @@
         <!-- Custom Parameters -->
         <div class="bg-gray-700 p-4 rounded-lg">
           <div class="flex justify-between items-center mb-3">
-            <h3 class="text-lg font-semibold">Custom Parameters</h3>
-            <button id="addParamBtn" class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm">
-              Add Parameter
-            </button>
+            <div class="has-tooltip relative">
+              <h3 class="text-lg font-semibold">Custom Parameters</h3>
+              <div class="tooltip">Add custom key-value parameters for the LLM or MLLM. These are passed directly to the LLM/MLLM API and can control advanced model behavior. For LLM: parameters are included in llm.params. For MLLM: parameters are included in mllm.params.</div>
+            </div>
+            <div class="has-tooltip relative">
+              <button id="addParamBtn" class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm">
+                Add Parameter
+              </button>
+              <div class="tooltip">Add a new custom parameter row.</div>
+            </div>
           </div>
           <div id="param-container" class="space-y-2"></div>
         </div>

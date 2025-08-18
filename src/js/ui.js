@@ -835,6 +835,11 @@ window.UI = class UI {
         }, 0);
         drawer.classList.remove('hidden');
         document.getElementById(drawerId + 'Backdrop').classList.remove('hidden');
+        
+        // Attach tooltip listeners to this drawer
+        if (window.attachTooltipListenersToDrawer) {
+            window.attachTooltipListenersToDrawer(drawerId);
+        }
     }
 
     closeDrawer(drawerId) {

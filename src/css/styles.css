@@ -394,10 +394,14 @@
   max-height: 70vh;
 }
 
-/* Only tooltips inside drawers use position: fixed to escape overflow */
-.drawer .tooltip {
-  position: fixed;
-  z-index: 12000;
+/* All tooltips are now handled by the portal system, so hide the regular tooltips */
+.tooltip {
+  display: none !important;
+}
+
+/* Disable hover effects for regular tooltips */
+.has-tooltip:hover .tooltip {
+  display: none !important;
 }
 
 /* Ensure the parent of the button is relative for absolute drawer placement */
@@ -426,25 +430,13 @@ select:focus, .drawer select:focus {
   position: relative;
 }
 
+/* All tooltips are now handled by the portal system */
 .tooltip {
-  display: none;
-  position: absolute;
-  left: 0;
-  top: 100%;
-  margin-top: 8px;
-  z-index: 9999;
-  max-width: 300px;
-  background: #222;
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  white-space: normal;
-  font-size: 14px;
+  display: none !important;
 }
 
 .has-tooltip:hover .tooltip {
-  display: block;
+  display: none !important;
 }
 
 /* Drawer-specific tooltips */
@@ -452,28 +444,7 @@ select:focus, .drawer select:focus {
   z-index: 22000;
 }
 
-/* Add style from index.html */
-.tooltip {
-  display: none;
-  position: absolute;
-  background: rgba(26, 32, 44, 0.95);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-size: 14px;
-  z-index: 10000;
-  min-width: 200px;
-  max-width: 300px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  left: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  margin-left: 10px;
-}
-
-.has-tooltip:hover .tooltip {
-  display: block;
-}
+/* All tooltips are now handled by the portal system - no additional styles needed */
 
 .modal {
   position: fixed;
