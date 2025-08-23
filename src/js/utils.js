@@ -602,15 +602,16 @@ window.Utils = class Utils {
 
         // Add TTS configuration based on vendor (only if MLLM is not enabled)
         if (!formData.enableMllm) {
-            // Handle skipPatterns logic
+            // Handle skip_patterns logic
             const skipPatternsSelect = document.getElementById("skipPatterns");
-            let skipPatterns = Array.from(skipPatternsSelect.selectedOptions).map(opt => opt.value).filter(v => v !== "");
-            if (skipPatterns.length === 0) skipPatterns = null;
-            else skipPatterns = skipPatterns.map(Number);
+            let skip_patterns = Array.from(skipPatternsSelect.selectedOptions).map(opt => opt.value).filter(v => v !== "");
+            if (skip_patterns.length === 0) skip_patterns = null;
+            else skip_patterns = skip_patterns.map(Number);
 
             if (formData.vendor === "microsoft") {
                 config.properties.tts = {
                     vendor: "microsoft",
+                    ...(skip_patterns ? { skip_patterns } : {}),
                     params: {
                         key: formData.ttsKey,
                         region: document.getElementById("ttsRegion").value,
@@ -618,8 +619,7 @@ window.Utils = class Utils {
                         ...(document.getElementById("microsoftRate")?.value ? { rate: parseFloat(document.getElementById("microsoftRate").value) } : {}),
                         ...(document.getElementById("microsoftSpeed")?.value ? { speed: parseFloat(document.getElementById("microsoftSpeed").value) } : {}),
                         ...(document.getElementById("microsoftVolume")?.value ? { volume: parseFloat(document.getElementById("microsoftVolume").value) } : {}),
-                        ...(document.getElementById("microsoftSampleRate")?.value ? { sample_rate: parseInt(document.getElementById("microsoftSampleRate").value, 10) } : {}),
-                        ...(skipPatterns ? { skipPatterns } : {})
+                        ...(document.getElementById("microsoftSampleRate")?.value ? { sample_rate: parseInt(document.getElementById("microsoftSampleRate").value, 10) } : {})
                     }
                 };
             } else if (formData.vendor === "elevenlabs") {
@@ -631,6 +631,7 @@ window.Utils = class Utils {
 
                 config.properties.tts = {
                     vendor: "elevenlabs",
+                    ...(skip_patterns ? { skip_patterns } : {}),
                     params: {
                         key: document.getElementById("elevenLabsTtsKey").value,
                         model_id: modelId,
@@ -639,45 +640,44 @@ window.Utils = class Utils {
                         ...(document.getElementById("elevenLabsStability")?.value ? { stability: parseFloat(document.getElementById("elevenLabsStability").value) } : {}),
                         ...(document.getElementById("elevenLabsSimilarityBoost")?.value ? { similarity_boost: parseFloat(document.getElementById("elevenLabsSimilarityBoost").value) } : {}),
                         ...(document.getElementById("elevenLabsStyle")?.value ? { style: parseFloat(document.getElementById("elevenLabsStyle").value) } : {}),
-                        ...(document.getElementById("elevenLabsUseSpeakerBoost")?.checked ? { use_speaker_boost: true } : {}),
-                        ...(skipPatterns ? { skipPatterns } : {})
+                        ...(document.getElementById("elevenLabsUseSpeakerBoost")?.checked ? { use_speaker_boost: true } : {})
                     }
                 };
             } else if (formData.vendor === "cartesia") {
                 config.properties.tts = {
                     vendor: "cartesia",
+                    ...(skip_patterns ? { skip_patterns } : {}),
                     params: {
                         api_key: document.getElementById("cartesiaTtsKey").value,
                         model_id: document.getElementById("cartesiaModelId").value,
                         voice: {
                             mode: "id",
                             id: document.getElementById("cartesiaVoiceId").value
-                        },
-                        ...(skipPatterns ? { skipPatterns } : {})
+                        }
                     }
                 };
             } else if (formData.vendor === "openai") {
                 config.properties.tts = {
                     vendor: "openai",
+                    ...(skip_patterns ? { skip_patterns } : {}),
                     params: {
                         api_key: document.getElementById("openaiTtsKey").value,
                         model: document.getElementById("openaiModel").value,
                         voice: document.getElementById("openaiVoice").value,
                         ...(document.getElementById("openaiInstructions")?.value ? { instructions: document.getElementById("openaiInstructions").value } : {}),
-                        ...(document.getElementById("openaiSpeed")?.value ? { speed: parseFloat(document.getElementById("openaiSpeed").value) } : {}),
-                        ...(skipPatterns ? { skipPatterns } : {})
+                        ...(document.getElementById("openaiSpeed")?.value ? { speed: parseFloat(document.getElementById("openaiSpeed").value) } : {})
                     }
                 };
             } else if (formData.vendor === "humeai") {
                 config.properties.tts = {
                     vendor: "humeai",
+                    ...(skip_patterns ? { skip_patterns } : {}),
                     params: {
                         key: document.getElementById("humeaiTtsKey").value,
                         voice_id: document.getElementById("humeaiVoiceId").value,
                         provider: document.getElementById("humeaiProvider").value || "HUME_AI",
                         ...(document.getElementById("humeaiSpeed")?.value ? { speed: parseFloat(document.getElementById("humeaiSpeed").value) } : {}),
-                        ...(document.getElementById("humeaiTrailingSilence")?.value ? { trailing_silence: parseFloat(document.getElementById("humeaiTrailingSilence").value) } : {}),
-                        ...(skipPatterns ? { skipPatterns } : {})
+                        ...(document.getElementById("humeaiTrailingSilence")?.value ? { trailing_silence: parseFloat(document.getElementById("humeaiTrailingSilence").value) } : {})
                     }
                 };
             }
