@@ -68,9 +68,14 @@ window.MediaProcessor = class MediaProcessor {
         this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
         this.subtitleManager = subtitleManager;
 
-        // Initialize Conversational AI for subtitles if enabled
-        if (this.subtitleManager && this.subtitleManager.isEnabled) {
+        // Initialize Conversational AI for subtitles if enabled (RTM mode)
+        if (this.subtitleManager && this.subtitleManager.isEnabled && !this.subtitleManager.isDataStreamMode) {
             await this.initializeConversationalAI(appId, channelName, token, uid, agentId);
+        }
+        
+        // Initialize data stream subtitle handling if enabled
+        if (this.subtitleManager && this.subtitleManager.isEnabled && this.subtitleManager.isDataStreamMode) {
+            await this.initializeDataStreamSubtitles(agentId);
         }
         
         this.client.on("user-published", async (user, mediaType) => {
@@ -157,7 +162,7 @@ window.MediaProcessor = class MediaProcessor {
         const imageInputEnabled = document.getElementById("inputImage").checked;
         if (imageInputEnabled && !this.localTracks.videoTrack) {
             this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
-            await this.client.publish(this.localTracks.videoTrack);
+            // await this.client.publish(this.localTracks.videoTrack);
         }
 
         return true;
@@ -183,6 +188,11 @@ window.MediaProcessor = class MediaProcessor {
 
         // Cleanup Conversational AI if initialized
         await this.cleanupConversationalAI();
+        
+        // Handle subtitle manager cleanup
+        if (this.subtitleManager) {
+            this.subtitleManager.handleChannelLeave();
+        }
 
         // Leave Agora Channel
         await this.client.leave();
@@ -196,6 +206,12 @@ window.MediaProcessor = class MediaProcessor {
         if (this.localTracks.videoTrack) {
             this.localTracks.videoTrack.stop();
             this.localTracks.videoTrack.close();
+        }
+
+        // Stop and close audio track if it exists
+        if (this.localTracks.audioTrack) {
+            this.localTracks.audioTrack.stop();
+            this.localTracks.audioTrack.close();
         }
 
         // Reset state
@@ -262,10 +278,29 @@ window.MediaProcessor = class MediaProcessor {
         try {
             if (this.subtitleManager) {
                 await this.subtitleManager.cleanupConversationalAI();
+                this.subtitleManager.cleanupDataStreamSubtitles();
                 console.log('Conversational AI cleaned up');
             }
         } catch (error) {
             console.error('Error cleaning up Conversational AI:', error);
+        }
+    }
+
+    async initializeDataStreamSubtitles(agentId) {
+        if (!this.subtitleManager || !this.subtitleManager.isDataStreamMode) return;
+
+        try {
+            // Get the agent UID from the agent ID or use a default
+            const agentUid = agentId || '8888'; // Default agent UID
+            
+            console.log('Initializing data stream subtitle handling for agent:', agentUid);
+            
+            // Initialize the subtitle manager with the RTC client and agent UID
+            await this.subtitleManager.initializeDataStreamSubtitles(this.client, agentUid);
+            
+            console.log('Data stream subtitle handling initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize data stream subtitle handling:', error);
         }
     }
 } 

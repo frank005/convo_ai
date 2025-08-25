@@ -112,6 +112,16 @@ window.UI = class UI {
         if (sendImageBtn) {
             sendImageBtn.addEventListener("click", () => this.sendImageMessage());
         }
+        const sendImageFileBtn = document.getElementById("sendImageFileBtn");
+        if (sendImageFileBtn) {
+            sendImageFileBtn.addEventListener("click", () => this.sendImageFileMessage());
+        }
+        
+        // Auto-send image file when selected
+        const imageFileInput = document.getElementById("imageFileInput");
+        if (imageFileInput) {
+            imageFileInput.addEventListener("change", () => this.sendImageFileMessage());
+        }
         
         // Handle Enter key in message inputs
         const messageInput = document.getElementById("messageInput");
@@ -194,8 +204,8 @@ window.UI = class UI {
 
     async sendImageMessage() {
         const imageUrlInput = document.getElementById("imageUrlInput");
-        const url = imageUrlInput.value.trim();
-        if (!url) return;
+        const imageUrl = imageUrlInput.value.trim();
+        if (!imageUrl) return;
 
         try {
             const agoraRtcUid = document.getElementById("agoraRtcUid").value.trim();
@@ -209,7 +219,7 @@ window.UI = class UI {
                 if (conversationalAI && conversationalAI.isReady()) {
                     await conversationalAI.chat(agoraRtcUid, {
                         messageType: 'IMAGE',
-                        url: url,
+                        image_url: imageUrl,
                         uuid: Date.now().toString() + Math.random().toString(36).substring(2)
                     });
                     imageUrlInput.value = "";
@@ -219,6 +229,56 @@ window.UI = class UI {
             console.error("Failed to send image:", error);
             alert("Failed to send image: " + error.message);
         }
+    }
+
+    async sendImageFileMessage() {
+        const imageFileInput = document.getElementById("imageFileInput");
+        const file = imageFileInput.files[0];
+        if (!file) {
+            alert("Please select an image file first");
+            return;
+        }
+
+        try {
+            const agoraRtcUid = document.getElementById("agoraRtcUid").value.trim();
+            if (!agoraRtcUid) {
+                alert("Please enter an agent RTC UID first");
+                return;
+            }
+
+            // Convert image to base64
+            const base64 = await this.convertImageToBase64(file);
+            
+            if (window.ConversationalAIAPI) {
+                const conversationalAI = window.ConversationalAIAPI.getInstance();
+                if (conversationalAI && conversationalAI.isReady()) {
+                    await conversationalAI.chat(agoraRtcUid, {
+                        messageType: 'IMAGE',
+                        image_base64: base64,
+                        uuid: Date.now().toString() + Math.random().toString(36).substring(2)
+                    });
+                    imageFileInput.value = ""; // Clear the file input
+                }
+            }
+        } catch (error) {
+            console.error("Failed to send image file:", error);
+            alert("Failed to send image file: " + error.message);
+        }
+    }
+
+    convertImageToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                // Remove the data:image/...;base64, prefix to get just the base64 data
+                const base64 = reader.result.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = () => {
+                reject(new Error('Failed to read image file'));
+            };
+            reader.readAsDataURL(file);
+        });
     }
 
     checkCredentials() {
@@ -304,7 +364,7 @@ window.UI = class UI {
         const clientRtcUid = document.getElementById("clientRtcUid").value.trim();
         const clientRtcToken = document.getElementById("clientRtcToken").value.trim();
         const enableStringUid = document.getElementById("enableStringUid").checked;
-        const agentId = document.getElementById("agentId").value.trim(); // Get agent ID from UI
+        const agentId = document.getElementById("uniqueName").value.trim(); // Get agent ID from unique name field
 
         try {
             // Convert empty string to null for token
@@ -622,6 +682,11 @@ window.UI = class UI {
                     agentIdElement.value = data.agent_id;
                 }
             }
+            
+            // Disable subtitle mode selection when agent is created
+            if (this.subtitleManager) {
+                this.subtitleManager.disableSubtitleModeSelection();
+            }
         } catch (error) {
             const errorMsg = `Error: ${error.message}`;
             if (output) {
@@ -700,6 +765,11 @@ window.UI = class UI {
                     status.classList.add('hidden');
                 }, 5000);
             }
+            
+            // Disable subtitle mode selection when agent is updated (agent is running)
+            if (this.subtitleManager) {
+                this.subtitleManager.disableSubtitleModeSelection();
+            }
         } catch (error) {
             const errorMsg = `Error: ${error.message}`;
             if (output) {
@@ -750,6 +820,11 @@ window.UI = class UI {
                 setTimeout(() => {
                     status.classList.add('hidden');
                 }, 5000);
+            }
+            
+            // Enable subtitle mode selection when agent is stopped
+            if (this.subtitleManager) {
+                this.subtitleManager.enableSubtitleModeSelection();
             }
         } catch (error) {
             const errorMsg = `Error: ${error.message}`;

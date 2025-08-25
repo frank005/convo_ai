@@ -228,6 +228,12 @@ class CovSubRenderController {
         // DEBUG: Log full message structure to understand available fields
         console.log('DEBUG - Full message structure:', JSON.stringify(message, null, 2));
         
+        // Log the transcription text prominently
+        const transcriptionText = message.text || message.content || '';
+        if (transcriptionText) {
+            // console.log('🎤 TRANSCRIPTION TEXT:', transcriptionText);
+        }
+        
         // Determine speaker based on message type/object
         let speaker;
         let agentUserId = context.publisher;
@@ -774,6 +780,7 @@ class ConversationalAIAPI extends EventHelper {
             } else if (messageData instanceof Uint8Array) {
                 const decoder = new TextDecoder('utf-8');
                 const messageString = decoder.decode(messageData);
+                // console.log('🎤 TRANSCRIPTION DECODED MESSAGE:', messageString);
                 console.log('TRANSCRIPTION DEBUG - Decoded binary message:', messageString);
                 try {
                     parsedMessage = JSON.parse(messageString);
@@ -895,9 +902,11 @@ class ConversationalAIAPI extends EventHelper {
                 throw new Error('Text message cannot be empty');
             }
         } else if (message.messageType === 'IMAGE') {
-            if (!message.url || message.url.trim() === '') {
-                console.error('IMAGE message validation failed: url is empty');
-                throw new Error('Image URL cannot be empty');
+            // Check for either image_url or image_base64
+            if ((!message.image_url || message.image_url.trim() === '') && 
+                (!message.image_base64 || message.image_base64.trim() === '')) {
+                console.error('IMAGE message validation failed: neither image_url nor image_base64 provided');
+                throw new Error('Image URL or base64 data must be provided');
             }
         } else {
             console.error('Unknown message type:', message.messageType);
@@ -918,9 +927,16 @@ class ConversationalAIAPI extends EventHelper {
         } else if (message.messageType === 'IMAGE') {
             messageData = {
                 messageType: message.messageType,
-                url: message.url,
                 uuid: uuid
             };
+            
+            // Add either image_url or image_base64 based on what's provided
+            if (message.image_url) {
+                messageData.image_url = message.image_url;
+            }
+            if (message.image_base64) {
+                messageData.image_base64 = message.image_base64;
+            }
         }
 
         console.log('📤 Preparing to send message:', {

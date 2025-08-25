@@ -6,7 +6,7 @@
 
 class SubtitleManager {
     constructor() {
-        console.log('SubtitleManager v1.1 loaded - using API-based chat history management');
+        console.log('SubtitleManager v1.2 loaded - supporting both RTM and data stream modes');
         
         this.isEnabled = false;
         this.isOverlayVisible = false;
@@ -16,6 +16,23 @@ class SubtitleManager {
         this.chatHistoryData = [];
         this.conversationalAIAPI = null;
         this.expectedAgentId = null;
+        
+        // New properties for data stream mode
+        this.isDataStreamMode = false;
+        this.messagesMap = new Map();
+        this.agentUid = null;
+        this.rtcClient = null;
+        
+        // Deduplication properties for data stream
+        this.lastProcessedText = null;
+        this.lastProcessedSpeaker = null;
+        this.lastProcessedTimestamp = 0;
+        this.lastProcessedTurnId = null;
+        this.lastProcessedMessageId = null;
+        
+        // Live message tracking for user transcripts
+        this.currentUserMessage = null;
+        this.currentUserTurnId = null;
         
         // DOM elements
         this.elements = {};
@@ -38,6 +55,8 @@ class SubtitleManager {
             chatHistory: document.getElementById('chatHistory'),
             copyChatBtn: document.getElementById('copyChatBtn'),
             clearChatBtn: document.getElementById('clearChatBtn'),
+            subtitleModeRTM: document.getElementById('subtitleModeRTM'),
+            subtitleModeDataStream: document.getElementById('subtitleModeDataStream'),
             
             // Auto-configuration elements
             transcriptEnable: document.getElementById('transcriptEnable'),
@@ -53,9 +72,22 @@ class SubtitleManager {
         if (this.elements.enableSubtitles) {
             this.elements.enableSubtitles.addEventListener('change', (e) => {
                 if (e.target.checked) {
-                    // Show signaling requirements modal when enabling subtitles
-                    this.showSignalingModal();
+                    // Check which mode is selected
+                    if (this.elements.subtitleModeRTM && this.elements.subtitleModeRTM.checked) {
+                        this.enableRTMMode();
+                    } else if (this.elements.subtitleModeDataStream && this.elements.subtitleModeDataStream.checked) {
+                        this.enableDataStreamMode();
+                    } else {
+                        // No mode selected, show signaling modal (default to RTM)
+                        this.showSignalingModal();
+                    }
                 } else {
+                    // Disable all modes
+                    if (this.isDataStreamMode) {
+                        this.disableDataStreamMode();
+                    } else {
+                        this.disableRTMMode();
+                    }
                     this.setSubtitlesEnabled(false);
                 }
             });
@@ -110,11 +142,37 @@ class SubtitleManager {
             });
         }
 
+        // Subtitle mode radio buttons
+        const subtitleModeRTM = document.getElementById('subtitleModeRTM');
+        const subtitleModeDataStream = document.getElementById('subtitleModeDataStream');
+        
+        if (subtitleModeRTM) {
+            subtitleModeRTM.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    this.enableRTMMode();
+                }
+            });
+        }
+        
+        if (subtitleModeDataStream) {
+            subtitleModeDataStream.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    this.enableDataStreamMode();
+                }
+            });
+        }
+        
+        // Handle mutual exclusivity of radio buttons
+        this.setupRadioButtonExclusivity();
+
         // Setup RTM change listeners to prevent manual disabling
         this.setupRTMChangeListeners();
 
         // Check configuration on load
         this.checkConfigurationCompatibility();
+        
+        // Check if data stream mode should be enabled on load
+        this.checkDataStreamModeOnLoad();
     }
 
     setSubtitlesEnabled(enabled) {
@@ -122,13 +180,49 @@ class SubtitleManager {
         
         if (enabled) {
             console.log('Subtitles enabled');
-            this.configureRTMSettings(true);
-            this.showNotification('Subtitles enabled with auto-configuration', 'success');
+            if (!this.isDataStreamMode) {
+                this.configureRTMSettings(true);
+                this.showNotification('Subtitles enabled with auto-configuration', 'success');
+            } else {
+                this.showNotification('Subtitles enabled in data stream mode', 'success');
+            }
+            
+            // Check if data stream mode should be enabled
+            if (this.elements.subtitleModeDataStream && this.elements.subtitleModeDataStream.checked) {
+                this.isDataStreamMode = true;
+                this.showDataStreamStatus();
+                console.log('🔵 Data Stream Subtitles: Auto-enabled from radio button');
+            }
         } else {
             console.log('Subtitles disabled');
             this.hideOverlay();
-            this.configureRTMSettings(false);
+            if (!this.isDataStreamMode) {
+                this.configureRTMSettings(false);
+            }
             this.showNotification('Subtitles disabled', 'info');
+            
+            // Reset data stream mode
+            this.isDataStreamMode = false;
+            
+            // Reset radio button states
+            if (this.elements.subtitleModeRTM) {
+                this.elements.subtitleModeRTM.checked = false;
+            }
+            if (this.elements.subtitleModeDataStream) {
+                this.elements.subtitleModeDataStream.checked = false;
+            }
+            
+            // Remove disable button
+            const disableBtn = document.getElementById('disableSubtitlesWithoutRTM');
+            if (disableBtn) {
+                disableBtn.remove();
+            }
+            
+            // Hide status indicator
+            const statusIndicator = document.getElementById('dataStreamStatusIndicator');
+            if (statusIndicator) {
+                statusIndicator.classList.add('hidden');
+            }
         }
 
         // Update UI elements
@@ -444,6 +538,93 @@ class SubtitleManager {
         return transcriptEnabled && rtmEnabled && dataChannelRtm;
     }
 
+    checkDataStreamModeOnLoad() {
+        // Check if data stream mode should be enabled on page load
+        if (this.elements.subtitleModeDataStream && this.elements.subtitleModeDataStream.checked) {
+            console.log('🔵 Data Stream Subtitles: Found enabled on page load');
+            this.isDataStreamMode = true;
+            this.isEnabled = true;
+            this.showDataStreamStatus();
+        }
+    }
+
+    checkAgentStatusOnLoad() {
+        // Check if there's an agent ID in the field (indicates agent might be running)
+        const agentIdElement = document.getElementById('agentId');
+        if (agentIdElement && agentIdElement.value.trim()) {
+            console.log('🔵 Subtitle Mode: Agent ID found, checking if agent is running...');
+            // For now, we'll assume if there's an agent ID, the agent might be running
+            // In a real implementation, you might want to query the agent status
+            this.disableSubtitleModeSelection();
+        }
+    }
+
+    setupRadioButtonExclusivity() {
+        // When RTM mode is selected, disable data stream mode
+        if (this.elements.subtitleModeRTM) {
+            this.elements.subtitleModeRTM.addEventListener('change', (e) => {
+                if (e.target.checked && this.elements.subtitleModeDataStream) {
+                    this.elements.subtitleModeDataStream.checked = false;
+                }
+            });
+        }
+        
+        // When data stream mode is selected, disable RTM mode
+        if (this.elements.subtitleModeDataStream) {
+            this.elements.subtitleModeDataStream.addEventListener('change', (e) => {
+                if (e.target.checked && this.elements.subtitleModeRTM) {
+                    this.elements.subtitleModeRTM.checked = false;
+                }
+            });
+        }
+    }
+
+    // Disable subtitle mode selection (when agent is created/running)
+    disableSubtitleModeSelection() {
+        console.log('🔵 Subtitle Mode: Disabling selection (agent running)');
+        
+        if (this.elements.subtitleModeRTM) {
+            this.elements.subtitleModeRTM.disabled = true;
+        }
+        if (this.elements.subtitleModeDataStream) {
+            this.elements.subtitleModeDataStream.disabled = true;
+        }
+        
+        // Also disable the main subtitle checkbox
+        if (this.elements.enableSubtitles) {
+            this.elements.enableSubtitles.disabled = true;
+        }
+        
+        // Show disabled indicator
+        const disabledIndicator = document.getElementById('subtitleModeDisabledIndicator');
+        if (disabledIndicator) {
+            disabledIndicator.classList.remove('hidden');
+        }
+    }
+
+    // Enable subtitle mode selection (when agent is stopped)
+    enableSubtitleModeSelection() {
+        console.log('🔵 Subtitle Mode: Enabling selection (agent stopped)');
+        
+        if (this.elements.subtitleModeRTM) {
+            this.elements.subtitleModeRTM.disabled = false;
+        }
+        if (this.elements.subtitleModeDataStream) {
+            this.elements.subtitleModeDataStream.disabled = false;
+        }
+        
+        // Also enable the main subtitle checkbox
+        if (this.elements.enableSubtitles) {
+            this.elements.enableSubtitles.disabled = false;
+        }
+        
+        // Hide disabled indicator
+        const disabledIndicator = document.getElementById('subtitleModeDisabledIndicator');
+        if (disabledIndicator) {
+            disabledIndicator.classList.add('hidden');
+        }
+    }
+
     showNotification(message, type = 'info') {
         // Create a temporary notification
         const notification = document.createElement('div');
@@ -752,6 +933,435 @@ class SubtitleManager {
         };
     }
 
+    // Subtitle mode methods
+    enableRTMMode() {
+        console.log('🔵 RTM Mode: Enabling...');
+        
+        // Disable data stream mode if it was active
+        if (this.isDataStreamMode) {
+            this.disableDataStreamMode();
+        }
+        
+        // Set RTM mode as active
+        this.isDataStreamMode = false;
+        this.isEnabled = true;
+        
+        // Ensure the main subtitle checkbox is checked
+        if (this.elements.enableSubtitles) {
+            this.elements.enableSubtitles.checked = true;
+        }
+        
+        // Show notification
+        this.showNotification('RTM subtitle mode enabled. Join a channel to start transcription.', 'success');
+        
+        console.log('🔵 RTM Mode: Enabled and ready for channel join');
+    }
+
+    enableDataStreamMode() {
+        console.log('🔵 Data Stream Mode: Enabling...');
+        
+        // Disable RTM mode if it was active
+        if (this.isEnabled && !this.isDataStreamMode) {
+            this.disableRTMMode();
+        }
+
+        // Check if transcript is enabled (required for data stream mode)
+        if (!this.isTranscriptEnabled()) {
+            // Auto-enable transcript for data stream mode
+            this.autoEnableTranscript();
+            this.showNotification('Auto-enabled transcript for data stream subtitles', 'info');
+        }
+
+        this.isDataStreamMode = true;
+        this.setSubtitlesEnabled(true);
+        this.showNotification('Subtitles enabled in data stream mode (no RTM required)', 'success');
+        
+        // Show status indicator
+        this.showDataStreamStatus();
+        
+        // Ensure the main subtitle checkbox is checked
+        if (this.elements.enableSubtitles) {
+            this.elements.enableSubtitles.checked = true;
+        }
+        
+        console.log('🔵 Data Stream Subtitles: Enabled');
+        console.log('🔵 Data Stream Subtitles: Waiting for channel join to initialize...');
+    }
+
+    disableRTMMode() {
+        console.log('🔴 RTM Mode: Disabling...');
+        this.setSubtitlesEnabled(false);
+        this.showNotification('RTM subtitle mode disabled', 'info');
+    }
+
+    disableDataStreamMode() {
+        console.log('🔴 Data Stream Mode: Disabling...');
+        this.setSubtitlesEnabled(false);
+        this.showNotification('Data stream subtitle mode disabled', 'info');
+        
+        // Hide status indicator
+        const statusIndicator = document.getElementById('dataStreamStatusIndicator');
+        if (statusIndicator) {
+            statusIndicator.classList.add('hidden');
+        }
+    }
+
+    showDataStreamStatus() {
+        // Show status indicator
+        const statusIndicator = document.getElementById('dataStreamStatusIndicator');
+        if (statusIndicator) {
+            statusIndicator.classList.remove('hidden');
+        }
+    }
+
+    isTranscriptEnabled() {
+        const transcriptEnableSet = this.elements.transcriptEnableSet;
+        const transcriptEnable = this.elements.transcriptEnable;
+        
+        return transcriptEnableSet?.checked && transcriptEnable?.value === 'true';
+    }
+
+    autoEnableTranscript() {
+        // Enable parameters section if not already enabled
+        const parametersEnabled = this.elements.parametersEnabled;
+        if (parametersEnabled && !parametersEnabled.checked) {
+            parametersEnabled.checked = true;
+            parametersEnabled.dataset.autoEnabled = 'true';
+            parametersEnabled.dispatchEvent(new Event('change'));
+        }
+
+        // Enable transcript
+        const transcriptEnableSet = this.elements.transcriptEnableSet;
+        const transcriptEnable = this.elements.transcriptEnable;
+        
+        if (transcriptEnableSet && !transcriptEnableSet.checked) {
+            transcriptEnableSet.checked = true;
+            transcriptEnableSet.dataset.autoEnabled = 'true';
+            transcriptEnableSet.dispatchEvent(new Event('change'));
+        }
+        
+        if (transcriptEnable && transcriptEnable.value !== 'true') {
+            transcriptEnable.value = 'true';
+        }
+    }
+
+
+
+
+
+    // Initialize data stream subtitle handling
+    async initializeDataStreamSubtitles(rtcClient, agentUid) {
+        if (!this.isDataStreamMode) return;
+
+        this.rtcClient = rtcClient;
+        this.agentUid = agentUid;
+
+        // Reset deduplication properties for new session
+        this.lastProcessedText = null;
+        this.lastProcessedSpeaker = null;
+        this.lastProcessedTimestamp = 0;
+        this.lastProcessedTurnId = null;
+        this.lastProcessedMessageId = null;
+        this.messagesMap.clear();
+        
+        // Reset user message tracking
+        this.currentUserMessage = null;
+        this.currentUserTurnId = null;
+
+        console.log('🔵 Data Stream Subtitles: Initializing for agent UID:', agentUid);
+        console.log('🔵 Data Stream Subtitles: RTC Client available:', !!rtcClient);
+
+        // Set up data stream message handler
+        if (this.rtcClient) {
+            this.rtcClient.on('stream-message', (uid, msgData) => {
+                console.log('🔵 Data Stream Subtitles: Received stream message from UID:', uid, 'Agent UID:', this.agentUid);
+                this.handleAgentStreamMessage(uid, msgData);
+            });
+            console.log('🔵 Data Stream Subtitles: Stream message handler attached');
+        } else {
+            console.error('🔴 Data Stream Subtitles: RTC Client not available');
+        }
+
+        this.showNotification('Data stream subtitle handling initialized. Waiting for agent to start...', 'success');
+        console.log('🔵 Data Stream Subtitles: Initialization complete');
+    }
+
+    // Handle agent stream messages (based on the provided code snippet)
+    handleAgentStreamMessage(uid, msgData) {
+        console.log('🔵 Data Stream Subtitles: Processing message from UID:', uid);
+        console.log('🔵 Data Stream Subtitles: Expected agent UID:', this.agentUid);
+        console.log('🔵 Data Stream Subtitles: Raw message data:', msgData);
+        console.log('🔵 Data Stream Subtitles: Message data type:', typeof msgData);
+        console.log('🔵 Data Stream Subtitles: Message data length:', msgData ? msgData.length : 'null/undefined');
+        
+        // Process ALL messages for now to see what we're getting
+        console.log('🔵 Data Stream Subtitles: Processing ALL messages for debugging...');
+        
+        try {
+            const decodedMessage = new TextDecoder().decode(msgData);
+            // console.log('🎤 TRANSCRIPTION DECODED MESSAGE:', decodedMessage);
+            console.log('🔵 Data Stream Subtitles: Raw decoded message:', decodedMessage);
+            
+            let [messageId, messagePart, messageChunks, messageData] = decodedMessage.split("|");
+            console.log('🔵 Data Stream Subtitles: Message parts:', { messageId, messagePart, messageChunks, messageDataLength: messageData?.length });
+            
+            messageData = atob(messageData);
+            console.log('🔵 Data Stream Subtitles: Base64 decoded message length:', messageData.length);
+            
+            this.messagesMap.set(messageId, this.messagesMap.get(messageId) ? this.messagesMap.get(messageId) + messageData : messageData);
+            console.log('🔵 Data Stream Subtitles: Messages map size:', this.messagesMap.size);
+
+            messageData = this.messagesMap.get(messageId);
+            if (parseInt(messagePart) === parseInt(messageChunks)) {
+                console.log('🔵 Data Stream Subtitles: Complete message received, processing...');
+                this.messagesMap.delete(messageId);
+            } else {
+                console.log('🔵 Data Stream Subtitles: Partial message, waiting for more chunks...');
+                return;
+            }
+
+            let messageDataJson;
+            try {
+                messageDataJson = JSON.parse(messageData);
+                console.log("🔵 Data Stream Subtitles: Parsed message data:", messageDataJson);
+                console.log("🔵 Data Stream Subtitles: Message object type:", messageDataJson.object);
+            } catch (parseError) {
+                console.error("🔴 Data Stream Subtitles: JSON parse error:", parseError);
+                console.error("🔴 Data Stream Subtitles: Raw message data that failed to parse:", messageData);
+                console.error("🔴 Data Stream Subtitles: Message data length:", messageData.length);
+                
+                // Try to find where the JSON is malformed
+                if (messageData.length > 1000) {
+                    console.error("🔴 Data Stream Subtitles: Message is very long, showing first 500 chars:", messageData.substring(0, 500));
+                    console.error("🔴 Data Stream Subtitles: Message around position 1050:", messageData.substring(1040, 1060));
+                }
+                return; // Skip this message
+            }
+            
+            if (messageDataJson.object === "assistant.transcription") {
+                console.log("🔵 Data Stream Subtitles: Processing assistant transcription");
+                // This is agent transcript
+                if (!messageDataJson?.turn_status) {
+                    console.log("🔵 Data Stream Subtitles: No turn_status, skipping");
+                    return;
+                }
+                
+                const transcriptText = messageDataJson.text;
+                if (!transcriptText || !transcriptText.trim()) {
+                    console.log("🔵 Data Stream Subtitles: Empty transcript text, skipping");
+                    return;
+                }
+                
+                // Finalize any current user message when agent starts speaking
+                this.finalizeCurrentUserMessage();
+                
+                // Extract deduplication fields
+                const turnId = messageDataJson.turn_id || messageDataJson.turnId;
+                const messageId = messageDataJson.message_id || messageDataJson.messageId;
+                const isFinal = messageDataJson.is_final || messageDataJson.isFinal || messageDataJson.final || false;
+                
+                // console.log("🎤 TRANSCRIPTION TEXT:", transcriptText);
+                console.log("🔵 Data Stream Subtitles: Agent transcript:", transcriptText);
+                console.log("🔵 Data Stream Subtitles: Deduplication fields:", { turnId, messageId, isFinal });
+                
+                // Check for duplicates using turnID and messageID if available
+                if (turnId && messageId) {
+                    if (this.lastProcessedTurnId === turnId && this.lastProcessedMessageId === messageId) {
+                        console.log("🔵 Data Stream Subtitles: Duplicate message detected (turnID/messageID), skipping");
+                        return;
+                    }
+                    this.lastProcessedTurnId = turnId;
+                    this.lastProcessedMessageId = messageId;
+                }
+                
+                // Add to chat history
+                this.addToChatHistoryDataStream(transcriptText, 'AI Agent', new Date().toLocaleTimeString());
+                
+                // Update subtitle overlay with isFinal flag
+                this.updateSubtitle(transcriptText, 'AI Agent', isFinal);
+                
+                // Handle bracket matches if any
+                const match = transcriptText.match(/\[([^\]]+)\]/);
+                if (match) {
+                    console.log("🔵 Data Stream Subtitles: Bracket match found:", match[1]);
+                    this.handleBracketMatch(match[1]);
+                }
+            } else if (messageDataJson.object === "user.transcription") {
+                console.log("🔵 Data Stream Subtitles: Processing user transcription");
+                // This is user transcript - process regardless of UID
+                // User transcripts don't have turn_status, but they have final, turn_id, message_id
+                if (!messageDataJson?.text) {
+                    console.log("🔵 Data Stream Subtitles: No text in user transcript, skipping");
+                    return;
+                }
+                
+                const transcriptText = messageDataJson.text;
+                if (!transcriptText || !transcriptText.trim()) {
+                    console.log("🔵 Data Stream Subtitles: Empty user transcript text, skipping");
+                    return;
+                }
+                
+                // Extract fields
+                const turnId = messageDataJson.turn_id || messageDataJson.turnId;
+                const messageId = messageDataJson.message_id || messageDataJson.messageId;
+                const isFinal = messageDataJson.is_final || messageDataJson.isFinal || messageDataJson.final || false;
+                
+                // console.log("🎤 USER TRANSCRIPTION TEXT:", transcriptText);
+                console.log("🔵 Data Stream Subtitles: User transcript:", transcriptText);
+                console.log("🔵 Data Stream Subtitles: User fields:", { turnId, messageId, isFinal });
+                
+                // Handle live user message updates
+                this.handleLiveUserMessage(transcriptText, turnId, isFinal);
+                
+                // Update subtitle overlay with isFinal flag
+                this.updateSubtitle(transcriptText, 'User', isFinal);
+            } else {
+                console.log("🔵 Data Stream Subtitles: Unknown message object type:", messageDataJson.object);
+                console.log("🔵 Data Stream Subtitles: Full message data for unknown type:", messageDataJson);
+            }
+        } catch (error) {
+            console.error("🔴 Data Stream Subtitles: Error processing agent stream message:", error);
+            console.error("🔴 Data Stream Subtitles: Error details:", {
+                uid,
+                msgDataLength: msgData?.length,
+                errorMessage: error.message,
+                errorStack: error.stack
+            });
+        }
+    }
+
+    // Handle live user message updates (like typing in real-time)
+    handleLiveUserMessage(text, turnId, isFinal) {
+        console.log("🔵 Data Stream Subtitles: Handling live user message:", { text, turnId, isFinal });
+        
+        // If this is a new turn, start a new message
+        if (turnId !== this.currentUserTurnId) {
+            console.log("🔵 Data Stream Subtitles: New user turn detected, starting new message");
+            this.finalizeCurrentUserMessage(); // Finalize any previous message
+            
+            // Create new message
+            this.currentUserMessage = {
+                id: `user-${Date.now()}`,
+                text: text,
+                speaker: 'User',
+                timestamp: new Date().toLocaleTimeString(),
+                isTemp: !isFinal,
+                turnId: turnId
+            };
+            this.currentUserTurnId = turnId;
+            
+            // Add to chat history
+            this.chatHistoryData.push(this.currentUserMessage);
+            console.log("🔵 Data Stream Subtitles: New user message created:", this.currentUserMessage);
+        } else {
+            // Same turn, update existing message
+            if (this.currentUserMessage) {
+                console.log("🔵 Data Stream Subtitles: Updating existing user message:", text);
+                this.currentUserMessage.text = text;
+                this.currentUserMessage.isTemp = !isFinal;
+            }
+        }
+        
+        // If message is final, mark it as permanent
+        if (isFinal && this.currentUserMessage) {
+            console.log("🔵 Data Stream Subtitles: Finalizing user message");
+            this.currentUserMessage.isTemp = false;
+            this.currentUserMessage.timestamp = new Date().toLocaleTimeString();
+            this.currentUserMessage = null; // Clear current message
+            this.currentUserTurnId = null;
+        }
+        
+        // Update display
+        this.updateChatHistoryDisplay();
+    }
+    
+    // Finalize current user message (called when starting new turn or agent speaks)
+    finalizeCurrentUserMessage() {
+        if (this.currentUserMessage && this.currentUserMessage.isTemp) {
+            console.log("🔵 Data Stream Subtitles: Finalizing current user message due to turn change");
+            this.currentUserMessage.isTemp = false;
+            this.currentUserMessage.timestamp = new Date().toLocaleTimeString();
+        }
+        this.currentUserMessage = null;
+        this.currentUserTurnId = null;
+    }
+
+    // Add to chat history for data stream mode
+    addToChatHistoryDataStream(text, speaker, timestamp) {
+        if (!text || !text.trim()) return;
+
+        console.log('🔵 Data Stream Subtitles: Adding to chat history:', { text, speaker, timestamp });
+
+        // Deduplication check for data stream messages
+        const currentTime = Date.now();
+        const timeDiff = currentTime - this.lastProcessedTimestamp;
+        
+        // Check if this is a duplicate message (same text, speaker, and within 2 seconds)
+        if (this.lastProcessedText === text.trim() && 
+            this.lastProcessedSpeaker === speaker && 
+            timeDiff < 2000) {
+            console.log('🔵 Data Stream Subtitles: Duplicate message detected, skipping:', { text, speaker, timeDiff });
+            return;
+        }
+        
+        // Update last processed values
+        this.lastProcessedText = text.trim();
+        this.lastProcessedSpeaker = speaker;
+        this.lastProcessedTimestamp = currentTime;
+
+        const message = {
+            id: Date.now().toString(),
+            text: text.trim(),
+            speaker: speaker,
+            timestamp: timestamp,
+            isTemp: false
+        };
+
+        this.chatHistoryData.push(message);
+        this.updateChatHistoryDisplay();
+        console.log('🔵 Data Stream Subtitles: Chat history updated, total messages:', this.chatHistoryData.length);
+    }
+
+    // Handle bracket matches (placeholder for future functionality)
+    handleBracketMatch(match) {
+        console.log('Bracket match detected:', match);
+        // Add any specific handling for bracket matches here
+    }
+
+    // Cleanup data stream subtitle handling
+    cleanupDataStreamSubtitles() {
+        console.log('🔵 Data Stream Subtitles: Cleaning up...');
+        if (this.rtcClient) {
+            this.rtcClient.off('stream-message');
+            this.rtcClient = null;
+            console.log('🔵 Data Stream Subtitles: RTC client event listeners removed');
+        }
+        this.agentUid = null;
+        this.messagesMap.clear();
+        
+        // Reset deduplication properties
+        this.lastProcessedText = null;
+        this.lastProcessedSpeaker = null;
+        this.lastProcessedTimestamp = 0;
+        this.lastProcessedTurnId = null;
+        this.lastProcessedMessageId = null;
+        
+        // Reset user message tracking
+        this.currentUserMessage = null;
+        this.currentUserTurnId = null;
+        
+        console.log('🔵 Data Stream Subtitles: Cleanup complete');
+    }
+
+    // Method to handle channel leave
+    handleChannelLeave() {
+        if (this.isDataStreamMode) {
+            console.log('🔵 Data Stream Subtitles: Channel leaving, cleaning up...');
+            this.cleanupDataStreamSubtitles();
+            this.showNotification('Data stream subtitle handling disconnected', 'info');
+        }
+    }
+
     // Signaling modal methods
     showSignalingModal() {
         const modal = document.getElementById('signalingRequirementsModal');
@@ -807,13 +1417,29 @@ class SubtitleManager {
             };
         }
 
-        // Enable anyway button
-        const enableBtn = document.getElementById('enableSignalingModal');
-        if (enableBtn) {
-            enableBtn.onclick = () => {
+        // Enable RTM mode button
+        const enableRTMBtn = document.getElementById('enableRTMModal');
+        if (enableRTMBtn) {
+            enableRTMBtn.onclick = () => {
                 this.hideSignalingModal();
-                // Actually enable subtitles
-                this.setSubtitlesEnabled(true);
+                // Enable RTM mode
+                if (this.elements.subtitleModeRTM) {
+                    this.elements.subtitleModeRTM.checked = true;
+                }
+                this.enableRTMMode();
+            };
+        }
+
+        // Enable data stream mode button
+        const enableDataStreamBtn = document.getElementById('enableDataStreamModal');
+        if (enableDataStreamBtn) {
+            enableDataStreamBtn.onclick = () => {
+                this.hideSignalingModal();
+                // Enable data stream mode
+                if (this.elements.subtitleModeDataStream) {
+                    this.elements.subtitleModeDataStream.checked = true;
+                }
+                this.enableDataStreamMode();
             };
         }
 
@@ -893,26 +1519,35 @@ class SubtitleManager {
         }
         
         console.log('Testing transcription system...');
-        const diagnosis = this.diagnoseTranscriptionConfig();
         
-        if (!diagnosis.sdksAvailable) {
-            this.showNotification('Agora SDKs not available', 'error');
-            return;
+        if (this.isDataStreamMode) {
+            // Test data stream mode
+            this.updateSubtitle('This is a test data stream transcription message', 'Test User', true);
+            this.addToChatHistoryDataStream('This is a test data stream transcription message', 'Test User', new Date().toLocaleTimeString());
+            this.showNotification('Test data stream transcription sent - check subtitle overlay and chat history', 'info');
+        } else {
+            // Test RTM mode
+            const diagnosis = this.diagnoseTranscriptionConfig();
+            
+            if (!diagnosis.sdksAvailable) {
+                this.showNotification('Agora SDKs not available', 'error');
+                return;
+            }
+            
+            if (!diagnosis.apiAvailable) {
+                this.showNotification('ConversationalAI API not available', 'error');
+                return;
+            }
+            
+            if (!diagnosis.configValid) {
+                this.showNotification('Configuration invalid - attempting to fix...', 'warning');
+                this.configureRTMSettings(true);
+            }
+            
+            // Test subtitle display
+            this.updateSubtitle('This is a test RTM transcription message', 'Test User', true);
+            this.showNotification('Test RTM transcription sent - check subtitle overlay', 'info');
         }
-        
-        if (!diagnosis.apiAvailable) {
-            this.showNotification('ConversationalAI API not available', 'error');
-            return;
-        }
-        
-        if (!diagnosis.configValid) {
-            this.showNotification('Configuration invalid - attempting to fix...', 'warning');
-            this.configureRTMSettings(true);
-        }
-        
-        // Test subtitle display
-        this.updateSubtitle('This is a test transcription message', 'Test User', true);
-        this.showNotification('Test transcription sent - check subtitle overlay', 'info');
     }
 
     // Destroy method for cleanup
@@ -922,6 +1557,7 @@ class SubtitleManager {
             clearInterval(this.demoInterval);
         }
         this.cleanupConversationalAI();
+        this.cleanupDataStreamSubtitles();
     }
 }
 

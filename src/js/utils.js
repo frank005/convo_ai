@@ -293,29 +293,26 @@ window.Utils = class Utils {
             const asrVendor = data.asrVendor;
             if (asrVendor === 'microsoft') {
                 const microsoftAsrKey = document.getElementById('microsoftAsrKey').value.trim();
-                const microsoftAsrLang = document.getElementById('microsoftAsrLangSelect').value;
+                const microsoftAsrRegion = document.getElementById('microsoftAsrRegion').value.trim();
+                const asrLanguage = document.getElementById('asrLanguage').value;
                 if (!microsoftAsrKey) {
                     throw new Error('Microsoft ASR Key is required');
                 }
-                if (!microsoftAsrLang) {
-                    throw new Error('Microsoft ASR Language is required');
+                if (!microsoftAsrRegion) {
+                    throw new Error('Microsoft ASR Region is required');
+                }
+                if (!asrLanguage) {
+                    throw new Error('ASR Language is required');
                 }
             } else if (asrVendor === 'deepgram') {
                 const deepgramAsrUrl = document.getElementById('deepgramAsrUrl').value.trim();
                 const deepgramAsrKey = document.getElementById('deepgramAsrKey').value.trim();
-                const deepgramAsrModel = document.getElementById('deepgramAsrModel').value.trim();
-                const deepgramAsrLang = document.getElementById('deepgramAsrLang').value.trim();
-                if (!deepgramAsrUrl) {
-                    throw new Error('Deepgram ASR URL is required');
-                }
+                const asrLanguage = document.getElementById('asrLanguage').value.trim();
                 if (!deepgramAsrKey) {
                     throw new Error('Deepgram ASR Key is required');
                 }
-                if (!deepgramAsrModel) {
-                    throw new Error('Deepgram ASR Model is required');
-                }
-                if (!deepgramAsrLang) {
-                    throw new Error('Deepgram ASR Language is required');
+                if (!asrLanguage) {
+                    throw new Error('ASR Language is required');
                 }
             }
         }
@@ -380,37 +377,66 @@ window.Utils = class Utils {
 
     static buildAsrConfig(formData) {
         const vendor = formData.asrVendor;
+        const asrLanguage = document.getElementById('asrLanguage').value;
         
         if (vendor === 'ares') {
             return {
                 vendor: 'ares',
-                language: document.getElementById('agoraAsrLang').value
+                language: asrLanguage
             };
         } else if (vendor === 'microsoft') {
+            const microsoftAsrKey = document.getElementById('microsoftAsrKey').value;
+            const microsoftAsrRegion = document.getElementById('microsoftAsrRegion').value;
+            const microsoftAsrPhraseList = document.getElementById('microsoftAsrPhraseList').value.trim();
+            
+            const params = {
+                key: microsoftAsrKey,
+                region: microsoftAsrRegion,
+                language: asrLanguage
+            };
+            
+            // Add phrase list if provided and language supports it
+            if (microsoftAsrPhraseList) {
+                // Check if the language supports phrase lists
+                const phraseListSupportedLanguages = [
+                    'ar-SA', 'de-CH', 'de-DE', 'en-AU', 'en-CA', 'en-GB', 'en-IE', 'en-IN', 'en-US', 'en-ZA'
+                ];
+                
+                if (phraseListSupportedLanguages.includes(asrLanguage)) {
+                    params.phrase_list = microsoftAsrPhraseList.split(',').map(phrase => phrase.trim()).filter(phrase => phrase.length > 0);
+                }
+            }
+            
             return {
                 vendor: 'microsoft',
-                params: {
-                    key: document.getElementById('microsoftAsrKey').value,
-                    region: document.getElementById('microsoftAsrRegion').value,
-                    language: document.getElementById('microsoftAsrLangSelect').value
-                }
+                params: params
             };
         } else if (vendor === 'deepgram') {
+            const deepgramAsrUrl = document.getElementById('deepgramAsrUrl').value;
+            const deepgramAsrKey = document.getElementById('deepgramAsrKey').value;
+            const deepgramAsrModel = document.getElementById('deepgramAsrModel').value.trim();
+            
+            const params = {
+                url: deepgramAsrUrl,
+                key: deepgramAsrKey,
+                language: asrLanguage
+            };
+            
+            // Add model if provided
+            if (deepgramAsrModel) {
+                params.model = deepgramAsrModel;
+            }
+            
             return {
                 vendor: 'deepgram',
-                params: {
-                    url: document.getElementById('deepgramAsrUrl').value,
-                    key: document.getElementById('deepgramAsrKey').value,
-                    model: document.getElementById('deepgramAsrModel').value,
-                    language: document.getElementById('deepgramAsrLang').value
-                }
+                params: params
             };
         }
         
         // Default to ARES if vendor is not recognized
         return {
             vendor: 'ares',
-            language: document.getElementById('agoraAsrLang').value
+            language: asrLanguage
         };
     }
 

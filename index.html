@@ -153,13 +153,37 @@
         <h3 class="text-lg font-semibold mb-3 text-cyan-400">Live Subtitles</h3>
         
         <div class="space-y-3">
-          <div class="flex space-x-2 has-tooltip relative">
+                    <div class="flex space-x-2 has-tooltip relative">
             <button id="toggleSubtitleOverlay" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50" disabled>
               Show Overlay
             </button>
             <div class="tooltip">Toggle the subtitle overlay to show real-time transcription of the conversation</div>
           </div>
-        </div>
+          
+          <!-- Subtitle Mode Selection -->
+          <div class="space-y-2 mt-3">
+            <div class="text-sm font-medium text-gray-300">Subtitle Mode:</div>
+            <div class="flex space-x-2">
+              <label class="flex items-center has-tooltip relative">
+                <input type="radio" id="subtitleModeRTM" name="subtitleMode" value="rtm" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+                <span class="text-sm">RTM (Full Features)</span>
+                <div class="tooltip">Enable live subtitles with RTM. Supports both viewing transcripts and sending messages.</div>
+              </label>
+              <label class="flex items-center has-tooltip relative">
+                <input type="radio" id="subtitleModeDataStream" name="subtitleMode" value="datastream" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+                <span class="text-sm">Data Stream (View Only)</span>
+                <div class="tooltip">Enable live subtitles using RTC data stream. View transcripts only, no message sending.</div>
+              </label>
+            </div>
+            <div id="dataStreamStatusIndicator" class="text-xs text-green-400 mt-1 flex items-center hidden">
+              <div class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+              Data Stream Mode Active - Viewing transcripts only
+            </div>
+            <div id="subtitleModeDisabledIndicator" class="text-xs text-gray-400 mt-1 flex items-center hidden">
+              <div class="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
+              Subtitle mode selection disabled - Agent is running
+            </div>
+          </div>
         
         <!-- Chat History Section -->
         <div class="mt-4">
@@ -183,148 +207,158 @@
           </div>
         </div>
       </div>
-
-          <!-- Query Section -->
-          <div class="w-full p-4 bg-gray-700 rounded-lg">
-            <h3 class="text-sm font-semibold mb-3 text-gray-300">Query Agents</h3>
-            <div class="space-y-3">
-              <div class="has-tooltip relative">
-                <input
-                  id="agentId"
-                  class="w-full p-2 rounded bg-gray-800 text-white"
-                  placeholder="Agent ID to Query"
-                />
-                <div class="tooltip">Enter the ID of the agent you want to query</div>
-              </div>
-
-              <div class="grid grid-cols-1 gap-2">
-                <div class="has-tooltip relative">
-                  <button
-                    id="queryAgentBtn"
-                    class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
-                  >
-                    Query Agent Status
-                  </button>
-                  <div class="tooltip">Get the current status of the specified Conversational AI agent instance. Shows status like IDLE, STARTING, RUNNING, STOPPING, STOPPED, RECOVERING, or FAILED.</div>
-                </div>
-
-                <div class="has-tooltip relative">
-                  <button
-                    id="listAgentsBtn"
-                    class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
-                  >
-                    Retrieve Agent List
-                  </button>
-                  <div class="tooltip">Get a list of Conversational AI agents that meet the specified conditions. Can filter by channel, time range, state, and limit results.</div>
-                </div>
-
-                <div class="has-tooltip relative">
-                  <button
-                    id="getAgentHistoryBtn"
-                    class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
-                  >
-                    Retrieve Agent History
-                  </button>
-                  <div class="tooltip">Retrieve the conversation history between the user and the Conversational AI agent while the agent is running. Shows messages with role (user/assistant) and content.</div>
-                </div>
-              </div>
-
-              <div class="relative mt-4">
-                <button
-                  id="copyQueryResponseBtn"
-                  class="absolute top-2 right-2 bg-transparent hover:bg-gray-600 rounded p-0.5 focus:outline-none"
-                  title="Copy response"
-                  style="z-index:10;width:24px;height:24px;display:flex;align-items:center;justify-content:center;"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <rect x="9" y="9" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
-                    <rect x="3" y="3" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
-                  </svg>
-                </button>
-                <span id="copyQueryResponseMsg" class="absolute top-2 right-10 text-green-400 text-xs hidden" style="z-index:10;">Copied!</span>
-                <pre
-                  id="queryResponse"
-                  class="p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto"
-                ></pre>
-              </div>
-            </div>
-          </div>
         </div>
-
-        <!-- Right Section: Send Messages and Broadcast -->
+                  <!-- Query Agents Section -->
+                  <div class="w-full p-4 bg-gray-700 rounded-lg">
+                    <h3 class="text-sm font-semibold mb-3 text-gray-300">Query Agents</h3>
+                    <div class="space-y-3">
+                      <div class="has-tooltip relative">
+                        <input
+                          id="agentId"
+                          class="w-full p-2 rounded bg-gray-800 text-white"
+                          placeholder="Agent ID to Query"
+                        />
+                        <div class="tooltip">Enter the ID of the agent you want to query</div>
+                      </div>
+        
+                      <div class="grid grid-cols-1 gap-2">
+                        <div class="has-tooltip relative">
+                          <button
+                            id="queryAgentBtn"
+                            class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+                          >
+                            Query Agent Status
+                          </button>
+                          <div class="tooltip">Get the current status of the specified Conversational AI agent instance. Shows status like IDLE, STARTING, RUNNING, STOPPING, STOPPED, RECOVERING, or FAILED.</div>
+                        </div>
+        
+                        <div class="has-tooltip relative">
+                          <button
+                            id="listAgentsBtn"
+                            class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+                          >
+                            Retrieve Agent List
+                          </button>
+                          <div class="tooltip">Get a list of Conversational AI agents that meet the specified conditions. Can filter by channel, time range, state, and limit results.</div>
+                        </div>
+        
+                        <div class="has-tooltip relative">
+                          <button
+                            id="getAgentHistoryBtn"
+                            class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+                          >
+                            Retrieve Agent History
+                          </button>
+                          <div class="tooltip">Retrieve the conversation history between the user and the Conversational AI agent while the agent is running. Shows messages with role (user/assistant) and content.</div>
+                        </div>
+                      </div>
+        
+                      <div class="relative mt-4">
+                        <button
+                          id="copyQueryResponseBtn"
+                          class="absolute top-2 right-2 bg-transparent hover:bg-gray-600 rounded p-0.5 focus:outline-none"
+                          title="Copy response"
+                          style="z-index:10;width:24px;height:24px;display:flex;align-items:center;justify-content:center;"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <rect x="9" y="9" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <rect x="3" y="3" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                          </svg>
+                        </button>
+                        <span id="copyQueryResponseMsg" class="absolute top-2 right-10 text-green-400 text-xs hidden" style="z-index:10;">Copied!</span>
+                        <pre
+                          id="queryResponse"
+                          class="p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto"
+                        ></pre>
+                      </div>
+                    </div>
+                  </div>
+          </div>
+                  <!-- Right Section: Send Messages and Broadcast -->
         <div class="space-y-4">
-      <!-- Message input area -->
-          <div class="w-full p-4 bg-gray-700 rounded-lg">
-        <h3 class="text-sm font-semibold mb-3 text-gray-300">Send Messages</h3>
-        <div class="space-y-2">
-          <div class="flex items-center gap-2">
-            <div class="flex-grow has-tooltip relative">
-              <input type="text" id="messageInput" placeholder="Type a message..." class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm">
-              <div class="tooltip">Type a text message to send to the agent. Press Enter or click Send to submit.</div>
+          <!-- Message input area -->
+              <div class="w-full p-4 bg-gray-700 rounded-lg">
+            <h3 class="text-sm font-semibold mb-3 text-gray-300">Send Messages</h3>
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <div class="flex-grow has-tooltip relative">
+                  <input type="text" id="messageInput" placeholder="Type a message..." class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm">
+                  <div class="tooltip">Type a text message to send to the agent. Press Enter or click Send to submit.</div>
+                </div>
+                <button id="sendTextBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm">
+                  <span class="material-icons text-sm">send</span>
+                </button>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="flex-grow has-tooltip relative">
+                  <input type="text" id="imageUrlInput" placeholder="Enter image URL..." class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm">
+                  <div class="tooltip">Enter a URL to an image to send to the agent for analysis. Press Enter or click Send to submit.</div>
+                </div>
+                <button id="sendImageBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm flex items-center">
+                  <span class="material-icons text-sm">send</span>
+                </button>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="flex-grow has-tooltip relative">
+                  <input type="file" id="imageFileInput" accept="image/*" class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm file:bg-gray-700 file:text-white file:border-0 file:rounded file:px-2 file:py-1 file:mr-2">
+                  <div class="tooltip">Upload an image file to send to the agent for analysis. The image will be converted to base64.</div>
+                </div>
+                <button id="sendImageFileBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm flex items-center">
+                  <span class="material-icons text-sm">upload</span>
+                </button>
+              </div>
             </div>
-            <button id="sendTextBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm">
-              <span class="material-icons text-sm">send</span>
-            </button>
           </div>
-          <div class="flex items-center gap-2">
-            <div class="flex-grow has-tooltip relative">
-              <input type="text" id="imageUrlInput" placeholder="Enter image URL..." class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm">
-              <div class="tooltip">Enter a URL to an image to send to the agent for analysis. Press Enter or click Send to submit.</div>
+    
+              <!-- Broadcast Message Section -->
+              <div class="w-full p-4 bg-gray-700 rounded-lg">
+                <h3 class="text-sm font-semibold mb-3 text-gray-300">Broadcast Messages</h3>
+            <div class="mb-2 has-tooltip relative">
+              <input
+                id="broadcastText"
+                maxlength="512"
+                class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                placeholder="Enter broadcast message (max 512 bytes)"
+              />
+              <div class="tooltip">Enter a message to broadcast to all users in the channel. Maximum 512 characters.</div>
             </div>
-            <button id="sendImageBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm flex items-center">
-              <span class="material-icons text-sm">send</span>
+            <div class="mb-2 flex space-x-2">
+              <div class="has-tooltip relative">
+                <select id="broadcastPriority" class="p-2 rounded bg-gray-800 text-white border border-gray-500">
+                  <option value="INTERRUPT">INTERRUPT</option>
+                  <option value="APPEND">APPEND</option>
+                  <option value="IGNORE">IGNORE</option>
+                </select>
+                <div class="tooltip">Message priority: INTERRUPT (stop current activity), APPEND (add to queue), IGNORE (skip if busy)</div>
+              </div>
+              <div class="has-tooltip relative">
+                <select id="broadcastInterruptable" class="p-2 rounded bg-gray-800 text-white border border-gray-500">
+                  <option value="true">Interrupt</option>
+                  <option value="false">No Interrupt</option>
+                </select>
+                <div class="tooltip">Whether this message can interrupt the agent's current activity</div>
+              </div>
+            </div>
+            <button
+              id="sendBroadcastBtn"
+              class="mt-2 px-3 py-2 bg-cyan-500 text-gray-900 rounded disabled:opacity-50 disabled:pointer-events-none hover:bg-cyan-400 w-full font-bold"
+            >
+              Send Msg
             </button>
+            <button
+               id="interruptAgentBtn"
+               class="mt-2 px-3 py-2 bg-red-600 text-white rounded font-bold w-full hover:bg-red-500"
+            >
+               Interrupt Agent
+            </button>
+            <div id="broadcastMsgStatus" class="mt-2 text-sm max-h-16 overflow-y-auto break-words"></div>
+          </div>
+        </div>
           </div>
         </div>
       </div>
 
-          <!-- Broadcast Message Section -->
-          <div class="w-full p-4 bg-gray-700 rounded-lg">
-            <h3 class="text-sm font-semibold mb-3 text-gray-300">Broadcast Messages</h3>
-        <div class="mb-2 has-tooltip relative">
-          <input
-            id="broadcastText"
-            maxlength="512"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-            placeholder="Enter broadcast message (max 512 bytes)"
-          />
-          <div class="tooltip">Enter a message to broadcast to all users in the channel. Maximum 512 characters.</div>
-        </div>
-        <div class="mb-2 flex space-x-2">
-          <div class="has-tooltip relative">
-            <select id="broadcastPriority" class="p-2 rounded bg-gray-800 text-white border border-gray-500">
-              <option value="INTERRUPT">INTERRUPT</option>
-              <option value="APPEND">APPEND</option>
-              <option value="IGNORE">IGNORE</option>
-            </select>
-            <div class="tooltip">Message priority: INTERRUPT (stop current activity), APPEND (add to queue), IGNORE (skip if busy)</div>
-          </div>
-          <div class="has-tooltip relative">
-            <select id="broadcastInterruptable" class="p-2 rounded bg-gray-800 text-white border border-gray-500">
-              <option value="true">Interrupt</option>
-              <option value="false">No Interrupt</option>
-            </select>
-            <div class="tooltip">Whether this message can interrupt the agent's current activity</div>
-          </div>
-        </div>
-        <button
-          id="sendBroadcastBtn"
-          class="mt-2 px-3 py-2 bg-cyan-500 text-gray-900 rounded disabled:opacity-50 disabled:pointer-events-none hover:bg-cyan-400 w-full font-bold"
-        >
-          Send Msg
-        </button>
-        <button
-           id="interruptAgentBtn"
-           class="mt-2 px-3 py-2 bg-red-600 text-white rounded font-bold w-full hover:bg-red-500"
-        >
-           Interrupt Agent
-        </button>
-        <div id="broadcastMsgStatus" class="mt-2 text-sm max-h-16 overflow-y-auto break-words"></div>
-      </div>
-    </div>
-          </div>
-          </div>
-          
+
 
   </div>
 
@@ -342,7 +376,7 @@
           class="w-full p-2 mb-2 rounded bg-gray-700 text-white"
           placeholder="Customer ID (Required)"
         />
-        <div class="tooltip">Your customer ID for API authentication</div>
+        <div class="tooltip">Your customer ID for RESTful API authentication</div>
       </div>
       <div class="has-tooltip relative">
         <input
@@ -351,7 +385,7 @@
           placeholder="Customer Secret (Required)"
           type="password"
         />
-        <div class="tooltip">Your customer secret for API authentication</div>
+        <div class="tooltip">Your customer secret for RESTful API authentication</div>
       </div>
       <div class="has-tooltip relative">
         <input
@@ -359,7 +393,7 @@
           class="w-full p-2 mb-4 rounded bg-gray-700 text-white"
           placeholder="App ID (Required)"
         />
-        <div class="tooltip">Your application ID for API access</div>
+        <div class="tooltip">Your AppID from the projects section of the console</div>
       </div>
       <button
         id="saveCredsBtn"
@@ -952,66 +986,7 @@
     });
     }
 
-    // ASR vendor selection logic
-    const asrVendor = document.getElementById('asrVendor');
-    const agoraAsrConfig = document.getElementById('agoraAsrConfig');
-    const microsoftAsrConfig = document.getElementById('microsoftAsrConfig');
-    const deepgramAsrConfig = document.getElementById('deepgramAsrConfig');
 
-    if (asrVendor && agoraAsrConfig && microsoftAsrConfig && deepgramAsrConfig) {
-
-    // Function to show/hide ASR config sections
-    function updateAsrConfigVisibility() {
-        const selectedVendor = asrVendor.value;
-        
-        // Hide all config sections
-        agoraAsrConfig.classList.add('hidden');
-        microsoftAsrConfig.classList.add('hidden');
-        deepgramAsrConfig.classList.add('hidden');
-        
-        // Show the selected config section
-        if (selectedVendor === 'ares') {
-            agoraAsrConfig.classList.remove('hidden');
-        } else if (selectedVendor === 'microsoft') {
-            microsoftAsrConfig.classList.remove('hidden');
-            // Populate Microsoft language dropdown if not already done
-            if (document.getElementById('microsoftAsrLangSelect').options.length <= 1) {
-                populateMicrosoftAsrLangList();
-            }
-        } else if (selectedVendor === 'deepgram') {
-            deepgramAsrConfig.classList.remove('hidden');
-        }
-    }
-
-    // Function to populate Microsoft ASR language dropdown
-    function populateMicrosoftAsrLangList() {
-        const langSelect = document.getElementById('microsoftAsrLangSelect');
-        langSelect.innerHTML = '';
-        Object.keys(microsoftVoicesByLang).forEach(langName => {
-            const voices = microsoftVoicesByLang[langName];
-            if (voices && voices.length > 0) {
-                const shortName = voices[0].shortName;
-                const langCode = shortName.split('-').slice(0, 2).join('-');
-                if (langCode) {
-                    const option = document.createElement('option');
-                    option.value = langCode;
-                    option.textContent = langName + ' (' + langCode + ')'; // Show display name and code
-                    langSelect.appendChild(option);
-                }
-            }
-        });
-        // Set default to en-US if available
-        if ([...langSelect.options].some(opt => opt.value === 'en-US')) {
-            langSelect.value = 'en-US';
-        }
-    }
-
-    // Add event listener for ASR vendor selection
-    asrVendor.addEventListener('change', updateAsrConfigVisibility);
-
-    // Initialize ASR config visibility
-    updateAsrConfigVisibility();
-    }
 
     // Camera configuration logic
     const cameraConfigModal = document.getElementById('cameraConfigModal');
@@ -2088,10 +2063,22 @@
 
     if (agentSettingsBtn) {
       agentSettingsBtn.addEventListener('click', function() {
+        console.log('Agent Settings button clicked');
         if (agentSettingsModal) {
           agentSettingsModal.classList.remove('hidden');
           // Attach tooltip listeners to modal content
           attachTooltipListenersToModal('agentSettingsModal');
+          // Initialize ASR configuration
+          console.log('About to initialize ASR configuration');
+          console.log('window.ASRManager exists:', !!window.ASRManager);
+          if (window.ASRManager) {
+            console.log('Creating new ASRManager instance');
+            window.asrManager = new window.ASRManager();
+            console.log('Calling initializeAsrConfig');
+            window.asrManager.initializeAsrConfig();
+          } else {
+            console.error('ASRManager not found in window object');
+          }
         }
         if (uniqueName) {
           uniqueName.value = `agent-${Math.random().toString(36).substring(2, 8)}`;
@@ -2168,6 +2155,7 @@
   <script src="src/js/conversational-ai-api.js?v=1.2"></script>
   <script src="src/js/subtitles.js?v=1.2"></script>
   <script src="src/js/ui.js?v=1.2"></script>
+  <script src="src/js/asr.js?v=1.0"></script>
 
   <!-- Subtitle Overlay -->
   <div id="subtitleOverlay" class="fixed inset-0 pointer-events-none hidden" style="z-index: 20001;">
@@ -2345,13 +2333,12 @@
             </div>
             <div class="has-tooltip relative">
               <select
-                id="agoraAsrLang"
+                id="asrLanguage"
                 class="w-full p-2 rounded bg-gray-600 text-white"
               >
-                <option value="en-US" selected>English (US) (en-US)</option>
-                <!-- Other language options will be populated by JavaScript -->
+                <!-- Language options will be populated dynamically based on selected vendor -->
               </select>
-              <div class="tooltip">Select the language for Agora Automatic Speech Recognition (ASR).</div>
+              <div class="tooltip">Select the language for the selected ASR provider.</div>
             </div>
           </div>
           
@@ -2369,13 +2356,50 @@
               </div>
               <div class="has-tooltip relative">
                 <select
-                  id="microsoftAsrLangSelect"
+                  id="microsoftAsrRegion"
                   class="w-full p-2 rounded bg-gray-600 text-white"
                 >
-                  <option value="en-US">English (US) (en-US)</option>
-                  <!-- Other language options will be populated by JavaScript -->
+                  <option value="southafricanorth">south africa north</option>
+                  <option value="eastasia">east asia</option>
+                  <option value="southeastasia">southeast asia</option>
+                  <option value="australiaeast">australia east</option>
+                  <option value="centralindia">central india</option>
+                  <option value="japaneast">japan east</option>
+                  <option value="japanwest">japan west</option>
+                  <option value="koreacentral">korea central</option>
+                  <option value="canadacentral">canada central</option>
+                  <option value="northeurope">north europe</option>
+                  <option value="westeurope">west europe</option>
+                  <option value="francecentral">france central</option>
+                  <option value="germanywestcentral">germany west central</option>
+                  <option value="norwayeast">norway east</option>
+                  <option value="swedencentral">sweden central</option>
+                  <option value="switzerlandnorth">switzerland north</option>
+                  <option value="switzerlandwest">switzerland west</option>
+                  <option value="uksouth">uk south</option>
+                  <option value="uaenorth">uae north</option>
+                  <option value="brazilsouth">brazil south</option>
+                  <option value="qatarcentral">qatar central</option>
+                  <option value="centralus">central us</option>
+                  <option value="eastus" selected>east us</option>
+                  <option value="eastus2">east us 2</option>
+                  <option value="northcentralus">north central us</option>
+                  <option value="southcentralus">south central us</option>
+                  <option value="westcentralus">west central us</option>
+                  <option value="westus">west us</option>
+                  <option value="westus2">west us 2</option>
+                  <option value="westus3">west us 3</option>
                 </select>
-                <div class="tooltip">Select the language for Microsoft ASR.</div>
+                <div class="tooltip">Select the Azure region where the Microsoft Speech service is hosted.</div>
+              </div>
+              <div class="has-tooltip relative md:col-span-2">
+                <textarea
+                  id="microsoftAsrPhraseList"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="Phrase List (Optional) - Enter phrases separated by commas"
+                  rows="2"
+                ></textarea>
+                <div class="tooltip">A list of words or phrases to improve recognition accuracy. Separate with commas.</div>
               </div>
             </div>
           </div>
@@ -2402,35 +2426,15 @@
                 <div class="tooltip">WebSocket URL for Deepgram ASR service.</div>
               </div>
               <div class="has-tooltip relative">
-                <select
+                <input
                   id="deepgramAsrModel"
                   class="w-full p-2 rounded bg-gray-600 text-white"
-                >
-                  <option value="nova-2">Nova-2</option>
-                  <option value="nova">Nova</option>
-                  <option value="enhanced">Enhanced</option>
-                  <option value="base">Base</option>
-                </select>
-                <div class="tooltip">Select the Deepgram ASR model.</div>
+                  placeholder="Deepgram Model (Optional)"
+                  value="nova-2"
+                />
+                <div class="tooltip">The speech recognition model to use (e.g., nova-2, nova, enhanced, base).</div>
               </div>
-              <div class="has-tooltip relative">
-                <select
-                  id="deepgramAsrLang"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
-                >
-                  <option value="en">English</option>
-                  <option value="es">Spanish</option>
-                  <option value="fr">French</option>
-                  <option value="de">German</option>
-                  <option value="it">Italian</option>
-                  <option value="pt">Portuguese</option>
-                  <option value="ru">Russian</option>
-                  <option value="ja">Japanese</option>
-                  <option value="ko">Korean</option>
-                  <option value="zh">Chinese</option>
-                </select>
-                <div class="tooltip">Select the language for Deepgram ASR.</div>
-              </div>
+
             </div>
           </div>
         </div>
@@ -2599,7 +2603,36 @@
             id="ttsRegion"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
           >
+            <option value="southafricanorth">south africa north</option>
+            <option value="eastasia">east asia</option>
+            <option value="southeastasia">southeast asia</option>
+            <option value="australiaeast">australia east</option>
+            <option value="centralindia">central india</option>
+            <option value="japaneast">japan east</option>
+            <option value="japanwest">japan west</option>
+            <option value="koreacentral">korea central</option>
+            <option value="canadacentral">canada central</option>
+            <option value="northeurope">north europe</option>
+            <option value="westeurope">west europe</option>
+            <option value="francecentral">france central</option>
+            <option value="germanywestcentral">germany west central</option>
+            <option value="norwayeast">norway east</option>
+            <option value="swedencentral">sweden central</option>
+            <option value="switzerlandnorth">switzerland north</option>
+            <option value="switzerlandwest">switzerland west</option>
+            <option value="uksouth">uk south</option>
+            <option value="uaenorth">uae north</option>
+            <option value="brazilsouth">brazil south</option>
+            <option value="qatarcentral">qatar central</option>
+            <option value="centralus">central us</option>
             <option value="eastus" selected>east us</option>
+            <option value="eastus2">east us 2</option>
+            <option value="northcentralus">north central us</option>
+            <option value="southcentralus">south central us</option>
+            <option value="westcentralus">west central us</option>
+            <option value="westus">west us</option>
+            <option value="westus2">west us 2</option>
+            <option value="westus3">west us 3</option>
             <!-- Other regions will be populated by JavaScript -->
           </select>
           <div class="tooltip">Select the Microsoft TTS region for voice synthesis.</div>
@@ -3300,6 +3333,8 @@
                 <option value="false">False</option>
               </select>
             </div>
+
+
  
           </div>
         </div>
@@ -3321,8 +3356,20 @@
       
       <div class="signaling-modal-body">
         <div class="signaling-modal-section">
-          <h3>Why Signaling is Required</h3>
-          <p>Live subtitles require <strong>signaling (RTM)</strong> to be enabled on your Agora AppID. This is because transcription data needs to be transmitted between the client and agent through Agora's Real-Time Messaging service.</p>
+          <h3>Choose Your Subtitle Mode</h3>
+          <p>You have two options for live subtitles:</p>
+          
+          <div class="mt-4 space-y-3">
+            <div class="bg-blue-900 bg-opacity-50 p-3 rounded border border-blue-600">
+              <h4 class="font-semibold text-blue-300">RTM Mode (Full Features)</h4>
+              <p class="text-sm text-gray-300">Requires RTM to be enabled on your Agora AppID. Supports both viewing transcripts and sending messages.</p>
+            </div>
+            
+            <div class="bg-green-900 bg-opacity-50 p-3 rounded border border-green-600">
+              <h4 class="font-semibold text-green-300">Data Stream Mode (View Only)</h4>
+              <p class="text-sm text-gray-300">Uses RTC data stream. No RTM required. View transcripts only, cannot send messages.</p>
+            </div>
+          </div>
         </div>
 
         <div class="signaling-modal-requirements">
@@ -3365,7 +3412,8 @@
       
       <div class="signaling-modal-footer">
         <button class="signaling-modal-btn signaling-modal-btn-secondary" id="cancelSignalingModal">Cancel</button>
-        <button class="signaling-modal-btn signaling-modal-btn-primary" id="enableSignalingModal">Enable Subtitles Anyway</button>
+        <button class="signaling-modal-btn signaling-modal-btn-primary" id="enableRTMModal">Enable RTM Mode</button>
+        <button class="signaling-modal-btn signaling-modal-btn-success" id="enableDataStreamModal">Enable Data Stream Mode</button>
       </div>
     </div>
   </div>

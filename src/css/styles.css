@@ -819,6 +819,15 @@ select:focus, .drawer select:focus {
   background: #4b5563;
 }
 
+.signaling-modal-btn-success {
+  background: #059669;
+  color: white;
+}
+
+.signaling-modal-btn-success:hover {
+  background: #047857;
+}
+
 .signaling-modal-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -898,6 +907,48 @@ select:focus, .drawer select:focus {
 .drawer input[type="checkbox"] {
   flex: none;
   margin-right: 0.5rem;
+}
+
+/* Disabled radio button styling */
+input[type="radio"]:disabled + span {
+  opacity: 0.5;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+input[type="radio"]:disabled {
+  cursor: not-allowed;
+}
+
+/* Disabled checkbox styling */
+input[type="checkbox"]:disabled + span {
+  opacity: 0.5;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+}
+
+/* Force two-column layout for debugging */
+.grid.grid-cols-1.lg\\:grid-cols-2,
+div[class*="grid grid-cols-1 lg:grid-cols-2"] {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 1rem !important;
+}
+
+/* Alternative: target by structure */
+.grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 1rem !important;
+}
+
+/* Force right section to be in second column */
+.grid > div:nth-child(2) {
+  grid-column: 2 !important;
 }
 
 
