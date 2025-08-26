@@ -935,7 +935,7 @@ class ConversationalAIAPI extends EventHelper {
                 messageData.image_url = message.url;
             }
             if (message.base64) {
-                messageData.iamge_base64 = message.base64;
+                messageData.image_base64 = message.base64;
             }
         }
 
