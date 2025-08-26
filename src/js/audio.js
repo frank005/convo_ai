@@ -162,7 +162,7 @@ window.MediaProcessor = class MediaProcessor {
         const imageInputEnabled = document.getElementById("inputImage").checked;
         if (imageInputEnabled && !this.localTracks.videoTrack) {
             this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
-            await this.client.publish(this.localTracks.videoTrack);
+            //await this.client.publish(this.localTracks.videoTrack);
         }
 
         return true;

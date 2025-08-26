@@ -932,10 +932,10 @@ class ConversationalAIAPI extends EventHelper {
             
             // Add either url or base64 based on what's provided
             if (message.url) {
-                messageData.url = message.url;
+                messageData.image_url = message.url;
             }
             if (message.base64) {
-                messageData.base64 = message.base64;
+                messageData.iamge_base64 = message.base64;
             }
         }
 
@@ -951,7 +951,7 @@ class ConversationalAIAPI extends EventHelper {
             // Use correct RTM format: publish to agent rtc uid (8888) with correct options
             const publishOptions = {
                 channelType: "USER",
-                customType: "user.transcription"
+                customType: message.messageType === "TEXT" ? "user.transcription" : "image.upload"
             };
             const result = await rtmEngine.publish("8888", messageStr, publishOptions);
             console.log('✅ Successfully sent', message.messageType, 'message to agent RTC UID 8888:', messageData);
