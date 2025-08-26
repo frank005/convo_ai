@@ -103,6 +103,15 @@ window.UI = class UI {
             toggleMicBtn.addEventListener("click", () => this.toggleMicrophone());
         }
 
+        // Camera control
+        const toggleCameraBtn = document.getElementById("toggleCameraBtn");
+        if (toggleCameraBtn) {
+            toggleCameraBtn.addEventListener("click", () => this.toggleCamera());
+            console.log("Camera button found and event listener added");
+        } else {
+            console.error("Camera button not found!");
+        }
+
         // Message sending controls
         const sendTextBtn = document.getElementById("sendTextBtn");
         if (sendTextBtn) {
@@ -170,6 +179,42 @@ window.UI = class UI {
             }
         } catch (error) {
             console.error('Failed to toggle microphone:', error);
+        }
+    }
+
+    async toggleCamera() {
+        if (!this.mediaProcessor || !this.mediaProcessor.localTracks.videoTrack) {
+            console.warn('No video track available for toggling - camera will be controlled when you join a channel');
+            // Show a user-friendly message
+            alert('Camera controls will be available once you join a channel with image modality enabled.');
+            return;
+        }
+
+        const videoTrack = this.mediaProcessor.localTracks.videoTrack;
+        const cameraBtn = document.getElementById("toggleCameraBtn");
+        const cameraIcon = cameraBtn.querySelector(".camera-icon");
+        const cameraOffIcon = cameraBtn.querySelector(".camera-off-icon");
+        
+        try {
+            if (cameraBtn.classList.contains("muted")) {
+                // Currently muted, unmute it
+                await videoTrack.setEnabled(true);
+                cameraBtn.classList.remove("muted");
+                cameraBtn.title = "Mute Camera";
+                cameraIcon.classList.remove("hidden");
+                cameraOffIcon.classList.add("hidden");
+                console.log("Camera unmuted");
+            } else {
+                // Currently unmuted, mute it
+                await videoTrack.setEnabled(false);
+                cameraBtn.classList.add("muted");
+                cameraBtn.title = "Unmute Camera";
+                cameraIcon.classList.add("hidden");
+                cameraOffIcon.classList.remove("hidden");
+                console.log("Camera muted");
+            }
+        } catch (error) {
+            console.error('Failed to toggle camera:', error);
         }
     }
 
@@ -382,8 +427,24 @@ window.UI = class UI {
             await this.mediaProcessor.joinChannel(appId, channelName, token, uid, this.subtitleManager, agentId);
             document.getElementById("joinChannel").disabled = true;
             document.getElementById("leaveChannel").disabled = false;
+            
+            // Check if video track is available and show camera button
+            this.checkAndShowCameraButton();
         } catch (error) {
             alert(error.message);
+        }
+    }
+
+    checkAndShowCameraButton() {
+        // Check if image input is enabled (video track will be created when joining channel)
+        const imageInputEnabled = document.getElementById("inputImage")?.checked;
+        
+        const cameraBtn = document.getElementById("toggleCameraBtn");
+        if (cameraBtn && imageInputEnabled) {
+            cameraBtn.classList.remove("hidden");
+            console.log("Camera button shown - image input enabled");
+        } else {
+            console.log("Camera button hidden - image input:", imageInputEnabled);
         }
     }
 
@@ -392,8 +453,41 @@ window.UI = class UI {
             await this.mediaProcessor.leaveChannel();
             document.getElementById("joinChannel").disabled = false;
             document.getElementById("leaveChannel").disabled = true;
+            
+            // Reset mic and camera button states
+            this.resetMicAndCameraStates();
         } catch (error) {
             alert(error.message);
+        }
+    }
+
+    resetMicAndCameraStates() {
+        // Reset microphone button state
+        const micBtn = document.getElementById("toggleMicBtn");
+        if (micBtn) {
+            micBtn.classList.remove("muted");
+            micBtn.title = "Mute Microphone";
+            const micIcon = micBtn.querySelector(".mic-icon");
+            const micOffIcon = micBtn.querySelector(".mic-off-icon");
+            if (micIcon) micIcon.classList.remove("hidden");
+            if (micOffIcon) micOffIcon.classList.add("hidden");
+        }
+
+        // Reset camera button state but only hide it if image input is disabled
+        const cameraBtn = document.getElementById("toggleCameraBtn");
+        if (cameraBtn) {
+            cameraBtn.classList.remove("muted");
+            cameraBtn.title = "Mute Camera";
+            const cameraIcon = cameraBtn.querySelector(".camera-icon");
+            const cameraOffIcon = cameraBtn.querySelector(".camera-off-icon");
+            if (cameraIcon) cameraIcon.classList.remove("hidden");
+            if (cameraOffIcon) cameraOffIcon.classList.add("hidden");
+            
+            // Only hide camera button if image input is disabled
+            const imageInputEnabled = document.getElementById("inputImage")?.checked;
+            if (!imageInputEnabled) {
+                cameraBtn.classList.add("hidden");
+            }
         }
     }
 

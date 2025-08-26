@@ -165,25 +165,26 @@
   background-color: #4b5563;
 }
 
-/* Mic icon styles */
-.mic-icon, .mic-off-icon {
+/* Camera button styles */
+#toggleCameraBtn {
+  transition: all 0.2s;
+}
+
+#toggleCameraBtn.muted {
+  background-color: #ef4444;
+}
+
+#toggleCameraBtn.muted:hover {
+  background-color: #dc2626;
+}
+
+#toggleCameraBtn:hover {
+  background-color: #4b5563;
+}
+
+/* Mic and Camera icon styles */
+.mic-icon, .mic-off-icon, .camera-icon, .camera-off-icon {
   transition: opacity 0.2s;
-}
-
-.mic-off-icon {
-  position: relative;
-}
-
-.mic-off-icon::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100%;
-  height: 2px;
-  background-color: currentColor;
-  transform: translate(-50%, -50%) rotate(45deg);
-  opacity: 0.8;
 }
 
 /* Toggle button in the top‐right corner (hidden for main layout) */

@@ -110,7 +110,18 @@
           </svg>
           <svg class="w-4 h-4 mic-off-icon hidden" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0019 10a1 1 0 10-2 0A5 5 0 015 10a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd"></path>
-            <path d="M3.707 2.293a1 1 0 00-1.414 1.414l6.921 6.922a1 1 0 001.414-1.414l-6.921-6.922zM15.5 10a1 1 0 00-1 1v1a1 1 0 01-1 1H6a1 1 0 01-1-1v-1a1 1 0 00-2 0v1a3 3 0 003 3h7.5a3 3 0 003-3v-1a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            <path d="M3.707 2.293L16.293 17.707" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+        </button>
+        <button id="toggleCameraBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-2 rounded flex items-center justify-center flex-shrink-0 hidden" title="Mute Camera">
+          <svg class="w-4 h-4 camera-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/>
+            <path d="M15 7a1 1 0 011 1v4a1 1 0 01-1 1h-1a1 1 0 01-1-1V8a1 1 0 011-1h1z"/>
+          </svg>
+          <svg class="w-4 h-4 camera-off-icon hidden" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/>
+            <path d="M15 7a1 1 0 011 1v4a1 1 0 01-1 1h-1a1 1 0 01-1-1V8a1 1 0 011-1h1z"/>
+            <path d="M3.707 2.293L16.293 17.707" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
           </svg>
         </button>
         <button id="leaveChannel" class="flex-1 px-3 py-2 bg-cyan-500 text-gray-900 rounded hover:bg-cyan-400 disabled:opacity-50 disabled:pointer-events-none" disabled>
@@ -1028,6 +1039,23 @@
           console.error('Error accessing cameras:', error);
           cameraSelect.innerHTML = '<option value="">Camera access denied</option>';
         }
+        
+        // Show camera button immediately when image input is enabled
+        const cameraBtn = document.getElementById("toggleCameraBtn");
+        if (cameraBtn) {
+          cameraBtn.classList.remove("hidden");
+        }
+      } else {
+        // Hide camera button when image input is disabled
+        const cameraBtn = document.getElementById("toggleCameraBtn");
+        if (cameraBtn) {
+          cameraBtn.classList.add("hidden");
+        }
+      }
+      
+      // Check if we should show camera button (if already in channel)
+      if (window.ui && typeof window.ui.checkAndShowCameraButton === 'function') {
+        window.ui.checkAndShowCameraButton();
       }
     });
 
@@ -1042,6 +1070,11 @@
         cameraConfigModal.classList.add('hidden');
         // Store selected camera ID
         localStorage.setItem('selectedCameraId', cameraSelect.value);
+        
+        // Check if we should show camera button (if already in channel)
+        if (window.ui && typeof window.ui.checkAndShowCameraButton === 'function') {
+          window.ui.checkAndShowCameraButton();
+        }
       }
     });
 
