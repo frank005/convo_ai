@@ -293,28 +293,28 @@
             <div class="space-y-2">
               <div class="flex items-center gap-2">
                 <div class="flex-grow has-tooltip relative">
-                  <input type="text" id="messageInput" placeholder="Type a message..." class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <div class="tooltip">Type a text message to send to the agent. Press Enter or click Send to submit.</div>
+                  <input type="text" id="messageInput" placeholder="Type a message..." class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm disabled:opacity-50 disabled:bg-gray-700" disabled>
+                  <div class="tooltip">Type a text message to send to the agent. Press Enter or click Send to submit. Disabled when RTM is not enabled.</div>
                 </div>
-                <button id="sendTextBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm">
+                <button id="sendTextBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm disabled:opacity-50 disabled:pointer-events-none" disabled title="Text messages disabled when RTM is not enabled">
                   <span class="material-icons text-sm">send</span>
                 </button>
               </div>
               <div class="flex items-center gap-2">
                 <div class="flex-grow has-tooltip relative">
-                  <input type="text" id="imageUrlInput" placeholder="Enter image URL..." class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <div class="tooltip">Enter a URL to an image to send to the agent for analysis. Press Enter or click Send to submit.</div>
+                  <input type="text" id="imageUrlInput" placeholder="Enter image URL..." class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm disabled:opacity-50 disabled:bg-gray-700" disabled>
+                  <div class="tooltip">Enter a URL to an image to send to the agent for analysis. Press Enter or click Send to submit. Disabled when camera is active.</div>
                 </div>
-                <button id="sendImageBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm flex items-center">
+                <button id="sendImageBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm flex items-center disabled:opacity-50 disabled:pointer-events-none" disabled title="Image upload disabled when camera is active">
                   <span class="material-icons text-sm">send</span>
                 </button>
               </div>
               <div class="flex items-center gap-2">
                 <div class="flex-grow has-tooltip relative">
-                  <input type="file" id="imageFileInput" accept="image/*" class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm file:bg-gray-700 file:text-white file:border-0 file:rounded file:px-2 file:py-1 file:mr-2">
-                  <div class="tooltip">Upload an image file to send to the agent for analysis. The image will be converted to base64.</div>
+                  <input type="file" id="imageFileInput" accept="image/*" class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm file:bg-gray-700 file:text-white file:border-0 file:rounded file:px-2 file:py-1 file:mr-2 disabled:opacity-50 disabled:bg-gray-700" disabled>
+                  <div class="tooltip">Upload an image file to send to the agent for analysis. The image will be converted to base64. Disabled when camera is active.</div>
                 </div>
-                <button id="sendImageFileBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm flex items-center">
+                <button id="sendImageFileBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm flex items-center disabled:opacity-50 disabled:pointer-events-none" disabled title="Image upload disabled when camera is active">
                   <span class="material-icons text-sm">upload</span>
                 </button>
               </div>

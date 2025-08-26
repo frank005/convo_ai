@@ -14,7 +14,9 @@ window.UI = class UI {
         this.mediaProcessor = mediaProcessor;
         this.agoraAPI = agoraAPI;
         this.subtitleManager = subtitleManager;
+        
         this.setupEventListeners();
+        this.setupMessageUIState();
         this.checkCredentials();
         this.populateMicrosoftLangList();
         this.setupDrawerListeners();
@@ -22,6 +24,11 @@ window.UI = class UI {
         this.handleTtsVendorChange();
         // Update base URL indicator
         this.updateBaseUrlIndicator();
+        
+        // Initialize message UI state after a short delay to ensure all elements are loaded
+        setTimeout(() => {
+            this.updateMessageUIState();
+        }, 100);
     }
 
     setupEventListeners() {
@@ -48,6 +55,9 @@ window.UI = class UI {
         if (addParamBtn) {
             addParamBtn.addEventListener("click", () => this.addParamField());
         }
+
+        // Setup message UI state management
+        this.setupMessageUIState();
 
         // Credentials modal
         const setCredsBtn = document.getElementById("setCredsBtn");
@@ -129,7 +139,21 @@ window.UI = class UI {
         // Auto-send image file when selected
         const imageFileInput = document.getElementById("imageFileInput");
         if (imageFileInput) {
-            imageFileInput.addEventListener("change", () => this.sendImageFileMessage());
+            imageFileInput.addEventListener("change", () => {
+                // Check if image upload is enabled before sending
+                if (this.isImageUploadEnabled()) {
+                    this.sendImageFileMessage();
+                } else {
+                    if (!this.isRTMEnabled()) {
+                        alert("Image upload is disabled. Enable RTM mode to use image upload.");
+                    } else if (this.isDataStreamMode()) {
+                        alert("Image upload is disabled. Data stream mode is view-only and does not support sending messages.");
+                    } else {
+                        alert("Image upload is disabled. Mute camera to use image upload.");
+                    }
+                    imageFileInput.value = ""; // Clear the file input
+                }
+            });
         }
         
         // Handle Enter key in message inputs
@@ -204,6 +228,9 @@ window.UI = class UI {
                 cameraIcon.classList.remove("hidden");
                 cameraOffIcon.classList.add("hidden");
                 console.log("Camera unmuted");
+                
+                // Disable image upload when camera is unmuted
+                this.updateMessageUIState();
             } else {
                 // Currently unmuted, mute it
                 await videoTrack.setEnabled(false);
@@ -212,10 +239,204 @@ window.UI = class UI {
                 cameraIcon.classList.add("hidden");
                 cameraOffIcon.classList.remove("hidden");
                 console.log("Camera muted");
+                
+                // Enable image upload when camera is muted
+                this.updateMessageUIState();
             }
         } catch (error) {
             console.error('Failed to toggle camera:', error);
         }
+    }
+
+    setupMessageUIState() {
+        // Check initial state on page load
+        this.updateMessageUIState();
+        
+        // Listen for RTM mode changes
+        const subtitleModeRTM = document.getElementById('subtitleModeRTM');
+        const subtitleModeDataStream = document.getElementById('subtitleModeDataStream');
+        const enableSubtitles = document.getElementById('enableSubtitles');
+        const imageModality = document.getElementById('inputImage');
+        
+        if (subtitleModeRTM) {
+            subtitleModeRTM.addEventListener('change', () => {
+                this.updateMessageUIState();
+            });
+        }
+        
+        if (subtitleModeDataStream) {
+            subtitleModeDataStream.addEventListener('change', () => {
+                this.updateMessageUIState();
+            });
+        }
+        
+        if (enableSubtitles) {
+            enableSubtitles.addEventListener('change', () => {
+                this.updateMessageUIState();
+            });
+        }
+        
+        if (imageModality) {
+            imageModality.addEventListener('change', () => {
+                this.updateMessageUIState();
+            });
+        }
+        
+        // Listen for subtitle manager creation
+        this.setupSubtitleManagerListener();
+    }
+
+    setupSubtitleManagerListener() {
+        // Check if subtitle manager exists and update reference
+        const checkSubtitleManager = () => {
+            if (window.subtitleManager && !this.subtitleManager) {
+                this.subtitleManager = window.subtitleManager;
+                console.log('Subtitle manager reference updated in UI');
+            }
+        };
+        
+        // Check immediately
+        checkSubtitleManager();
+        
+        // Also check periodically for a short time
+        let checkCount = 0;
+        const maxChecks = 10;
+        const checkInterval = setInterval(() => {
+            checkSubtitleManager();
+            checkCount++;
+            if (checkCount >= maxChecks || this.subtitleManager) {
+                clearInterval(checkInterval);
+            }
+        }, 500);
+    }
+
+    isRTMEnabled() {
+        // Check if RTM is enabled (either RTM mode or data stream mode with subtitles enabled)
+        const subtitleModeRTM = document.getElementById('subtitleModeRTM');
+        const subtitleModeDataStream = document.getElementById('subtitleModeDataStream');
+        const enableSubtitles = document.getElementById('enableSubtitles');
+        
+        const isRTMEnabled = (subtitleModeRTM && subtitleModeRTM.checked) || 
+                           (subtitleModeDataStream && subtitleModeDataStream.checked && enableSubtitles && enableSubtitles.checked);
+        
+        return isRTMEnabled;
+    }
+
+    isDataStreamMode() {
+        // Check if data stream mode is enabled (view-only mode)
+        const subtitleModeDataStream = document.getElementById('subtitleModeDataStream');
+        const enableSubtitles = document.getElementById('enableSubtitles');
+        
+        return (subtitleModeDataStream && subtitleModeDataStream.checked && enableSubtitles && enableSubtitles.checked);
+    }
+
+    isImageUploadEnabled() {
+        // Check if RTM is enabled
+        const isRTMEnabled = this.isRTMEnabled();
+        
+        // Check if image modality is enabled
+        const imageModalityEnabled = document.getElementById("inputImage")?.checked;
+        
+        // Check if camera is muted (image upload is only available when camera is muted)
+        const cameraBtn = document.getElementById("toggleCameraBtn");
+        const isCameraMuted = cameraBtn && cameraBtn.classList.contains("muted");
+        
+        // Check if video track exists (camera permissions might have been denied)
+        const videoTrackExists = this.mediaProcessor && this.mediaProcessor.localTracks && this.mediaProcessor.localTracks.videoTrack;
+        
+        // If camera button doesn't exist yet or video track doesn't exist, assume camera is not active (so image upload is allowed)
+        const cameraNotActive = !cameraBtn || isCameraMuted || !videoTrackExists;
+        
+        // Image upload is only enabled if RTM is enabled, image modality is enabled, and camera is not active
+        return isRTMEnabled && imageModalityEnabled && cameraNotActive;
+    }
+
+    isTextMessageEnabled() {
+        // Text messages are enabled if RTM is enabled and we're not in data stream mode
+        const isRTMEnabled = this.isRTMEnabled();
+        const isDataStream = this.isDataStreamMode();
+        
+        return isRTMEnabled && !isDataStream;
+    }
+
+    updateMessageUIState() {
+        const imageUrlInput = document.getElementById("imageUrlInput");
+        const sendImageBtn = document.getElementById("sendImageBtn");
+        const imageFileInput = document.getElementById("imageFileInput");
+        const sendImageFileBtn = document.getElementById("sendImageFileBtn");
+        const messageInput = document.getElementById("messageInput");
+        const sendTextBtn = document.getElementById("sendTextBtn");
+        
+        const isImageEnabled = this.isImageUploadEnabled();
+        const isTextEnabled = this.isTextMessageEnabled();
+        const isDataStream = this.isDataStreamMode();
+        
+        // Update image upload controls
+        if (imageUrlInput) {
+            imageUrlInput.disabled = !isImageEnabled;
+        }
+        if (sendImageBtn) {
+            sendImageBtn.disabled = !isImageEnabled;
+        }
+        if (imageFileInput) {
+            imageFileInput.disabled = !isImageEnabled;
+        }
+        if (sendImageFileBtn) {
+            sendImageFileBtn.disabled = !isImageEnabled;
+        }
+        
+        // Update text message controls
+        if (messageInput) {
+            messageInput.disabled = !isTextEnabled;
+        }
+        if (sendTextBtn) {
+            sendTextBtn.disabled = !isTextEnabled;
+        }
+        
+        // Update tooltips based on state
+        const updateTooltip = (element, enabledText, disabledText) => {
+            if (element) {
+                const tooltip = element.parentElement.querySelector('.tooltip');
+                if (tooltip) {
+                    tooltip.textContent = enabledText;
+                }
+            }
+        };
+        
+        // Image URL tooltip
+        let imageUrlTooltip = "Enter a URL to an image to send to the agent for analysis. Press Enter or click Send to submit.";
+        if (!this.isRTMEnabled()) {
+            imageUrlTooltip = "Image upload is disabled. Enable RTM mode to use image upload.";
+        } else if (isDataStream) {
+            imageUrlTooltip = "Image upload is disabled. Data stream mode is view-only and does not support sending messages.";
+        } else if (!document.getElementById("inputImage")?.checked) {
+            imageUrlTooltip = "Image upload is disabled. Enable image modality to use image upload.";
+        } else if (!isImageEnabled) {
+            imageUrlTooltip = "Image upload is disabled. Mute camera to use image upload.";
+        }
+        updateTooltip(imageUrlInput, imageUrlTooltip);
+        
+        // Image file tooltip
+        let imageFileTooltip = "Upload an image file to send to the agent for analysis. The image will be converted to base64.";
+        if (!this.isRTMEnabled()) {
+            imageFileTooltip = "Image upload is disabled. Enable RTM mode to use image upload.";
+        } else if (isDataStream) {
+            imageFileTooltip = "Image upload is disabled. Data stream mode is view-only and does not support sending messages.";
+        } else if (!document.getElementById("inputImage")?.checked) {
+            imageFileTooltip = "Image upload is disabled. Enable image modality to use image upload.";
+        } else if (!isImageEnabled) {
+            imageFileTooltip = "Image upload is disabled. Mute camera to use image upload.";
+        }
+        updateTooltip(imageFileInput, imageFileTooltip);
+        
+        // Text message tooltip
+        let textTooltip = "Type a text message to send to the agent. Press Enter or click Send to submit.";
+        if (!this.isRTMEnabled()) {
+            textTooltip = "Text messages are disabled. Enable RTM mode to send messages.";
+        } else if (isDataStream) {
+            textTooltip = "Text messages are disabled. Data stream mode is view-only and does not support sending messages.";
+        }
+        updateTooltip(messageInput, textTooltip);
     }
 
     async sendTextMessage() {
@@ -227,6 +448,18 @@ window.UI = class UI {
             const agoraRtcUid = document.getElementById("agoraRtcUid").value.trim();
             if (!agoraRtcUid) {
                 alert("Please enter an agent RTC UID first");
+                return;
+            }
+
+            // Check if text messages are enabled
+            if (!this.isTextMessageEnabled()) {
+                if (!this.isRTMEnabled()) {
+                    alert("Text messages are disabled. Enable RTM mode to send messages.");
+                } else if (this.isDataStreamMode()) {
+                    alert("Text messages are disabled. Data stream mode is view-only and does not support sending messages.");
+                } else {
+                    alert("Text messages are disabled.");
+                }
                 return;
             }
 
@@ -259,13 +492,32 @@ window.UI = class UI {
                 return;
             }
 
+            // Check if image upload is enabled
+            if (!this.isImageUploadEnabled()) {
+                if (!this.isRTMEnabled()) {
+                    alert("Image upload is disabled. Enable RTM mode to use image upload.");
+                } else if (this.isDataStreamMode()) {
+                    alert("Image upload is disabled. Data stream mode is view-only and does not support sending messages.");
+                } else if (!document.getElementById("inputImage")?.checked) {
+                    alert("Image upload is disabled. Enable image modality to use image upload.");
+                } else {
+                    alert("Image upload is disabled. Mute camera to use image upload.");
+                }
+                return;
+            }
+
+            const uuid = Date.now().toString() + Math.random().toString(36).substring(2);
+
             if (window.ConversationalAIAPI) {
                 const conversationalAI = window.ConversationalAIAPI.getInstance();
                 if (conversationalAI && conversationalAI.isReady()) {
+                    // Add to chat history immediately
+                    this.addImageToChatHistory('url', imageUrl, uuid);
+                    
                     await conversationalAI.chat(agoraRtcUid, {
                         messageType: 'IMAGE',
                         url: imageUrl,
-                        uuid: Date.now().toString() + Math.random().toString(36).substring(2)
+                        uuid: uuid
                     });
                     imageUrlInput.value = "";
                 }
@@ -291,16 +543,35 @@ window.UI = class UI {
                 return;
             }
 
+            // Check if image upload is enabled
+            if (!this.isImageUploadEnabled()) {
+                if (!this.isRTMEnabled()) {
+                    alert("Image upload is disabled. Enable RTM mode to use image upload.");
+                } else if (this.isDataStreamMode()) {
+                    alert("Image upload is disabled. Data stream mode is view-only and does not support sending messages.");
+                } else if (!document.getElementById("inputImage")?.checked) {
+                    alert("Image upload is disabled. Enable image modality to use image upload.");
+                } else {
+                    alert("Image upload is disabled. Mute camera to use image upload.");
+                }
+                return;
+            }
+
+            const uuid = Date.now().toString() + Math.random().toString(36).substring(2);
+
             // Convert image to base64
             const base64 = await this.convertImageToBase64(file);
             
             if (window.ConversationalAIAPI) {
                 const conversationalAI = window.ConversationalAIAPI.getInstance();
                 if (conversationalAI && conversationalAI.isReady()) {
+                    // Add to chat history immediately
+                    this.addImageToChatHistory('base64', file.name, uuid, file.size);
+                    
                     await conversationalAI.chat(agoraRtcUid, {
                         messageType: 'IMAGE',
                         base64: base64,
-                        uuid: Date.now().toString() + Math.random().toString(36).substring(2)
+                        uuid: uuid
                     });
                     imageFileInput.value = ""; // Clear the file input
                 }
@@ -324,6 +595,132 @@ window.UI = class UI {
             };
             reader.readAsDataURL(file);
         });
+    }
+
+    addImageToChatHistory(type, source, uuid, fileSize = null) {
+        // Get current user info
+        const clientRtcUid = document.getElementById("clientRtcUid").value.trim() || "User";
+        
+        const timestamp = new Date().toLocaleTimeString();
+        const imageInfo = type === 'url' ? 
+            `Image URL: ${source}` : 
+            `Image File: ${source} (${this.formatFileSize(fileSize)})`;
+        
+        const messageData = {
+            id: uuid,
+            text: `📷 ${imageInfo}`,
+            speaker: `User (${clientRtcUid})`,
+            timestamp: timestamp,
+            isTemp: false,
+            userId: clientRtcUid,
+            messageType: 'image',
+            imageType: type,
+            imageSource: source
+        };
+
+        // Add to subtitle manager's chat history if available
+        if (window.subtitleManager && window.subtitleManager.chatHistoryData) {
+            window.subtitleManager.chatHistoryData.push(messageData);
+            window.subtitleManager.updateChatHistoryDisplay();
+        }
+        
+        console.log('Added image to chat history:', messageData);
+    }
+
+    formatFileSize(bytes) {
+        if (!bytes) return 'Unknown size';
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        if (bytes === 0) return '0 Bytes';
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    handleImageMessageResponse(message) {
+        try {
+            console.log('=== IMAGE MESSAGE RESPONSE DEBUG ===');
+            console.log('Original message:', message);
+            
+            // The message parameter is already the parsed message object
+            // Check if it's a message.info or message.error with context module
+            if (message.object === 'message.info' && message.module === 'context') {
+                console.log('✅ Found message.info with context module - processing image response');
+                const imageInfo = JSON.parse(message.message);
+                console.log('Image info from callback:', imageInfo);
+                console.log('Image info keys:', Object.keys(imageInfo));
+                
+                if (imageInfo.success !== false) {
+                    // Image was successfully received
+                    // Handle different possible response structures
+                    const width = imageInfo.width || imageInfo.dimensions?.width || imageInfo.w || 'unknown';
+                    const height = imageInfo.height || imageInfo.dimensions?.height || imageInfo.h || 'unknown';
+                    const size = imageInfo.size_bytes || imageInfo.size || imageInfo.file_size || imageInfo.bytes || 'unknown';
+                    
+                    console.log('Extracted dimensions:', { width, height, size });
+                    
+                    const imageDetails = `📷 Image received: ${width}x${height} (${this.formatFileSize(size)})`;
+                    console.log('Final image details text:', imageDetails);
+                    
+                    // Instead of using UUID matching, update the most recent image message
+                    this.updateMostRecentImageMessage(imageDetails, 'success');
+                }
+            } else if (message.object === 'message.error' && message.module === 'context') {
+                console.log('❌ Found message.error with context module - processing error response');
+                const errorInfo = JSON.parse(message.message);
+                console.log('Error info from callback:', errorInfo);
+                
+                // Image upload failed
+                const errorMessage = errorInfo.error?.message || errorInfo.message || 'Unknown error';
+                const errorDetails = `❌ Image upload failed: ${errorMessage}`;
+                this.updateMostRecentImageMessage(errorDetails, 'error');
+            } else {
+                console.log('❌ Message does not match expected format for image response');
+                console.log('Expected: object="message.info" and module="context"');
+                console.log('Got: object="' + message.object + '" and module="' + message.module + '"');
+            }
+        } catch (error) {
+            console.error('Error handling image message response:', error);
+            console.error('Original message:', message);
+        }
+    }
+
+    updateMostRecentImageMessage(newText, status) {
+        console.log('=== UPDATE MOST RECENT IMAGE MESSAGE DEBUG ===');
+        console.log('New text:', newText);
+        console.log('Status:', status);
+        
+        // Find and update the most recent image message in chat history
+        if (window.subtitleManager && window.subtitleManager.chatHistoryData) {
+            console.log('Chat history data length:', window.subtitleManager.chatHistoryData.length);
+            console.log('All messages:', window.subtitleManager.chatHistoryData.map(msg => ({ id: msg.id, type: msg.messageType, text: msg.text })));
+            
+            // Find the last image message in the chat history
+            let messageIndex = -1;
+            for (let i = window.subtitleManager.chatHistoryData.length - 1; i >= 0; i--) {
+                const msg = window.subtitleManager.chatHistoryData[i];
+                if (msg.messageType === 'image') {
+                    messageIndex = i;
+                    console.log('Found most recent image message at index:', i);
+                    break;
+                }
+            }
+            
+            if (messageIndex !== -1) {
+                const message = window.subtitleManager.chatHistoryData[messageIndex];
+                console.log('Original message:', message);
+                message.text = newText;
+                message.status = status;
+                console.log('Updated message:', message);
+                
+                // Update the display
+                window.subtitleManager.updateChatHistoryDisplay();
+                console.log(`✅ Successfully updated image message at index ${messageIndex} with status: ${status}`);
+            } else {
+                console.log('❌ Could not find any image message to update');
+                console.log('Available messages:', window.subtitleManager.chatHistoryData.map(msg => ({ id: msg.id, type: msg.messageType, text: msg.text })));
+            }
+        } else {
+            console.log('❌ Subtitle manager or chat history data not available');
+        }
     }
 
     checkCredentials() {
@@ -430,6 +827,16 @@ window.UI = class UI {
             
             // Check if video track is available and show camera button
             this.checkAndShowCameraButton();
+            
+            // Check if camera permissions were denied and show a notification
+            const imageInputEnabled = document.getElementById("inputImage")?.checked;
+            const videoTrackExists = this.mediaProcessor && this.mediaProcessor.localTracks && this.mediaProcessor.localTracks.videoTrack;
+            
+            if (imageInputEnabled && !videoTrackExists) {
+                console.warn("Camera permission was denied. You can still use the channel for audio and text/image messages.");
+                // Show a user-friendly notification
+                this.showNotification("Camera permission denied. You can still use audio and text/image messages.", "warning");
+            }
         } catch (error) {
             alert(error.message);
         }
@@ -441,8 +848,24 @@ window.UI = class UI {
         
         const cameraBtn = document.getElementById("toggleCameraBtn");
         if (cameraBtn && imageInputEnabled) {
-            cameraBtn.classList.remove("hidden");
-            console.log("Camera button shown - image input enabled");
+            // Check if video track actually exists (camera permissions might have been denied)
+            const videoTrackExists = this.mediaProcessor && this.mediaProcessor.localTracks && this.mediaProcessor.localTracks.videoTrack;
+            
+            if (videoTrackExists) {
+                cameraBtn.classList.remove("hidden");
+                console.log("Camera button shown - image input enabled and video track available");
+                
+                // Update message UI state when camera button is shown
+                this.updateMessageUIState();
+            } else {
+                cameraBtn.classList.add("hidden");
+                console.log("Camera button hidden - image input enabled but no video track (camera permission likely denied)");
+                
+                // Show a user-friendly message about camera permission
+                if (imageInputEnabled) {
+                    console.warn("Camera permission was denied. Camera functionality will not be available.");
+                }
+            }
         } else {
             console.log("Camera button hidden - image input:", imageInputEnabled);
         }
@@ -1050,5 +1473,46 @@ window.UI = class UI {
         parametersCheckbox.addEventListener('change', () => {
             parametersConfig.classList.toggle('hidden', !parametersCheckbox.checked);
         });
+    }
+
+    showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md transform transition-all duration-300 translate-x-full`;
+        
+        // Set background color based on type
+        switch (type) {
+            case 'warning':
+                notification.className += ' bg-yellow-600 text-white';
+                break;
+            case 'error':
+                notification.className += ' bg-red-600 text-white';
+                break;
+            case 'success':
+                notification.className += ' bg-green-600 text-white';
+                break;
+            default:
+                notification.className += ' bg-blue-600 text-white';
+        }
+        
+        notification.textContent = message;
+        
+        // Add to DOM
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.classList.remove('translate-x-full');
+        }, 100);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            notification.classList.add('translate-x-full');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 5000);
     }
 } 

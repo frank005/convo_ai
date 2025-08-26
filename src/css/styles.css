@@ -640,6 +640,26 @@ select:focus, .drawer select:focus {
   color: #6B7280;
 }
 
+/* Image message styling */
+.chat-message.image-message {
+  border-left-color: #F59E0B;
+  background: linear-gradient(135deg, #374151 0%, #4B5563 100%);
+}
+
+.chat-message.image-message .text {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem !important;
+  color: #FCD34D;
+}
+
+.chat-message.image-message.error .text {
+  color: #F87171;
+}
+
+.chat-message.image-message.success .text {
+  color: #34D399;
+}
+
 /* Subtitle Animation */
 @keyframes subtitleFadeIn {
   from {

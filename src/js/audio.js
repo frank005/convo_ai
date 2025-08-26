@@ -161,8 +161,22 @@ window.MediaProcessor = class MediaProcessor {
         // Create and publish video track if image input is enabled
         const imageInputEnabled = document.getElementById("inputImage").checked;
         if (imageInputEnabled && !this.localTracks.videoTrack) {
-            this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
-            await this.client.publish(this.localTracks.videoTrack);
+            try {
+                this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+                await this.client.publish(this.localTracks.videoTrack);
+            } catch (error) {
+                console.error('Failed to create camera video track:', error);
+                // If camera permission is denied, we should still allow the user to join
+                // but inform them that camera functionality won't be available
+                if (error.name === 'NotAllowedError' || error.message.includes('permission')) {
+                    console.warn('Camera permission denied - continuing without video track');
+                    // Don't throw the error, just log it and continue
+                    // The UI will handle showing appropriate messages
+                } else {
+                    // For other errors, re-throw them
+                    throw error;
+                }
+            }
         }
 
         return true;

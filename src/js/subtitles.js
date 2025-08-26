@@ -333,7 +333,17 @@ class SubtitleManager {
             const messageType = isAgent ? 'agent' : 'user';
             const tempClass = msg.isTemp ? ' temp' : '';
             
-            return `<div class="chat-message ${messageType}${tempClass}"><div class="speaker">${this.escapeHtml(msg.speaker)}</div><div class="text">${this.escapeHtml(msg.text)}</div><div class="timestamp">${msg.isTemp ? '(live)' : msg.timestamp}</div></div>`;
+            // Handle image messages with special styling
+            let messageContent = this.escapeHtml(msg.text);
+            let messageClass = messageType + tempClass;
+            
+            if (msg.messageType === 'image') {
+                messageClass += ' image-message';
+                // Don't escape HTML for image messages as they contain emojis and formatting
+                messageContent = msg.text;
+            }
+            
+            return `<div class="chat-message ${messageClass}"><div class="speaker">${this.escapeHtml(msg.speaker)}</div><div class="text">${messageContent}</div><div class="timestamp">${msg.isTemp ? '(live)' : msg.timestamp}</div></div>`;
         }).join('');
 
         this.elements.chatHistory.innerHTML = historyHtml;
@@ -869,8 +879,11 @@ class SubtitleManager {
     updateChatHistoryFromAPI(chatHistory) {
         if (!Array.isArray(chatHistory)) return;
 
+        // Preserve existing image messages
+        const existingImageMessages = this.chatHistoryData.filter(msg => msg.messageType === 'image');
+        
         // Convert API chat history to our display format
-        this.chatHistoryData = chatHistory.map(item => {
+        const apiMessages = chatHistory.map(item => {
             const transcription = item.data;
             const text = transcription.text || transcription.content || '';
             const speaker = transcription.speaker || item.agentUserId || 'Unknown';
@@ -907,6 +920,30 @@ class SubtitleManager {
             };
         });
 
+        // Merge API messages with existing image messages in chronological order
+        const allMessages = [...apiMessages, ...existingImageMessages];
+        
+        // Sort by timestamp to maintain chronological order
+        allMessages.sort((a, b) => {
+            // Handle live messages (they should appear at the end)
+            if (a.timestamp === '(live)' && b.timestamp !== '(live)') return 1;
+            if (a.timestamp !== '(live)' && b.timestamp === '(live)') return -1;
+            if (a.timestamp === '(live)' && b.timestamp === '(live)') return 0;
+            
+            // Parse timestamps for comparison
+            try {
+                const timeA = new Date(`2000-01-01 ${a.timestamp}`);
+                const timeB = new Date(`2000-01-01 ${b.timestamp}`);
+                return timeA - timeB;
+            } catch (error) {
+                // If timestamp parsing fails, maintain original order
+                return 0;
+            }
+        });
+        
+        this.chatHistoryData = allMessages;
+        
+        // Update the display
         this.updateChatHistoryDisplay();
     }
 
@@ -951,6 +988,11 @@ class SubtitleManager {
             this.elements.enableSubtitles.checked = true;
         }
         
+        // Update message UI state to enable message buttons
+        if (window.ui && typeof window.ui.updateMessageUIState === 'function') {
+            setTimeout(() => window.ui.updateMessageUIState(), 100);
+        }
+        
         // Show notification
         this.showNotification('RTM subtitle mode enabled. Join a channel to start transcription.', 'success');
         
@@ -984,6 +1026,11 @@ class SubtitleManager {
             this.elements.enableSubtitles.checked = true;
         }
         
+        // Update message UI state to disable message buttons
+        if (window.ui && typeof window.ui.updateMessageUIState === 'function') {
+            setTimeout(() => window.ui.updateMessageUIState(), 100);
+        }
+        
         console.log('🔵 Data Stream Subtitles: Enabled');
         console.log('🔵 Data Stream Subtitles: Waiting for channel join to initialize...');
     }
@@ -992,6 +1039,11 @@ class SubtitleManager {
         console.log('🔴 RTM Mode: Disabling...');
         this.setSubtitlesEnabled(false);
         this.showNotification('RTM subtitle mode disabled', 'info');
+        
+        // Update message UI state to disable message buttons
+        if (window.ui && typeof window.ui.updateMessageUIState === 'function') {
+            setTimeout(() => window.ui.updateMessageUIState(), 100);
+        }
     }
 
     disableDataStreamMode() {
@@ -1003,6 +1055,11 @@ class SubtitleManager {
         const statusIndicator = document.getElementById('dataStreamStatusIndicator');
         if (statusIndicator) {
             statusIndicator.classList.add('hidden');
+        }
+        
+        // Update message UI state to disable message buttons
+        if (window.ui && typeof window.ui.updateMessageUIState === 'function') {
+            setTimeout(() => window.ui.updateMessageUIState(), 100);
         }
     }
 

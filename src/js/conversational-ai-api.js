@@ -136,43 +136,29 @@ class CovSubRenderController {
     }
 
     handleMessage(message, context) {
-        console.log('Handling message:', message, context);
-        
         try {
-            // Check message type and handle accordingly
-            if (message.type === EMessageType.AGENT_TRANSCRIPTION || 
-                message.type === EMessageType.USER_TRANSCRIPTION ||
-                message.customType === 'assistant.transcription' ||
-                message.customType === 'user.transcription' ||
-                message.object === 'assistant.transcription' ||
-                message.object === 'user.transcription') {
-                console.log('Found transcription message!', message);
+            console.log('=== MESSAGE HANDLER DEBUG ===');
+            console.log('Received message:', message);
+            console.log('Message object:', message.object);
+            console.log('Message module:', message.module);
+            console.log('Context:', context);
+            
+            if (message.object === 'assistant.transcription' || message.object === 'user.transcription') {
+                // Handle transcription messages
+                console.log('Found transcription message:', message.object);
                 this.handleTranscriptionMessage(message, context);
-            } else if (message.type === EMessageType.MSG_METRICS || message.object === 'message.metrics') {
-                this.handleMetricsMessage(message, context);
-            } else if (message.type === EMessageType.MSG_ERROR || message.object === 'message.error') {
-                this.handleErrorMessage(message, context);
-            } else if (message.type === 'message.receipt' || message.object === 'message.receipt') {
-                // Handle message receipts (success/failure of sent messages)
-                this.handleMessageReceipt(message, context);
-            } else if (message.type === EMessageType.MSG_INTERRUPTED || message.object === 'message.interrupt') {
-                // When an interrupt occurs, finalize any pending messages
-                this.finalizeAllPendingTranscriptions();
-                
-                if (this.onAgentInterrupted) {
-                    this.onAgentInterrupted({ message, context });
-                }
-            } else if (message.messageType === 'TEXT' || message.messageType === 'IMAGE') {
-                // Handle our custom text and image messages - these should be sent to the agent, not treated as transcriptions
-                console.log('Found message to send to agent:', message);
-                // Don't treat these as transcriptions - they're messages TO the agent
-                // The agent should process these and respond accordingly
+            } else if (message.object === 'message.info' || message.object === 'message.error') {
+                // Handle image upload responses
+                console.log('✅ Found image message response:', message);
+                console.log('Message object:', message.object);
+                console.log('Message module:', message.module);
+                this.handleImageMessageResponse(message, context);
             } else if (message.text || message.content) {
                 // Handle any message with text content as potential transcription
                 console.log('Found message with text content, treating as transcription:', message);
                 this.handleTranscriptionMessage(message, context);
             } else {
-                console.log('Unhandled message type:', message.type || message.customType || message.object, message);
+                console.log('❌ Unhandled message type:', message.type || message.customType || message.object, message);
             }
         } catch (error) {
             console.error('Error handling message:', error);
@@ -535,6 +521,19 @@ class CovSubRenderController {
             }
         } catch (error) {
             console.error('Failed to parse message receipt:', error);
+        }
+    }
+
+    handleImageMessageResponse(message, context) {
+        console.log('Image message response received:', message, context);
+        
+        try {
+            // Forward the image message response to the UI for handling
+            if (window.ui && typeof window.ui.handleImageMessageResponse === 'function') {
+                window.ui.handleImageMessageResponse(message);
+            }
+        } catch (error) {
+            console.error('Failed to handle image message response:', error);
         }
     }
 }
