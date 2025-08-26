@@ -219,7 +219,7 @@ window.UI = class UI {
                 if (conversationalAI && conversationalAI.isReady()) {
                     await conversationalAI.chat(agoraRtcUid, {
                         messageType: 'IMAGE',
-                        image_url: imageUrl,
+                        url: imageUrl,
                         uuid: Date.now().toString() + Math.random().toString(36).substring(2)
                     });
                     imageUrlInput.value = "";
@@ -254,7 +254,7 @@ window.UI = class UI {
                 if (conversationalAI && conversationalAI.isReady()) {
                     await conversationalAI.chat(agoraRtcUid, {
                         messageType: 'IMAGE',
-                        image_base64: base64,
+                        base64: base64,
                         uuid: Date.now().toString() + Math.random().toString(36).substring(2)
                     });
                     imageFileInput.value = ""; // Clear the file input

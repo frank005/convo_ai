@@ -902,10 +902,10 @@ class ConversationalAIAPI extends EventHelper {
                 throw new Error('Text message cannot be empty');
             }
         } else if (message.messageType === 'IMAGE') {
-            // Check for either image_url or image_base64
-            if ((!message.image_url || message.image_url.trim() === '') && 
-                (!message.image_base64 || message.image_base64.trim() === '')) {
-                console.error('IMAGE message validation failed: neither image_url nor image_base64 provided');
+            // Check for either url or base64
+            if ((!message.url || message.url.trim() === '') && 
+                (!message.base64 || message.base64.trim() === '')) {
+                console.error('IMAGE message validation failed: neither url nor base64 provided');
                 throw new Error('Image URL or base64 data must be provided');
             }
         } else {
@@ -930,12 +930,12 @@ class ConversationalAIAPI extends EventHelper {
                 uuid: uuid
             };
             
-            // Add either image_url or image_base64 based on what's provided
-            if (message.image_url) {
-                messageData.image_url = message.image_url;
+            // Add either url or base64 based on what's provided
+            if (message.url) {
+                messageData.url = message.url;
             }
-            if (message.image_base64) {
-                messageData.image_base64 = message.image_base64;
+            if (message.base64) {
+                messageData.base64 = message.base64;
             }
         }
 
