@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Agora Web SDK API Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen py-10 px-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">Agora Web SDK API Test</h1>
+        
+        <div class="space-y-4">
+            <button id="testAgoraBtn" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                Test Agora Web SDK API
+            </button>
+            
+            <button id="testVideoTrackBtn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">
+                Test Video Track Creation
+            </button>
+        </div>
+        
+        <div class="mt-8">
+            <h2 class="text-lg font-semibold mb-2">Test Results</h2>
+            <pre id="testResults" class="bg-gray-800 p-4 rounded text-sm overflow-auto max-h-96"></pre>
+        </div>
+    </div>
+
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
+    <script>
+        function log(message) {
+            const results = document.getElementById('testResults');
+            results.textContent += message + '\n';
+            console.log(message);
+        }
+
+        document.getElementById('testAgoraBtn').addEventListener('click', function() {
+            log('=== Testing Agora Web SDK API ===');
+            
+            try {
+                // Test if AgoraRTC is available
+                if (typeof AgoraRTC !== 'undefined') {
+                    log('✓ AgoraRTC is available');
+                    log('AgoraRTC version: ' + (AgoraRTC.VERSION || 'Unknown'));
+                    
+                    // Test createClient
+                    const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+                    log('✓ createClient works');
+                    
+                    // Test getCameras
+                    AgoraRTC.getCameras().then(devices => {
+                        log('✓ getCameras works - found ' + devices.length + ' cameras');
+                    }).catch(error => {
+                        log('✗ getCameras failed: ' + error.message);
+                    });
+                    
+                } else {
+                    log('✗ AgoraRTC is not available');
+                }
+            } catch (error) {
+                log('✗ Error testing Agora Web SDK: ' + error.message);
+            }
+        });
+
+        document.getElementById('testVideoTrackBtn').addEventListener('click', async function() {
+            log('=== Testing Video Track Creation ===');
+            
+            try {
+                // Request camera permission first
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                log('✓ Camera permission granted');
+                
+                // Create video track
+                const videoTrack = await AgoraRTC.createCameraVideoTrack();
+                log('✓ createCameraVideoTrack works');
+                
+                // Test getMediaStreamTrack method
+                if (videoTrack.getMediaStreamTrack) {
+                    const mediaStreamTrack = videoTrack.getMediaStreamTrack();
+                    log('✓ getMediaStreamTrack works');
+                    log('MediaStreamTrack kind: ' + mediaStreamTrack.kind);
+                    log('MediaStreamTrack id: ' + mediaStreamTrack.id);
+                    
+                    // Test creating MediaStream
+                    const newStream = new MediaStream([mediaStreamTrack]);
+                    log('✓ MediaStream creation works');
+                    log('MediaStream tracks: ' + newStream.getTracks().length);
+                    
+                } else {
+                    log('✗ getMediaStreamTrack method not available');
+                }
+                
+                // Clean up
+                videoTrack.stop();
+                videoTrack.close();
+                stream.getTracks().forEach(track => track.stop());
+                log('✓ Cleanup completed');
+                
+            } catch (error) {
+                log('✗ Error testing video track: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

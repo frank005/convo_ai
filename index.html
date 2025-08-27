@@ -26,6 +26,12 @@
       >
         Agent Settings
       </button>
+      <button
+        id="deviceSettingsBtn"
+        class="bg-gray-600 hover:bg-gray-700 p-2 rounded font-bold"
+      >
+        Device Settings
+      </button>
       <span id="baseUrlIndicator" class="text-xs text-gray-400 hidden"></span>
     </div>
 
@@ -461,6 +467,46 @@
     </div>
   </div>
 
+  <!-- Device Settings Modal -->
+  <div id="deviceSettingsModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 101;">
+    <div class="bg-gray-800 p-6 rounded-lg max-w-lg w-full mx-4">
+      <h3 class="text-xl font-bold mb-4">Device Settings</h3>
+      <div class="space-y-4">
+        <div>
+          <label for="micSelect" class="block text-sm font-medium mb-2">Microphone:</label>
+          <select id="micSelect" class="w-full p-2 rounded bg-gray-700 text-white">
+            <option value="">Loading microphones...</option>
+          </select>
+        </div>
+        <div>
+          <label for="cameraSelect" class="block text-sm font-medium mb-2">Camera:</label>
+          <select id="cameraSelect" class="w-full p-2 rounded bg-gray-700 text-white">
+            <option value="">Loading cameras...</option>
+          </select>
+          <div class="text-xs text-gray-400 mt-1">
+            Camera selection is available even when image input is disabled. Your selection will be used when you enable image input.
+          </div>
+        </div>
+        <div class="text-center space-y-2">
+          <button id="retryDeviceLoad" class="text-sm text-blue-400 hover:text-blue-300 underline">
+            Retry loading devices
+          </button>
+          <div class="text-xs text-gray-400">
+            If devices are not showing, please allow microphone and camera permissions in your browser
+          </div>
+        </div>
+      </div>
+      <div class="flex space-x-2 mt-6">
+        <button id="saveDeviceSettings" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          Save
+        </button>
+        <button id="cancelDeviceSettings" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Camera Configuration Modal -->
   <div id="cameraConfigModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 101;">
     <div class="bg-gray-800 p-6 rounded-lg max-w-lg w-full mx-4">
@@ -473,8 +519,8 @@
         <li>Ask the agent to analyze the images and respond to the user</li>
       </ul>
       <div class="mb-4">
-        <label for="cameraSelect" class="block text-sm font-medium mb-2">Select Camera:</label>
-        <select id="cameraSelect" class="w-full p-2 rounded bg-gray-700 text-white">
+        <label for="cameraConfigSelect" class="block text-sm font-medium mb-2">Select Camera:</label>
+        <select id="cameraConfigSelect" class="w-full p-2 rounded bg-gray-700 text-white">
           <option value="">Loading cameras...</option>
         </select>
       </div>
@@ -720,15 +766,15 @@
 
   <!-- JSON Display Modal -->
   <div id="jsonDisplayModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 102;">
-    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] min-h-[400px] flex flex-col">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-xl font-bold text-white" id="jsonModalTitle">JSON Configuration</h3>
         <button id="closeJsonModal" class="text-gray-400 hover:text-white text-2xl font-bold leading-none">
           <span>&times;</span>
         </button>
       </div>
-      <div class="flex-1 overflow-hidden">
-        <pre id="jsonModalContent" class="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-auto h-full font-mono whitespace-pre-wrap"></pre>
+      <div class="flex-1 overflow-hidden min-h-0">
+        <pre id="jsonModalContent" class="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-auto h-full font-mono whitespace-pre-wrap max-h-full"></pre>
       </div>
       <div class="flex justify-end mt-4 space-x-2">
         <button id="copyJsonFromModal" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
@@ -1122,7 +1168,7 @@
 
     // Camera configuration logic
     const cameraConfigModal = document.getElementById('cameraConfigModal');
-    const cameraSelect = document.getElementById('cameraSelect');
+    const cameraSelect = document.getElementById('cameraConfigSelect');
     const cameraAcknowledge = document.getElementById('cameraAcknowledge');
     const saveCameraConfig = document.getElementById('saveCameraConfig');
     const cancelCameraConfig = document.getElementById('cancelCameraConfig');
@@ -2372,6 +2418,7 @@
   <script src="src/js/utils.js?v=1.2"></script>
   <script src="src/js/api.js?v=1.2"></script>
   <script src="src/js/audio.js?v=1.2"></script>
+  <script src="src/js/camera-preview.js?v=1.0"></script>
   <script src="src/js/conversational-ai-api.js?v=1.2"></script>
   <script src="src/js/subtitles.js?v=1.2"></script>
   <script src="src/js/ui.js?v=1.2"></script>
@@ -3636,6 +3683,28 @@
         <button class="signaling-modal-btn signaling-modal-btn-success" id="enableDataStreamModal">Enable Data Stream Mode</button>
       </div>
     </div>
+  </div>
+
+  <!-- Camera Preview Overlay -->
+  <div id="cameraPreviewOverlay" class="hidden">
+    <video id="cameraPreview" autoplay muted playsinline></video>
+    <button id="closeCameraPreview">×</button>
+    <div id="cameraPreviewDragHandle"></div>
+    <div id="cameraPreviewResizeHandle">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M6 10l2 2 4-4"/>
+      </svg>
+    </div>
+    <div class="muted-indicator hidden">Camera Muted</div>
+  </div>
+
+  <!-- Camera Preview Reopen Button -->
+  <div id="cameraPreviewReopenBtn" class="hidden">
+    <button title="Show Camera Preview">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/>
+      </svg>
+    </button>
   </div>
 </body>
 </html> 

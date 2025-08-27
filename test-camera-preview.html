@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Camera Preview Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="src/css/styles.css?v=1.3">
+</head>
+<body class="bg-gray-900 text-white min-h-screen py-10 px-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">Camera Preview Test</h1>
+        
+        <div class="space-y-4">
+            <button id="testCameraBtn" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                Test Camera Access
+            </button>
+            
+            <button id="togglePreviewBtn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">
+                Toggle Preview
+            </button>
+            
+            <button id="toggleMutedBtn" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded">
+                Toggle Muted State
+            </button>
+        </div>
+        
+        <div class="mt-8">
+            <h2 class="text-lg font-semibold mb-2">Test Controls</h2>
+            <ul class="list-disc list-inside space-y-1 text-sm">
+                <li>Click "Test Camera Access" to request camera permissions</li>
+                <li>Click "Toggle Preview" to show/hide the camera preview</li>
+                <li>Click "Toggle Muted State" to simulate camera mute/unmute</li>
+                <li>Drag the preview window to test dragging functionality</li>
+                <li>Click the X button to close the preview</li>
+            </ul>
+        </div>
+    </div>
+
+        <!-- Camera Preview Overlay -->
+    <div id="cameraPreviewOverlay" class="hidden">
+      <video id="cameraPreview" autoplay muted playsinline></video>
+      <button id="closeCameraPreview">×</button>
+      <div id="cameraPreviewDragHandle"></div>
+      <div id="cameraPreviewResizeHandle">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M6 10l2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="muted-indicator hidden">Camera Muted</div>
+    </div>
+
+    <!-- Camera Preview Reopen Button -->
+    <div id="cameraPreviewReopenBtn" class="hidden">
+      <button title="Show Camera Preview">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/>
+        </svg>
+      </button>
+    </div>
+
+    <script src="src/js/camera-preview.js"></script>
+    <script>
+        let cameraPreviewManager;
+        let testStream = null;
+        let isMuted = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize camera preview manager
+            cameraPreviewManager = new window.CameraPreviewManager();
+            
+            // Test camera access
+            document.getElementById('testCameraBtn').addEventListener('click', async function() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    testStream = stream;
+                    cameraPreviewManager.setVideoStream(stream);
+                    cameraPreviewManager.updateVisibility(true, true);
+                    console.log('Camera access granted');
+                } catch (error) {
+                    console.error('Camera access denied:', error);
+                    alert('Camera access denied. Please allow camera permissions.');
+                }
+            });
+            
+            // Toggle preview
+            document.getElementById('togglePreviewBtn').addEventListener('click', function() {
+                if (testStream) {
+                    if (cameraPreviewManager.isVisible) {
+                        cameraPreviewManager.hide();
+                    } else {
+                        cameraPreviewManager.show();
+                    }
+                } else {
+                    alert('Please test camera access first');
+                }
+            });
+            
+            // Toggle muted state
+            document.getElementById('toggleMutedBtn').addEventListener('click', function() {
+                if (testStream) {
+                    isMuted = !isMuted;
+                    cameraPreviewManager.updateVisibility(true, !isMuted);
+                    console.log('Muted state:', isMuted);
+                } else {
+                    alert('Please test camera access first');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -34,6 +34,11 @@ class SubtitleManager {
         this.currentUserMessage = null;
         this.currentUserTurnId = null;
         
+        // Chat history management
+        this.chatClearedByUser = false;
+        this.lastClearedTimestamp = 0;
+        this.lastMessageIdBeforeClear = null;
+        
         // DOM elements
         this.elements = {};
         
@@ -371,9 +376,24 @@ class SubtitleManager {
     }
 
     clearChatHistory() {
+        // Store the last message ID before clearing (if any messages exist)
+        if (this.chatHistoryData.length > 0) {
+            const lastMessage = this.chatHistoryData[this.chatHistoryData.length - 1];
+            this.lastMessageIdBeforeClear = lastMessage.id;
+        }
+        
         this.chatHistoryData = [];
+        this.chatClearedByUser = true;
+        this.lastClearedTimestamp = Date.now();
         this.updateChatHistoryDisplay();
         this.showNotification('Chat history cleared', 'info');
+    }
+
+    // Reset the clear flag when starting a new session
+    resetChatClearState() {
+        this.chatClearedByUser = false;
+        this.lastClearedTimestamp = 0;
+        this.lastMessageIdBeforeClear = null;
     }
 
     escapeHtml(text) {
@@ -445,6 +465,9 @@ class SubtitleManager {
 
             console.log('Auto-configured settings for subtitles: parameters=true, transcript=true, rtm=true, data_channel=rtm, metrics=true, error_messages=true');
             this.showNotification('Settings auto-configured for subtitles', 'info');
+            
+            // Ensure form data is properly updated by triggering additional events
+            this.ensureRTMParametersSynchronized();
         } else {
             // Revert auto-enabled settings
             if (parametersEnabled && parametersEnabled.dataset.autoEnabled === 'true') {
@@ -715,6 +738,9 @@ class SubtitleManager {
     async initializeConversationalAI(appId, channelName, token, uid, agentId = null) {
         // Store the agent ID for use in speaker identification
         this.expectedAgentId = agentId;
+        
+        // Reset chat clear state for new session
+        this.resetChatClearState();
         try {
             // Check SDK availability
             if (!window.AgoraRTC || !window.AgoraRTM) {
@@ -879,6 +905,52 @@ class SubtitleManager {
     updateChatHistoryFromAPI(chatHistory) {
         if (!Array.isArray(chatHistory)) return;
 
+        // If user has cleared the chat, filter out old messages
+        if (this.chatClearedByUser) {
+            let newMessages = chatHistory;
+            
+            // If we have a last message ID before clear, filter based on that
+            if (this.lastMessageIdBeforeClear) {
+                // Find the index of the last message we had before clearing
+                const lastMessageIndex = chatHistory.findIndex(item => item.id === this.lastMessageIdBeforeClear);
+                
+                if (lastMessageIndex !== -1) {
+                    // Only take messages that come after the last message we had
+                    newMessages = chatHistory.slice(lastMessageIndex + 1);
+                } else {
+                    // If we can't find the last message, assume all messages are new
+                    // (this could happen if the API sends a different set of messages)
+                    newMessages = chatHistory;
+                }
+            } else {
+                // If no last message ID, use timestamp-based filtering as fallback
+                // But be more lenient - only filter out messages that are clearly old
+                const clearTime = this.lastClearedTimestamp;
+                const timeThreshold = clearTime - 5000; // Allow messages from 5 seconds before clear
+                
+                newMessages = chatHistory.filter(item => {
+                    const transcription = item.data;
+                    if (transcription.timestamp) {
+                        const messageTime = typeof transcription.timestamp === 'number' 
+                            ? transcription.timestamp 
+                            : new Date(transcription.timestamp).getTime();
+                        return messageTime > timeThreshold;
+                    }
+                    // If no timestamp, assume it's a new message
+                    return true;
+                });
+            }
+            
+            // If no new messages, don't update anything
+            if (newMessages.length === 0) {
+                console.log('No new messages to display after clear');
+                return;
+            }
+            
+            console.log(`Filtered ${chatHistory.length - newMessages.length} old messages, keeping ${newMessages.length} new messages`);
+            chatHistory = newMessages;
+        }
+
         // Preserve existing image messages
         const existingImageMessages = this.chatHistoryData.filter(msg => msg.messageType === 'image');
         
@@ -988,6 +1060,9 @@ class SubtitleManager {
             this.elements.enableSubtitles.checked = true;
         }
         
+        // Configure RTM settings to ensure proper agent configuration
+        this.configureRTMSettings(true);
+        
         // Update message UI state to enable message buttons
         if (window.ui && typeof window.ui.updateMessageUIState === 'function') {
             setTimeout(() => window.ui.updateMessageUIState(), 100);
@@ -997,6 +1072,62 @@ class SubtitleManager {
         this.showNotification('RTM subtitle mode enabled. Join a channel to start transcription.', 'success');
         
         console.log('🔵 RTM Mode: Enabled and ready for channel join');
+    }
+
+    // New method to ensure RTM parameters are properly synchronized
+    ensureRTMParametersSynchronized() {
+        // Force a small delay to ensure all DOM updates are complete
+        setTimeout(() => {
+            // Trigger change events on all RTM-related elements to ensure form data is updated
+            const rtmElements = [
+                'enableRtm',
+                'dataChannel', 
+                'parametersEnabled',
+                'transcriptEnableSet',
+                'transcriptEnable',
+                'enableMetrics',
+                'enableErrorMessage'
+            ];
+            
+            rtmElements.forEach(elementId => {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    // Trigger both change and input events to ensure form data is captured
+                    element.dispatchEvent(new Event('change', { bubbles: true }));
+                    element.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+            
+            console.log('RTM parameters synchronization completed');
+        }, 100);
+    }
+
+    // New method to validate RTM configuration before agent creation
+    validateRTMConfigurationForAgentCreation() {
+        if (!this.isEnabled || this.isDataStreamMode) {
+            return true; // Not using RTM mode, no validation needed
+        }
+
+        console.log('🔵 Validating RTM configuration for agent creation...');
+        
+        // Check if all required RTM settings are properly configured
+        const isConfigValid = this.isConfigurationValid();
+        
+        if (!isConfigValid) {
+            console.warn('🔵 RTM configuration invalid, attempting to auto-configure...');
+            this.configureRTMSettings(true);
+            
+            // Check again after auto-configuration
+            const isConfigValidAfter = this.isConfigurationValid();
+            if (!isConfigValidAfter) {
+                console.error('🔵 Failed to auto-configure RTM settings for agent creation');
+                this.showNotification('Failed to configure RTM settings for subtitles. Please check your configuration.', 'error');
+                return false;
+            }
+        }
+        
+        console.log('🔵 RTM configuration validated successfully for agent creation');
+        return true;
     }
 
     enableDataStreamMode() {
@@ -1124,6 +1255,9 @@ class SubtitleManager {
         // Reset user message tracking
         this.currentUserMessage = null;
         this.currentUserTurnId = null;
+        
+        // Reset chat clear state for new session
+        this.resetChatClearState();
 
         console.log('🔵 Data Stream Subtitles: Initializing for agent UID:', agentUid);
         console.log('🔵 Data Stream Subtitles: RTC Client available:', !!rtcClient);

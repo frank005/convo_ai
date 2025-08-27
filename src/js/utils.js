@@ -533,13 +533,13 @@ window.Utils = class Utils {
             { role: "system", content: formData.sMsgContent }
         ];
 
-        // Add image handling system message if image input is enabled
+        /* Add image handling system message if image input is enabled
         if (formData.inputModalities.includes("image")) {
             systemMessages.push({
                 role: "system",
                 content: "We will be sending you images so when you receive an image and the user specifically asks about it, comment on it based on the request from the user"
             });
-        }
+        } */
 
         const config = {
             name: formData.uniqueName,

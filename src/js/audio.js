@@ -7,6 +7,7 @@ window.MediaProcessor = class MediaProcessor {
         this.localTracks = { audioTrack: null, videoTrack: null };
         this.client = null;
         this.animationFrameId = null;
+        this.cameraPreviewManager = null;
     }
 
     async setupAudioProcessing(remoteAudioTrack) {
@@ -152,9 +153,31 @@ window.MediaProcessor = class MediaProcessor {
         
         // Create and publish audio track
         if (!this.localTracks.audioTrack) {
-            this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
+            const micId = localStorage.getItem('selectedMicrophoneId');
+            const audioConfig = {
                 encoderConfig: "music_standard"
-            });
+            };
+            
+            // Only add microphoneId if it's actually set and not empty
+            if (micId && micId.trim() !== '') {
+                audioConfig.microphoneId = micId;
+            }
+            
+            try {
+                this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack(audioConfig);
+            } catch (error) {
+                console.error('Failed to create audio track with selected device:', error);
+                
+                // Fallback: try without specifying microphoneId
+                try {
+                    this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
+                        encoderConfig: "music_standard"
+                    });
+                } catch (fallbackError) {
+                    console.error('Failed to create audio track with fallback:', fallbackError);
+                    throw fallbackError;
+                }
+            }
         }
         await this.client.publish(this.localTracks.audioTrack);
 
@@ -162,8 +185,45 @@ window.MediaProcessor = class MediaProcessor {
         const imageInputEnabled = document.getElementById("inputImage").checked;
         if (imageInputEnabled && !this.localTracks.videoTrack) {
             try {
-                this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+                const cameraId = localStorage.getItem('selectedCameraId');
+                const videoConfig = {};
+                
+                // Only add cameraId if it's actually set and not empty
+                if (cameraId && cameraId.trim() !== '') {
+                    videoConfig.cameraId = cameraId;
+                }
+                
+                try {
+                    this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack(videoConfig);
+                } catch (error) {
+                    console.error('Failed to create video track with selected device:', error);
+                    
+                    // Fallback: try without specifying cameraId
+                    try {
+                        this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+                    } catch (fallbackError) {
+                        console.error('Failed to create video track with fallback:', fallbackError);
+                        throw fallbackError;
+                    }
+                }
+                
                 await this.client.publish(this.localTracks.videoTrack);
+                
+                // Initialize camera preview manager and show preview
+                console.log('Video track created successfully, initializing camera preview...');
+                
+                // Log camera resolution
+                const mediaStream = this.localTracks.videoTrack.getMediaStreamTrack();
+                if (mediaStream && mediaStream.getSettings) {
+                    const settings = mediaStream.getSettings();
+                    console.log('Camera resolution:', settings.width + 'x' + settings.height);
+                    console.log('Camera aspect ratio:', (settings.width / settings.height).toFixed(2));
+                }
+                
+                // Add a small delay to ensure the video track is fully initialized
+                setTimeout(() => {
+                    this.initializeCameraPreview();
+                }, 100);
             } catch (error) {
                 console.error('Failed to create camera video track:', error);
                 // If camera permission is denied, we should still allow the user to join
@@ -220,6 +280,11 @@ window.MediaProcessor = class MediaProcessor {
         if (this.localTracks.videoTrack) {
             this.localTracks.videoTrack.stop();
             this.localTracks.videoTrack.close();
+        }
+
+        // Clean up camera preview
+        if (this.cameraPreviewManager) {
+            this.cameraPreviewManager.hide();
         }
 
         // Stop and close audio track if it exists
@@ -315,6 +380,84 @@ window.MediaProcessor = class MediaProcessor {
             console.log('Data stream subtitle handling initialized successfully');
         } catch (error) {
             console.error('Failed to initialize data stream subtitle handling:', error);
+        }
+    }
+
+    initializeCameraPreview() {
+        if (!this.localTracks.videoTrack) {
+            console.warn('No video track available for camera preview initialization');
+            return;
+        }
+
+        try {
+            // Initialize camera preview manager if not already done
+            if (!this.cameraPreviewManager && window.CameraPreviewManager) {
+                this.cameraPreviewManager = new window.CameraPreviewManager();
+                this.cameraPreviewManager.loadSavedPosition();
+            }
+
+            if (this.cameraPreviewManager) {
+                // Verify that the video track has the expected Agora Web SDK methods
+                if (!this.localTracks.videoTrack.getMediaStreamTrack) {
+                    console.error('Video track does not have getMediaStreamTrack method - Agora Web SDK version issue?');
+                    this.cameraPreviewManager.updateVisibility(false, false);
+                    return;
+                }
+
+                // Get the media stream from the video track using Agora Web SDK API
+                const mediaStreamTrack = this.localTracks.videoTrack.getMediaStreamTrack();
+                if (mediaStreamTrack) {
+                    const stream = new MediaStream([mediaStreamTrack]);
+                    this.cameraPreviewManager.setVideoStream(stream);
+                    
+                    // Update visibility based on camera state
+                    const cameraBtn = document.getElementById("toggleCameraBtn");
+                    const isCameraEnabled = !cameraBtn || !cameraBtn.classList.contains("muted");
+                    this.cameraPreviewManager.updateVisibility(true, isCameraEnabled);
+                    
+                    console.log('Camera preview initialized with stream:', stream);
+                } else {
+                    console.warn('No media stream track available for camera preview');
+                    // Hide preview if no stream is available
+                    this.cameraPreviewManager.updateVisibility(false, false);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to initialize camera preview:', error);
+            // Hide preview on error
+            if (this.cameraPreviewManager) {
+                this.cameraPreviewManager.updateVisibility(false, false);
+            }
+        }
+    }
+
+    updateCameraPreviewVisibility(isEnabled) {
+        if (!this.cameraPreviewManager || !this.localTracks.videoTrack) {
+            console.warn('Camera preview manager or video track not available');
+            return;
+        }
+
+        try {
+            // Verify that the video track has the expected Agora Web SDK methods
+            if (!this.localTracks.videoTrack.getMediaStreamTrack) {
+                console.error('Video track does not have getMediaStreamTrack method - Agora Web SDK version issue?');
+                this.cameraPreviewManager.updateVisibility(false, false);
+                return;
+            }
+
+            // Update the video stream if needed
+            const mediaStreamTrack = this.localTracks.videoTrack.getMediaStreamTrack();
+            if (mediaStreamTrack) {
+                const stream = new MediaStream([mediaStreamTrack]);
+                this.cameraPreviewManager.setVideoStream(stream);
+                this.cameraPreviewManager.updateVisibility(true, isEnabled);
+            } else {
+                console.warn('No media stream track available for camera preview update');
+                this.cameraPreviewManager.updateVisibility(false, false);
+            }
+        } catch (error) {
+            console.error('Failed to update camera preview visibility:', error);
+            this.cameraPreviewManager.updateVisibility(false, false);
         }
     }
 } 

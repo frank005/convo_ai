@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Button Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .chat-history {
+            height: 300px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            overflow-y: auto;
+            background: #f9f9f9;
+        }
+        .chat-message {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 5px;
+        }
+        .user {
+            background: #e3f2fd;
+            margin-left: 20px;
+        }
+        .agent {
+            background: #f3e5f5;
+            margin-right: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .clear-btn {
+            background: #f44336;
+            color: white;
+        }
+        .add-btn {
+            background: #4caf50;
+            color: white;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <h1>Clear Button Functionality Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Instructions</h2>
+        <ol>
+            <li>Click "Add Test Message" to add some messages to the chat</li>
+            <li>Click "Clear Chat" to clear the chat history</li>
+            <li>Click "Add Test Message" again - you should only see the new message, not the old ones</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>Chat History</h2>
+        <div id="chatHistory" class="chat-history"></div>
+        <button id="addMessageBtn" class="add-btn">Add Test Message</button>
+        <button id="clearChatBtn" class="clear-btn">Clear Chat</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Status</h2>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // Simplified version of the chat history management
+        class TestChatManager {
+            constructor() {
+                this.chatHistoryData = [];
+                this.chatClearedByUser = false;
+                this.lastClearedTimestamp = 0;
+                this.lastMessageIdBeforeClear = null;
+                this.messageCounter = 0;
+                
+                this.chatHistory = document.getElementById('chatHistory');
+                this.addMessageBtn = document.getElementById('addMessageBtn');
+                this.clearChatBtn = document.getElementById('clearChatBtn');
+                this.status = document.getElementById('status');
+                
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                this.addMessageBtn.addEventListener('click', () => {
+                    this.addTestMessage();
+                });
+
+                this.clearChatBtn.addEventListener('click', () => {
+                    this.clearChatHistory();
+                });
+            }
+
+            addTestMessage() {
+                this.messageCounter++;
+                const isUser = this.messageCounter % 2 === 1;
+                const speaker = isUser ? 'User' : 'AI Agent';
+                const text = `Test message ${this.messageCounter} from ${speaker}`;
+                
+                const message = {
+                    id: Date.now().toString(),
+                    text: text,
+                    speaker: speaker,
+                    timestamp: new Date().toLocaleTimeString(),
+                    isTemp: false
+                };
+
+                this.chatHistoryData.push(message);
+                this.updateChatHistoryDisplay();
+                this.showStatus(`Added message: ${text}`, 'success');
+            }
+
+            clearChatHistory() {
+                // Store the last message ID before clearing (if any messages exist)
+                if (this.chatHistoryData.length > 0) {
+                    const lastMessage = this.chatHistoryData[this.chatHistoryData.length - 1];
+                    this.lastMessageIdBeforeClear = lastMessage.id;
+                }
+                
+                this.chatHistoryData = [];
+                this.chatClearedByUser = true;
+                this.lastClearedTimestamp = Date.now();
+                this.updateChatHistoryDisplay();
+                this.showStatus('Chat history cleared', 'info');
+            }
+
+            updateChatHistoryDisplay() {
+                if (!this.chatHistory) return;
+
+                const historyHtml = this.chatHistoryData.map(msg => {
+                    const messageType = msg.speaker === 'AI Agent' ? 'agent' : 'user';
+                    return `<div class="chat-message ${messageType}">
+                        <div class="speaker">${msg.speaker}</div>
+                        <div class="text">${msg.text}</div>
+                        <div class="timestamp">${msg.timestamp}</div>
+                    </div>`;
+                }).join('');
+
+                this.chatHistory.innerHTML = historyHtml;
+                this.chatHistory.scrollTop = this.chatHistory.scrollHeight;
+            }
+
+            showStatus(message, type) {
+                if (this.status) {
+                    this.status.className = `status ${type}`;
+                    this.status.textContent = message;
+                    
+                    // Clear status after 3 seconds
+                    setTimeout(() => {
+                        this.status.textContent = '';
+                        this.status.className = 'status';
+                    }, 3000);
+                }
+            }
+
+            // Simulate receiving messages from API (like the real system)
+            simulateAPIUpdate() {
+                // This simulates what happens when the API sends chat history
+                let apiMessages = [
+                    {
+                        id: 'old-1',
+                        data: {
+                            text: 'Old message 1 from API',
+                            speaker: 'User',
+                            timestamp: Date.now() - 10000 // 10 seconds ago
+                        }
+                    },
+                    {
+                        id: 'old-2', 
+                        data: {
+                            text: 'Old message 2 from API',
+                            speaker: 'AI Agent',
+                            timestamp: Date.now() - 8000 // 8 seconds ago
+                        }
+                    },
+                    {
+                        id: 'new-1',
+                        data: {
+                            text: 'New message after clear',
+                            speaker: 'User',
+                            timestamp: Date.now() + 1000 // 1 second in future
+                        }
+                    }
+                ];
+
+                // If user has cleared the chat, filter out old messages
+                if (this.chatClearedByUser) {
+                    let newMessages = apiMessages;
+                    
+                    // If we have a last message ID before clear, filter based on that
+                    if (this.lastMessageIdBeforeClear) {
+                        const lastMessageIndex = apiMessages.findIndex(item => item.id === this.lastMessageIdBeforeClear);
+                        if (lastMessageIndex !== -1) {
+                            newMessages = apiMessages.slice(lastMessageIndex + 1);
+                        }
+                    } else {
+                        // Use timestamp-based filtering as fallback
+                        const clearTime = this.lastClearedTimestamp;
+                        const timeThreshold = clearTime - 5000; // Allow messages from 5 seconds before clear
+                        
+                        newMessages = apiMessages.filter(item => {
+                            const transcription = item.data;
+                            if (transcription.timestamp) {
+                                return transcription.timestamp > timeThreshold;
+                            }
+                            return true;
+                        });
+                    }
+                    
+                    if (newMessages.length === 0) {
+                        this.showStatus('No new messages to add (old messages filtered out)', 'info');
+                        return;
+                    }
+                    
+                    apiMessages = newMessages;
+                }
+
+                // Convert API messages to display format
+                const convertedMessages = apiMessages.map(item => {
+                    const transcription = item.data;
+                    return {
+                        id: item.id,
+                        text: transcription.text,
+                        speaker: transcription.speaker,
+                        timestamp: new Date(transcription.timestamp).toLocaleTimeString(),
+                        isTemp: false
+                    };
+                });
+
+                // Add to existing chat history
+                this.chatHistoryData.push(...convertedMessages);
+                this.updateChatHistoryDisplay();
+                this.showStatus(`Added ${convertedMessages.length} messages from API`, 'success');
+            }
+        }
+
+        // Initialize the test
+        const testManager = new TestChatManager();
+        
+        // Add a button to test API simulation
+        const apiTestBtn = document.createElement('button');
+        apiTestBtn.textContent = 'Simulate API Update';
+        apiTestBtn.className = 'add-btn';
+        apiTestBtn.style.background = '#ff9800';
+        apiTestBtn.addEventListener('click', () => {
+            testManager.simulateAPIUpdate();
+        });
+        
+        document.querySelector('.test-section:nth-child(2)').appendChild(apiTestBtn);
+    </script>
+</body>
+</html>

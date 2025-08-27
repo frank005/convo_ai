@@ -29,6 +29,9 @@ window.UI = class UI {
         setTimeout(() => {
             this.updateMessageUIState();
         }, 100);
+        
+        // Initialize camera preview manager
+        this.initializeCameraPreviewManager();
     }
 
     setupEventListeners() {
@@ -107,6 +110,24 @@ window.UI = class UI {
             listAgentsBtn.addEventListener("click", () => this.listAgents());
         }
 
+        // Device settings
+        const deviceSettingsBtn = document.getElementById("deviceSettingsBtn");
+        if (deviceSettingsBtn) {
+            deviceSettingsBtn.addEventListener("click", () => this.openDeviceSettings());
+        }
+        const saveDeviceSettings = document.getElementById("saveDeviceSettings");
+        if (saveDeviceSettings) {
+            saveDeviceSettings.addEventListener("click", () => this.saveDeviceSettings());
+        }
+        const cancelDeviceSettings = document.getElementById("cancelDeviceSettings");
+        if (cancelDeviceSettings) {
+            cancelDeviceSettings.addEventListener("click", () => this.closeDeviceSettings());
+        }
+        const retryDeviceLoad = document.getElementById("retryDeviceLoad");
+        if (retryDeviceLoad) {
+            retryDeviceLoad.addEventListener("click", () => this.loadDeviceLists());
+        }
+
         // Microphone control
         const toggleMicBtn = document.getElementById("toggleMicBtn");
         if (toggleMicBtn) {
@@ -153,6 +174,14 @@ window.UI = class UI {
                     }
                     imageFileInput.value = ""; // Clear the file input
                 }
+            });
+        }
+
+        // Update camera info message when image input changes
+        const inputImage = document.getElementById("inputImage");
+        if (inputImage) {
+            inputImage.addEventListener("change", () => {
+                this.updateCameraInfoMessage();
             });
         }
         
@@ -229,6 +258,11 @@ window.UI = class UI {
                 cameraOffIcon.classList.add("hidden");
                 console.log("Camera unmuted");
                 
+                // Update camera preview visibility
+                if (this.mediaProcessor && this.mediaProcessor.updateCameraPreviewVisibility) {
+                    this.mediaProcessor.updateCameraPreviewVisibility(true);
+                }
+                
                 // Disable image upload when camera is unmuted
                 this.updateMessageUIState();
             } else {
@@ -239,6 +273,11 @@ window.UI = class UI {
                 cameraIcon.classList.add("hidden");
                 cameraOffIcon.classList.remove("hidden");
                 console.log("Camera muted");
+                
+                // Update camera preview visibility
+                if (this.mediaProcessor && this.mediaProcessor.updateCameraPreviewVisibility) {
+                    this.mediaProcessor.updateCameraPreviewVisibility(false);
+                }
                 
                 // Enable image upload when camera is muted
                 this.updateMessageUIState();
@@ -1175,6 +1214,14 @@ window.UI = class UI {
         }
 
         try {
+            // Validate RTM configuration before agent creation if subtitles are enabled
+            if (this.subtitleManager) {
+                const isRTMConfigValid = this.subtitleManager.validateRTMConfigurationForAgentCreation();
+                if (!isRTMConfigValid) {
+                    throw new Error('RTM configuration validation failed. Please check your subtitle settings.');
+                }
+            }
+            
             const formData = Utils.getFormData();
             Utils.validateFormData(formData);
             const customParams = Utils.getCustomParams();
@@ -1233,6 +1280,14 @@ window.UI = class UI {
         }
 
         try {
+            // Validate RTM configuration before agent update if subtitles are enabled
+            if (this.subtitleManager) {
+                const isRTMConfigValid = this.subtitleManager.validateRTMConfigurationForAgentCreation();
+                if (!isRTMConfigValid) {
+                    throw new Error('RTM configuration validation failed. Please check your subtitle settings.');
+                }
+            }
+            
             const { customerId, customerSecret } = Utils.getStoredCredentials();
             const agentIdElement = document.getElementById("agentId");
             if (!agentIdElement || !agentIdElement.value.trim()) {
@@ -1514,5 +1569,293 @@ window.UI = class UI {
                 }
             }, 300);
         }, 5000);
+    }
+
+    initializeCameraPreviewManager() {
+        try {
+            if (window.CameraPreviewManager) {
+                // Initialize the camera preview manager
+                const cameraPreviewManager = new window.CameraPreviewManager();
+                
+                // Store reference in media processor for later use
+                if (this.mediaProcessor) {
+                    this.mediaProcessor.cameraPreviewManager = cameraPreviewManager;
+                }
+                
+                console.log('Camera preview manager initialized successfully');
+            } else {
+                console.warn('CameraPreviewManager not available');
+            }
+        } catch (error) {
+            console.error('Failed to initialize camera preview manager:', error);
+        }
+    }
+
+    async openDeviceSettings() {
+        const modal = document.getElementById('deviceSettingsModal');
+        if (!modal) return;
+
+        try {
+            // Show modal first
+            modal.classList.remove('hidden');
+            
+            // Add click outside to close
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.closeDeviceSettings();
+                }
+            });
+            
+            // Check if image input is enabled and show appropriate message
+            const imageInputEnabled = document.getElementById("inputImage");
+            if (imageInputEnabled) {
+                const cameraInfo = modal.querySelector('.text-xs.text-gray-400');
+                if (cameraInfo) {
+                    if (imageInputEnabled.checked) {
+                        cameraInfo.textContent = 'Camera selection will be used immediately for image input.';
+                    } else {
+                        cameraInfo.textContent = 'Camera selection is available even when image input is disabled. Your selection will be used when you enable image input.';
+                    }
+                }
+            }
+            
+            // Load device lists after modal is shown
+            await this.loadDeviceLists();
+        } catch (error) {
+            console.error('Failed to open device settings:', error);
+            this.showNotification('Failed to load device settings. Please check your browser permissions.', 'error');
+        }
+    }
+
+    closeDeviceSettings() {
+        const modal = document.getElementById('deviceSettingsModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    async loadDeviceLists() {
+        try {
+            // Request permissions first before trying to enumerate devices
+            let micPermissionGranted = false;
+            let cameraPermissionGranted = false;
+            
+            try {
+                // Request microphone permission
+                await navigator.mediaDevices.getUserMedia({ audio: true });
+                micPermissionGranted = true;
+            } catch (error) {
+                console.warn('Microphone permission denied:', error);
+            }
+
+            try {
+                // Request camera permission - always try to get camera permission for device selection
+                // This allows users to pre-configure their camera even if image input isn't enabled yet
+                await navigator.mediaDevices.getUserMedia({ video: true });
+                cameraPermissionGranted = true;
+            } catch (error) {
+                console.warn('Camera permission denied:', error);
+            }
+
+            // Load microphones
+            const microphones = await AgoraRTC.getMicrophones();
+            const micSelect = document.getElementById('micSelect');
+            if (micSelect) {
+                if (microphones.length > 0) {
+                    micSelect.innerHTML = microphones.map(device => 
+                        `<option value="${device.deviceId}">${device.label || `Microphone ${device.deviceId.slice(0, 8)}`}</option>`
+                    ).join('');
+                    
+                    // Set current selection
+                    const currentMicId = localStorage.getItem('selectedMicrophoneId');
+                    if (currentMicId) {
+                        micSelect.value = currentMicId;
+                    }
+                } else {
+                    if (!micPermissionGranted) {
+                        micSelect.innerHTML = '<option value="">Microphone permission required</option>';
+                    } else {
+                        micSelect.innerHTML = '<option value="">No microphones found</option>';
+                    }
+                }
+            }
+
+            // Load cameras
+            const cameras = await AgoraRTC.getCameras();
+            const cameraSelect = document.getElementById('cameraSelect');
+            if (cameraSelect) {
+                if (cameras.length > 0) {
+                    cameraSelect.innerHTML = cameras.map(device => 
+                        `<option value="${device.deviceId}">${device.label || `Camera ${device.deviceId.slice(0, 8)}`}</option>`
+                    ).join('');
+                    
+                    // Set current selection
+                    const currentCameraId = localStorage.getItem('selectedCameraId');
+                    if (currentCameraId) {
+                        cameraSelect.value = currentCameraId;
+                    }
+                } else {
+                    if (!cameraPermissionGranted) {
+                        cameraSelect.innerHTML = '<option value="">Camera permission required</option>';
+                    } else {
+                        cameraSelect.innerHTML = '<option value="">No cameras found</option>';
+                    }
+                }
+            }
+            
+            // Show success notification if devices were loaded
+            if ((microphones.length > 0 || cameras.length > 0)) {
+                this.showNotification('Device list loaded successfully', 'success');
+            }
+        } catch (error) {
+            console.error('Failed to load device lists:', error);
+            
+            // Show user-friendly error messages
+            const micSelect = document.getElementById('micSelect');
+            const cameraSelect = document.getElementById('cameraSelect');
+            
+            if (micSelect) {
+                micSelect.innerHTML = '<option value="">Error loading microphones</option>';
+            }
+            if (cameraSelect) {
+                cameraSelect.innerHTML = '<option value="">Error loading cameras</option>';
+            }
+            
+            this.showNotification('Failed to load devices. Please check browser permissions.', 'error');
+            throw error;
+        }
+    }
+
+    async saveDeviceSettings() {
+        try {
+            const micSelect = document.getElementById('micSelect');
+            const cameraSelect = document.getElementById('cameraSelect');
+            
+            if (micSelect && micSelect.value) {
+                localStorage.setItem('selectedMicrophoneId', micSelect.value);
+            }
+            
+            if (cameraSelect && cameraSelect.value) {
+                localStorage.setItem('selectedCameraId', cameraSelect.value);
+            }
+            
+            this.closeDeviceSettings();
+            this.showNotification('Device settings saved successfully', 'success');
+            
+            // If we're currently in a channel, we need to restart the tracks with new devices
+            if (this.mediaProcessor && this.mediaProcessor.client) {
+                await this.restartTracksWithNewDevices();
+            }
+        } catch (error) {
+            console.error('Failed to save device settings:', error);
+            this.showNotification('Failed to save device settings', 'error');
+        }
+    }
+
+    async restartTracksWithNewDevices() {
+        if (!this.mediaProcessor || !this.mediaProcessor.client) return;
+
+        try {
+            // Stop current tracks
+            if (this.mediaProcessor.localTracks.audioTrack) {
+                await this.mediaProcessor.client.unpublish(this.mediaProcessor.localTracks.audioTrack);
+                this.mediaProcessor.localTracks.audioTrack.stop();
+                this.mediaProcessor.localTracks.audioTrack.close();
+                this.mediaProcessor.localTracks.audioTrack = null;
+            }
+
+            if (this.mediaProcessor.localTracks.videoTrack) {
+                await this.mediaProcessor.client.unpublish(this.mediaProcessor.localTracks.videoTrack);
+                this.mediaProcessor.localTracks.videoTrack.stop();
+                this.mediaProcessor.localTracks.videoTrack.close();
+                this.mediaProcessor.localTracks.videoTrack = null;
+            }
+
+            // Create new tracks with selected devices
+            const micId = localStorage.getItem('selectedMicrophoneId');
+            const cameraId = localStorage.getItem('selectedCameraId');
+
+            // Create new audio track
+            if (micId && micId.trim() !== '') {
+                try {
+                    this.mediaProcessor.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
+                        encoderConfig: "music_standard",
+                        microphoneId: micId
+                    });
+                } catch (error) {
+                    console.error('Failed to create audio track with selected device:', error);
+                    // Fallback to default device
+                    this.mediaProcessor.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
+                        encoderConfig: "music_standard"
+                    });
+                }
+                await this.mediaProcessor.client.publish(this.mediaProcessor.localTracks.audioTrack);
+            } else {
+                // Create audio track with default device
+                this.mediaProcessor.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
+                    encoderConfig: "music_standard"
+                });
+                await this.mediaProcessor.client.publish(this.mediaProcessor.localTracks.audioTrack);
+            }
+
+            // Create new video track if image input is enabled
+            const imageInputEnabled = document.getElementById("inputImage").checked;
+            if (imageInputEnabled) {
+                if (cameraId && cameraId.trim() !== '') {
+                    try {
+                        this.mediaProcessor.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack({
+                            cameraId: cameraId
+                        });
+                    } catch (error) {
+                        console.error('Failed to create video track with selected device:', error);
+                        // Fallback to default device
+                        this.mediaProcessor.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+                    }
+                } else {
+                    // Create video track with default device
+                    this.mediaProcessor.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+                }
+                
+                await this.mediaProcessor.client.publish(this.mediaProcessor.localTracks.videoTrack);
+                
+                // Reinitialize camera preview
+                this.mediaProcessor.initializeCameraPreview();
+            }
+
+            this.showNotification('Tracks restarted with new devices', 'success');
+        } catch (error) {
+            console.error('Failed to restart tracks with new devices:', error);
+            this.showNotification('Failed to restart tracks with new devices', 'error');
+        }
+    }
+
+    checkAndShowCameraButton() {
+        const cameraBtn = document.getElementById("toggleCameraBtn");
+        const imageInputEnabled = document.getElementById("inputImage").checked;
+        
+        if (cameraBtn) {
+            if (imageInputEnabled) {
+                cameraBtn.classList.remove("hidden");
+            } else {
+                cameraBtn.classList.add("hidden");
+            }
+        }
+    }
+
+    updateCameraInfoMessage() {
+        const modal = document.getElementById('deviceSettingsModal');
+        if (!modal || modal.classList.contains('hidden')) return;
+
+        const imageInputEnabled = document.getElementById("inputImage");
+        if (imageInputEnabled) {
+            const cameraInfo = modal.querySelector('.text-xs.text-gray-400');
+            if (cameraInfo) {
+                if (imageInputEnabled.checked) {
+                    cameraInfo.textContent = 'Camera selection will be used immediately for image input.';
+                } else {
+                    cameraInfo.textContent = 'Camera selection is available even when image input is disabled. Your selection will be used when you enable image input.';
+                }
+            }
+        }
     }
 } 

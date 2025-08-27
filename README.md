@@ -34,11 +34,25 @@ A modern web dashboard for managing and interacting with Agora's Conversational 
   - Toggle-able AI interaction widget
   - Audio configuration for multiple vendors
 
+- **Device Selection** ⭐ **NEW**
+  - **Microphone Selection**: Choose from available microphones with persistent storage
+  - **Camera Selection**: Pre-configure camera devices even when image input is disabled
+  - **Permission Management**: Automatic permission requests with clear user feedback
+  - **Error Recovery**: Fallback to default devices if selected devices fail
+  - **Real-time Updates**: Automatic track restart when devices are changed while in channel
+  - **User-Friendly Interface**: Clean modal with retry functionality and helpful messages
+
 - **Camera Integration** ⭐ **NEW**
   - Periodic screenshot capture for image analysis
-  - Multi-camera device selection
-  - Privacy-aware camera configuration
+  - Multi-camera device selection and configuration
+  - Privacy-aware camera setup with user consent
   - Image-based visual analysis (not video streaming)
+  - **Camera Preview Overlay** ⭐ **NEW**
+    - Draggable local camera preview when image input is enabled
+    - Shows what the user is sending to the AI agent
+    - Automatically hides when camera is muted
+    - Position persistence across sessions
+    - Touch-friendly mobile support
 
 - **AI Avatar Support** ⭐ **NEW**
   - Visual AI avatar representation with neural network design
@@ -130,6 +144,10 @@ A modern web dashboard for managing and interacting with Agora's Conversational 
   - Privacy-aware camera setup with user consent
   - Periodic screenshot capture for image analysis
   - Integration with MLLM image processing capabilities
+  - **Device Selection Integration** ⭐ **NEW**
+    - Seamless integration with device selection modal
+    - Pre-configuration support for camera devices
+    - Automatic application of selected devices when image input is enabled
 
 ### Broadcast & Communication
 - **Message Broadcasting**
@@ -248,17 +266,25 @@ convo_ai/
    - Configure vendor-specific settings (quality, timeouts)
    - Visual placeholder will appear until video stream is active
 
-8. **Camera setup (optional):** ⭐ **NEW**
+8. **Device selection setup (optional):** ⭐ **NEW**
+   - Click "Device Settings" button in the top bar
+   - Select preferred microphone from available devices
+   - Pre-configure camera device (works even when image input is disabled)
+   - Grant microphone and camera permissions when prompted
+   - Use retry button if devices don't load initially
+   - Device selections are automatically applied when joining channels
+
+9. **Camera setup (optional):** ⭐ **NEW**
    - Enable image input modality for camera integration
    - Select camera device from available options
    - Acknowledge privacy terms for camera access
    - Configure periodic screenshot capture for image analysis
 
-9. **Live subtitles setup (optional):** ⭐ **NEW**
-   - Enable live subtitles in the AI Interaction widget
-   - Ensure signaling (RTM) is enabled on your Agora AppID
-   - Configure subtitle overlay and chat history display
-   - Test subtitle functionality with demo and test buttons
+10. **Live subtitles setup (optional):** ⭐ **NEW**
+    - Enable live subtitles in the AI Interaction widget
+    - Ensure signaling (RTM) is enabled on your Agora AppID
+    - Configure subtitle overlay and chat history display
+    - Test subtitle functionality with demo and test buttons
 
 ## API Integration
 
@@ -457,6 +483,11 @@ The application follows a modular architecture:
    - Manages vendor-specific field visibility
    - Handles MLLM mode switching and configuration
    - Manages AI Avatar integration and video streams
+   - **Device Selection Management** ⭐ **NEW**
+     - Handles device enumeration and permission requests
+     - Manages device selection modal and user interactions
+     - Provides error recovery and fallback mechanisms
+     - Handles real-time track restart with new devices
 
 6. **Utilities** (`utils.js`)
    - Provides helper functions for common operations
@@ -465,13 +496,19 @@ The application follows a modular architecture:
    - Supports JSON configuration management
    - Manages credential storage and retrieval
    - Handles camera integration and image processing
+   - **Device Management** ⭐ **NEW**
+     - Manages device ID storage and retrieval
+     - Handles device validation and fallback logic
+     - Provides device selection persistence across sessions
 
 ## Browser Compatibility
 
 - **Modern Browsers:** Chrome, Firefox, Safari, Edge (latest versions)
-- **Required APIs:** Web Audio API, WebRTC, localStorage
-- **Camera Support:** For image input functionality
+- **Required APIs:** Web Audio API, WebRTC, localStorage, MediaDevices API
+- **Camera Support:** For image input functionality and device selection
+- **Microphone Support:** For audio input and device selection
 - **WebSocket Support:** For MLLM real-time communication
+- **Permission Support:** For microphone and camera access
 - **Responsive Design:** Optimized for various screen sizes and orientations
 
 ## Contributing
@@ -491,4 +528,4 @@ For issues and questions:
 
 ---
 
-**Agora ConversationalAI Backend v1.6** - Enhanced with MLLM support, AI Avatar functionality, advanced configuration options, new TTS/ASR vendors, and comprehensive real-time multimodal capabilities. Features professional SVG placeholders, seamless video stream integration, and improved chat interface with proper overflow handling and responsive design. 
+**Agora ConversationalAI Backend v1.6** - Enhanced with MLLM support, AI Avatar functionality, advanced configuration options, new TTS/ASR vendors, comprehensive real-time multimodal capabilities, and device selection management. Features professional SVG placeholders, seamless video stream integration, improved chat interface with proper overflow handling and responsive design, and robust device selection with permission management and error recovery. 
