@@ -718,6 +718,29 @@
     </div>
   </div>
 
+  <!-- JSON Display Modal -->
+  <div id="jsonDisplayModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 102;">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-bold text-white" id="jsonModalTitle">JSON Configuration</h3>
+        <button id="closeJsonModal" class="text-gray-400 hover:text-white text-2xl font-bold leading-none">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="flex-1 overflow-hidden">
+        <pre id="jsonModalContent" class="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-auto h-full font-mono whitespace-pre-wrap"></pre>
+      </div>
+      <div class="flex justify-end mt-4 space-x-2">
+        <button id="copyJsonFromModal" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          Copy to Clipboard
+        </button>
+        <button id="closeJsonModalBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- JavaScript Modules -->
   <script>
     // Initialize components after all scripts are loaded
@@ -808,8 +831,22 @@
     // Close modal when clicking outside
     const audioConfigModal = document.getElementById('audioConfigModal');
     if (audioConfigModal) {
+      let isDragging = false;
+      
+      audioConfigModal.addEventListener('mousedown', function(e) {
+        if (e.target.tagName === 'PRE' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+          isDragging = true;
+        }
+      });
+      
+      audioConfigModal.addEventListener('mouseup', function(e) {
+        setTimeout(() => {
+          isDragging = false;
+        }, 100);
+      });
+      
       audioConfigModal.addEventListener('click', function(e) {
-        if (e.target === this) {
+        if (e.target === this && !isDragging) {
             this.classList.add('hidden');
         }
     });
@@ -830,8 +867,22 @@
         const formData = window.Utils.getFormData();
         const customParams = window.Utils.getCustomParams();
         const config = window.Utils.buildAgentConfig(formData, customParams);
-        navigator.clipboard.writeText(JSON.stringify(config, null, 2));
+        const jsonString = JSON.stringify(config, null, 2);
+        
+        // Copy to clipboard
+        navigator.clipboard.writeText(jsonString);
         showCopyMsg();
+        
+        // Show modal with JSON content
+        const jsonModal = document.getElementById('jsonDisplayModal');
+        const jsonModalTitle = document.getElementById('jsonModalTitle');
+        const jsonModalContent = document.getElementById('jsonModalContent');
+        
+        if (jsonModal && jsonModalTitle && jsonModalContent) {
+          jsonModalTitle.textContent = 'Create Agent JSON Configuration';
+          jsonModalContent.textContent = jsonString;
+          jsonModal.classList.remove('hidden');
+        }
       });
     }
 
@@ -870,8 +921,22 @@
         };
       }
       
-      navigator.clipboard.writeText(JSON.stringify(updateJson, null, 2));
+      const jsonString = JSON.stringify(updateJson, null, 2);
+      
+      // Copy to clipboard
+      navigator.clipboard.writeText(jsonString);
       showCopyMsg();
+      
+      // Show modal with JSON content
+      const jsonModal = document.getElementById('jsonDisplayModal');
+      const jsonModalTitle = document.getElementById('jsonModalTitle');
+      const jsonModalContent = document.getElementById('jsonModalContent');
+      
+      if (jsonModal && jsonModalTitle && jsonModalContent) {
+        jsonModalTitle.textContent = 'Update Agent JSON Configuration';
+        jsonModalContent.textContent = jsonString;
+        jsonModal.classList.remove('hidden');
+      }
     });
     }
 
@@ -997,6 +1062,62 @@
     });
     }
 
+    // JSON Display Modal event handlers
+    const jsonModal = document.getElementById('jsonDisplayModal');
+    const closeJsonModal = document.getElementById('closeJsonModal');
+    const closeJsonModalBtn = document.getElementById('closeJsonModalBtn');
+    const copyJsonFromModal = document.getElementById('copyJsonFromModal');
+
+    // Close modal when clicking the X button
+    if (closeJsonModal) {
+      closeJsonModal.addEventListener('click', function() {
+        jsonModal.classList.add('hidden');
+      });
+    }
+
+    // Close modal when clicking the Close button
+    if (closeJsonModalBtn) {
+      closeJsonModalBtn.addEventListener('click', function() {
+        jsonModal.classList.add('hidden');
+      });
+    }
+
+    // Copy JSON from modal
+    if (copyJsonFromModal) {
+      copyJsonFromModal.addEventListener('click', function() {
+        const jsonContent = document.getElementById('jsonModalContent');
+        if (jsonContent) {
+          navigator.clipboard.writeText(jsonContent.textContent);
+          showCopyMsg();
+        }
+      });
+    }
+
+    // Close modal when clicking outside (but prevent closing when dragging)
+    if (jsonModal) {
+      let isDragging = false;
+      
+      jsonModal.addEventListener('mousedown', function(e) {
+        // Check if user is starting to drag text
+        if (e.target.tagName === 'PRE' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+          isDragging = true;
+        }
+      });
+      
+      jsonModal.addEventListener('mouseup', function(e) {
+        // Reset dragging flag after a short delay
+        setTimeout(() => {
+          isDragging = false;
+        }, 100);
+      });
+      
+      jsonModal.addEventListener('click', function(e) {
+        if (e.target === this && !isDragging) {
+          this.classList.add('hidden');
+        }
+      });
+    }
+
 
 
     // Camera configuration logic
@@ -1085,8 +1206,22 @@
     });
 
     // Close modal when clicking outside
+    let isDragging = false;
+    
+    cameraConfigModal.addEventListener('mousedown', function(e) {
+      if (e.target.tagName === 'PRE' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        isDragging = true;
+      }
+    });
+    
+    cameraConfigModal.addEventListener('mouseup', function(e) {
+      setTimeout(() => {
+        isDragging = false;
+      }, 100);
+    });
+    
     cameraConfigModal.addEventListener('click', function(e) {
-      if (e.target === this) {
+      if (e.target === this && !isDragging) {
         this.classList.add('hidden');
         inputImage.checked = false;
       }
@@ -1633,6 +1768,30 @@
       });
     }
 
+    // Add drag prevention to experimental features modal
+    const experimentalFeaturesModal = document.getElementById('experimentalFeaturesModal');
+    if (experimentalFeaturesModal) {
+      let isDragging = false;
+      
+      experimentalFeaturesModal.addEventListener('mousedown', function(e) {
+        if (e.target.tagName === 'PRE' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+          isDragging = true;
+        }
+      });
+      
+      experimentalFeaturesModal.addEventListener('mouseup', function(e) {
+        setTimeout(() => {
+          isDragging = false;
+        }, 100);
+      });
+      
+      experimentalFeaturesModal.addEventListener('click', function(e) {
+        if (e.target === this && !isDragging) {
+          this.classList.add('hidden');
+        }
+      });
+    }
+
     // Save button (collects all checked fields and values)
     const experimentalFeaturesForm = document.getElementById('experimentalFeaturesForm');
     if (experimentalFeaturesForm) {
@@ -1661,8 +1820,22 @@
     // Close Agora token modal when clicking outside
     const agoraTokenModal = document.getElementById('agoraTokenModal');
     if (agoraTokenModal) {
+      let isDragging = false;
+      
+      agoraTokenModal.addEventListener('mousedown', function(e) {
+        if (e.target.tagName === 'PRE' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+          isDragging = true;
+        }
+      });
+      
+      agoraTokenModal.addEventListener('mouseup', function(e) {
+        setTimeout(() => {
+          isDragging = false;
+        }, 100);
+      });
+      
       agoraTokenModal.addEventListener('click', function(e) {
-      if (e.target === this) {
+      if (e.target === this && !isDragging) {
         this.classList.add('hidden');
       }
     });
@@ -2129,8 +2302,22 @@
 
     // Close Agent Settings modal when clicking outside
     if (agentSettingsModal) {
+      let isDragging = false;
+      
+      agentSettingsModal.addEventListener('mousedown', function(e) {
+        if (e.target.tagName === 'PRE' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+          isDragging = true;
+        }
+      });
+      
+      agentSettingsModal.addEventListener('mouseup', function(e) {
+        setTimeout(() => {
+          isDragging = false;
+        }, 100);
+      });
+      
       agentSettingsModal.addEventListener('click', function(e) {
-        if (e.target === this) {
+        if (e.target === this && !isDragging) {
           this.classList.add('hidden');
         }
       });

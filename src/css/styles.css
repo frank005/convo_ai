@@ -449,6 +449,32 @@ select:focus, .drawer select:focus {
 
 .modal {
   position: fixed;
+  /* Prevent text selection and dragging from closing modals */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Allow text selection within modal content areas */
+.modal pre,
+.modal input,
+.modal textarea,
+.modal select {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+/* Prevent modal from closing when dragging text */
+.modal * {
+  pointer-events: auto;
+}
+
+/* Ensure modal backdrop doesn't interfere with content */
+.modal > div {
+  pointer-events: auto;
 }
 
 .tooltip-right {
