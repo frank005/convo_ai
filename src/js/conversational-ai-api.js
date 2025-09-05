@@ -169,6 +169,12 @@ class CovSubRenderController {
     }
 
     handleTranscriptionMessage(message, context) {
+        // Check if this is a user transcription - if so, finalize any pending agent transcriptions
+        if (message.object === 'user.transcription' || (message.speaker && message.speaker.includes('User'))) {
+            console.log('User transcription detected, finalizing pending agent transcriptions');
+            this.finalizeAllPendingTranscriptions();
+        }
+        
         // Check for duplicate message ID
         const messageId = message.message_id || message.id;
         if (messageId && this.processedMessageIds.has(messageId)) {

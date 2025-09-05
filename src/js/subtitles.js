@@ -739,6 +739,9 @@ class SubtitleManager {
         // Store the agent ID for use in speaker identification
         this.expectedAgentId = agentId;
         
+        // Clear chat history for new agent session
+        this.chatHistoryData = [];
+        
         // Reset chat clear state for new session
         this.resetChatClearState();
         try {
@@ -1256,6 +1259,9 @@ class SubtitleManager {
         this.currentUserMessage = null;
         this.currentUserTurnId = null;
         
+        // Clear chat history for new agent session
+        this.chatHistoryData = [];
+        
         // Reset chat clear state for new session
         this.resetChatClearState();
 
@@ -1332,8 +1338,11 @@ class SubtitleManager {
             if (messageDataJson.object === "assistant.transcription") {
                 console.log("🔵 Data Stream Subtitles: Processing assistant transcription");
                 // This is agent transcript
-                if (!messageDataJson?.turn_status) {
-                    console.log("🔵 Data Stream Subtitles: No turn_status, skipping");
+                // Check turn_status - 0 means the message is ready to be processed
+                // We should process messages with turn_status 0 or 1 (final)
+                const turnStatus = messageDataJson.turn_status;
+                if (turnStatus !== 0 && turnStatus !== 1) {
+                    console.log("🔵 Data Stream Subtitles: turn_status not ready for processing:", turnStatus, "skipping");
                     return;
                 }
                 
@@ -1354,15 +1363,47 @@ class SubtitleManager {
                 // console.log("🎤 TRANSCRIPTION TEXT:", transcriptText);
                 console.log("🔵 Data Stream Subtitles: Agent transcript:", transcriptText);
                 console.log("🔵 Data Stream Subtitles: Deduplication fields:", { turnId, messageId, isFinal });
+                console.log("🔵 Data Stream Subtitles: Previous turnId:", this.lastProcessedTurnId, "Current turnId:", turnId);
                 
-                // Check for duplicates using turnID and messageID if available
+                // Check for duplicates and handle multiple transcription messages for the same turn
                 if (turnId && messageId) {
-                    if (this.lastProcessedTurnId === turnId && this.lastProcessedMessageId === messageId) {
-                        console.log("🔵 Data Stream Subtitles: Duplicate message detected (turnID/messageID), skipping");
-                        return;
+                    // If this is the same turn as the last processed message, check if we should skip it
+                    if (this.lastProcessedTurnId === turnId) {
+                        // If it's the exact same message, skip it
+                        if (this.lastProcessedMessageId === messageId) {
+                            console.log("🔵 Data Stream Subtitles: Duplicate message detected (turnID/messageID), skipping");
+                            return;
+                        }
+                        
+                        // If it's a different message for the same turn, check if the new message is more complete
+                        const currentTextLength = transcriptText.length;
+                        const lastTextLength = this.lastProcessedText ? this.lastProcessedText.length : 0;
+                        
+                        // If the new message is shorter or the same length, skip it (we want the most complete version)
+                        if (currentTextLength <= lastTextLength) {
+                            console.log("🔵 Data Stream Subtitles: Shorter/equal length message for same turn, skipping");
+                            console.log("🔵 Data Stream Subtitles: Current length:", currentTextLength, "Previous length:", lastTextLength);
+                            return;
+                        }
+                        
+                        console.log("🔵 Data Stream Subtitles: Longer message for same turn, processing new version");
+                        console.log("🔵 Data Stream Subtitles: Current length:", currentTextLength, "Previous length:", lastTextLength);
+                        
+                        // Remove the previous shorter message from chat history
+                        this.removeLastMessageFromChatHistory();
+                        
+                        // Reset deduplication tracking to allow the new message
+                        // Only reset if we're actually replacing with a longer message
+                        if (currentTextLength > lastTextLength) {
+                            this.lastProcessedText = null;
+                            this.lastProcessedSpeaker = null;
+                            this.lastProcessedTimestamp = 0;
+                        }
                     }
+                    
                     this.lastProcessedTurnId = turnId;
                     this.lastProcessedMessageId = messageId;
+                    this.lastProcessedText = transcriptText;
                 }
                 
                 // Add to chat history
@@ -1488,11 +1529,27 @@ class SubtitleManager {
         const timeDiff = currentTime - this.lastProcessedTimestamp;
         
         // Check if this is a duplicate message (same text, speaker, and within 2 seconds)
+        // But allow it if the new message is longer (indicating a replacement) or if it's a recent replacement
         if (this.lastProcessedText === text.trim() && 
             this.lastProcessedSpeaker === speaker && 
             timeDiff < 2000) {
-            console.log('🔵 Data Stream Subtitles: Duplicate message detected, skipping:', { text, speaker, timeDiff });
-            return;
+            
+            // If the new message is longer, it's likely a replacement, so allow it
+            if (text.trim().length > this.lastProcessedText.length) {
+                console.log('🔵 Data Stream Subtitles: Longer replacement message detected, allowing:', { 
+                    newLength: text.trim().length, 
+                    oldLength: this.lastProcessedText.length 
+                });
+            } 
+            // If it's a very recent message (within 500ms), it might be a replacement of equal length
+            else if (timeDiff < 500) {
+                console.log('🔵 Data Stream Subtitles: Recent message replacement detected, allowing:', { 
+                    text, speaker, timeDiff 
+                });
+            } else {
+                console.log('🔵 Data Stream Subtitles: Duplicate message detected, skipping:', { text, speaker, timeDiff });
+                return;
+            }
         }
         
         // Update last processed values
@@ -1511,6 +1568,16 @@ class SubtitleManager {
         this.chatHistoryData.push(message);
         this.updateChatHistoryDisplay();
         console.log('🔵 Data Stream Subtitles: Chat history updated, total messages:', this.chatHistoryData.length);
+    }
+
+    // Remove the last message from chat history (used when replacing with a longer version)
+    removeLastMessageFromChatHistory() {
+        if (this.chatHistoryData.length > 0) {
+            const removedMessage = this.chatHistoryData.pop();
+            console.log('🔵 Data Stream Subtitles: Removed last message from chat history:', removedMessage);
+            this.updateChatHistoryDisplay();
+            console.log('🔵 Data Stream Subtitles: Chat history updated after removal, total messages:', this.chatHistoryData.length);
+        }
     }
 
     // Handle bracket matches (placeholder for future functionality)
