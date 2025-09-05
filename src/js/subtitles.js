@@ -147,27 +147,7 @@ class SubtitleManager {
             });
         }
 
-        // Subtitle mode radio buttons
-        const subtitleModeRTM = document.getElementById('subtitleModeRTM');
-        const subtitleModeDataStream = document.getElementById('subtitleModeDataStream');
-        
-        if (subtitleModeRTM) {
-            subtitleModeRTM.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    this.enableRTMMode();
-                }
-            });
-        }
-        
-        if (subtitleModeDataStream) {
-            subtitleModeDataStream.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    this.enableDataStreamMode();
-                }
-            });
-        }
-        
-        // Handle mutual exclusivity of radio buttons
+        // Subtitle mode radio buttons - handled in setupRadioButtonExclusivity to avoid duplicate listeners
         this.setupRadioButtonExclusivity();
 
         // Setup RTM change listeners to prevent manual disabling
@@ -412,7 +392,13 @@ class SubtitleManager {
 
         // Add null checks for all elements
         if (!transcriptEnable || !transcriptEnableSet || !enableRtm || !dataChannel || !parametersEnabled) {
-            console.warn('Some subtitle configuration elements are missing');
+            console.warn('Some subtitle configuration elements are missing:', {
+                transcriptEnable: !!transcriptEnable,
+                transcriptEnableSet: !!transcriptEnableSet,
+                enableRtm: !!enableRtm,
+                dataChannel: !!dataChannel,
+                parametersEnabled: !!parametersEnabled
+            });
             return;
         }
 
@@ -593,22 +579,43 @@ class SubtitleManager {
     }
 
     setupRadioButtonExclusivity() {
-        // When RTM mode is selected, disable data stream mode
-        if (this.elements.subtitleModeRTM) {
-            this.elements.subtitleModeRTM.addEventListener('change', (e) => {
-                if (e.target.checked && this.elements.subtitleModeDataStream) {
+        // Create the RTM change handler
+        this.rtmChangeHandler = (e) => {
+            if (e.target.checked) {
+                console.log('🔵 RTM radio button clicked');
+                // Uncheck data stream mode without triggering its change event
+                if (this.elements.subtitleModeDataStream) {
+                    this.elements.subtitleModeDataStream.removeEventListener('change', this.dataStreamChangeHandler);
                     this.elements.subtitleModeDataStream.checked = false;
+                    this.elements.subtitleModeDataStream.addEventListener('change', this.dataStreamChangeHandler);
                 }
-            });
+                // Enable RTM mode
+                this.enableRTMMode();
+            }
+        };
+        
+        // Create the data stream change handler
+        this.dataStreamChangeHandler = (e) => {
+            if (e.target.checked) {
+                console.log('🔵 Data Stream radio button clicked');
+                // Uncheck RTM mode without triggering its change event
+                if (this.elements.subtitleModeRTM) {
+                    this.elements.subtitleModeRTM.removeEventListener('change', this.rtmChangeHandler);
+                    this.elements.subtitleModeRTM.checked = false;
+                    this.elements.subtitleModeRTM.addEventListener('change', this.rtmChangeHandler);
+                }
+                // Enable data stream mode
+                this.enableDataStreamMode();
+            }
+        };
+        
+        // Add event listeners
+        if (this.elements.subtitleModeRTM) {
+            this.elements.subtitleModeRTM.addEventListener('change', this.rtmChangeHandler);
         }
         
-        // When data stream mode is selected, disable RTM mode
         if (this.elements.subtitleModeDataStream) {
-            this.elements.subtitleModeDataStream.addEventListener('change', (e) => {
-                if (e.target.checked && this.elements.subtitleModeRTM) {
-                    this.elements.subtitleModeRTM.checked = false;
-                }
-            });
+            this.elements.subtitleModeDataStream.addEventListener('change', this.dataStreamChangeHandler);
         }
     }
 
@@ -1048,9 +1055,11 @@ class SubtitleManager {
     // Subtitle mode methods
     enableRTMMode() {
         console.log('🔵 RTM Mode: Enabling...');
+        console.log('🔵 RTM Mode: Current state - isDataStreamMode:', this.isDataStreamMode, 'isEnabled:', this.isEnabled);
         
         // Disable data stream mode if it was active
         if (this.isDataStreamMode) {
+            console.log('🔵 RTM Mode: Disabling data stream mode first');
             this.disableDataStreamMode();
         }
         
@@ -1063,8 +1072,19 @@ class SubtitleManager {
             this.elements.enableSubtitles.checked = true;
         }
         
+        // Ensure RTM radio button is checked
+        if (this.elements.subtitleModeRTM) {
+            this.elements.subtitleModeRTM.checked = true;
+            console.log('🔵 RTM Mode: RTM radio button checked:', this.elements.subtitleModeRTM.checked);
+        }
+        
         // Configure RTM settings to ensure proper agent configuration
+        console.log('🔵 RTM Mode: Configuring RTM settings');
         this.configureRTMSettings(true);
+        
+        // Check if user is already in a channel and initialize RTM if needed
+        console.log('🔵 RTM Mode: Checking if user is in channel for RTM initialization');
+        this.checkAndInitializeRTMIfInChannel();
         
         // Update message UI state to enable message buttons
         if (window.ui && typeof window.ui.updateMessageUIState === 'function') {
@@ -1075,6 +1095,34 @@ class SubtitleManager {
         this.showNotification('RTM subtitle mode enabled. Join a channel to start transcription.', 'success');
         
         console.log('🔵 RTM Mode: Enabled and ready for channel join');
+    }
+
+    // Check if user is already in a channel and initialize RTM if needed
+    checkAndInitializeRTMIfInChannel() {
+        console.log('🔵 RTM Mode: Checking channel status...');
+        console.log('🔵 RTM Mode: mediaProcessor exists:', !!window.mediaProcessor);
+        console.log('🔵 RTM Mode: client exists:', !!(window.mediaProcessor && window.mediaProcessor.client));
+        
+        // Check if media processor exists and user is in a channel
+        if (window.mediaProcessor && window.mediaProcessor.client) {
+            console.log('🔵 RTM Mode: User is already in channel, initializing RTM...');
+            
+            // Use the mediaProcessor's method to initialize RTM
+            window.mediaProcessor.initializeRTMForExistingChannel().then(success => {
+                if (success) {
+                    console.log('🔵 RTM Mode: RTM initialization completed successfully');
+                    this.showNotification('RTM initialized for existing channel connection', 'success');
+                } else {
+                    console.warn('🔵 RTM Mode: RTM initialization failed');
+                    this.showNotification('Failed to initialize RTM for existing channel', 'error');
+                }
+            }).catch(error => {
+                console.error('🔵 RTM Mode: Error during RTM initialization:', error);
+                this.showNotification('Error initializing RTM for existing channel', 'error');
+            });
+        } else {
+            console.log('🔵 RTM Mode: User not in channel, RTM will be initialized on channel join');
+        }
     }
 
     // New method to ensure RTM parameters are properly synchronized

@@ -797,6 +797,9 @@
     const subtitleManager = new SubtitleManager();
       const ui = new window.UI();
 
+      // Make mediaProcessor available globally for RTM initialization
+      window.mediaProcessor = mediaProcessor;
+
     // Set random agent name
       const uniqueNameElement = document.getElementById('uniqueName');
       if (uniqueNameElement) {

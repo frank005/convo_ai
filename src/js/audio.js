@@ -67,7 +67,18 @@ window.MediaProcessor = class MediaProcessor {
 
     async joinChannel(appId, channelName, token, uid, subtitleManager = null, agentId = null) {
         this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+        this.appId = appId; // Store appId for later use
         this.subtitleManager = subtitleManager;
+        
+        // Store the requested UID initially (will be updated with actual assigned UID)
+        this.uid = uid;
+        console.log('🔵 MediaProcessor: Initial UID for RTM initialization:', this.uid, '(original uid param:', uid, ')');
+        
+        // Listen for join success to capture the actual assigned UID
+        this.client.on("user-joined", (user) => {
+            // This event is for when other users join, not for our own join
+            // We'll capture our UID from the join promise result
+        });
 
         // Initialize Conversational AI for subtitles if enabled (RTM mode)
         if (this.subtitleManager && this.subtitleManager.isEnabled && !this.subtitleManager.isDataStreamMode) {
@@ -149,7 +160,13 @@ window.MediaProcessor = class MediaProcessor {
             }
         });
 
-        await this.client.join(appId, channelName, token, uid);
+        const joinResult = await this.client.join(appId, channelName, token, uid);
+        
+        // Capture the actual assigned UID from the join result
+        if (joinResult && joinResult.uid) {
+            console.log('🔵 MediaProcessor: UID updated from join result - requested:', this.uid, 'assigned:', joinResult.uid);
+            this.uid = joinResult.uid;
+        }
         
         // Create and publish audio track
         if (!this.localTracks.audioTrack) {
@@ -295,6 +312,8 @@ window.MediaProcessor = class MediaProcessor {
 
         // Reset state
         this.client = null;
+        this.appId = null;
+        this.uid = null;
         this.audioContext = null;
         this.analyser = null;
         this.dataArray = null;
@@ -458,6 +477,58 @@ window.MediaProcessor = class MediaProcessor {
         } catch (error) {
             console.error('Failed to update camera preview visibility:', error);
             this.cameraPreviewManager.updateVisibility(false, false);
+        }
+    }
+
+    // Method to initialize RTM for existing channel connection
+    async initializeRTMForExistingChannel() {
+        if (!this.client || !this.appId) {
+            console.log('🔵 RTM: No active channel connection to initialize RTM for');
+            return false;
+        }
+
+        console.log('🔵 RTM: Initializing RTM for existing channel connection');
+        
+        // Get channel information
+        const channelName = document.getElementById("agoraChannelName")?.value?.trim();
+        let clientRtcUid = document.getElementById("clientRtcUid")?.value?.trim();
+        const clientRtcToken = document.getElementById("clientRtcToken")?.value?.trim();
+        const agentId = document.getElementById("uniqueName")?.value?.trim();
+        
+        // Use the actual UID from the join request if Client UID field is empty
+        console.log('🔵 RTM: Debug - clientRtcUid from form:', clientRtcUid, 'this.uid from join:', this.uid);
+        
+        if (!clientRtcUid && this.uid !== undefined && this.uid !== null) {
+            clientRtcUid = this.uid.toString();
+            console.log('🔵 RTM: No Client UID in form field, using UID from join request:', clientRtcUid);
+        } else if (!clientRtcUid) {
+            console.warn('🔵 RTM: No Client UID available from form field or join request');
+            console.warn('🔵 RTM: Form field value:', document.getElementById("clientRtcUid")?.value);
+            console.warn('🔵 RTM: Stored UID value:', this.uid);
+            return false;
+        }
+        
+        console.log('🔵 RTM: Channel info - channelName:', channelName, 'clientRtcUid:', clientRtcUid, 'agentId:', agentId);
+        
+        if (!channelName) {
+            console.warn('🔵 RTM: Missing channel name for RTM initialization');
+            return false;
+        }
+
+        try {
+            // Initialize Conversational AI for RTM mode
+            await this.initializeConversationalAI(
+                this.appId,
+                channelName,
+                clientRtcToken || null,
+                clientRtcUid,
+                agentId
+            );
+            console.log('🔵 RTM: Successfully initialized RTM for existing channel');
+            return true;
+        } catch (error) {
+            console.error('🔵 RTM: Failed to initialize RTM for existing channel:', error);
+            return false;
         }
     }
 } 
