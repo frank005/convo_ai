@@ -1,12 +1,12 @@
 # Building Real-Time Voice AI Agents with Agora
 
-The difference between a voice agent that feels conversational and one that feels like a walkie-talkie? Latency. 
+Building a voice AI agent? The hard part isn't the LLM—it's the audio pipeline.
 
-The traditional approach strings together separate services: capture audio, transcribe it, send to an LLM, synthesize the response, stream it back. Each hop costs you 100-300ms. By the time your agent responds, you've already lost the rhythm of real conversation. Users start second-guessing whether to speak or wait. The interaction feels broken.
+You need WebRTC for real-time audio streaming. ASR to transcribe speech. Coordination logic to know when the user stopped talking. LLM integration that maintains conversation context. TTS to synthesize responses. Streaming the audio back without introducing latency. Handling interruptions. Managing state transitions. Every piece needs to work in real-time or the conversation feels broken.
 
-Agora's Conversational AI Engine collapses this pipeline. Instead of stitching together separate services for audio streaming, speech recognition, LLM calls, and TTS, everything runs as a single real-time stream inside their infrastructure. You provide an LLM endpoint—Anthropic, OpenAI, Gemini, whatever—and configure how you want the conversation to flow. Agora handles the audio processing, the buffering, the synchronization. End-to-end latency drops to sub-second, and suddenly the experience actually works.
+Agora's Conversational AI Engine handles the orchestration. You provide API keys for ASR (Microsoft, Deepgram, or use Agora's built-in), TTS (Microsoft, ElevenLabs, OpenAI, etc), and your LLM endpoint. Agora's infrastructure manages the RTC audio streaming, coordinates the ASR→LLM→TTS pipeline, handles voice activity detection, manages interruptions, and keeps everything synchronized. The services themselves are still separate APIs you configure, but you don't build the coordination layer or audio infrastructure.
 
-I built this playground to experiment with that architecture. It's a browser-based interface where you can wire up any LLM, configure conversation behaviors, and test prompt variations without building the audio infrastructure yourself. This guide focuses on what matters: conversation design and LLM integration. The audio pipeline just works.
+I built this playground as a browser interface to experiment with different configurations. You can wire up any LLM, test different ASR/TTS providers, configure conversation behaviors, tune VAD parameters—without writing audio streaming code. This guide focuses on configuration: what works, what doesn't, and why.
 
 ![Convo AI Playground Interface](./src/media/1.png)
 _The Convo AI Playground interface provides a complete control center for managing conversational AI agents._
