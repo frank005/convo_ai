@@ -1,19 +1,19 @@
-# Building Real-Time Voice AI Agents with Agora and Claude
+# Building Real-Time Voice AI Agents with Agora
 
-Building a voice AI agent that feels conversational—not like a walkie-talkie—comes down to latency. The traditional pipeline is serial: capture audio → transcribe → send to LLM → synthesize speech → stream back. Each hop adds 100-300ms. By the time your agent responds, you've lost the natural rhythm of conversation.
+The difference between a voice agent that feels conversational and one that feels like a walkie-talkie? Latency. 
 
-Agora's Conversational AI Engine streamlines this pipeline. Instead of stitching together separate services for audio streaming, speech recognition, LLM calls, and TTS, the agent runs as a single real-time stream inside Agora's infrastructure. You provide an LLM endpoint (like Claude or GPT-5), configure the conversation flow, and Agora handles the audio processing automatically. The result: sub-second end-to-end latency that actually feels responsive.
+The traditional approach strings together separate services: capture audio, transcribe it, send to an LLM, synthesize the response, stream it back. Each hop costs you 100-300ms. By the time your agent responds, you've already lost the rhythm of real conversation. Users start second-guessing whether to speak or wait. The interaction feels broken.
 
-This guide walks through a playground application that lets you experiment with that architecture. You'll wire up Claude as your reasoning engine, configure different conversation behaviors, and test prompt variations—all from a browser interface. No need to build the audio infrastructure from scratch; we're focusing on the parts that make your agent useful: conversation design and LLM integration.
+Agora's Conversational AI Engine collapses this pipeline. Instead of stitching together separate services for audio streaming, speech recognition, LLM calls, and TTS, everything runs as a single real-time stream inside their infrastructure. You provide an LLM endpoint—Anthropic, OpenAI, Gemini, whatever—and configure how you want the conversation to flow. Agora handles the audio processing, the buffering, the synchronization. End-to-end latency drops to sub-second, and suddenly the experience actually works.
 
-What you'll build: a configurable voice agent that maintains context across turns, handles interruptions naturally, and integrates with Claude's extended thinking capabilities for complex reasoning tasks.
+I built this playground to experiment with that architecture. It's a browser-based interface where you can wire up any LLM, configure conversation behaviors, and test prompt variations without building the audio infrastructure yourself. This guide focuses on what matters: conversation design and LLM integration. The audio pipeline just works.
 
 ![Convo AI Playground Interface](./src/media/1.png)
 _The Convo AI Playground interface provides a complete control center for managing conversational AI agents._
 
-## Architecture Overview
+## How It Works
 
-The application follows a client-server-agent pattern. Keeping the entire processing pipeline within Agora's infrastructure delivers sub-second end-to-end latency.
+The playground splits cleanly into three layers: browser client, Agora's infrastructure, and your LLM. Keeping the audio pipeline entirely within Agora's infrastructure is what makes sub-second latency possible.
 
 ```mermaid
 graph TB
@@ -31,36 +31,28 @@ graph TB
         AGENT --> RTC_CH
         AGENT --> ASR[ASR Engine]
         ASR --> LLM_PROXY[LLM Proxy]
-        LLM_PROXY --> CLAUDE[Claude API]
-        CLAUDE --> LLM_PROXY
+        LLM_PROXY --> LLM[LLM API]
+        LLM --> LLM_PROXY
         LLM_PROXY --> TTS[TTS Engine]
         TTS --> AGENT
         AGENT --> RTM_CH
     end
 
     style AGENT fill:#333,stroke:#f9f,stroke-width:4px
-    style CLAUDE fill:#333,stroke:#bbf,stroke-width:2px
+    style LLM fill:#333,stroke:#bbf,stroke-width:2px
 ```
 
-**Client Layer (Browser)**
+**Browser Layer**
 
-The browser handles media streams via Agora's RTC SDK. Client joins an RTC channel, publishes microphone audio, and subscribes to agent audio. For transcription, the client connects to an RTM channel to receive live captions. The WebRTC stack (codec negotiation, packet loss recovery, jitter buffering) is handled by the SDK.
+The browser uses Agora's RTC SDK to handle media streams. It joins an RTC channel, publishes microphone audio, and subscribes to agent audio. For transcription, it connects to an RTM channel for live captions. All the WebRTC complexity—codec negotiation, packet loss recovery, jitter buffering—stays in the SDK.
 
-**Agent Layer (Agora Infrastructure)**
+**Agora's Infrastructure**
 
-The Conversational AI Agent orchestrates the voice pipeline:
+The agent lives here. It subscribes to the RTC channel and receives user audio, runs it through ASR (Agora's built-in, Microsoft, or Deepgram), posts the transcribed text plus conversation history to your LLM endpoint, converts the response to audio via TTS, and streams it back through the RTC channel. The agent keeps a rolling buffer of conversation history (32 messages by default) and sends the full context with every LLM request.
 
-1. **Audio Ingestion**: Subscribes to RTC channel, receives user audio streams
-2. **Speech Recognition**: Processes audio through ASR (Agora, Microsoft, or Deepgram)
-3. **LLM Inference**: POSTs transcribed text + conversation context to your LLM endpoint
-4. **Speech Synthesis**: Converts LLM text response to audio via TTS
-5. **Audio Streaming**: Publishes synthesized speech back to RTC channel
+**Your LLM**
 
-The agent maintains a configurable message history buffer (default: 32 messages) and includes full conversation context with every LLM request. Session management and context windowing are handled at the infrastructure level.
-
-**LLM Layer (External API)**
-
-Claude (or any HTTP-accessible LLM) sits outside Agora's infrastructure. The agent makes standard HTTPS API calls, sending conversation context and receiving text responses. This decoupling lets you swap LLM providers, implement custom middleware, or inject dynamic context without reconfiguring the audio pipeline.
+Sits outside Agora's network entirely. The agent makes standard HTTPS API calls with conversation context and gets back text. This separation is useful—you can swap LLM providers, add middleware, inject dynamic context, without touching the audio pipeline.
 
 ### Key Components
 
@@ -125,9 +117,9 @@ const customParams = Utils.getCustomParams();
 const agentConfig = Utils.buildAgentConfig(formData, customParams);
 ```
 
-The builder pattern here does three things. First, it validates required fields upfront—no point sending an API request if you're missing your LLM API key. Second, it handles type conversions (form inputs are strings, but the API expects numbers for things like `idle_timeout`). Third, it provides defaults for optional fields so you're not constantly checking "did the user specify a temperature, or should I use 1.0?"
+The builder pattern validates required fields upfront (no point hitting the API if you're missing your LLM key), handles type conversions (form inputs are strings, the API wants numbers), and provides defaults so you're not constantly checking "did they set temperature or should I use 1.0?"
 
-This matters more than you might think. Agora's API is flexible, which means there are many ways to misconfigure it. Centralizing configuration logic gives you one place to encode the rules: "If RTM mode is enabled, you must set `data_channel` to 'rtm' and enable transcript in parameters." Without this, you'd be debugging malformed requests that silently fail.
+This turned out to be more important than I expected. Agora's API is flexible, which means there are dozens of ways to misconfigure it. Centralizing the logic gives you one place to encode rules like "RTM mode requires `data_channel` set to 'rtm' and transcript enabled." Without this, you'd waste hours debugging malformed requests that fail silently.
 
 **`conversational-ai-api.js`** - Real-Time Transcription
 
@@ -158,11 +150,11 @@ api.on(EConversationalAIAPIEvents.TRANSCRIPTION_UPDATED, (chatHistory) => {
 await api.subscribeMessage(channelName);
 ```
 
-Under the hood, the `CovSubRenderController` is doing deduplication work. Here's why that matters: ASR engines send incremental updates. You might get "Hello", then "Hello how", then "Hello how are", then finally "Hello how are you" as the user speaks. Without deduplication, your UI would show four separate messages instead of one updating line.
+Under the hood, `CovSubRenderController` handles deduplication. ASR engines send incremental updates—you get "Hello", then "Hello how", then "Hello how are", then finally "Hello how are you" as the user speaks. Without deduplication, your UI shows four separate messages instead of one updating line.
 
-The controller tracks message IDs and render timestamps to distinguish temporary from final transcriptions. When a final transcription arrives, it replaces all temporary ones with the same base ID. This gives users the illusion of smooth, real-time captions without the chaos of rapidly updating text fragments.
+The controller tracks message IDs and timestamps to distinguish temporary from final transcriptions. When a final version arrives, it replaces all the temporary ones with the same base ID. Users see smooth, real-time captions instead of rapidly stuttering text.
 
-There's also state management happening here. The agent transitions between listening (waiting for user speech), thinking (LLM is processing), and speaking (TTS is playing). These state changes get published to RTM as well, which lets you build UI feedback—maybe a thinking spinner or a visual indicator that the agent is speaking.
+The agent also publishes state transitions—listening, thinking, speaking—through RTM. You can use these for UI feedback: a thinking spinner, a visual indicator that the agent is currently talking, whatever fits your interface.
 
 **`audio.js`** - Audio Visualization
 
@@ -188,11 +180,11 @@ await processor.joinChannel(
 // Creates frequency analysis and waveform display
 ```
 
-The visualization works by tapping into the Web Audio API's AnalyserNode. As audio streams through the RTC connection, the analyzer performs FFT (Fast Fourier Transform) on the audio buffer, giving you frequency domain data. We then map that frequency data to visual bars—higher frequencies create taller bars, giving users an intuitive sense of audio activity.
+The visualization taps into the Web Audio API's AnalyserNode. As audio streams through the RTC connection, the analyzer runs FFT (Fast Fourier Transform) on the buffer, giving you frequency domain data. Higher frequencies map to taller bars. Simple, intuitive feedback about audio activity.
 
-Why this matters: in testing, I found users were uncertain when to speak without visual feedback. They'd interrupt the agent mid-sentence or sit in awkward silence waiting for a response that had already started. The waveform solves this—when it's animating, the agent is speaking. When it's flat, the floor is yours.
+In testing, users couldn't tell when to speak without this visual cue. They'd interrupt the agent mid-sentence or sit in awkward silence waiting for a response that had already started. The waveform fixes this—when it's animating, the agent is speaking. When it's flat, the floor is yours.
 
-There's also a practical debugging benefit. When audio isn't working, the waveform immediately tells you if the problem is on the capture side (your mic) or playback side (agent audio). Flat waveform while you're speaking? Mic permission issue. Flat waveform when agent should respond? Check your RTC subscription.
+Bonus: when audio breaks, the waveform immediately shows you which side failed. Flat while you're speaking? Mic permissions. Flat when the agent should be responding? RTC subscription issue.
 
 **`subtitles.js`** - Live Caption System
 
@@ -218,54 +210,47 @@ graph LR
 
 Both modes face the same deduplication challenge I mentioned earlier. ASR engines send incremental updates, and you need logic to coalesce them into coherent sentences. The `SubtitleManager` maintains a message history buffer, tracks message IDs, and replaces temporary transcriptions with final ones. It also handles the chat history UI—scrolling, speaker labels, timestamps—so you're not reinventing that wheel.
 
-## Setting Up Claude as Your LLM
+## LLM Configuration
 
-The LLM is where your agent's personality and intelligence live. I've used Claude (via Anthropic's API) for this implementation because of its balance between response quality and latency, but the architecture supports any LLM that accepts HTTP requests.
+Your agent's personality and intelligence live in the LLM. The architecture works with any LLM that accepts HTTP requests—Anthropic, OpenAI, Gemini, custom providers, whatever.
 
-### Step 1: Get Your Anthropic API Key
+### Get an API Key
 
-1. Create an account at [Anthropic Console](https://console.anthropic.com/)
-2. Navigate to API Keys section
+1. Create an account with your chosen LLM provider (Anthropic, OpenAI, Google, etc.)
+2. Navigate to the API Keys section
 3. Generate a new API key
 4. Keep it secure—you'll need it for the LLM configuration
 
-Standard API onboarding. The key point: don't commit this to version control. In the playground, I'm storing it in localStorage for convenience, but production apps should proxy LLM calls through your backend.
+Standard API onboarding. Don't commit the key to version control. The playground stores it in localStorage for convenience, but production apps should proxy LLM calls through your backend.
 
-### Step 2: Configure the LLM Endpoint
+### Configure the Endpoint
 
-In the application's LLM Settings section:
+**LLM URL**: The API endpoint for your chosen provider, for example:
+- Anthropic: `https://api.anthropic.com/v1/messages`
+- OpenAI: `https://api.openai.com/v1/chat/completions`
+- Google Gemini: `https://generativelanguage.googleapis.com/v1/models/{model}:generateContent`
+- Or your custom LLM endpoint
 
-**LLM URL**: `https://api.anthropic.com/v1/messages`
+**API Key**: Your LLM provider's API key
 
-**API Key**: Your Anthropic API key
+**Model**: Choose your model based on your latency and quality requirements. For voice conversations, you need fast responses without sacrificing quality. Balance response time (~2-3 seconds ideal) with reasoning capabilities. Faster models work great for simple conversations, while more capable models handle complex tasks better but may introduce latency.
 
-**Model**: Choose your Claude model based on your latency and quality requirements:
+### System Messages
 
-- `claude-3-5-sonnet-20241022` (Recommended - Best balance of intelligence and speed)
-- `claude-3-5-haiku-20241022` (Fastest - Great for simple conversations)
-- `claude-3-opus-20240229` (Highest intelligence - Best for complex tasks)
-
-Why choose Sonnet? For voice conversations, you need fast responses without sacrificing quality. Sonnet delivers responses in ~2-3 seconds while maintaining strong reasoning capabilities. Opus is too slow for natural conversation flow, while Haiku sometimes lacks nuance in complex scenarios.
-
-### Step 3: Configure System Messages
-
-The system message defines your agent's personality and capabilities:
+The system message defines personality and capabilities:
 
 ```
 You are a helpful AI voice assistant. Keep responses concise since they will be spoken aloud.
 Avoid lengthy explanations unless specifically asked. Use natural conversational language.
 ```
 
-This matters more than you might expect. Claude's default behavior is optimized for written communication—detailed, thorough, often lengthy. That works great in text chat where users can skim. In voice, verbosity kills the experience. Users can't skim audio. They have to listen to every word.
+This matters more than you might expect. Many LLMs' default behavior is optimized for written communication—detailed, thorough, often lengthy. That works great in text chat where users can skim. In voice, verbosity kills the experience. Users can't skim audio. They have to listen to every word.
 
-I spent considerable time tuning this. Early iterations had Claude giving comprehensive, well-structured answers that sounded robotic when spoken. "To answer your question, I'll first explain the background context, then provide three key points, and finally offer a conclusion." Nobody talks like that. The system message needs to explicitly instruct: be conversational, be brief, sound human.
+Early iterations often produce comprehensive, well-structured answers that sound robotic when spoken. "To answer your question, I'll first explain the background context, then provide three key points, and finally offer a conclusion." Nobody talks like that. The system message needs to explicitly instruct: be conversational, be brief, sound human.
 
-A few rules I've found effective:
+Some patterns that work:
 
-1. **Set response length expectations**: "Keep responses under 50 words unless asked for details"
-2. **Define personality explicitly**: "You're friendly but professional" vs. "You're casual and playful"
-3. **Handle edge cases**: "If you don't know something, say so directly instead of hedging"
-4. **Format guidance**: "Avoid lists and bullet points—speak in natural sentences"
+Set explicit length limits ("Keep responses under 50 words unless asked for details"). Define personality directly ("You're friendly but professional" vs. "You're casual and playful"). Handle edge cases upfront ("If you don't know something, say so directly instead of hedging"). Avoid written formats ("No lists or bullet points—speak in natural sentences").
 
 **Greeting Message**: What the agent says when the first user joins the channel.
 
@@ -283,41 +268,25 @@ I'm sorry, I'm having trouble processing that right now. Could you try again?
 
 You want this message to be apologetic but not alarming. "Something went wrong with my language model endpoint" is technically accurate but creates user anxiety. "I'm having trouble" is softer and more human.
 
-### Step 4: Configure Custom Parameters
+### Custom Parameters
 
-Claude's API requires parameters that Agora's standard LLM configuration doesn't expose by default. Add these via the Custom Parameters section:
+Most LLM APIs need additional parameters beyond Agora's standard config. Add these via Custom Parameters:
 
-**Parameter 1 (Required):**
+**max_tokens** (`number`, typically `1024`): Limits response length. 1024 tokens (~800 words) balances detail against voice constraints. Lower values (512) speed things up but truncate complex answers. Higher values (2048+) increase latency and cost.
 
-- Type: `number`
-- Key: `max_tokens`
-- Value: `1024`
+**temperature** (`number`, typically `1.0`): Controls randomness. 1.0 gives natural variety. Lower (0.7) produces deterministic, focused responses but feels repetitive. Higher (1.2+) increases creativity at the cost of coherence.
 
-Claude requires `max_tokens` to limit response length. 1024 tokens (~800 words) balances detailed responses against voice conversation constraints. Lower values (512) improve response time but truncate complex answers. Higher values (2048+) increase latency and API costs.
+**stop_sequences** (`array`, optional): Tells the LLM when to stop generating. Useful for preventing the model from simulating multi-turn exchanges in a single response.
 
-**Parameter 2 (Optional but Recommended):**
+Check your LLM provider's docs for what's required.
 
-- Type: `number`
-- Key: `temperature`
-- Value: `1.0`
+### Request Format
 
-Controls response randomness. `1.0` (default) provides natural variety. Lower values (0.7) produce more deterministic, focused responses but can feel repetitive. Higher values (1.2+) increase creativity at the cost of coherence and factual accuracy.
-
-**Parameter 3 (Advanced):**
-
-- Type: `array`
-- Key: `stop_sequences`
-- Value: `["Human:", "Assistant:"]`
-
-Instructs Claude to stop generation at specific strings. Useful for implementing structured conversation patterns or preventing the model from simulating multi-turn exchanges in a single response.
-
-### Understanding Claude's Request Format
-
-Agora constructs and sends requests to your LLM endpoint in the chosen format. Four our example wer're using Anthropic's Messages API format:
+Agora constructs requests in the format your provider expects. Most modern LLMs use a similar message-based structure:
 
 ```json
 {
-  "model": "claude-3-5-sonnet-20241022",
+  "model": "your-chosen-model",
   "max_tokens": 1024,
   "temperature": 1.0,
   "system": "You are a helpful AI voice assistant...",
@@ -336,7 +305,7 @@ The agent maintains conversation context automatically by appending to the `mess
 
 **Context Window Management:**
 
-Claude 3.5 Sonnet has a 200K token context window, but practical limits are lower. Consider:
+Modern LLMs have varying context window sizes (ranging from 8K to 200K+ tokens). Practical limits depend on your specific model. Consider:
 
 - System message: ~100-500 tokens
 - Conversation history (32 messages): ~2,000-8,000 tokens depending on verbosity
@@ -347,7 +316,7 @@ For most voice applications, 32 message history is sufficient. Reduce to 16 for 
 
 ## Complete Configuration Example
 
-Here's a working configuration for a Claude-powered agent:
+Here's a working configuration for an LLM-powered agent:
 
 ![Agent Configuration Form](./src/media/2.png)  
 _The agent configuration form allows you to set up all aspects of your conversational AI agent, from LLM settings to TTS voice selection._
@@ -362,10 +331,10 @@ _The agent configuration form allows you to set up all aspects of your conversat
 
 **LLM Configuration:**
 
-- Provider: Anthropic (via API)
-- URL: `https://api.anthropic.com/v1/messages`
-- API Key: `sk-ant-api03-...` (your actual key)
-- Model: `claude-3-5-sonnet-20241022`
+- Provider: Your chosen LLM provider
+- URL: Your LLM API endpoint (e.g., `https://api.anthropic.com/v1/messages` or `https://api.openai.com/v1/chat/completions`)
+- API Key: Your actual API key
+- Model: Your chosen model
 - System Message:
   ```
   You are Emma, a friendly AI assistant who helps users with their questions.
@@ -383,6 +352,8 @@ _The agent configuration form allows you to set up all aspects of your conversat
   "temperature": 1.0
 }
 ```
+
+Note: Adjust parameters based on your LLM provider's API requirements.
 
 **TTS Configuration:**
 
@@ -422,11 +393,12 @@ Agora supports multiple TTS vendors, each with different characteristics:
 
 **Hume AI TTS**:
 
-- Vendor: `hume_ai`
+- Vendor: `humeai`
 - API Key: Required
-- Model: `gpt-4o-mini-tts`
-- Voice: `coral`
-- Speed: `0.25-4.0` (configurable)
+- Voice ID: Required (specific voice identifier)
+- Provider: `HUME_AI` (default)
+- Speed: Configurable speaking rate
+- Trailing Silence: Configurable trailing silence duration
 - Characteristics: Customizable speaking rate, emotional tone control, trailing silence management
 
 For this example, we'll use Microsoft Azure TTS for its reliability and quality.
@@ -478,13 +450,13 @@ VAD determines turn-taking behavior—when the system considers user speech comp
 }
 ```
 
-**Configuration Parameters:**
+**interrupt_duration_ms**: How long user speech must last before triggering an interruption. 160ms gives immediate interruption without catching background noise. Noisy environments need 300-500ms.
 
-- `interrupt_duration_ms`: Minimum duration of user speech to interrupt agent output. 160ms provides immediate interruption without triggering on background noise. Increase to 300-500ms in noisy environments.
-- `silence_duration_ms`: Duration of silence before speech is considered complete. 640ms prevents premature cutoff during natural pauses (thinking, breathing). Decrease to 400ms for rapid-fire Q&A, increase to 800ms+ for thoughtful conversations.
-- `threshold`: Audio level sensitivity (0.0-1.0). 0.5 works in typical environments. Lower values (0.3) increase sensitivity to quiet speech but trigger more false positives. Higher values (0.7) reduce false triggers but may miss soft-spoken users.
+**silence_duration_ms**: How long to wait before considering speech complete. 640ms prevents cutoff during natural pauses (thinking, breathing). Drop to 400ms for rapid Q&A, raise to 800ms+ for thoughtful conversations.
 
-Agora VAD operates client-side with ~10-20ms latency. It uses energy-based detection combined with zero-crossing rate analysis—fast but purely acoustic. Can't distinguish intentional pauses from speech completion.
+**threshold**: Audio sensitivity (0.0-1.0). 0.5 works in typical rooms. Lower (0.3) catches quiet speech but false-triggers more. Higher (0.7) reduces false triggers but misses soft voices.
+
+Agora VAD runs client-side with ~10-20ms latency. Uses energy detection plus zero-crossing rate—fast, purely acoustic. Can't tell intentional pauses from actual speech completion.
 
 **Server VAD (Semantic Detection):**
 
@@ -509,13 +481,13 @@ Controls agent response when user speaks during agent output:
 interrupt_mode: 'interrupt' | 'append' | 'ignore';
 ```
 
-- **`interrupt`**: Immediately stops agent speech, discards remaining output, processes new user input. Lowest latency, most natural for conversational Q&A. Agent must regenerate if interrupted mid-response.
+**`interrupt`**: Stops agent speech immediately, discards remaining output, processes new input. Lowest latency, feels most natural for Q&A. Agent regenerates if interrupted mid-response.
 
-- **`append`**: Completes current agent response, queues new user input for processing afterward. Prevents fragmentary responses in storytelling or instruction sequences. User waits longer for acknowledgment.
+**`append`**: Finishes current response, then processes new input. Prevents fragmentary responses in storytelling or instructions. User waits longer for acknowledgment.
 
-- **`ignore`**: Blocks interruptions until agent finishes speaking. Use sparingly—violates conversational norms. Appropriate for critical information (emergency instructions, legal disclaimers) or single-direction content (meditation scripts).
+**`ignore`**: Blocks interruptions until agent finishes. Violates conversational norms—use sparingly. Works for critical info (emergency instructions, legal disclaimers) or one-way content (meditation scripts).
 
-**Implementation Note:** Interrupt mode operates at the TTS level. When interrupted, the agent must reinvoke the LLM with updated context. This adds ~2-3 seconds of latency. For latency-sensitive applications, consider streaming TTS with chunked LLM responses to reduce interruption recovery time.
+Note: interruption happens at the TTS level. When interrupted, the agent reinvokes the LLM with updated context—adds ~2-3 seconds. For latency-sensitive apps, stream TTS with chunked LLM responses.
 
 ### Silence Management
 
@@ -531,19 +503,11 @@ Handles scenarios where users stop responding:
 }
 ```
 
-Triggers after `timeout_ms` of no user speech. Prevents dead air and clarifies whether the user expects agent response or has left the conversation.
+Triggers after `timeout_ms` of no user speech. Prevents dead air, clarifies if the user expects a response or left.
 
-**Recommended Timeouts by Use Case:**
+Timeout depends on context. Q&A and customer support: 8-10s (users respond quickly or formulate questions). Technical troubleshooting: 15-20s (checking systems, reading screens). Education: 10-15s (processing info, working through problems). Meditation: 30-60s (silence is intentional). Voice commerce: 5-8s (friction kills conversion).
 
-| Use Case                  | Timeout | Rationale                                                            |
-| ------------------------- | ------- | -------------------------------------------------------------------- |
-| Q&A / Customer Support    | 8-10s   | Users typically respond quickly or are formulating complex questions |
-| Technical Troubleshooting | 15-20s  | Users need time to check systems, read screens                       |
-| Educational / Tutoring    | 10-15s  | Students may be processing information or working through problems   |
-| Meditation / Wellness     | 30-60s  | Intentional silence is part of the experience                        |
-| Voice Commerce            | 5-8s    | Friction kills conversion; prompt quickly                            |
-
-Set `action` to `"speak"` for verbal prompt or `"disconnect"` to terminate session. The `content` field defines the spoken message.
+Set `action` to `"speak"` for a verbal prompt or `"disconnect"` to end the session. `content` is what the agent says.
 
 ### Input/Output Modalities
 
@@ -938,67 +902,29 @@ Broadcast messages appear in conversation context as system messages. Use cases:
 
 ### Debugging Common Issues
 
-**Agent Not Responding:**
+**Agent Not Responding**
 
-Symptoms: User speaks but agent remains silent. Transcription may or may not appear.
+User speaks, nothing happens. Transcription might show up, might not.
 
-Diagnostic steps:
+Check the browser console first—JavaScript errors are obvious. Then verify your LLM API key (test it with `curl` if you're not sure). Confirm you've set required parameters—some providers need `max_tokens` and will silently fail without it. Check the network tab for 401 or 403 responses to your LLM endpoint. Look at microphone permissions. Watch the agent state transitions: should go listening → thinking → speaking.
 
-1. Check browser console for JavaScript errors
-2. Verify Claude API key validity (test with `curl` against Anthropic's API)
-3. Confirm `max_tokens` parameter exists in custom params
-4. Inspect network tab—look for 401/403 responses to LLM endpoint
-5. Check microphone permissions in browser settings
-6. Verify agent state transitions (should show "listening" → "thinking" → "speaking")
+Common culprits: invalid API key (403), missing required params (400), CORS blocking the LLM request, or microphone access denied.
 
-Common causes:
+**Slow Response Time**
 
-- Invalid or expired API key (403)
-- Missing `max_tokens` parameter (Claude returns 400)
-- CORS issues with LLM endpoint (browser blocks request)
-- Microphone access denied (browser console shows warning)
+More than 5 seconds between user speech and agent response.
 
-**Slow Response Time:**
+Typical latency breakdown: VAD detection (~640ms), ASR transcription (~200-500ms), network round-trip (~100-300ms), LLM inference (~2-5s, model-dependent), TTS synthesis (~300-700ms), audio buffering (~100-200ms). Total: 3.5-7.6 seconds on average.
 
-Symptoms: Noticeable delay (>5 seconds) between user speech and agent response.
+The LLM inference is almost always your bottleneck. Switch to a faster model—saves 1-3 seconds immediately. Shrink the context window (reduce `max_history` from 32 to 16, saves ~10-20%). Lower the VAD silence threshold (`silence_duration_ms` from 640ms to 400ms saves 240ms but risks premature cutoff). Switch TTS providers or reduce audio quality. Check network latency to your LLM endpoint with `traceroute` (should be under 100ms).
 
-Latency breakdown:
+**Agent Cuts Off Mid-Sentence**
 
-```
-User speech end-of-utterance detection: ~640ms (VAD silence_duration_ms)
-ASR transcription: ~200-500ms
-Network round-trip to LLM: ~100-300ms
-LLM inference: ~2-5s (model-dependent)
-TTS synthesis: ~300-700ms
-Audio playback buffering: ~100-200ms
----
-Total: 3.5-7.6 seconds typical
-```
+Agent stops talking abruptly when user makes noise.
 
-Optimization strategies:
+VAD is false-triggering. Either `interrupt_duration_ms` is too low (160ms catches background noise), or `threshold` is too sensitive (0.5 picks up ambient sound), or the room has echo/typing/rustling that sounds like speech.
 
-1. **Reduce LLM latency**: Switch from Opus → Sonnet (saves ~2-3s) or Sonnet → Haiku (saves ~1-2s)
-2. **Shrink context window**: Reduce `max_history` from 32 to 16 (saves ~10-20% LLM time)
-3. **Decrease VAD silence threshold**: Lower `silence_duration_ms` from 640ms to 400ms (saves ~240ms but may cause premature cutoff)
-4. **Optimize TTS**: Switch to faster TTS provider or reduce audio quality
-5. **Check network path**: Use `traceroute` to measure latency to Anthropic API (should be <100ms)
-
-**Agent Cuts Off Mid-Sentence:**
-
-Symptoms: Agent speech abruptly stops when user makes noise or speaks.
-
-This is usually VAD false triggering. Causes:
-
-- `interrupt_duration_ms` too low (160ms default may trigger on background noise)
-- VAD `threshold` too sensitive (0.5 default may pick up ambient sound)
-- Keyboard typing, paper rustling, or room echo being interpreted as speech
-
-Solutions:
-
-1. Increase `interrupt_duration_ms` from 160ms to 300-500ms
-2. Increase VAD `threshold` from 0.5 to 0.6-0.7
-3. Use push-to-talk UI pattern to gate audio input
-4. Implement noise suppression via Web Audio API before feeding to RTC SDK
+Increase `interrupt_duration_ms` from 160ms to 300-500ms. Raise VAD `threshold` from 0.5 to 0.6-0.7. Or add push-to-talk, or implement noise suppression via Web Audio API before the RTC SDK gets it.
 
 **Transcription Not Showing:**
 
@@ -1021,969 +947,38 @@ Data Stream Mode troubleshooting:
 
 **Poor Speech Recognition:**
 
-- Consider upgrading from Microsoft or Deepgram to Agora ASR to improve accuracy
+- Consider upgrading from Agora ASR to Microsoft or Deepgram for improved accuracy
 - Adjust VAD threshold (lower for quiet environments)
 - Check microphone quality and positioning
 
-## Production Considerations
+## What You Get
 
-### API Key Management
+This playground gives you a working interface to experiment with Agora's Conversational AI Engine. You can wire up any LLM (OpenAI, Anthropic, Gemini, custom endpoints), pick from multiple TTS and ASR vendors, configure VAD and turn detection, add AI avatars, manage devices—all from a browser.
 
-The playground stores credentials in `localStorage` for rapid prototyping. Production deployments must secure credentials server-side.
+The code is modular. Swap LLM providers without touching the audio pipeline. Change TTS vendors with a dropdown. Adjust VAD parameters and see results immediately. The architecture separates concerns so you can iterate on conversation design without rebuilding infrastructure.
 
-**Secure Architecture Pattern:**
+### What's Supported
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant Backend
-    participant Agora API
-    participant Claude API
+**LLM Providers**: OpenAI, Azure OpenAI, Google Gemini, Google Vertex AI, Anthropic Claude, Dify, custom endpoints
 
-    Client->>Backend: Request voice session
-    Backend->>Backend: Validate user auth
-    Backend->>Agora API: Create agent (with LLM config)
-    Agora API-->>Backend: Return agent_id
-    Backend->>Backend: Generate RTC token
-    Backend-->>Client: Return agent_id + RTC token
-    Client->>Agora RTC: Join channel with token
-    Note over Agora API,Claude API: Agent makes LLM calls server-side
-    Claude API-->>Agora API: LLM responses
-```
+**TTS Vendors**: Microsoft Azure, ElevenLabs, Cartesia, OpenAI, Hume AI
 
-**Implementation Guidelines:**
+**ASR Vendors**: Agora (ARES with 36 languages), Microsoft Azure (100+ languages), Deepgram (50+ languages)
 
-1. **Never expose in client code**:
+**AI Avatars**: Akool (Beta), HeyGen (Alpha)
 
-   - Agora Customer ID/Secret
-   - Claude/LLM API keys
-   - App Certificate
+**Features**: AIVAD for smart interruptions, RTM signaling, three VAD types (Agora, Server, Semantic), configurable turn detection, silence management, live subtitles, real-time audio viz, camera integration for multimodal input.
 
-2. **Backend agent creation endpoint**:
+### Production Notes
 
-```javascript
-// Express.js example
-app.post('/api/voice-session', authenticateUser, async (req, res) => {
-  const { userId, channelName } = req.body;
+The playground stores credentials in `localStorage` for quick testing. Don't do this in production. Keep LLM keys and Agora secrets server-side. Generate short-lived RTC/RTM tokens dynamically. Validate users before creating agent sessions. Monitor usage and costs.
 
-  // Build agent config server-side
-  const agentConfig = {
-    name: `agent-${userId}-${Date.now()}`,
-    properties: {
-      channel: channelName,
-      agent_rtc_uid: generateAgentUid(),
-      llm: {
-        url: process.env.ANTHROPIC_API_URL,
-        api_key: process.env.ANTHROPIC_API_KEY,
-        // ... rest of config
-      },
-    },
-  };
+### Reference
 
-  // Create agent via Agora API
-  const agent = await createAgoraAgent(agentConfig);
+- [Agora Conversational AI docs](https://docs.agora.io/en/conversational-ai/)
+- [REST API Reference](https://docs.agora.io/en/conversational-ai/rest-api/join)
+- [FEATURES.md](DOCS/FEATURES.md) - complete feature list
+- [VENDORS.md](DOCS/VENDORS.md) - vendor configs and language support
+- [SETUP.md](DOCS/SETUP.md) - setup instructions
 
-  // Generate short-lived RTC token
-  const token = RtcTokenBuilder.buildTokenWithUid(
-    process.env.AGORA_APP_ID,
-    process.env.AGORA_APP_CERTIFICATE,
-    channelName,
-    userId,
-    RtcRole.PUBLISHER,
-    Math.floor(Date.now() / 1000) + 3600 // 1 hour expiry
-  );
-
-  res.json({
-    agentId: agent.agent_id,
-    channelName: channelName,
-    token: token,
-    uid: userId,
-  });
-});
-```
-
-3. **Client receives only non-sensitive data**: Agent ID, RTC token, channel name. Client cannot access LLM credentials or create arbitrary agents.
-
-### Token Generation
-
-RTC tokens provide time-limited channel access with specified privileges.
-
-**Token Structure:**
-
-```javascript
-const token = RtcTokenBuilder.buildTokenWithUid(
-  appId, // Agora App ID (public)
-  appCertificate, // Secret, never expose to client
-  channelName, // Channel this token grants access to
-  uid, // User ID (0 for wildcard, or specific UID)
-  role, // RtcRole.PUBLISHER or RtcRole.SUBSCRIBER
-  privilegeExpireTime // Unix timestamp (current time + duration)
-);
-```
-
-**Role Selection:**
-
-- `PUBLISHER`: User needs to publish audio (typical for voice interaction)
-- `SUBSCRIBER`: User only listens (monitoring, recording, analytics) |
-
-**Combined RTC+RTM Tokens:**
-
-If using RTM transcription, generate tokens that cover both services:
-
-```javascript
-// Build RTC privileges
-const rtcPrivilege = {
-  [RtcTokenBuilder.kJoinChannel]: privilegeExpireTime,
-  [RtcTokenBuilder.kPublishAudioStream]: privilegeExpireTime,
-};
-
-// Build RTM privileges
-const rtmPrivilege = {
-  [RtmTokenBuilder.kRtmLogin]: privilegeExpireTime,
-};
-
-// Generate combined token
-const token = AccessToken.build(appId, appCertificate, channelName, uid, {
-  ...rtcPrivilege,
-  ...rtmPrivilege,
-});
-```
-
-### Scaling Considerations
-
-**Resource Consumption Per Agent:**
-
-Monitor your usage:
-
-```javascript
-parameters: {
-  enable_metrics: true,
-  enable_error_message: true
-}
-```
-
-### Error Handling
-
-Voice AI systems have multiple failure modes. Implement graceful degradation and user-visible error states.
-
-**Agent Creation Errors:**
-
-```javascript
-async function createAgentWithRetry(config, maxRetries = 3) {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await fetch(
-        `https://api.agora.io/api/conversational-ai-agent/v2/projects/${APP_ID}/join`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Basic ${btoa(`${CUSTOMER_ID}:${CUSTOMER_SECRET}`)}`,
-          },
-          body: JSON.stringify(config),
-        }
-      );
-
-      const result = await response.json();
-
-      if (response.ok) {
-        return result;
-      }
-
-      // Handle specific error cases
-      switch (response.status) {
-        case 400:
-          // Invalid configuration - don't retry
-          throw new Error(`Configuration error: ${result.message}`);
-
-        case 401:
-          // Auth failure - don't retry
-          throw new Error('Authentication failed: Invalid credentials');
-
-        case 429:
-          // Rate limited - retry with backoff
-          const retryAfter =
-            response.headers.get('Retry-After') || Math.pow(2, attempt);
-          await sleep(retryAfter * 1000);
-          continue;
-
-        case 503:
-          // Service unavailable - retry with exponential backoff
-          await sleep(Math.pow(2, attempt) * 1000);
-          continue;
-
-        default:
-          throw new Error(`Unexpected error: ${response.status}`);
-      }
-    } catch (error) {
-      if (attempt === maxRetries - 1) throw error;
-      await sleep(Math.pow(2, attempt) * 1000);
-    }
-  }
-}
-```
-
-**Runtime Error Handling:**
-
-Monitor RTM error messages when `enable_error_message: true`:
-
-```javascript
-api.on(EConversationalAIAPIEvents.ERROR, (errorEvent) => {
-  const { code, message, severity } = errorEvent;
-
-  switch (code) {
-    case 'LLM_TIMEOUT':
-      // LLM didn't respond within timeout window (typically 30s)
-      notifyUser('The assistant is taking longer than usual. Please wait...');
-      break;
-
-    case 'LLM_ERROR':
-      // LLM returned error (API quota, invalid response format)
-      playFailureMessage();
-      logError('LLM failure', { message, timestamp: Date.now() });
-      break;
-
-    case 'ASR_ERROR':
-      // Speech recognition failed
-      notifyUser("Sorry, I couldn't understand that. Please try again.");
-      break;
-
-    case 'TTS_ERROR':
-      // Speech synthesis failed
-      // Send text fallback via RTM data channel
-      sendTextFallback(lastAgentResponse);
-      break;
-
-    case 'NETWORK_ERROR':
-      // RTC connection issues
-      if (severity === 'critical') {
-        showReconnectDialog();
-      }
-      break;
-  }
-});
-```
-
-**Circuit Breaker Pattern for LLM Calls:**
-
-Prevent cascading failures when LLM is degraded:
-
-```javascript
-class LLMCircuitBreaker {
-  constructor(threshold = 5, timeout = 60000) {
-    this.failureCount = 0;
-    this.threshold = threshold;
-    this.timeout = timeout;
-    this.state = 'CLOSED'; // CLOSED, OPEN, HALF_OPEN
-    this.nextRetry = null;
-  }
-
-  async call(llmFunction) {
-    if (this.state === 'OPEN') {
-      if (Date.now() < this.nextRetry) {
-        throw new Error('Circuit breaker is OPEN');
-      }
-      this.state = 'HALF_OPEN';
-    }
-
-    try {
-      const result = await llmFunction();
-      this.onSuccess();
-      return result;
-    } catch (error) {
-      this.onFailure();
-      throw error;
-    }
-  }
-
-  onSuccess() {
-    this.failureCount = 0;
-    this.state = 'CLOSED';
-  }
-
-  onFailure() {
-    this.failureCount++;
-    if (this.failureCount >= this.threshold) {
-      this.state = 'OPEN';
-      this.nextRetry = Date.now() + this.timeout;
-      // Notify operations team
-      alertOps('LLM circuit breaker opened');
-    }
-  }
-}
-```
-
-**Common Error Codes and Remediation:**
-
-| Error Code            | HTTP Status | Cause                           | Solution                                        |
-| --------------------- | ----------- | ------------------------------- | ----------------------------------------------- |
-| `INVALID_PARAMETER`   | 400         | Malformed agent config          | Validate config against schema before sending   |
-| `UNAUTHORIZED`        | 401         | Invalid credentials             | Rotate credentials, check encoding              |
-| `INSUFFICIENT_QUOTA`  | 402         | Account quota exceeded          | Upgrade plan or implement usage caps            |
-| `RATE_LIMIT_EXCEEDED` | 429         | Too many requests               | Implement exponential backoff                   |
-| `CHANNEL_OCCUPIED`    | 409         | Agent already exists in channel | Use unique channel names or stop existing agent |
-| `LLM_UNREACHABLE`     | 502         | Can't reach LLM endpoint        | Check LLM service status, firewall rules        |
-| `SERVICE_UNAVAILABLE` | 503         | Temporary Agora outage          | Retry with backoff, check status page           |
-
-## Use Cases and Implementation Patterns
-
-### Customer Support Bot
-
-**Technical Requirements:**
-
-- Low latency (<3s response time) for natural troubleshooting flow
-- Context retention across multi-step diagnostic procedures
-- Ability to inject real-time data (order status, account info)
-- Escalation path to human agents with full conversation context
-
-**Configuration:**
-
-```javascript
-const supportAgentConfig = {
-  properties: {
-    llm: {
-      system_messages: [{
-        role: "system",
-        content: `You are a customer support agent for TechCo.
-
-        Your capabilities:
-        - Access user account information via injected context
-        - Troubleshoot technical issues step-by-step
-        - Escalate to human agents when necessary
-
-        Guidelines:
-        - Ask one diagnostic question at a time
-        - Confirm understanding before proceeding
-        - Use simple, non-technical language unless user demonstrates technical knowledge
-        - Always acknowledge user frustration empathetically
-
-        Escalation criteria:
-        - User explicitly requests human agent
-        - Issue requires account-level changes you cannot perform
-        - Troubleshooting exceeds 5 minutes without resolution`
-      }],
-      max_history: 48, // Longer context for complex troubleshooting
-      params: {
-        temperature: 0.7, // Lower temperature for consistent, factual responses
-      }
-    },
-    turn_detection: {
-      interrupt_mode: "interrupt", // Users need to interrupt for clarifications
-      silence_duration_ms: 800, // Slightly longer—users may be performing steps
-    },
-    silence_config: {
-      timeout_ms: 10000,
-      action: "speak",
-      content: "Are you still there? I'm here when you're ready to continue."
-    }
-  }
-};
-
-// Runtime: Inject user context via broadcast
-async function startSupportSession(userId, agentId) {
-  const userData = await fetchUserData(userId);
-
-  await broadcastMessage(agentId,
-    `[Context: User ${userData.name}, Account tier: ${userData.tier},
-     Recent orders: ${userData.recentOrders.map(o => o.id).join(', ')},
-     Previous support tickets: ${userData.ticketCount}]`,
-    priority: 'normal',
-    interruptable: false
-  );
-}
-
-// Human handoff
-async function escalateToHuman(agentId, conversationHistory) {
-  // Extract conversation context from transcription
-  const context = conversationHistory.map(msg =>
-    `${msg.speaker}: ${msg.text}`
-  ).join('\n');
-
-  // Create support ticket with full context
-  const ticket = await createSupportTicket({
-    context: context,
-    priority: 'high',
-    source: 'voice_bot_escalation'
-  });
-
-  // Notify agent about handoff
-  await broadcastMessage(agentId,
-    "I'm connecting you with a specialist who can help better. They'll have access to our full conversation.",
-    priority: 'high',
-    interruptable: false
-  );
-
-  return ticket.id;
-}
-```
-
-**Performance Characteristics:**
-
-- Average conversation: 3-7 minutes, 8-15 user turns
-- Context injection latency: <100ms
-- Escalation rate target: <15% of conversations
-
-### Educational Tutor
-
-**Technical Requirements:**
-
-- Multimodal input for visual problem-solving
-- Append mode to prevent incomplete explanations
-- Extended context window for worked examples
-- Adaptive difficulty based on student performance
-
-**Configuration:**
-
-```javascript
-const tutorAgentConfig = {
-  properties: {
-    llm: {
-      system_messages: [
-        {
-          role: 'system',
-          content: `You are a Socratic tutor for high school mathematics.
-        
-        Teaching approach:
-        - Never give direct answers—guide students to discover solutions
-        - Ask targeted questions that isolate conceptual gaps
-        - When student struggles >3 times, provide a hint, not the answer
-        - Celebrate breakthroughs enthusiastically but briefly
-        
-        Adaptive scaffolding:
-        - Track student reasoning patterns in your responses
-        - If student shows mastery, introduce edge cases
-        - If student struggles repeatedly, break problem into smaller steps
-        
-        Image analysis (when provided):
-        - Describe student's work step-by-step
-        - Identify first error point without revealing correction
-        - Ask questions about the incorrect step`,
-        },
-      ],
-      input_modalities: ['text', 'audio', 'image'],
-      output_modalities: ['text', 'audio'],
-      max_history: 64, // Long context for multi-problem sessions
-      params: {
-        temperature: 0.8, // Moderate creativity for varied explanations
-      },
-    },
-    turn_detection: {
-      interrupt_mode: 'append', // Don't cut off explanations mid-thought
-      silence_duration_ms: 1200, // Students need time to work through problems
-    },
-  },
-};
-
-// Dynamic difficulty adjustment
-class AdaptiveTutorController {
-  constructor(agentId) {
-    this.agentId = agentId;
-    this.consecutiveCorrect = 0;
-    this.consecutiveIncorrect = 0;
-  }
-
-  async onStudentResponse(isCorrect) {
-    if (isCorrect) {
-      this.consecutiveCorrect++;
-      this.consecutiveIncorrect = 0;
-
-      if (this.consecutiveCorrect >= 3) {
-        // Increase difficulty
-        await updateAgent(this.agentId, {
-          properties: {
-            llm: {
-              system_messages: [
-                {
-                  role: 'system',
-                  content:
-                    '...Student showing mastery. Introduce advanced concepts and edge cases...',
-                },
-              ],
-            },
-          },
-        });
-      }
-    } else {
-      this.consecutiveIncorrect++;
-      this.consecutiveCorrect = 0;
-
-      if (this.consecutiveIncorrect >= 3) {
-        // Provide more scaffolding
-        await updateAgent(this.agentId, {
-          properties: {
-            llm: {
-              system_messages: [
-                {
-                  role: 'system',
-                  content:
-                    '...Student struggling. Break problems into very small steps with concrete examples...',
-                },
-              ],
-            },
-          },
-        });
-      }
-    }
-  }
-}
-```
-
-**Performance Characteristics:**
-
-- Average session: 30-45 minutes
-- Image capture frequency: ~1 frame every 10s when student is writing
-- Context window usage: ~15-20K tokens per session
-- Multimodal latency overhead: +50-100ms per image-inclusive turn
-
-### Meditation Guide
-
-**Technical Requirements:**
-
-- Uninterrupted audio flow (ignore mode)
-- Extended silence tolerance
-- Slower TTS rate for calming effect
-- Precise timing for guided breathing sequences
-
-**Configuration:**
-
-```javascript
-const meditationAgentConfig = {
-  properties: {
-    llm: {
-      system_messages: [
-        {
-          role: 'system',
-          content: `You guide 10-minute mindfulness meditation sessions.
-        
-        Session structure:
-        1. Welcome and settling (1 min)
-        2. Breathing awareness instructions (2 min)
-        3. Body scan guided visualization (4 min)
-        4. Open awareness practice (2 min)
-        5. Closing and return (1 min)
-        
-        Speaking style:
-        - Short sentences with long pauses between
-        - Use present tense: "Notice your breath" not "Try to notice"
-        - Repeat key phrases for emphasis: "Breathing in... breathing out"
-        - No questions—declarative guidance only
-        - Pauses indicated by ellipsis should be 3-5 seconds
-        
-        Avoid:
-        - Complex metaphors or philosophical content
-        - Asking questions (breaks immersion)
-        - Rushed transitions`,
-        },
-      ],
-      params: {
-        temperature: 0.6, // Low variability—consistency builds relaxation
-        max_tokens: 150, // Short segments with natural pauses
-      },
-    },
-    tts: {
-      vendor: 'microsoft',
-      params: {
-        voice_name: 'en-US-JennyNeural', // Warm, calm voice
-        rate: 0.75, // 25% slower than normal speech
-        volume: 65, // Softer volume
-        pitch: -5, // Slightly lower pitch for calming effect
-      },
-    },
-    turn_detection: {
-      interrupt_mode: 'ignore', // No interruptions during guided meditation
-      silence_duration_ms: 5000, // Wait for user to settle before responding
-    },
-    silence_config: {
-      timeout_ms: 60000, // Long pauses are intentional
-      action: 'speak',
-      content: "Taking a moment of silence... continuing when you're ready.",
-    },
-  },
-};
-
-// Timed meditation sequence
-class MeditationSession {
-  constructor(agentId, durationMinutes = 10) {
-    this.agentId = agentId;
-    this.duration = durationMinutes * 60 * 1000;
-    this.segments = this.generateSegments();
-  }
-
-  generateSegments() {
-    return [
-      {
-        timing: 0,
-        content:
-          'Welcome. Find a comfortable position... Close your eyes if that feels comfortable.',
-      },
-      {
-        timing: 30000,
-        content:
-          'Begin to notice your breath... Natural breathing... No need to change anything.',
-      },
-      {
-        timing: 120000,
-        content:
-          'Shift awareness to your body... Starting at the top of your head...',
-      },
-      {
-        timing: 360000,
-        content:
-          'Now expanding awareness... Noticing thoughts as they arise... Letting them pass...',
-      },
-      {
-        timing: 540000,
-        content:
-          "Slowly beginning to return... Wiggling fingers and toes... When you're ready, opening your eyes.",
-      },
-    ];
-  }
-
-  async start() {
-    for (const segment of this.segments) {
-      await sleep(segment.timing);
-      await broadcastMessage(this.agentId, segment.content, 'high', false);
-    }
-  }
-}
-```
-
-**Performance Characteristics:**
-
-- Session duration: Fixed (10, 20, or 30 minutes)
-- User interaction: Minimal (session selection only)
-- Interruption rate: <5% (mostly technical issues)
-- Audio quality requirements: High (low compression, no artifacts)
-
-## What's Next?
-
-You now have the foundational knowledge to build production voice AI systems with Agora and Claude. Here's how to advance from prototype to production deployment.
-
-### Immediate Next Steps (Days 1-7)
-
-**1. Prompt Engineering Iteration**
-
-The system message is your primary control surface. Test variations systematically:
-
-```javascript
-// A/B test framework
-const promptVariants = [
-  {
-    id: 'concise',
-    content: 'Keep all responses under 30 words. Be direct.',
-    metric: 'user_satisfaction',
-  },
-  {
-    id: 'verbose',
-    content: 'Provide detailed explanations with examples.',
-    metric: 'user_satisfaction',
-  },
-  {
-    id: 'socratic',
-    content: 'Answer questions with guiding questions. Use Socratic method.',
-    metric: 'engagement_duration',
-  },
-];
-
-// Randomly assign variant per session
-const variant =
-  promptVariants[Math.floor(Math.random() * promptVariants.length)];
-// Track metrics and iterate toward optimal prompt
-```
-
-Test across dimensions:
-
-- Verbosity (word count per response)
-- Personality (professional, casual, enthusiastic)
-- Technical depth (ELI5 vs expert-level)
-- Conversation style (Q&A, tutorial, counseling)
-
-**2. Implement Analytics Pipeline**
-
-Track critical metrics from day one:
-
-```javascript
-const conversationMetrics = {
-  session_id: uuid(),
-  duration_seconds: 0,
-  user_turns: 0,
-  agent_turns: 0,
-  interruption_count: 0,
-  escalation_occurred: false,
-  avg_response_latency_ms: 0,
-  asr_confidence_scores: [],
-  llm_tokens_consumed: 0,
-  cost_usd: 0,
-  user_satisfaction_score: null, // Post-conversation survey
-};
-
-// Log to analytics platform
-analytics.track('conversation_completed', conversationMetrics);
-```
-
-Critical metrics to monitor:
-
-- P95 end-to-end latency (should be <5s)
-- Conversation completion rate (did user accomplish goal?)
-- Interruption frequency (high rate suggests poor turn-taking)
-- Cost per conversation
-- ASR accuracy (via confidence scores)
-
-**3. Build Fallback Mechanisms**
-
-Implement graceful degradation when services fail:
-
-```javascript
-// Fallback chain
-const llmProviders = [
-  { name: 'claude', endpoint: CLAUDE_API, priority: 1 },
-  { name: 'gpt-4', endpoint: GPT4_API, priority: 2 },
-  { name: 'fallback-model', endpoint: FALLBACK_API, priority: 3 },
-];
-
-async function createAgentWithFallback(config) {
-  for (const provider of llmProviders) {
-    try {
-      const agentConfig = { ...config, llm: { ...config.llm, ...provider } };
-      return await createAgent(agentConfig);
-    } catch (error) {
-      logger.warn(`LLM provider ${provider.name} failed, trying next`);
-      if (provider.priority === llmProviders.length) {
-        throw new Error('All LLM providers exhausted');
-      }
-    }
-  }
-}
-```
-
-### Mid-Term Improvements (Weeks 2-4)
-
-**1. Implement Conversation State Management**
-
-Track where the user is in the conversation flow:
-
-```javascript
-class ConversationStateManager {
-  constructor() {
-    this.states = {
-      GREETING: 'greeting',
-      PROBLEM_GATHERING: 'problem_gathering',
-      TROUBLESHOOTING: 'troubleshooting',
-      SOLUTION_CONFIRMATION: 'solution_confirmation',
-      CLOSING: 'closing',
-    };
-    this.currentState = this.states.GREETING;
-    this.stateHistory = [];
-  }
-
-  async transitionTo(newState, agentId) {
-    this.stateHistory.push({
-      from: this.currentState,
-      to: newState,
-      timestamp: Date.now(),
-    });
-    this.currentState = newState;
-
-    // Update agent system message based on state
-    const stateInstructions = this.getInstructionsForState(newState);
-    await updateAgent(agentId, {
-      properties: {
-        llm: {
-          system_messages: [{ role: 'system', content: stateInstructions }],
-        },
-      },
-    });
-  }
-
-  getInstructionsForState(state) {
-    const instructions = {
-      [this.states.GREETING]: 'Warmly greet user. Ask how you can help.',
-      [this.states.PROBLEM_GATHERING]:
-        'Ask targeted diagnostic questions. Gather symptoms.',
-      [this.states.TROUBLESHOOTING]:
-        'Provide step-by-step solutions. Confirm each step completes.',
-      [this.states.SOLUTION_CONFIRMATION]:
-        'Verify problem is resolved. Offer additional help.',
-      [this.states.CLOSING]: 'Thank user. Provide summary of what was fixed.',
-    };
-    return instructions[state];
-  }
-}
-```
-
-**2. Optimize for Latency**
-
-Latency kills conversation naturalness. Profile and optimize:
-
-```javascript
-// Latency profiling
-const latencyBreakdown = {
-  vad_detection: { p50: 640, p95: 800 },
-  asr_transcription: { p50: 350, p95: 650 },
-  network_llm_rtt: { p50: 120, p95: 250 },
-  llm_inference: { p50: 2400, p95: 4200 },
-  tts_synthesis: { p50: 450, p95: 750 },
-  audio_playback: { p50: 150, p95: 300 },
-};
-
-// Identify bottleneck (usually LLM inference)
-// Optimization strategies:
-// 1. Reduce context window (trim old messages)
-// 2. Use faster model variant (Sonnet → Haiku)
-// 3. Implement response streaming if LLM supports it
-// 4. Cache common responses for FAQ-type queries
-```
-
-**3. Multi-Language Support**
-
-Expand to international markets:
-
-```javascript
-const languageConfigs = {
-  'en-US': {
-    asr: { vendor: 'microsoft', language: 'en-US' },
-    tts: { voice_name: 'en-US-AriaNeural' },
-    llm: { system_message: 'You are a helpful assistant...' },
-  },
-  'es-ES': {
-    asr: { vendor: 'microsoft', language: 'es-ES' },
-    tts: { voice_name: 'es-ES-ElviraNeural' },
-    llm: { system_message: 'Eres un asistente útil...' },
-  },
-  'zh-CN': {
-    asr: { vendor: 'microsoft', language: 'zh-CN' },
-    tts: { voice_name: 'zh-CN-XiaoxiaoNeural' },
-    llm: { system_message: '你是一个有帮助的助手...' },
-  },
-};
-
-function createLocalizedAgent(userLanguage) {
-  const config = languageConfigs[userLanguage] || languageConfigs['en-US'];
-  return createAgent(buildAgentConfig(config));
-}
-```
-
-### Long-Term Architecture (Months 2-3)
-
-**1. Distributed Agent Management**
-
-Scale beyond single-server deployments:
-
-```javascript
-// Agent registry with distributed coordination
-class AgentRegistry {
-  constructor(redisClient) {
-    this.redis = redisClient;
-    this.namespace = 'voice:agents';
-  }
-
-  async registerAgent(userId, agentId, channelName) {
-    await this.redis.hset(`${this.namespace}:${userId}`, {
-      agent_id: agentId,
-      channel: channelName,
-      created_at: Date.now(),
-      server_instance: process.env.INSTANCE_ID,
-    });
-
-    // Set expiration to match agent idle_timeout
-    await this.redis.expire(`${this.namespace}:${userId}`, 600);
-  }
-
-  async getActiveAgent(userId) {
-    return await this.redis.hgetall(`${this.namespace}:${userId}`);
-  }
-
-  async cleanup() {
-    // Periodic cleanup of terminated agents
-    const keys = await this.redis.keys(`${this.namespace}:*`);
-    for (const key of keys) {
-      const agent = await this.redis.hgetall(key);
-      const status = await queryAgentStatus(agent.agent_id);
-      if (status.state === 'terminated') {
-        await this.redis.del(key);
-      }
-    }
-  }
-}
-```
-
-**2. Conversation Memory and Personalization**
-
-Persist context across sessions:
-
-```javascript
-// Long-term memory system
-class ConversationMemory {
-  async saveConversation(userId, conversation) {
-    await db.conversations.insert({
-      user_id: userId,
-      messages: conversation,
-      timestamp: Date.now(),
-      topics: await extractTopics(conversation), // LLM-based topic extraction
-      sentiment: await analyzeSentiment(conversation),
-    });
-  }
-
-  async getRelevantContext(userId, currentQuery) {
-    // Retrieve past conversations relevant to current query
-    const pastConversations = await db.conversations
-      .find({ user_id: userId })
-      .sort({ timestamp: -1 })
-      .limit(5);
-
-    // Use vector similarity to find relevant past exchanges
-    const relevantContext = await semanticSearch(
-      currentQuery,
-      pastConversations
-    );
-
-    return `[User History: ${relevantContext
-      .map((c) => c.summary)
-      .join('; ')}]`;
-  }
-
-  async injectMemoryIntoAgent(userId, agentId) {
-    const context = await this.getRelevantContext(userId, 'general');
-    await broadcastMessage(agentId, context, 'normal', false);
-  }
-}
-```
-
-**3. Voice Biometrics and Security**
-
-Add authentication and fraud detection:
-
-```javascript
-// Voice biometric integration
-async function authenticateVoice(audioStream, claimedIdentity) {
-  const voiceprint = await voiceBiometricService.extract(audioStream);
-  const storedVoiceprint = await db.voiceprints.findOne({
-    user_id: claimedIdentity,
-  });
-
-  const similarity = cosineSimilarity(voiceprint, storedVoiceprint.features);
-
-  if (similarity > 0.85) {
-    return { authenticated: true, confidence: similarity };
-  } else {
-    // Potential fraud - require additional auth
-    return { authenticated: false, requiresMFA: true };
-  }
-}
-```
-
-### Advanced Capabilities to Explore
-
-**Multimodal MLLM Integration**: Enable visual understanding by switching to multimodal LLMs (GPT-4V, Claude 3). Requires image capture pipeline and increases latency by ~100ms but unlocks use cases like visual troubleshooting and accessibility features.
-
-**Real-Time Knowledge Integration**: Connect agents to live data sources (APIs, databases, search engines) via function calling. Requires LLM provider that supports function calls and careful handling of tool latency.
-
-**Emotion Detection**: Analyze prosody and speech patterns to detect user emotional state. Adjust agent empathy and approach dynamically. Available via specialized ASR providers or post-processing audio features.
-
-**Voice Cloning for Brand Consistency**: Train custom TTS models on your brand voice. Requires ~10-30 minutes of clean audio samples and access to providers like ElevenLabs or Azure Custom Neural Voice.
-
----
-
-The architecture is modular by design. You can swap LLM providers, change ASR/TTS vendors, adjust VAD parameters—all without rewriting core logic. Start with a focused use case, instrument everything, and iterate based on real conversation data.
-
-Voice AI isn't magic. It's careful orchestration of audio streams, text processing, and thoughtful configuration. You now have the complete blueprint to build natural, responsive voice agents at production scale.
+The goal here was to build something useful for understanding how these agents work—how to configure them, debug them, tune them for real conversations. The audio pipeline is handled. Focus on making the conversation feel natural.
