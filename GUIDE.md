@@ -164,20 +164,46 @@ You need visual feedback in voice interfaces. Without it, users don't know if th
 _Real-time waveform and volume ring visualization provides immediate feedback on agent voice activity._
 
 ```javascript
-const processor = new MediaProcessor();
+// Setup audio processing with Web Audio API
+async setupAudioProcessing(remoteAudioTrack) {
+  this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  this.analyser = this.audioContext.createAnalyser();
+  this.analyser.fftSize = 256;
+  const bufferLength = this.analyser.frequencyBinCount;
+  this.dataArray = new Uint8Array(bufferLength);
 
-// Join channel with audio
-await processor.joinChannel(
-  appId,
-  channelName,
-  token,
-  uid,
-  subtitleManager,
-  agentId
-);
+  const mediaStream = new MediaStream([remoteAudioTrack.getMediaStreamTrack()]);
+  const source = this.audioContext.createMediaStreamSource(mediaStream);
+  source.connect(this.analyser);
 
-// Audio visualization runs automatically using Web Audio API
-// Creates frequency analysis and waveform display
+  this.visualizeAudio();
+}
+
+// Real-time visualization using FFT frequency data
+visualizeAudio() {
+  const canvas = document.getElementById("audio-wave");
+  const ctx = canvas.getContext("2d");
+
+  const drawWave = () => {
+    requestAnimationFrame(drawWave);
+    this.analyser.getByteFrequencyData(this.dataArray);
+    let averageVolume = this.dataArray.reduce((a, b) => a + b, 0) / this.dataArray.length;
+    let volumeLevel = averageVolume / 128;
+
+    // Draw waveform
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    for (let i = 0; i < canvas.width; i += 10) {
+      let height = Math.sin(i * 0.05) * volumeLevel * 50;
+      ctx.lineTo(i, canvas.height / 2 - height);
+    }
+    ctx.strokeStyle = `rgba(0, 255, 255, ${0.3 + volumeLevel * 0.7})`;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+  };
+
+  drawWave();
+}
 ```
 
 The visualization taps into the Web Audio API's AnalyserNode. As audio streams through the RTC connection, the analyzer runs FFT (Fast Fourier Transform) on the buffer, giving you frequency domain data. Higher frequencies map to taller bars. Simple, intuitive feedback about audio activity.
@@ -201,7 +227,7 @@ graph LR
     style B1 fill:#333,stroke:#afa,stroke-width:2px
 ```
 
-**Data Stream Mode** uses RTC data streams—essentially, data packets piggy-backed onto the RTC connection. Simpler setup (no RTM configuration), but you only get agent transcription, and there's no broadcast capability. This works fine for single-user scenarios but doesn't scale to multi-party conversations.
+**Data Stream Mode** uses RTC data streams—essentially, data packets piggy-backed onto the RTC connection. Simpler setup (no RTM configuration), and you get bidirectional transcription (both user and agent speech) plus agent state events. However, it lacks message sending capabilities, metrics, error notifications, and message receipts. This works fine for single-user scenarios but doesn't scale to multi-party conversations.
 
 ```mermaid
 graph LR
@@ -411,7 +437,7 @@ Agora supports multiple ASR vendors:
 
 - Vendor: `ares`
 - Language: `en-US`
-- Characteristics: Built-in, no additional API keys, good for testing, limited accuracy with accents
+- Characteristics: Built-in, no additional API keys required, zero setup overhead, integrated with Agora's infrastructure for optimal latency and reliability. Recommended for most production use cases.
 
 **Microsoft ASR**:
 
@@ -419,7 +445,7 @@ Agora supports multiple ASR vendors:
 - API Key: Required
 - Region: e.g., `eastus`
 - Language: `en-US` (extensive language support)
-- Characteristics: High accuracy, robust noise handling, accent-adaptive
+- Characteristics: High accuracy, robust noise handling, accent-adaptive. Consider if you need extensive language support or have specific accuracy requirements.
 
 **Deepgram ASR**:
 
@@ -428,9 +454,9 @@ Agora supports multiple ASR vendors:
 - URL: `wss://api.deepgram.com/v1/listen`
 - Model: `nova-2` (most accurate) or `nova` (faster)
 - Language: `en`
-- Characteristics: Lowest latency (50-150ms), excellent accuracy, real-time streaming
+- Characteristics: Lowest latency (50-150ms), excellent accuracy, real-time streaming. Consider if ultra-low latency is critical for your use case.
 
-For production, consider Microsoft ASR or Deepgram for higher accuracy, especially in noisy environments. Agora ASR works well for testing but has limitations with accents and background noise.
+Agora ASR is the recommended choice for most production deployments due to its seamless integration, zero configuration overhead, and reliable performance. Microsoft ASR and Deepgram are alternatives if you need specific features like extensive language support or ultra-low latency.
 
 ## Advanced Configuration
 
@@ -634,29 +660,33 @@ Uses RTC data streams (SCTP) to piggyback transcription on audio connection.
 
 **Capabilities:**
 
-- **Agent transcription only**: No user speech transcription
+- **Bidirectional transcription**: Captures both user and agent speech
+- **Agent state events**: Real-time notifications when agent transitions between listening/thinking/speaking
 - **Simpler setup**: No RTM credentials or channel management
 - **Direct delivery**: Point-to-point, no pub/sub overhead
 
 **Limitations:**
 
-- No broadcast message support
 - No message receipts or delivery guarantees
-- No agent state events
+- Cannot send direct messages or image url to AI Agent
+- No metrics support
+- No error message notifications
 - Higher packet loss susceptibility (uses unreliable data channel mode)
 
 **When to Use Each:**
 
 | Requirement                     | RTM Mode | Data Stream |
 | ------------------------------- | -------- | ----------- |
-| Production conversation logging | ✓        | ✗           |
+| Production conversation logging | ✓        | ✓           |
 | Multi-client scenarios          | ✓        | ✗           |
 | Broadcast dynamic context       | ✓        | ✗           |
+| Agent metrics and errors        | ✓        | ✗           |
 | Rapid prototyping               | ✗        | ✓           |
 | Minimal infrastructure          | ✗        | ✓           |
-| User speech transcription       | ✓        | ✗           |
+| User speech transcription       | ✓        | ✓           |
+| Agent state events              | ✓        | ✓           |
 
-For production applications, RTM mode is recommended. Data Stream mode works for quick testing or single-user demos where transcription reliability isn't critical.
+For production applications, RTM mode is recommended due to guaranteed delivery, metrics, and error handling. Data Stream mode works well for quick testing or single-user demos where you need transcription and agent state but don't require metrics or broadcast capabilities.
 
 ## Building Agent Configurations Programmatically
 
@@ -813,14 +843,14 @@ stateDiagram-v2
 Update agent configuration without recreating:
 
 ![Updating Agent Configuration](./src/media/4.png)  
-_Updating or stopping an agent session through REST API calls - PATCH and DELETE operations in DevTools._
+_Updating or stopping an agent session through REST API calls - POST and DELETE operations in DevTools._
 
 ```javascript
 // Update LLM parameters mid-conversation
 await fetch(
-  `https://api.agora.io/api/conversational-ai-agent/v2/projects/${APP_ID}/agents/${agentId}`,
+  `https://api.agora.io/api/conversational-ai-agent/v2/projects/${APP_ID}/agents/${agentId}/update`,
   {
-    method: 'PATCH',
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Basic ${btoa(`${CUSTOMER_ID}:${CUSTOMER_SECRET}`)}`,
@@ -845,16 +875,16 @@ await fetch(
 );
 ```
 
-Use PATCH updates to adapt agent behavior based on conversation state, user preferences, or A/B testing scenarios. Changes take effect on next LLM invocation.
+Use POST updates to the `/update` endpoint to adapt agent behavior based on conversation state, user preferences, or A/B testing scenarios. Changes take effect on next LLM invocation.
 
-### Broadcast Messages (Dynamic Context Injection)
+### Broadcast Messages (Make Agent Speak Messages)
 
-Inject external context into active conversations:
+Make the agent speak a specific message out loud during an active conversation:
 
 ```javascript
-// Send context about user's account status
+// Make agent speak a message
 await fetch(
-  `https://api.agora.io/api/conversational-ai-agent/v2/projects/${APP_ID}/agents/${agentId}/broadcast`,
+  `https://api.agora.io/api/conversational-ai-agent/v2/projects/${APP_ID}/agents/${agentId}/speak`,
   {
     method: 'POST',
     headers: {
@@ -862,7 +892,7 @@ await fetch(
       Authorization: `Basic ${btoa(`${CUSTOMER_ID}:${CUSTOMER_SECRET}`)}`,
     },
     body: JSON.stringify({
-      text: '[System Context: User account tier is Premium, subscription expires in 30 days]',
+      text: 'Please listen to this message that we are broadcasting out!', // Agent will speak this exact message
       priority: 'high', // or 'normal'
       interruptable: false, // Whether user can interrupt this message
     }),
@@ -870,12 +900,12 @@ await fetch(
 );
 ```
 
-Broadcast messages appear in conversation context as system messages. Use cases:
+The agent will speak the provided text exactly as written. Use cases:
 
-- Inject real-time data (stock prices, weather, inventory levels)
-- Provide user-specific context (account status, purchase history)
-- Send notifications (new message arrived, appointment reminder)
-- Implement human handoff (agent transfers to human operator with full context)
+- Send spoken notifications (appointment reminders, alerts)
+- Provide real-time updates (stock prices, weather, status changes)
+- Deliver pre-written announcements
+- Implement human handoff (agent says "Transferring you to a human agent now")
 
 **Priority Handling:**
 

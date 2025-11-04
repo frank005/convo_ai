@@ -66,7 +66,7 @@ For more details on advanced features, see [FEATURES.md](./FEATURES.md).
 
 ## Optional Features Setup
 
-### AI Avatar Setup ⭐ **NEW**
+### AI Avatar Setup
 
 Enable visual AI avatar representation:
 
@@ -79,7 +79,7 @@ Enable visual AI avatar representation:
 
 For detailed vendor configuration, see [VENDORS.md](./VENDORS.md).
 
-### Device Selection Setup ⭐ **NEW**
+### Device Selection Setup
 
 Configure your microphone and camera devices:
 
@@ -90,7 +90,7 @@ Configure your microphone and camera devices:
 5. Use retry button if devices don't load initially
 6. Device selections are automatically applied when joining channels
 
-### Camera Setup ⭐ **NEW**
+### Camera Setup
 
 Enable camera integration for image analysis:
 
@@ -99,7 +99,7 @@ Enable camera integration for image analysis:
 3. Acknowledge privacy terms for camera access
 4. Configure periodic screenshot capture for image analysis
 
-### Live Subtitles Setup ⭐ **NEW**
+### Live Subtitles Setup
 
 Enable real-time subtitle display:
 
