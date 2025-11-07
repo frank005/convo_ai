@@ -51,6 +51,7 @@ class ASRManager {
     updateAsrConfigVisibility() {
         console.log('updateAsrConfigVisibility called');
         const asrVendor = document.getElementById('asrVendor');
+        const asrLanguageContainer = document.getElementById('asrLanguage')?.parentElement; // Get the container div
         const microsoftAsrConfig = document.getElementById('microsoftAsrConfig');
         const deepgramAsrConfig = document.getElementById('deepgramAsrConfig');
         const openaiAsrConfig = document.getElementById('openaiAsrConfig');
@@ -59,6 +60,7 @@ class ASRManager {
 
         console.log('ASR elements found:', {
             asrVendor: !!asrVendor,
+            asrLanguageContainer: !!asrLanguageContainer,
             microsoftAsrConfig: !!microsoftAsrConfig,
             deepgramAsrConfig: !!deepgramAsrConfig,
             openaiAsrConfig: !!openaiAsrConfig,
@@ -81,6 +83,16 @@ class ASRManager {
         if (speechmaticsAsrConfig) speechmaticsAsrConfig.classList.add('hidden');
         if (assemblyaiAsrConfig) assemblyaiAsrConfig.classList.add('hidden');
         
+        // Show/hide main language dropdown based on vendor
+        // Speechmatics and AssemblyAI have their own language fields, so hide the main dropdown
+        if (asrLanguageContainer) {
+            if (selectedVendor === 'speechmatics' || selectedVendor === 'assemblyai') {
+                asrLanguageContainer.classList.add('hidden');
+            } else {
+                asrLanguageContainer.classList.remove('hidden');
+            }
+        }
+        
         // Show the selected config section (ARES doesn't need additional config)
         if (selectedVendor === 'microsoft' && microsoftAsrConfig) {
             microsoftAsrConfig.classList.remove('hidden');
@@ -95,8 +107,10 @@ class ASRManager {
         }
         // For ARES, no additional config section is shown
         
-        // Update language dropdown based on selected vendor
-        this.updateAsrLanguageDropdown(selectedVendor);
+        // Update language dropdown based on selected vendor (only if it's visible)
+        if (selectedVendor !== 'speechmatics' && selectedVendor !== 'assemblyai') {
+            this.updateAsrLanguageDropdown(selectedVendor);
+        }
     }
 
     updateAsrLanguageDropdown(vendor) {

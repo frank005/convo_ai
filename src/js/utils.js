@@ -475,7 +475,7 @@ window.Utils = class Utils {
             };
         } else if (vendor === 'speechmatics') {
             const speechmaticsAsrKey = document.getElementById('speechmaticsAsrKey').value.trim();
-            const speechmaticsAsrLanguage = document.getElementById('speechmaticsAsrLanguage').value.trim() || asrLanguage;
+            const speechmaticsAsrLanguage = document.getElementById('speechmaticsAsrLanguage').value.trim();
             
             return {
                 vendor: 'speechmatics',
@@ -486,7 +486,7 @@ window.Utils = class Utils {
             };
         } else if (vendor === 'assemblyai') {
             const assemblyaiAsrKey = document.getElementById('assemblyaiAsrKey').value.trim();
-            const assemblyaiAsrLanguage = document.getElementById('assemblyaiAsrLanguage').value.trim() || asrLanguage;
+            const assemblyaiAsrLanguage = document.getElementById('assemblyaiAsrLanguage').value.trim();
             
             return {
                 vendor: 'assemblyai',
