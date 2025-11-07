@@ -30,6 +30,18 @@ window.Utils = class Utils {
             ttsKey = document.getElementById("cartesiaTtsKey").value.trim();
         } else if (ttsVendor === "openai") {
             ttsKey = document.getElementById("openaiTtsKey").value.trim();
+        } else if (ttsVendor === "rime") {
+            ttsKey = document.getElementById("rimeTtsKey") ? document.getElementById("rimeTtsKey").value.trim() : '';
+        } else if (ttsVendor === "minimax") {
+            ttsKey = document.getElementById("minimaxTtsKey") ? document.getElementById("minimaxTtsKey").value.trim() : '';
+        } else if (ttsVendor === "fishaudio") {
+            ttsKey = document.getElementById("fishaudioTtsKey") ? document.getElementById("fishaudioTtsKey").value.trim() : '';
+        } else if (ttsVendor === "groq") {
+            ttsKey = document.getElementById("groqTtsKey") ? document.getElementById("groqTtsKey").value.trim() : '';
+        } else if (ttsVendor === "google") {
+            ttsKey = document.getElementById("googleTtsCredentials") ? document.getElementById("googleTtsCredentials").value.trim() : '';
+        } else if (ttsVendor === "playht") {
+            ttsKey = document.getElementById("playhtTtsKey") ? document.getElementById("playhtTtsKey").value.trim() : '';
         }
 
         // Get new v1.6 fields
@@ -45,6 +57,7 @@ window.Utils = class Utils {
         const turnDetectionEnabled = document.getElementById("turnDetectionEnabled").checked;
         const turnDetectionType = document.getElementById("turnDetectionType").value;
         const turnInterruptMode = document.getElementById("interruptMode").value;
+        const turnInterruptKeywords = document.getElementById("interruptKeywords") ? document.getElementById("interruptKeywords").value.trim() : '';
         const turnInterruptDuration = document.getElementById("turnInterruptDuration").value || null;
         const turnPrefixPadding = document.getElementById("turnPrefixPadding").value || null;
         const turnSilenceDuration = document.getElementById("turnSilenceDuration").value || null;
@@ -79,6 +92,14 @@ window.Utils = class Utils {
         const mllmStyle = document.getElementById("mllmStyle").value;
         const mllmMaxHistory = document.getElementById("mllmMaxHistory").value || null;
         
+        // Get Vertex AI specific settings
+        const vertexaiAdcCredentials = document.getElementById("vertexaiAdcCredentials") ? document.getElementById("vertexaiAdcCredentials").value.trim() : '';
+        const vertexaiProjectId = document.getElementById("vertexaiProjectId") ? document.getElementById("vertexaiProjectId").value.trim() : '';
+        const vertexaiLocation = document.getElementById("vertexaiLocation") ? document.getElementById("vertexaiLocation").value.trim() : '';
+        const vertexaiModel = document.getElementById("vertexaiModel") ? document.getElementById("vertexaiModel").value.trim() : '';
+        const vertexaiVoice = document.getElementById("vertexaiVoice") ? document.getElementById("vertexaiVoice").value.trim() : '';
+        const vertexaiInstructions = document.getElementById("vertexaiInstructions") ? document.getElementById("vertexaiInstructions").value.trim() : '';
+        
         // Get input/output modalities
         const inputModalities = [
             ...(document.getElementById("inputText").checked ? ["text"] : []),
@@ -111,6 +132,8 @@ window.Utils = class Utils {
             idleTimeout: idleTimeout,
             llmApiKey: document.getElementById("llmApiKey").value.trim(),
             llmUrl: document.getElementById("llmUrl").value.trim(),
+            llmAccessKey: document.getElementById("llmAccessKey") ? document.getElementById("llmAccessKey").value.trim() : '',
+            llmSecret: document.getElementById("llmSecret") ? document.getElementById("llmSecret").value.trim() : '',
             ttsKey: ttsKey,
             gMsg: document.getElementById("gMsg").value.trim(),
             fMsg: document.getElementById("fMsg").value.trim(),
@@ -137,10 +160,19 @@ window.Utils = class Utils {
             mllmStyle: mllmStyle,
             mllmMaxHistory: mllmMaxHistory,
             
+            // Vertex AI settings
+            vertexaiAdcCredentials: vertexaiAdcCredentials,
+            vertexaiProjectId: vertexaiProjectId,
+            vertexaiLocation: vertexaiLocation,
+            vertexaiModel: vertexaiModel,
+            vertexaiVoice: vertexaiVoice,
+            vertexaiInstructions: vertexaiInstructions,
+            
             // Turn detection
             turnDetectionEnabled: turnDetectionEnabled,
             turnDetectionType: turnDetectionType,
             turnInterruptMode: turnInterruptMode,
+            turnInterruptKeywords: turnInterruptKeywords,
             turnInterruptDuration: turnInterruptDuration,
             turnPrefixPadding: turnPrefixPadding,
             turnSilenceDuration: turnSilenceDuration,
@@ -431,6 +463,38 @@ window.Utils = class Utils {
                 vendor: 'deepgram',
                 params: params
             };
+        } else if (vendor === 'openai') {
+            const openaiAsrKey = document.getElementById('openaiAsrKey').value.trim();
+            
+            return {
+                vendor: 'openai',
+                params: {
+                    api_key: openaiAsrKey
+                },
+                language: asrLanguage
+            };
+        } else if (vendor === 'speechmatics') {
+            const speechmaticsAsrKey = document.getElementById('speechmaticsAsrKey').value.trim();
+            const speechmaticsAsrLanguage = document.getElementById('speechmaticsAsrLanguage').value.trim() || asrLanguage;
+            
+            return {
+                vendor: 'speechmatics',
+                params: {
+                    api_key: speechmaticsAsrKey,
+                    language: speechmaticsAsrLanguage
+                }
+            };
+        } else if (vendor === 'assemblyai') {
+            const assemblyaiAsrKey = document.getElementById('assemblyaiAsrKey').value.trim();
+            const assemblyaiAsrLanguage = document.getElementById('assemblyaiAsrLanguage').value.trim() || asrLanguage;
+            
+            return {
+                vendor: 'assemblyai',
+                params: {
+                    api_key: assemblyaiAsrKey,
+                    language: assemblyaiAsrLanguage
+                }
+            };
         }
         
         // Default to ARES if vendor is not recognized
@@ -469,6 +533,11 @@ window.Utils = class Utils {
                 type: formData.turnDetectionType,
                 interrupt_mode: formData.turnInterruptMode
             };
+            
+            // Add interrupt keywords if keyword mode is selected
+            if (formData.turnInterruptMode === 'keyword' && formData.turnInterruptKeywords) {
+                turnDetection.interrupt_keywords = formData.turnInterruptKeywords.split(',').map(k => k.trim()).filter(k => k.length > 0);
+            }
             
             // Add VAD parameters if they have values
             if (formData.turnInterruptDuration) {
@@ -559,6 +628,8 @@ window.Utils = class Utils {
                     llm: {
                         url: formData.llmUrl,
                         api_key: formData.llmApiKey,
+                        ...(formData.llmAccessKey ? { access_key: formData.llmAccessKey } : {}),
+                        ...(formData.llmSecret ? { secret: formData.llmSecret } : {}),
                         system_messages: systemMessages,
                         greeting_message: formData.gMsg,
                         failure_message: formData.fMsg,
@@ -573,15 +644,27 @@ window.Utils = class Utils {
                 }),
                 ...(formData.enableMllm ? { // Include MLLM if enabled
                     mllm: {
-                        url: formData.mllmUrl,
-                        api_key: formData.mllmApiKey,
+                        ...(formData.mllmVendor === 'vertexai' ? {} : { url: formData.mllmUrl }), // URL not needed for vertexai
+                        ...(formData.mllmVendor === 'vertexai' ? {} : { api_key: formData.mllmApiKey }), // API key not needed for vertexai
                         ...(formData.mllmGreetingMessage ? { greeting_message: formData.mllmGreetingMessage } : {}),
                         ...(formData.mllmVendor ? { vendor: formData.mllmVendor } : {}),
                         ...(formData.mllmStyle ? { style: formData.mllmStyle } : {}),
                         ...(formData.mllmMaxHistory ? { max_history: parseInt(formData.mllmMaxHistory, 10) } : {}),
-                        input_modalities: ["text", "audio"], // MLLM always uses text and audio
-                        output_modalities: ["text", "audio"], // MLLM always outputs text and audio
-                        ...(Object.keys(customParams).length > 0 ? { params: customParams } : {}) // Only include params if customParams is not empty
+                        input_modalities: ["audio"], // MLLM uses audio input
+                        output_modalities: ["audio"], // MLLM outputs audio
+                        ...(formData.mllmVendor === 'vertexai' ? {
+                            params: {
+                                model: formData.vertexaiModel || 'gemini-live-2.5-flash-preview-native-audio-09-2025',
+                                adc_credentials_string: formData.vertexaiAdcCredentials,
+                                project_id: formData.vertexaiProjectId,
+                                location: formData.vertexaiLocation,
+                                ...(formData.vertexaiVoice ? { voice: formData.vertexaiVoice } : {}),
+                                ...(formData.vertexaiInstructions ? { instructions: formData.vertexaiInstructions } : {}),
+                                transcribe_agent: true,
+                                transcribe_user: true,
+                                ...customParams
+                            }
+                        } : (Object.keys(customParams).length > 0 ? { params: customParams } : {})) // Only include params if customParams is not empty
                     }
                 } : {}),
                         //add chorus scenario for websdk fix for now, merge with dynamic parameters
@@ -704,6 +787,82 @@ window.Utils = class Utils {
                         provider: document.getElementById("humeaiProvider").value || "HUME_AI",
                         ...(document.getElementById("humeaiSpeed")?.value ? { speed: parseFloat(document.getElementById("humeaiSpeed").value) } : {}),
                         ...(document.getElementById("humeaiTrailingSilence")?.value ? { trailing_silence: parseFloat(document.getElementById("humeaiTrailingSilence").value) } : {})
+                    }
+                };
+            } else if (formData.vendor === "rime") {
+                config.properties.tts = {
+                    vendor: "rime",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: {
+                        api_key: document.getElementById("rimeTtsKey").value,
+                        speaker: document.getElementById("rimeSpeaker").value,
+                        modelId: document.getElementById("rimeModelId").value
+                    }
+                };
+            } else if (formData.vendor === "minimax") {
+                config.properties.tts = {
+                    vendor: "minimax",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: {
+                        api_key: document.getElementById("minimaxTtsKey").value,
+                        group_id: document.getElementById("minimaxGroupId").value,
+                        model: document.getElementById("minimaxModel").value,
+                        voice_setting: {
+                            voice_id: document.getElementById("minimaxVoiceId").value
+                        },
+                        url: document.getElementById("minimaxUrl").value
+                    }
+                };
+            } else if (formData.vendor === "fishaudio") {
+                config.properties.tts = {
+                    vendor: "fishaudio",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: {
+                        api_key: document.getElementById("fishaudioTtsKey").value,
+                        reference_id: document.getElementById("fishaudioReferenceId").value,
+                        backend: document.getElementById("fishaudioBackend").value
+                    }
+                };
+            } else if (formData.vendor === "groq") {
+                config.properties.tts = {
+                    vendor: "groq",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: {
+                        api_key: document.getElementById("groqTtsKey").value,
+                        model: document.getElementById("groqModel").value,
+                        voice: document.getElementById("groqVoice").value
+                    }
+                };
+            } else if (formData.vendor === "google") {
+                const audioConfig = {};
+                if (document.getElementById("googleSpeakingRate")?.value) {
+                    audioConfig.speaking_rate = parseFloat(document.getElementById("googleSpeakingRate").value);
+                }
+                if (document.getElementById("googleSampleRate")?.value) {
+                    audioConfig.sample_rate_hertz = parseInt(document.getElementById("googleSampleRate").value, 10);
+                }
+                
+                config.properties.tts = {
+                    vendor: "google",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: {
+                        credentials: document.getElementById("googleTtsCredentials").value,
+                        VoiceSelectionParams: {
+                            name: document.getElementById("googleVoiceName").value
+                        },
+                        ...(Object.keys(audioConfig).length > 0 ? { AudioConfig: audioConfig } : {})
+                    }
+                };
+            } else if (formData.vendor === "playht") {
+                config.properties.tts = {
+                    vendor: "playht",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: {
+                        api_key: document.getElementById("playhtTtsKey").value,
+                        user_id: document.getElementById("playhtUserId").value,
+                        voice_engine: document.getElementById("playhtVoiceEngine").value,
+                        voice: document.getElementById("playhtVoice").value,
+                        ...(document.getElementById("playhtSpeed")?.value ? { speed: parseFloat(document.getElementById("playhtSpeed").value) } : {})
                     }
                 };
             }

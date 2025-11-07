@@ -1438,6 +1438,19 @@
     const mllmSettingsBtn = document.getElementById('mllmSettingsBtn');
     const mllmDrawer = document.getElementById('mllmDrawer');
     const mllmDrawerBackdrop = document.getElementById('mllmDrawerBackdrop');
+    const mllmVendor = document.getElementById('mllmVendor');
+    const vertexaiConfig = document.getElementById('vertexaiConfig');
+    
+    // Show/hide Vertex AI config based on vendor selection
+    if (mllmVendor && vertexaiConfig) {
+        mllmVendor.addEventListener('change', function() {
+            if (this.value === 'vertexai') {
+                vertexaiConfig.classList.remove('hidden');
+            } else {
+                vertexaiConfig.classList.add('hidden');
+            }
+        });
+    }
     const enableMllm = document.getElementById('enableMllm');
     
     // MLLM drawer functionality
@@ -1617,6 +1630,19 @@
     }
     
     // Handle turn detection type changes
+    const interruptMode = document.getElementById('interruptMode');
+    const interruptKeywordsBlock = document.getElementById('interruptKeywordsBlock');
+    
+    if (interruptMode && interruptKeywordsBlock) {
+        interruptMode.addEventListener('change', function() {
+            if (this.value === 'keyword') {
+                interruptKeywordsBlock.classList.remove('hidden');
+            } else {
+                interruptKeywordsBlock.classList.add('hidden');
+            }
+        });
+    }
+    
     if (turnDetectionType) {
     turnDetectionType.addEventListener('change', function() {
       const isServerVad = this.value === 'server_vad';
@@ -2598,6 +2624,9 @@
                 <option value="ares">ARES (Default)</option>
                 <option value="microsoft">Microsoft</option>
                 <option value="deepgram">Deepgram</option>
+                <option value="openai">OpenAI (Beta)</option>
+                <option value="speechmatics">Speechmatics</option>
+                <option value="assemblyai">AssemblyAI (Beta)</option>
               </select>
               <div class="tooltip">Select the Automatic Speech Recognition (ASR) vendor to use for speech recognition.</div>
             </div>
@@ -2705,6 +2734,69 @@
                 <div class="tooltip">The speech recognition model to use (e.g., nova-2, nova, enhanced, base).</div>
               </div>
 
+            </div>
+          </div>
+          
+          <!-- OpenAI ASR Configuration -->
+          <div id="openaiAsrConfig" class="hidden mt-4">
+            <h4 class="text-sm font-semibold mb-2">OpenAI ASR Settings (Beta)</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="has-tooltip relative">
+                <input
+                  id="openaiAsrKey"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="OpenAI API Key (Required)"
+                />
+                <div class="tooltip">API key for OpenAI ASR service.</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Speechmatics ASR Configuration -->
+          <div id="speechmaticsAsrConfig" class="hidden mt-4">
+            <h4 class="text-sm font-semibold mb-2">Speechmatics ASR Settings</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="has-tooltip relative">
+                <input
+                  id="speechmaticsAsrKey"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="Speechmatics API Key (Required)"
+                />
+                <div class="tooltip">API key for Speechmatics ASR service.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="speechmaticsAsrLanguage"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="Language Code (e.g., en)"
+                  value="en"
+                />
+                <div class="tooltip">The language code to use for transcription (e.g., en for English).</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- AssemblyAI ASR Configuration -->
+          <div id="assemblyaiAsrConfig" class="hidden mt-4">
+            <h4 class="text-sm font-semibold mb-2">AssemblyAI ASR Settings (Beta)</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="has-tooltip relative">
+                <input
+                  id="assemblyaiAsrKey"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="AssemblyAI API Key (Required)"
+                />
+                <div class="tooltip">API key for AssemblyAI ASR service.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="assemblyaiAsrLanguage"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="Language Code (e.g., en-US)"
+                  value="en-US"
+                />
+                <div class="tooltip">The language code for speech recognition (e.g., en-US).</div>
+              </div>
             </div>
           </div>
         </div>
@@ -2845,6 +2937,23 @@
           />
           <div class="tooltip">Request style for chat completion (optional). Use 'openai' for OpenAI-compatible APIs or custom LLM. Possible values: openai, gemini, anthropic. Leave blank to omit.</div>
         </div>
+        <div class="has-tooltip relative">
+          <input
+            id="llmAccessKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="LLM Access Key (Optional, Amazon Bedrock only)"
+          />
+          <div class="tooltip">Access key for Amazon Bedrock LLM (optional). Only used when LLM vendor is Amazon Bedrock.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="llmSecret"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="LLM Secret (Optional, Amazon Bedrock only)"
+            type="password"
+          />
+          <div class="tooltip">Secret key for Amazon Bedrock LLM (optional). Only used when LLM vendor is Amazon Bedrock.</div>
+        </div>
       </div>
     </div>
 
@@ -2863,6 +2972,12 @@
             <option value="cartesia">Cartesia (Beta)</option>
             <option value="openai">OpenAI (Beta)</option>
             <option value="humeai">Hume AI (Beta)</option>
+            <option value="rime">Rime (Beta)</option>
+            <option value="minimax">MiniMax</option>
+            <option value="fishaudio">Fish Audio (Beta)</option>
+            <option value="groq">Groq (Beta)</option>
+            <option value="google">Google (Beta)</option>
+            <option value="playht">PlayHT (Beta)</option>
           </select>
           <div class="tooltip">Select the Text-to-Speech vendor to use for voice output.</div>
         </div>
@@ -3222,6 +3337,225 @@
           <div class="tooltip">Trailing silence duration for Hume AI TTS (0-5000ms).</div>
         </div>
         
+        <!-- Rime TTS Settings -->
+        <div id="rimeTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="rimeTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Rime API Key (Required)"
+          />
+          <div class="tooltip">API key for Rime TTS service.</div>
+        </div>
+        <div id="rimeSpeakerBlock" class="has-tooltip relative hidden">
+          <input
+            id="rimeSpeaker"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Speaker (e.g., cove)"
+            value="cove"
+          />
+          <div class="tooltip">The speaker voice to use for TTS output.</div>
+        </div>
+        <div id="rimeModelIdBlock" class="has-tooltip relative hidden">
+          <input
+            id="rimeModelId"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Model ID (e.g., mistv2)"
+            value="mistv2"
+          />
+          <div class="tooltip">The Rime TTS model to use.</div>
+        </div>
+        
+        <!-- MiniMax TTS Settings -->
+        <div id="minimaxTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="minimaxTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="MiniMax API Key (Required)"
+          />
+          <div class="tooltip">API key for MiniMax TTS service.</div>
+        </div>
+        <div id="minimaxGroupIdBlock" class="has-tooltip relative hidden">
+          <input
+            id="minimaxGroupId"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Group ID (Required)"
+          />
+          <div class="tooltip">The MiniMax group identifier.</div>
+        </div>
+        <div id="minimaxModelBlock" class="has-tooltip relative hidden">
+          <input
+            id="minimaxModel"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Model (e.g., speech-02-turbo)"
+            value="speech-02-turbo"
+          />
+          <div class="tooltip">The TTS model to use.</div>
+        </div>
+        <div id="minimaxVoiceIdBlock" class="has-tooltip relative hidden">
+          <input
+            id="minimaxVoiceId"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Voice ID (e.g., English_captivating_female1)"
+          />
+          <div class="tooltip">The voice style identifier to use.</div>
+        </div>
+        <div id="minimaxUrlBlock" class="has-tooltip relative hidden">
+          <input
+            id="minimaxUrl"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="WebSocket URL"
+            value="wss://api.minimax.io/ws/v1/t2a_v2"
+          />
+          <div class="tooltip">The WebSocket endpoint for streaming TTS output.</div>
+        </div>
+        
+        <!-- Fish Audio TTS Settings -->
+        <div id="fishaudioTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="fishaudioTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Fish Audio API Key (Required)"
+          />
+          <div class="tooltip">API key for Fish Audio TTS service.</div>
+        </div>
+        <div id="fishaudioReferenceIdBlock" class="has-tooltip relative hidden">
+          <input
+            id="fishaudioReferenceId"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Voice Model ID (Required)"
+          />
+          <div class="tooltip">The identifier of the voice model to use for speech synthesis.</div>
+        </div>
+        <div id="fishaudioBackendBlock" class="has-tooltip relative hidden">
+          <input
+            id="fishaudioBackend"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Backend (e.g., speech-1.5)"
+            value="speech-1.5"
+          />
+          <div class="tooltip">The backend model version to use.</div>
+        </div>
+        
+        <!-- Groq TTS Settings -->
+        <div id="groqTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="groqTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Groq API Key (Required)"
+          />
+          <div class="tooltip">API key for Groq TTS service.</div>
+        </div>
+        <div id="groqModelBlock" class="has-tooltip relative hidden">
+          <input
+            id="groqModel"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Model (e.g., playai-tts)"
+            value="playai-tts"
+          />
+          <div class="tooltip">The Groq TTS model to use.</div>
+        </div>
+        <div id="groqVoiceBlock" class="has-tooltip relative hidden">
+          <input
+            id="groqVoice"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Voice (e.g., Arista-PlayAI)"
+            value="Arista-PlayAI"
+          />
+          <div class="tooltip">The voice preset to use for speech synthesis.</div>
+        </div>
+        
+        <!-- Google TTS Settings -->
+        <div id="googleTtsCredentialsBlock" class="has-tooltip relative hidden">
+          <textarea
+            id="googleTtsCredentials"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Google Cloud Credentials JSON String (Required)"
+            rows="4"
+          ></textarea>
+          <div class="tooltip">The Google Cloud service account credentials JSON string used for authentication.</div>
+        </div>
+        <div id="googleVoiceNameBlock" class="has-tooltip relative hidden">
+          <input
+            id="googleVoiceName"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Voice Name (e.g., en-US-Chirp3-HD-Charon)"
+          />
+          <div class="tooltip">The name of the voice to use.</div>
+        </div>
+        <div id="googleSpeakingRateBlock" class="has-tooltip relative hidden">
+          <input
+            id="googleSpeakingRate"
+            type="number"
+            step="0.1"
+            min="0.25"
+            max="2.0"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Speaking Rate (Optional, 0.25-2.0)"
+            value="1.0"
+          />
+          <div class="tooltip">The speed of speech. Valid range is 0.25 to 2.0, where 1.0 is the normal speed.</div>
+        </div>
+        <div id="googleSampleRateBlock" class="has-tooltip relative hidden">
+          <input
+            id="googleSampleRate"
+            type="number"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Sample Rate (Optional, e.g., 24000)"
+            value="24000"
+          />
+          <div class="tooltip">The sample rate in Hertz for the audio output.</div>
+        </div>
+        
+        <!-- PlayHT TTS Settings -->
+        <div id="playhtTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="playhtTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="PlayHT API Key (Required)"
+          />
+          <div class="tooltip">API key for PlayHT TTS service.</div>
+        </div>
+        <div id="playhtUserIdBlock" class="has-tooltip relative hidden">
+          <input
+            id="playhtUserId"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="User ID (Required)"
+          />
+          <div class="tooltip">The user ID associated with your PlayHT account.</div>
+        </div>
+        <div id="playhtVoiceEngineBlock" class="has-tooltip relative hidden">
+          <select
+            id="playhtVoiceEngine"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="PlayDialog">PlayDialog</option>
+            <option value="Play3.0-mini">Play3.0-mini</option>
+            <option value="PlayHT2.0-turbo">PlayHT2.0-turbo</option>
+          </select>
+          <div class="tooltip">The voice engine to use for speech synthesis.</div>
+        </div>
+        <div id="playhtVoiceBlock" class="has-tooltip relative hidden">
+          <input
+            id="playhtVoice"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Voice ID (e.g., alex)"
+          />
+          <div class="tooltip">The voice ID to use for speech generation.</div>
+        </div>
+        <div id="playhtSpeedBlock" class="has-tooltip relative hidden">
+          <input
+            id="playhtSpeed"
+            type="number"
+            step="0.1"
+            min="0.1"
+            max="5.0"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Speed (Optional, 1.0 = normal)"
+            value="1.0"
+          />
+          <div class="tooltip">The speed of speech, where 1.0 is the normal speed.</div>
+        </div>
+        
         <!-- Skip Patterns Section -->
         <div class="has-tooltip relative">
           <label class="text-sm font-medium mb-2 block">Skip Patterns (Optional)</label>
@@ -3374,8 +3708,9 @@
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
           >
             <option value="openai">OpenAI</option>
+            <option value="vertexai">Google Gemini Live (Vertex AI)</option>
           </select>
-          <div class="tooltip">MLLM provider. Currently supports OpenAI Realtime API.</div>
+          <div class="tooltip">MLLM provider. Supports OpenAI Realtime API and Google Gemini Live.</div>
         </div>
         <div class="has-tooltip relative">
           <select
@@ -3384,7 +3719,63 @@
           >
             <option value="openai">OpenAI</option>
           </select>
-          <div class="tooltip">The request style for MLLM completion. Currently supports OpenAI Realtime API format.</div>
+          <div class="tooltip">The request style for MLLM completion. Use 'openai' for OpenAI-compatible APIs or Google Gemini Live.</div>
+        </div>
+        
+        <!-- Google Gemini Live (Vertex AI) Specific Settings -->
+        <div id="vertexaiConfig" class="hidden space-y-4">
+          <div class="has-tooltip relative">
+            <textarea
+              id="vertexaiAdcCredentials"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="ADC Credentials String (Base64-encoded Google Cloud credentials)"
+              rows="4"
+            ></textarea>
+            <div class="tooltip">Base64-encoded Google Cloud Application Default Credentials (ADC) JSON string.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="vertexaiProjectId"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Project ID (Required)"
+            />
+            <div class="tooltip">Your Google Cloud project ID for Vertex AI access.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="vertexaiLocation"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Location (e.g., us-central1)"
+            />
+            <div class="tooltip">The Google Cloud region hosting the Gemini Live model.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="vertexaiModel"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Model (e.g., gemini-live-2.5-flash-preview-native-audio-09-2025)"
+              value="gemini-live-2.5-flash-preview-native-audio-09-2025"
+            />
+            <div class="tooltip">The Gemini Live model identifier.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="vertexaiVoice"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Voice (e.g., Aoede)"
+              value="Aoede"
+            />
+            <div class="tooltip">The voice identifier for audio output (e.g., Aoede, Puck, Charon, Kore, Fenrir, Leda, Orus, Zephyr).</div>
+          </div>
+          <div class="has-tooltip relative">
+            <textarea
+              id="vertexaiInstructions"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Instructions (Optional - System instructions for the agent)"
+              rows="3"
+            ></textarea>
+            <div class="tooltip">System instructions that define the agent's behavior or tone.</div>
+          </div>
         </div>
         <div class="has-tooltip relative">
           <input
@@ -3454,8 +3845,20 @@
                 <option value="interrupt">Interrupt (Stop and process input)</option>
                 <option value="append">Append (Complete current, then process)</option>
                 <option value="ignore">Ignore (Discard input)</option>
+                <option value="keyword">Keyword (Stop on keyword detection)</option>
+                <option value="adaptive">Adaptive (Dynamic threshold adjustment)</option>
               </select>
-              <div class="tooltip">Sets the agent's behavior when human voice interrupts the agent while it is interacting. Only interrupt mode is supported when MLLM is enabled.</div>
+              <div class="tooltip">Sets the agent's behavior when human voice interrupts the agent while it is interacting. Only interrupt mode is supported when MLLM is enabled. Keyword mode stops on specified keywords. Adaptive mode dynamically adjusts voice continuity threshold.</div>
+            </div>
+            <div id="interruptKeywordsBlock" class="has-tooltip relative hidden">
+              <label class="text-sm">Interrupt Keywords</label>
+              <input
+                type="text"
+                id="interruptKeywords"
+                class="w-full p-2 rounded bg-gray-600 turn-field"
+                placeholder="Comma-separated keywords (e.g., stop, cancel, wait)"
+              />
+              <div class="tooltip">Keywords that trigger interruption when keyword mode is enabled. Separate multiple keywords with commas.</div>
             </div>
             
             <!-- Turn Detection Parameters -->

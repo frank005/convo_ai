@@ -6,7 +6,7 @@
 
 // Event types
 const EConversationalAIAPIEvents = {
-    TRANSCRIPTION_UPDATED: 'transcription-updated',
+    TRANSCRIPT_UPDATED: 'transcript-updated',
     AGENT_STATE_CHANGED: 'agent-state-changed',
     AGENT_INTERRUPTED: 'agent-interrupted',
     AGENT_METRICS: 'agent-metrics',
@@ -836,7 +836,7 @@ class ConversationalAIAPI extends EventHelper {
         if (this.enableLog) {
             console.log('Chat history updated:', chatHistory);
         }
-        this.emit(EConversationalAIAPIEvents.TRANSCRIPTION_UPDATED, chatHistory);
+        this.emit(EConversationalAIAPIEvents.TRANSCRIPT_UPDATED, chatHistory);
     }
 
     onAgentStateChanged(agentUserId, event) {

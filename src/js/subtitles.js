@@ -815,7 +815,7 @@ class SubtitleManager {
                 this.conversationalAIAPI = ConversationalAIAPI.getInstance();
                 
                 // Subscribe to transcription events using the correct event system
-                this.conversationalAIAPI.on(window.EConversationalAIAPIEvents.TRANSCRIPTION_UPDATED, (chatHistory) => {
+                this.conversationalAIAPI.on(window.EConversationalAIAPIEvents.TRANSCRIPT_UPDATED, (chatHistory) => {
                     console.log('Received transcription update:', chatHistory);
                     this.handleTranscriptionUpdate(chatHistory);
                 });
