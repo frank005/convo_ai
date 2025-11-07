@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/agora-rtm-sdk@2.2.2/agora-rtm.js"></script>
-  <script type="module" src="src/lib/microsoftVoicesByLang.js"></script>
+  <script src="src/lib/microsoftVoicesByLang.js"></script>
   <link rel="stylesheet" href="src/css/styles.css?v=1.3">
 </head>
 <body class="bg-gray-900 text-white min-h-screen py-10 px-4">
@@ -42,7 +42,7 @@
         class="bg-green-600 hover:bg-green-700 p-2 rounded font-bold"
       >
         Create Agent
-      </button>
+    </button>
       <div class="has-tooltip relative">
         <button
           id="copyCreateJson"
@@ -149,14 +149,14 @@
         </div>
         <div id="avatarUidNote" class="text-xs text-cyan-400 mt-1 hidden">
           Note: Remote RTC UIDs have been automatically set to match your Client RTC UID.
-        </div>
+      </div>
       </div>
         <div class="flex-1 has-tooltip relative">
       <input
         id="clientRtcToken"
             class="w-full px-3 py-2 rounded bg-gray-700 text-white"
             placeholder="Agora token (if token required)"
-          />
+      />
         <div class="tooltip">Authentication token for Agora RTC. Required if your project has token authentication enabled.</div>
         </div>
       </div>
@@ -199,14 +199,14 @@
             <div id="subtitleModeDisabledIndicator" class="text-xs text-gray-400 mt-1 flex items-center hidden">
               <div class="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
               Subtitle mode selection disabled - Agent is running
-            </div>
           </div>
+        </div>
         
         <!-- Chat History Section -->
         <div class="mt-4">
           <div class="flex justify-between items-center mb-2">
             <div class="has-tooltip relative">
-              <h4 class="text-sm font-medium text-gray-300">Chat History</h4>
+            <h4 class="text-sm font-medium text-gray-300">Chat History</h4>
               <div class="tooltip">Real-time conversation history between you and the AI agent. Messages are displayed as they occur.</div>
             </div>
             <div class="space-x-2 has-tooltip relative">
@@ -224,42 +224,42 @@
           </div>
         </div>
       </div>
-        </div>
+          </div>
                   <!-- Query Agents Section -->
                   <div class="w-full p-4 bg-gray-700 rounded-lg">
                     <h3 class="text-sm font-semibold mb-3 text-gray-300">Query Agents</h3>
                     <div class="space-y-3">
                       <div class="has-tooltip relative">
-                        <input
+          <input
                           id="agentId"
                           class="w-full p-2 rounded bg-gray-800 text-white"
                           placeholder="Agent ID to Query"
                         />
                         <div class="tooltip">Enter the ID of the agent you want to query</div>
-                      </div>
+        </div>
         
                       <div class="grid grid-cols-1 gap-2">
                         <div class="has-tooltip relative">
-                          <button
+        <button
                             id="queryAgentBtn"
                             class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
-                          >
+        >
                             Query Agent Status
-                          </button>
+        </button>
                           <div class="tooltip">Get the current status of the specified Conversational AI agent instance. Shows status like IDLE, STARTING, RUNNING, STOPPING, STOPPED, RECOVERING, or FAILED.</div>
                         </div>
         
                         <div class="has-tooltip relative">
-                          <button
+        <button
                             id="listAgentsBtn"
                             class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
-                          >
+        >
                             Retrieve Agent List
-                          </button>
+        </button>
                           <div class="tooltip">Get a list of Conversational AI agents that meet the specified conditions. Can filter by channel, time range, state, and limit results.</div>
-                        </div>
-        
-                        <div class="has-tooltip relative">
+    </div>
+
+          <div class="has-tooltip relative">
                           <button
                             id="getAgentHistoryBtn"
                             class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
@@ -267,9 +267,9 @@
                             Retrieve Agent History
                           </button>
                           <div class="tooltip">Retrieve the conversation history between the user and the Conversational AI agent while the agent is running. Shows messages with role (user/assistant) and content.</div>
-                        </div>
-                      </div>
-        
+          </div>
+          </div>
+          
                       <div class="relative mt-4">
                         <button
                           id="copyQueryResponseBtn"
@@ -287,9 +287,110 @@
                           id="queryResponse"
                           class="p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto"
                         ></pre>
-                      </div>
-                    </div>
-                  </div>
+            </div>
+          </div>
+          </div>
+
+                  <!-- Phone Number Management (Combined) -->
+                  <div class="w-full p-4 bg-gray-700 rounded-lg">
+                    <h3 class="text-sm font-semibold mb-3 text-gray-300">Phone Number Management</h3>
+                    <div class="space-y-2">
+              <div class="has-tooltip relative">
+                <input
+                          id="phoneNumberInput"
+                          class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                          placeholder="Phone Number (e.g., +1234567890)"
+                />
+                        <div class="tooltip">The phone number for import, get info, update, or delete operations.</div>
+              </div>
+                      <div class="grid grid-cols-2 gap-2">
+              <div class="has-tooltip relative">
+                <input
+                            id="phoneCountryCode"
+                            class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                            placeholder="Country Code (e.g., US)"
+                />
+                          <div class="tooltip">Country code for the phone number (required for import).</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                            id="phoneAreaCode"
+                            class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                            placeholder="Area Code (e.g., 415)"
+                />
+                          <div class="tooltip">Area code for the phone number (required for import).</div>
+              </div>
+              </div>
+              <div class="has-tooltip relative">
+                        <textarea
+                          id="phoneUpdateData"
+                          class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                          placeholder='Update Data (JSON, e.g., {"display_name": "My Number"}) - Only used for Update button'
+                          rows="2"
+                        ></textarea>
+                        <div class="tooltip">JSON object with fields to update. Only used when clicking the Update button.</div>
+              </div>
+                      <div class="grid grid-cols-2 gap-2">
+                        <button
+                          id="importPhoneNumberBtn"
+                          class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold"
+                        >
+                          Import Phone Number
+          </button>
+                        <button
+                          id="getPhoneInfoBtn"
+                          class="w-full px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm font-bold"
+                        >
+                          Get Phone Number Info
+                        </button>
+                        <button
+                          id="updatePhoneNumberBtn"
+                          class="w-full px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm font-bold"
+                        >
+                          Update Phone Number
+                        </button>
+                        <button
+                          id="deletePhoneNumberBtn"
+                          class="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-bold"
+                        >
+                          Delete Phone Number
+                        </button>
+              </div>
+                      <div id="phoneNumberResult" class="hidden mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto break-words whitespace-pre-wrap" style="max-width: 100%; overflow-wrap: break-word; word-wrap: break-word;"></div>
+            </div>
+          </div>
+
+                  <!-- Get Number List -->
+                  <div class="w-full p-4 bg-gray-700 rounded-lg">
+                    <h3 class="text-sm font-semibold mb-3 text-gray-300">Get Number List</h3>
+                    <div class="space-y-2">
+                      <button
+                        id="listPhoneNumbersBtn"
+                        class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-bold"
+                      >
+                        Get Number List
+                      </button>
+                      <div class="relative mt-4 w-full" style="max-width: 100%; overflow: hidden;">
+                        <button
+                          id="copyPhoneListBtn"
+                          class="absolute top-2 right-2 bg-transparent hover:bg-gray-600 rounded p-0.5 focus:outline-none"
+                          title="Copy response"
+                          style="z-index:10;width:24px;height:24px;display:flex;align-items:center;justify-content:center;"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <rect x="9" y="9" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <rect x="3" y="3" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                          </svg>
+                        </button>
+                        <span id="copyPhoneListMsg" class="absolute top-2 right-10 text-green-400 text-xs hidden" style="z-index:10;">Copied!</span>
+                        <pre
+                          id="phoneListResult"
+                          class="p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto break-words whitespace-pre-wrap break-all"
+                          style="max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box; width: 100%;"
+                        ></pre>
+              </div>
+              </div>
+            </div>
           </div>
                   <!-- Right Section: Send Messages and Broadcast -->
         <div class="space-y-4">
@@ -304,8 +405,8 @@
                 </div>
                 <button id="sendTextBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm disabled:opacity-50 disabled:pointer-events-none" disabled title="Text messages disabled when RTM is not enabled">
                   <span class="material-icons text-sm">send</span>
-                </button>
-              </div>
+          </button>
+                  </div>
               <div class="flex items-center gap-2">
                 <div class="flex-grow has-tooltip relative">
                   <input type="text" id="imageUrlInput" placeholder="Enter image URL..." class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm disabled:opacity-50 disabled:bg-gray-700" disabled>
@@ -314,48 +415,48 @@
                 <button id="sendImageBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm flex items-center disabled:opacity-50 disabled:pointer-events-none" disabled title="Image upload disabled when camera is active">
                   <span class="material-icons text-sm">send</span>
                 </button>
-              </div>
+                  </div>
               <div class="flex items-center gap-2">
                 <div class="flex-grow has-tooltip relative">
                   <input type="file" id="imageFileInput" accept="image/*" class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm file:bg-gray-700 file:text-white file:border-0 file:rounded file:px-2 file:py-1 file:mr-2 disabled:opacity-50 disabled:bg-gray-700" disabled>
                   <div class="tooltip">Upload an image file to send to the agent for analysis. The image will be converted to base64. Disabled when camera is active.</div>
-                </div>
+                  </div>
                 <button id="sendImageFileBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm flex items-center disabled:opacity-50 disabled:pointer-events-none" disabled title="Image upload disabled when camera is active">
                   <span class="material-icons text-sm">upload</span>
                 </button>
-              </div>
-            </div>
-          </div>
-    
+                      </div>
+                    </div>
+                  </div>
+                  
               <!-- Broadcast Message Section -->
               <div class="w-full p-4 bg-gray-700 rounded-lg">
                 <h3 class="text-sm font-semibold mb-3 text-gray-300">Broadcast Messages</h3>
             <div class="mb-2 has-tooltip relative">
-              <input
+                  <input
                 id="broadcastText"
                 maxlength="512"
-                class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
                 placeholder="Enter broadcast message (max 512 bytes)"
-              />
+                  />
               <div class="tooltip">Enter a message to broadcast to all users in the channel. Maximum 512 characters.</div>
-            </div>
+                </div>
             <div class="mb-2 flex space-x-2">
-              <div class="has-tooltip relative">
+                <div class="has-tooltip relative">
                 <select id="broadcastPriority" class="p-2 rounded bg-gray-800 text-white border border-gray-500">
                   <option value="INTERRUPT">INTERRUPT</option>
                   <option value="APPEND">APPEND</option>
                   <option value="IGNORE">IGNORE</option>
-                </select>
+                  </select>
                 <div class="tooltip">Message priority: INTERRUPT (stop current activity), APPEND (add to queue), IGNORE (skip if busy)</div>
-              </div>
-              <div class="has-tooltip relative">
+                </div>
+                <div class="has-tooltip relative">
                 <select id="broadcastInterruptable" class="p-2 rounded bg-gray-800 text-white border border-gray-500">
                   <option value="true">Interrupt</option>
                   <option value="false">No Interrupt</option>
-                </select>
+                  </select>
                 <div class="tooltip">Whether this message can interrupt the agent's current activity</div>
+                </div>
               </div>
-            </div>
             <button
               id="sendBroadcastBtn"
               class="mt-2 px-3 py-2 bg-cyan-500 text-gray-900 rounded disabled:opacity-50 disabled:pointer-events-none hover:bg-cyan-400 w-full font-bold"
@@ -369,10 +470,183 @@
                Interrupt Agent
             </button>
             <div id="broadcastMsgStatus" class="mt-2 text-sm max-h-16 overflow-y-auto break-words"></div>
+            </div>
+
+          <!-- Start Outbound Call -->
+          <div class="w-full p-4 bg-gray-700 rounded-lg">
+            <h3 class="text-sm font-semibold mb-3 text-gray-300">Start Outbound Call</h3>
+              <div class="space-y-2">
+                <div class="has-tooltip relative">
+                  <input
+                  id="outboundCallPhoneNumber"
+                  class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                  placeholder="Phone Number (e.g., +1234567890)"
+                  />
+                <div class="tooltip">The recipient's phone number in E.164 format.</div>
+                </div>
+                <div class="has-tooltip relative">
+                  <input
+                  id="outboundCallCallerId"
+                  class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                  placeholder="Caller ID / From Number"
+                  />
+                <div class="tooltip">The phone number to display as the caller ID. Must be a number you own.</div>
+                </div>
+                <div class="has-tooltip relative">
+                  <input
+                  id="outboundCallPipelineId"
+                  class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                  placeholder="Pipeline ID (optional)"
+                  />
+                <div class="tooltip">Optional pipeline ID. If provided, only channel, token, and agent_rtc_uid will be used from the configuration. Otherwise, the complete configuration will be used.</div>
+                </div>
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  id="startOutboundCallBtn"
+                  class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-bold"
+                >
+                  Start Outbound Call
+                </button>
+                <button
+                  id="hangUpCallBtn"
+                  class="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-bold"
+                >
+                  Hang Up Call
+                </button>
+            </div>
+              <div id="startOutboundCallResult" class="hidden mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto break-words whitespace-pre-wrap" style="max-width: 100%; overflow-wrap: break-word; word-wrap: break-word;"></div>
+              <div id="hangUpCallResult" class="hidden mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto break-words whitespace-pre-wrap" style="max-width: 100%; overflow-wrap: break-word; word-wrap: break-word;"></div>
+            </div>
+          </div>
+
+          <!-- Check Call Status -->
+          <div class="w-full p-4 bg-gray-700 rounded-lg">
+            <h3 class="text-sm font-semibold mb-3 text-gray-300">Check Call Status</h3>
+            <div class="space-y-2">
+            <button
+                id="checkCallStatusBtn"
+                class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold"
+            >
+                Check Status
+            </button>
+              <div class="relative mt-4 w-full" style="max-width: 100%; overflow: hidden;">
+            <button
+                  id="copyCallStatusBtn"
+                  class="absolute top-2 right-2 bg-transparent hover:bg-gray-600 rounded p-0.5 focus:outline-none"
+                  title="Copy response"
+                  style="z-index:10;width:24px;height:24px;display:flex;align-items:center;justify-content:center;"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <rect x="9" y="9" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <rect x="3" y="3" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+            </button>
+                <span id="copyCallStatusMsg" class="absolute top-2 right-10 text-green-400 text-xs hidden" style="z-index:10;">Copied!</span>
+                <pre
+                  id="callStatusResult"
+                  class="p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto break-words whitespace-pre-wrap break-all"
+                  style="max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box; width: 100%;"
+                ></pre>
+          </div>
+            </div>
+          </div>
+
+          <!-- Get Call Records -->
+          <div class="w-full p-4 bg-gray-700 rounded-lg">
+            <h3 class="text-sm font-semibold mb-3 text-gray-300">Call Records</h3>
+            <div class="space-y-2">
+              <div class="grid grid-cols-2 gap-2">
+                <div class="has-tooltip relative">
+                  <input
+                    id="callHistoryFromTime"
+                    type="datetime-local"
+                    class="w-full p-2 rounded bg-gray-800 text-white text-xs"
+                  />
+                  <div class="tooltip">Start time for query (optional, default: 60 days ago).</div>
+              </div>
+                <div class="has-tooltip relative">
+                  <input
+                    id="callHistoryToTime"
+                    type="datetime-local"
+                    class="w-full p-2 rounded bg-gray-800 text-white text-xs"
+                  />
+                  <div class="tooltip">End time for query (optional, default: current time).</div>
+              </div>
+            </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="has-tooltip relative">
+                  <input
+                    id="callHistoryNumber"
+                    type="text"
+                    class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                    placeholder="Phone Number (optional)"
+                  />
+                  <div class="tooltip">Filter by phone number (calling or called).</div>
+          </div>
+          <div class="has-tooltip relative">
+            <select
+                    id="callHistoryType"
+                    class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+            >
+              <option value="">All Types</option>
+              <option value="inbound">Inbound</option>
+              <option value="outbound">Outbound</option>
+            </select>
+                  <div class="tooltip">Filter by call type.</div>
+          </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="has-tooltip relative">
+                  <input
+                    id="callHistoryLimit"
+                    type="number"
+                    class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                    placeholder="Limit"
+                    value="20"
+                    min="1"
+                  />
+                  <div class="tooltip">Maximum number of items per page (default: 20).</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+                    id="callHistoryCursor"
+                    type="text"
+                    class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                    placeholder="Cursor (optional)"
+            />
+                  <div class="tooltip">Pagination cursor (use agent_id from previous page).</div>
+          </div>
+              </div>
+          <button
+                id="getCallHistoryBtn"
+                class="w-full px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm font-bold"
+          >
+                Get Call Records
+          </button>
+                      <div class="relative mt-4 w-full" style="max-width: 100%; overflow: hidden;">
+          <button
+                          id="copyCallHistoryBtn"
+              class="absolute top-2 right-2 bg-transparent hover:bg-gray-600 rounded p-0.5 focus:outline-none"
+              title="Copy response"
+              style="z-index:10;width:24px;height:24px;display:flex;align-items:center;justify-content:center;"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <rect x="9" y="9" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                <rect x="3" y="3" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+                        <span id="copyCallHistoryMsg" class="absolute top-2 right-10 text-green-400 text-xs hidden" style="z-index:10;">Copied!</span>
+            <pre
+                          id="callHistoryResult"
+                          class="p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto break-words whitespace-pre-wrap break-all"
+                          style="max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box; width: 100%;"
+            ></pre>
+                      </div>
+            </div>
           </div>
         </div>
-          </div>
-        </div>
+      </div>
+    </div>
       </div>
 
 
@@ -816,8 +1090,8 @@
     // Initialize canvas size
     const canvas = document.getElementById("audio-wave");
     if (canvas) {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
     }
 
     // Log any initialization errors
@@ -832,9 +1106,9 @@
         // Only prevent unchecking text when MLLM is not enabled
         const enableMllm = document.getElementById('enableMllm');
         if (enableMllm && !this.checked && !enableMllm.checked) {
-          this.checked = true; // Prevent unchecking text only when not in MLLM mode
+            this.checked = true; // Prevent unchecking text only when not in MLLM mode
         }
-      });
+    });
     }
 
     // Update the event listeners for output modalities
@@ -874,7 +1148,7 @@
         if (audioConfigModal) {
           audioConfigModal.classList.add('hidden');
         }
-      });
+    });
     }
 
     // Close modal when clicking outside
@@ -907,7 +1181,7 @@
       if (msg) {
       msg.classList.remove('hidden');
       setTimeout(() => msg.classList.add('hidden'), 1200);
-      }
+    }
     }
 
     const copyCreateJsonBtn = document.getElementById('copyCreateJson');
@@ -920,7 +1194,7 @@
         
         // Copy to clipboard
         navigator.clipboard.writeText(jsonString);
-        showCopyMsg();
+      showCopyMsg();
         
         // Show modal with JSON content
         const jsonModal = document.getElementById('jsonDisplayModal');
@@ -995,7 +1269,7 @@
       getAgentHistoryBtn.addEventListener('click', async function() {
         const agentId = document.getElementById('agentId');
         const queryResponse = document.getElementById('queryResponse');
-        
+      
         if (!agentId || !agentId.value) {
           if (queryResponse) {
             queryResponse.textContent = 'Please enter an Agent ID first';
@@ -1167,7 +1441,450 @@
       });
     }
 
+    // Outbound Call Event Handlers
+    const startOutboundCallBtn = document.getElementById('startOutboundCallBtn');
+    if (startOutboundCallBtn) {
+      startOutboundCallBtn.addEventListener('click', async function() {
+        try {
+          const { customerId, customerSecret, appId } = window.Utils.getStoredCredentials();
+          if (!customerId || !customerSecret || !appId) {
+            alert('Please configure credentials first');
+            return;
+          }
 
+          const phoneNumber = document.getElementById('outboundCallPhoneNumber').value.trim();
+          const callerId = document.getElementById('outboundCallCallerId').value.trim();
+          const pipelineId = document.getElementById('outboundCallPipelineId').value.trim();
+
+          if (!phoneNumber || !callerId) {
+            alert('Please fill in phone number and caller ID');
+            return;
+          }
+
+          // Get the current agent configuration
+          const formData = window.Utils.getFormData();
+          const agentConfig = window.Utils.buildAgentConfig(formData, {});
+          
+          // Get agent name from form
+          const agentName = formData.uniqueName || `agent-${Math.random().toString(36).substring(2, 8)}`;
+
+          // Build outbound call config
+          let callConfig = {
+            name: agentName,
+            sip: {
+              to_number: phoneNumber,
+              from_number: callerId,
+              sip_rtc_uid: agentConfig.properties.agent_rtc_uid || "100",
+              sip_rtc_token: agentConfig.properties.token || ""
+        }
+          };
+
+          // Add pipeline ID if provided
+          if (pipelineId) {
+            callConfig.pipeline_id = pipelineId;
+            // With pipeline ID, only need channel, token, and agent_rtc_uid
+            callConfig.properties = {
+              channel: agentConfig.properties.channel,
+              token: agentConfig.properties.token,
+              agent_rtc_uid: agentConfig.properties.agent_rtc_uid
+            };
+          } else {
+            // Without pipeline ID, use complete configuration
+            callConfig.properties = agentConfig.properties;
+          }
+
+          const agoraAPI = new window.AgoraAPI(appId);
+          const result = await agoraAPI.startOutboundCall(customerId, customerSecret, callConfig);
+          
+          // Display JSON result
+          const resultDiv = document.getElementById('startOutboundCallResult');
+          if (resultDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.textContent = JSON.stringify(result, null, 2);
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto';
+          }
+          
+          // Populate agent ID (returned from start, like normal start request)
+          if (result.agent_id) {
+            const agentIdElement = document.getElementById('agentId');
+            if (agentIdElement) {
+              agentIdElement.value = result.agent_id;
+            }
+          }
+
+          // Disable create and update agent buttons
+          const createBtn = document.getElementById('createAgentBtn');
+          const updateBtn = document.getElementById('updateAgentBtn');
+          if (createBtn) {
+            createBtn.disabled = true;
+            createBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          }
+          if (updateBtn) {
+            updateBtn.disabled = true;
+            updateBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          }
+        } catch (error) {
+          const resultDiv = document.getElementById('startOutboundCallResult');
+          if (resultDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.textContent = `Error: ${error.message}`;
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto';
+                }
+            }
+        });
+    }
+
+    const checkCallStatusBtn = document.getElementById('checkCallStatusBtn');
+    if (checkCallStatusBtn) {
+      checkCallStatusBtn.addEventListener('click', async function() {
+        try {
+          const { customerId, customerSecret, appId } = window.Utils.getStoredCredentials();
+          const agentIdElement = document.getElementById('agentId');
+          if (!agentIdElement || !agentIdElement.value.trim()) {
+            alert('Please start an agent first (Agent ID is required)');
+            return;
+          }
+          const agentId = agentIdElement.value.trim();
+
+          const agoraAPI = new window.AgoraAPI(appId);
+          const result = await agoraAPI.getOutboundCallStatus(customerId, customerSecret, agentId);
+          
+          const resultDiv = document.getElementById('callStatusResult');
+          if (resultDiv) {
+            resultDiv.textContent = JSON.stringify(result, null, 2);
+            resultDiv.className = 'p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto break-words whitespace-pre-wrap break-all';
+            resultDiv.style.cssText = 'max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box; width: 100%;';
+          }
+        } catch (error) {
+          const resultDiv = document.getElementById('callStatusResult');
+          if (resultDiv) {
+            resultDiv.textContent = `Error: ${error.message}`;
+            resultDiv.className = 'p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto break-words whitespace-pre-wrap break-all text-red-400';
+            resultDiv.style.cssText = 'max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box; width: 100%;';
+          }
+        }
+      });
+    }
+
+    const hangUpCallBtn = document.getElementById('hangUpCallBtn');
+    if (hangUpCallBtn) {
+      hangUpCallBtn.addEventListener('click', async function() {
+        try {
+          const { customerId, customerSecret, appId } = window.Utils.getStoredCredentials();
+          const agentIdElement = document.getElementById('agentId');
+          if (!agentIdElement || !agentIdElement.value.trim()) {
+            alert('Please start an agent first (Agent ID is required)');
+            return;
+          }
+          const agentId = agentIdElement.value.trim();
+
+          if (!confirm('Are you sure you want to hang up this call?')) {
+            return;
+          }
+
+          const agoraAPI = new window.AgoraAPI(appId);
+          const result = await agoraAPI.hangUpOutboundCall(customerId, customerSecret, agentId);
+          
+          // Display JSON result
+          const resultDiv = document.getElementById('hangUpCallResult');
+          if (resultDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.textContent = JSON.stringify(result, null, 2);
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto';
+          }
+
+          // Re-enable create and update agent buttons
+          const createBtn = document.getElementById('createAgentBtn');
+          const updateBtn = document.getElementById('updateAgentBtn');
+          if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          }
+          if (updateBtn) {
+            updateBtn.disabled = false;
+            updateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          }
+        } catch (error) {
+          const resultDiv = document.getElementById('hangUpCallResult');
+          if (resultDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.textContent = `Error: ${error.message}`;
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto';
+          }
+        }
+      });
+    }
+
+    const getCallHistoryBtn = document.getElementById('getCallHistoryBtn');
+    if (getCallHistoryBtn) {
+      getCallHistoryBtn.addEventListener('click', async function() {
+        try {
+          const { customerId, customerSecret, appId } = window.Utils.getStoredCredentials();
+          
+          const params = {};
+          const fromTime = document.getElementById('callHistoryFromTime').value;
+          const toTime = document.getElementById('callHistoryToTime').value;
+          const number = document.getElementById('callHistoryNumber').value.trim();
+          const type = document.getElementById('callHistoryType').value;
+          const limit = document.getElementById('callHistoryLimit').value;
+          const cursor = document.getElementById('callHistoryCursor').value.trim();
+
+          if (fromTime) {
+            params.from_time = Math.floor(new Date(fromTime).getTime() / 1000);
+          }
+          if (toTime) {
+            params.to_time = Math.floor(new Date(toTime).getTime() / 1000);
+          }
+          if (number) params.number = number;
+          if (type) params.type = type;
+          if (limit) params.limit = parseInt(limit, 10);
+          if (cursor) params.cursor = cursor;
+
+          const agoraAPI = new window.AgoraAPI(appId);
+          const result = await agoraAPI.getCallRecords(customerId, customerSecret, params);
+          
+          const resultDiv = document.getElementById('callHistoryResult');
+          if (resultDiv) {
+            resultDiv.textContent = JSON.stringify(result, null, 2);
+            resultDiv.className = 'p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto break-words whitespace-pre-wrap break-all';
+            resultDiv.style.cssText = 'max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box; width: 100%;';
+        }
+        } catch (error) {
+          const resultDiv = document.getElementById('callHistoryResult');
+          if (resultDiv) {
+            resultDiv.textContent = `Error: ${error.message}`;
+            resultDiv.className = 'p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto break-words whitespace-pre-wrap break-all text-red-400';
+            resultDiv.style.cssText = 'max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box; width: 100%;';
+          }
+        }
+      });
+    }
+
+    // Phone Number Management Event Handlers
+    const listPhoneNumbersBtn = document.getElementById('listPhoneNumbersBtn');
+    if (listPhoneNumbersBtn) {
+      listPhoneNumbersBtn.addEventListener('click', async function() {
+        try {
+          const { customerId, customerSecret, appId } = window.Utils.getStoredCredentials();
+          
+          const agoraAPI = new window.AgoraAPI(appId);
+          const result = await agoraAPI.listPhoneNumbers(customerId, customerSecret);
+          
+          const resultDiv = document.getElementById('phoneListResult');
+          if (resultDiv) {
+            resultDiv.textContent = JSON.stringify(result, null, 2);
+            resultDiv.className = 'p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto break-words whitespace-pre-wrap break-all';
+            resultDiv.style.cssText = 'max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box; width: 100%;';
+          }
+        } catch (error) {
+          const resultDiv = document.getElementById('phoneListResult');
+          if (resultDiv) {
+            resultDiv.textContent = `Error: ${error.message}`;
+            resultDiv.className = 'p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto break-words whitespace-pre-wrap break-all text-red-400';
+            resultDiv.style.cssText = 'max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box; width: 100%;';
+          }
+        }
+      });
+    }
+
+    // Phone Number Management Event Handlers (Combined)
+    const importPhoneNumberBtn = document.getElementById('importPhoneNumberBtn');
+    if (importPhoneNumberBtn) {
+      importPhoneNumberBtn.addEventListener('click', async function() {
+        try {
+          const { customerId, customerSecret, appId } = window.Utils.getStoredCredentials();
+          const phoneNumber = document.getElementById('phoneNumberInput').value.trim();
+          const country = document.getElementById('phoneCountryCode').value.trim();
+          const areaCode = document.getElementById('phoneAreaCode').value.trim();
+
+          if (!phoneNumber || !country || !areaCode) {
+            alert('Please fill in phone number, country code, and area code');
+            return;
+          }
+
+          const agoraAPI = new window.AgoraAPI(appId);
+          const result = await agoraAPI.importPhoneNumber(customerId, customerSecret, phoneNumber, country, areaCode);
+          
+          // Display JSON result
+          const resultDiv = document.getElementById('phoneNumberResult');
+          if (resultDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.textContent = JSON.stringify(result, null, 2);
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto';
+          }
+        } catch (error) {
+          const resultDiv = document.getElementById('phoneNumberResult');
+          if (resultDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.textContent = `Error: ${error.message}`;
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto';
+          }
+        }
+      });
+    }
+
+    const getPhoneInfoBtn = document.getElementById('getPhoneInfoBtn');
+    if (getPhoneInfoBtn) {
+      getPhoneInfoBtn.addEventListener('click', async function() {
+        try {
+          const { customerId, customerSecret, appId } = window.Utils.getStoredCredentials();
+          const phoneNumber = document.getElementById('phoneNumberInput').value.trim();
+
+          if (!phoneNumber) {
+            alert('Please enter a phone number');
+            return;
+          }
+
+          const agoraAPI = new window.AgoraAPI(appId);
+          const result = await agoraAPI.getPhoneNumberInfo(customerId, customerSecret, phoneNumber);
+
+          // Display JSON result
+          const resultDiv = document.getElementById('phoneNumberResult');
+          if (resultDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.textContent = JSON.stringify(result, null, 2);
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto';
+          }
+        } catch (error) {
+          const resultDiv = document.getElementById('phoneNumberResult');
+          if (resultDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.textContent = `Error: ${error.message}`;
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto';
+          }
+        }
+      });
+    }
+
+    const updatePhoneNumberBtn = document.getElementById('updatePhoneNumberBtn');
+    if (updatePhoneNumberBtn) {
+      updatePhoneNumberBtn.addEventListener('click', async function() {
+        try {
+          const { customerId, customerSecret, appId } = window.Utils.getStoredCredentials();
+          const phoneNumber = document.getElementById('phoneNumberInput').value.trim();
+          const updateDataStr = document.getElementById('phoneUpdateData').value.trim();
+
+          if (!phoneNumber) {
+            alert('Please enter a phone number');
+            return;
+          }
+
+          let updateData = {};
+          if (updateDataStr) {
+            try {
+              updateData = JSON.parse(updateDataStr);
+            } catch (e) {
+              alert('Invalid JSON in update data field');
+              return;
+            }
+          }
+
+          const agoraAPI = new window.AgoraAPI(appId);
+          const result = await agoraAPI.updatePhoneNumber(customerId, customerSecret, phoneNumber, updateData);
+          
+          // Display JSON result
+          const resultDiv = document.getElementById('phoneNumberResult');
+          if (resultDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.textContent = JSON.stringify(result, null, 2);
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto';
+          }
+        } catch (error) {
+          const resultDiv = document.getElementById('phoneNumberResult');
+          if (resultDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.textContent = `Error: ${error.message}`;
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto';
+          }
+        }
+      });
+    }
+
+    const deletePhoneNumberBtn = document.getElementById('deletePhoneNumberBtn');
+    if (deletePhoneNumberBtn) {
+      deletePhoneNumberBtn.addEventListener('click', async function() {
+        try {
+          const { customerId, customerSecret, appId } = window.Utils.getStoredCredentials();
+          const phoneNumber = document.getElementById('phoneNumberInput').value.trim();
+
+          if (!phoneNumber) {
+            alert('Please enter a phone number');
+            return;
+          }
+
+          if (!confirm(`Are you sure you want to delete phone number ${phoneNumber}?`)) {
+            return;
+          }
+
+          const agoraAPI = new window.AgoraAPI(appId);
+          const result = await agoraAPI.deletePhoneNumber(customerId, customerSecret, phoneNumber);
+          
+          // Display JSON result
+          const resultDiv = document.getElementById('phoneNumberResult');
+          if (resultDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.textContent = JSON.stringify(result, null, 2);
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto';
+          }
+        } catch (error) {
+          const resultDiv = document.getElementById('phoneNumberResult');
+          if (resultDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.textContent = `Error: ${error.message}`;
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto';
+          }
+        }
+      });
+    }
+
+    // Copy button handlers
+    const copyCallHistoryBtn = document.getElementById('copyCallHistoryBtn');
+    if (copyCallHistoryBtn) {
+      copyCallHistoryBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const pre = document.getElementById('callHistoryResult');
+        const msg = document.getElementById('copyCallHistoryMsg');
+        if (pre && msg) {
+          let text = pre.innerText || pre.textContent;
+          text = text.replace(/Copied!\s*/, '');
+          navigator.clipboard.writeText(text.trim());
+          msg.classList.remove('hidden');
+          setTimeout(() => msg.classList.add('hidden'), 1200);
+        }
+      });
+    }
+
+    const copyPhoneListBtn = document.getElementById('copyPhoneListBtn');
+    if (copyPhoneListBtn) {
+      copyPhoneListBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const pre = document.getElementById('phoneListResult');
+        const msg = document.getElementById('copyPhoneListMsg');
+        if (pre && msg) {
+          let text = pre.innerText || pre.textContent;
+          text = text.replace(/Copied!\s*/, '');
+          navigator.clipboard.writeText(text.trim());
+          msg.classList.remove('hidden');
+          setTimeout(() => msg.classList.add('hidden'), 1200);
+        }
+      });
+    }
+
+    const copyCallStatusBtn = document.getElementById('copyCallStatusBtn');
+    if (copyCallStatusBtn) {
+      copyCallStatusBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const pre = document.getElementById('callStatusResult');
+        const msg = document.getElementById('copyCallStatusMsg');
+        if (pre && msg) {
+          let text = pre.innerText || pre.textContent;
+          text = text.replace(/Copied!\s*/, '');
+          navigator.clipboard.writeText(text.trim());
+          msg.classList.remove('hidden');
+          setTimeout(() => msg.classList.add('hidden'), 1200);
+        }
+      });
+    }
 
     // Camera configuration logic
     const cameraConfigModal = document.getElementById('cameraConfigModal');
@@ -1717,18 +2434,18 @@
     // Use already declared parametersEnabled
     const transcriptConfig = document.getElementById('transcriptConfig');
     if (parametersEnabled && transcriptConfig) {
-      parametersEnabled.addEventListener('change', function() {
-        if (this.checked) {
-          transcriptConfig.classList.remove('hidden');
-        } else {
-          transcriptConfig.classList.add('hidden');
-        }
-      });
-      // On load, set initial state
-      if (parametersEnabled.checked) {
+    parametersEnabled.addEventListener('change', function() {
+      if (this.checked) {
         transcriptConfig.classList.remove('hidden');
       } else {
         transcriptConfig.classList.add('hidden');
+      }
+    });
+    // On load, set initial state
+    if (parametersEnabled.checked) {
+      transcriptConfig.classList.remove('hidden');
+    } else {
+      transcriptConfig.classList.add('hidden');
       }
     }
 
@@ -1737,11 +2454,11 @@
       const setEl = document.getElementById(setId);
       const valueEl = document.getElementById(valueId);
       if (setEl && valueEl) {
-        setEl.addEventListener('change', function() {
-          valueEl.disabled = !this.checked;
-        });
-        // On load
-        valueEl.disabled = !setEl.checked;
+      setEl.addEventListener('change', function() {
+        valueEl.disabled = !this.checked;
+      });
+      // On load
+      valueEl.disabled = !setEl.checked;
       }
     }
     setupTranscriptSet('transcriptEnableSet', 'transcriptEnable');
@@ -1752,22 +2469,22 @@
     // RTM Metrics show/hide logic
     // Use already declared enableRtm and rtmMetricsConfig
     if (enableRtm && rtmMetricsConfig) {
-      enableRtm.addEventListener('change', function() {
-        if (this.checked) {
-          rtmMetricsConfig.classList.remove('hidden');
-        } else {
-          rtmMetricsConfig.classList.add('hidden');
+    enableRtm.addEventListener('change', function() {
+      if (this.checked) {
+        rtmMetricsConfig.classList.remove('hidden');
+      } else {
+        rtmMetricsConfig.classList.add('hidden');
           const enableMetrics = document.getElementById('enableMetrics');
           const enableErrorMessage = document.getElementById('enableErrorMessage');
           if (enableMetrics) enableMetrics.checked = false;
           if (enableErrorMessage) enableErrorMessage.checked = false;
-        }
-      });
-      // On load
-      if (enableRtm.checked) {
-        rtmMetricsConfig.classList.remove('hidden');
-      } else {
-        rtmMetricsConfig.classList.add('hidden');
+      }
+    });
+    // On load
+    if (enableRtm.checked) {
+      rtmMetricsConfig.classList.remove('hidden');
+    } else {
+      rtmMetricsConfig.classList.add('hidden');
       }
     }
 
@@ -1792,11 +2509,11 @@
       const setEl = document.getElementById(setId);
       const fieldEl = document.getElementById(fieldId);
       if (setEl && fieldEl) {
-        setEl.addEventListener('change', function() {
-          fieldEl.disabled = !this.checked;
-        });
-        // On load
-        fieldEl.disabled = !setEl.checked;
+      setEl.addEventListener('change', function() {
+        fieldEl.disabled = !this.checked;
+      });
+      // On load
+      fieldEl.disabled = !setEl.checked;
       }
     }
     // List of [setId, fieldId] pairs
@@ -1829,7 +2546,7 @@
         if (expBaseUrl) {
           expBaseUrl.value = '';
         }
-      });
+    });
     }
 
     // Cancel button
@@ -1840,7 +2557,7 @@
         if (experimentalFeaturesModal) {
           experimentalFeaturesModal.classList.add('hidden');
         }
-      });
+    });
     }
 
     // Add drag prevention to experimental features modal
@@ -1889,7 +2606,7 @@
         if (agoraTokenModal) {
           agoraTokenModal.classList.add('hidden');
         }
-      });
+    });
     }
 
     // Close Agora token modal when clicking outside
@@ -2113,12 +2830,12 @@
         if (enableRtmCheck && enableRtmCheck.checked) {
           agentRtmUidElement.value = agoraRtcUidElement.value;
           agentRtmUidElement.dataset.lastRtcUid = agoraRtcUidElement.value;
-        }
-      });
+      }
+    });
     }
     // On load
     if (enableRtmElement) {
-      updateAgentRtmUidVisibility();
+    updateAgentRtmUidVisibility();
     }
   });
   </script>

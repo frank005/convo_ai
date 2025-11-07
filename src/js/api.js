@@ -197,4 +197,192 @@ window.AgoraAPI = class AgoraAPI {
             throw new Error(`Failed to interrupt agent: ${error.message}`);
         }
     }
+
+    // Outbound Call APIs
+    async startOutboundCall(customerId, customerSecret, callConfig) {
+        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const url = `${this.baseUrl}/projects/${this.appId}/call`;
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers,
+                body: JSON.stringify(callConfig)
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || response.statusText);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Failed to start outbound call: ${error.message}`);
+        }
+    }
+
+    async getOutboundCallStatus(customerId, customerSecret, agentId) {
+        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const url = `${this.baseUrl}/projects/${this.appId}/calls/${agentId}`;
+
+        try {
+            const response = await fetch(url, {
+                method: "GET",
+                headers
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || response.statusText);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Failed to get outbound call status: ${error.message}`);
+        }
+    }
+
+    async hangUpOutboundCall(customerId, customerSecret, agentId) {
+        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const url = `${this.baseUrl}/projects/${this.appId}/calls/${agentId}/hangup`;
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || response.statusText);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Failed to hang up outbound call: ${error.message}`);
+        }
+    }
+
+    async getCallRecords(customerId, customerSecret, params = {}) {
+        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const queryParams = new URLSearchParams();
+        if (params.number) queryParams.append('number', params.number);
+        if (params.from_time) queryParams.append('from_time', params.from_time);
+        if (params.to_time) queryParams.append('to_time', params.to_time);
+        if (params.type) queryParams.append('type', params.type);
+        if (params.limit) queryParams.append('limit', params.limit);
+        if (params.cursor) queryParams.append('cursor', params.cursor);
+        
+        const url = `${this.baseUrl}/projects/${this.appId}/call${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+
+        try {
+            const response = await fetch(url, {
+                method: "GET",
+                headers
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || response.statusText);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Failed to get call records: ${error.message}`);
+        }
+    }
+
+    // Phone Number Management APIs
+    async listPhoneNumbers(customerId, customerSecret) {
+        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const url = `${this.baseUrl}/phone-numbers`;
+
+        try {
+            const response = await fetch(url, {
+                method: "GET",
+                headers
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || response.statusText);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Failed to list phone numbers: ${error.message}`);
+        }
+    }
+
+    async importPhoneNumber(customerId, customerSecret, phoneNumber, country, areaCode) {
+        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const url = `${this.baseUrl}/phone-numbers`;
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({
+                    phone_number: phoneNumber,
+                    country: country,
+                    area_code: areaCode
+                })
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || response.statusText);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Failed to import phone number: ${error.message}`);
+        }
+    }
+
+    async getPhoneNumberInfo(customerId, customerSecret, phoneNumber) {
+        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const url = `${this.baseUrl}/phone-numbers/${encodeURIComponent(phoneNumber)}`;
+
+        try {
+            const response = await fetch(url, {
+                method: "GET",
+                headers
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || response.statusText);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Failed to get phone number info: ${error.message}`);
+        }
+    }
+
+    async updatePhoneNumber(customerId, customerSecret, phoneNumber, updateData) {
+        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const url = `${this.baseUrl}/phone-numbers/${encodeURIComponent(phoneNumber)}`;
+
+        try {
+            const response = await fetch(url, {
+                method: "PATCH",
+                headers,
+                body: JSON.stringify(updateData)
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || response.statusText);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Failed to update phone number: ${error.message}`);
+        }
+    }
+
+    async deletePhoneNumber(customerId, customerSecret, phoneNumber) {
+        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const url = `${this.baseUrl}/phone-numbers/${encodeURIComponent(phoneNumber)}`;
+
+        try {
+            const response = await fetch(url, {
+                method: "DELETE",
+                headers
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || response.statusText);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Failed to delete phone number: ${error.message}`);
+        }
+    }
 } 
