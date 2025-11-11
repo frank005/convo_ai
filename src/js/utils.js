@@ -42,6 +42,10 @@ window.Utils = class Utils {
             ttsKey = document.getElementById("googleTtsCredentials") ? document.getElementById("googleTtsCredentials").value.trim() : '';
         } else if (ttsVendor === "playht") {
             ttsKey = document.getElementById("playhtTtsKey") ? document.getElementById("playhtTtsKey").value.trim() : '';
+        } else if (ttsVendor === "amazon") {
+            // Amazon Polly uses access key and secret key, not a single ttsKey
+            // We'll handle this in buildAgentConfig
+            ttsKey = '';
         }
 
         // Get new v1.6 fields
@@ -134,6 +138,9 @@ window.Utils = class Utils {
             llmUrl: document.getElementById("llmUrl").value.trim(),
             llmAccessKey: document.getElementById("llmAccessKey") ? document.getElementById("llmAccessKey").value.trim() : '',
             llmSecret: document.getElementById("llmSecret") ? document.getElementById("llmSecret").value.trim() : '',
+            llmHeaders: document.getElementById("llmHeaders") ? document.getElementById("llmHeaders").value.trim() : '',
+            llmVendor: document.getElementById("llmVendor") ? document.getElementById("llmVendor").value.trim() : '',
+            llmStyle: document.getElementById("llmStyle") ? document.getElementById("llmStyle").value.trim() : '',
             ttsKey: ttsKey,
             gMsg: document.getElementById("gMsg").value.trim(),
             fMsg: document.getElementById("fMsg").value.trim(),
@@ -495,6 +502,56 @@ window.Utils = class Utils {
                     language: assemblyaiAsrLanguage
                 }
             };
+        } else if (vendor === 'amazon') {
+            const amazonAsrRegion = document.getElementById('amazonAsrRegion').value.trim();
+            const amazonAsrAccessKeyId = document.getElementById('amazonAsrAccessKeyId').value.trim();
+            const amazonAsrSecretAccessKey = document.getElementById('amazonAsrSecretAccessKey').value.trim();
+            const amazonAsrLanguageCode = document.getElementById('amazonAsrLanguageCode').value.trim();
+            const amazonAsrMediaSampleRateHz = document.getElementById('amazonAsrMediaSampleRateHz').value.trim();
+            const amazonAsrMediaEncoding = document.getElementById('amazonAsrMediaEncoding').value;
+            
+            const params = {
+                region: amazonAsrRegion,
+                access_key_id: amazonAsrAccessKeyId,
+                secret_access_key: amazonAsrSecretAccessKey,
+                language_code: amazonAsrLanguageCode
+            };
+            
+            // Add optional parameters if provided
+            if (amazonAsrMediaSampleRateHz) {
+                params.media_sample_rate_hz = parseInt(amazonAsrMediaSampleRateHz, 10);
+            }
+            if (amazonAsrMediaEncoding) {
+                params.media_encoding = amazonAsrMediaEncoding;
+            }
+            
+            return {
+                vendor: 'amazon',
+                params: params
+            };
+        } else if (vendor === 'google') {
+            const googleAsrProjectId = document.getElementById('googleAsrProjectId').value.trim();
+            const googleAsrLocation = document.getElementById('googleAsrLocation').value.trim();
+            const googleAsrAdcCredentials = document.getElementById('googleAsrAdcCredentials').value.trim();
+            const googleAsrLanguage = document.getElementById('googleAsrLanguage').value.trim();
+            const googleAsrModel = document.getElementById('googleAsrModel').value.trim();
+            
+            const params = {
+                project_id: googleAsrProjectId,
+                location: googleAsrLocation,
+                adc_credentials_string: googleAsrAdcCredentials,
+                language: googleAsrLanguage
+            };
+            
+            // Add optional model if provided
+            if (googleAsrModel) {
+                params.model = googleAsrModel;
+            }
+            
+            return {
+                vendor: 'google',
+                params: params
+            };
         }
         
         // Default to ARES if vendor is not recognized
@@ -630,6 +687,9 @@ window.Utils = class Utils {
                         api_key: formData.llmApiKey,
                         ...(formData.llmAccessKey ? { access_key: formData.llmAccessKey } : {}),
                         ...(formData.llmSecret ? { secret: formData.llmSecret } : {}),
+                        ...(formData.llmHeaders ? { headers: formData.llmHeaders } : {}),
+                        ...(formData.llmVendor ? { vendor: formData.llmVendor } : {}),
+                        ...(formData.llmStyle ? { style: formData.llmStyle } : {}),
                         system_messages: systemMessages,
                         greeting_message: formData.gMsg,
                         failure_message: formData.fMsg,
@@ -863,6 +923,18 @@ window.Utils = class Utils {
                         voice_engine: document.getElementById("playhtVoiceEngine").value,
                         voice: document.getElementById("playhtVoice").value,
                         ...(document.getElementById("playhtSpeed")?.value ? { speed: parseFloat(document.getElementById("playhtSpeed").value) } : {})
+                    }
+                };
+            } else if (formData.vendor === "amazon") {
+                config.properties.tts = {
+                    vendor: "amazon",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: {
+                        aws_access_key_id: document.getElementById("amazonPollyAccessKey").value,
+                        aws_secret_access_key: document.getElementById("amazonPollySecretKey").value,
+                        region_name: document.getElementById("amazonPollyRegion").value,
+                        voice: document.getElementById("amazonPollyVoice").value,
+                        engine: document.getElementById("amazonPollyEngine").value
                     }
                 };
             }

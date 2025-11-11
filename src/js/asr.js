@@ -57,6 +57,8 @@ class ASRManager {
         const openaiAsrConfig = document.getElementById('openaiAsrConfig');
         const speechmaticsAsrConfig = document.getElementById('speechmaticsAsrConfig');
         const assemblyaiAsrConfig = document.getElementById('assemblyaiAsrConfig');
+        const amazonAsrConfig = document.getElementById('amazonAsrConfig');
+        const googleAsrConfig = document.getElementById('googleAsrConfig');
 
         console.log('ASR elements found:', {
             asrVendor: !!asrVendor,
@@ -65,7 +67,9 @@ class ASRManager {
             deepgramAsrConfig: !!deepgramAsrConfig,
             openaiAsrConfig: !!openaiAsrConfig,
             speechmaticsAsrConfig: !!speechmaticsAsrConfig,
-            assemblyaiAsrConfig: !!assemblyaiAsrConfig
+            assemblyaiAsrConfig: !!assemblyaiAsrConfig,
+            amazonAsrConfig: !!amazonAsrConfig,
+            googleAsrConfig: !!googleAsrConfig
         });
 
         if (!asrVendor) {
@@ -82,11 +86,13 @@ class ASRManager {
         if (openaiAsrConfig) openaiAsrConfig.classList.add('hidden');
         if (speechmaticsAsrConfig) speechmaticsAsrConfig.classList.add('hidden');
         if (assemblyaiAsrConfig) assemblyaiAsrConfig.classList.add('hidden');
+        if (amazonAsrConfig) amazonAsrConfig.classList.add('hidden');
+        if (googleAsrConfig) googleAsrConfig.classList.add('hidden');
         
         // Show/hide main language dropdown based on vendor
-        // Speechmatics and AssemblyAI have their own language fields, so hide the main dropdown
+        // Speechmatics, AssemblyAI, Amazon, and Google have their own language fields, so hide the main dropdown
         if (asrLanguageContainer) {
-            if (selectedVendor === 'speechmatics' || selectedVendor === 'assemblyai') {
+            if (selectedVendor === 'speechmatics' || selectedVendor === 'assemblyai' || selectedVendor === 'amazon' || selectedVendor === 'google') {
                 asrLanguageContainer.classList.add('hidden');
             } else {
                 asrLanguageContainer.classList.remove('hidden');
@@ -104,11 +110,15 @@ class ASRManager {
             speechmaticsAsrConfig.classList.remove('hidden');
         } else if (selectedVendor === 'assemblyai' && assemblyaiAsrConfig) {
             assemblyaiAsrConfig.classList.remove('hidden');
+        } else if (selectedVendor === 'amazon' && amazonAsrConfig) {
+            amazonAsrConfig.classList.remove('hidden');
+        } else if (selectedVendor === 'google' && googleAsrConfig) {
+            googleAsrConfig.classList.remove('hidden');
         }
         // For ARES, no additional config section is shown
         
         // Update language dropdown based on selected vendor (only if it's visible)
-        if (selectedVendor !== 'speechmatics' && selectedVendor !== 'assemblyai') {
+        if (selectedVendor !== 'speechmatics' && selectedVendor !== 'assemblyai' && selectedVendor !== 'amazon' && selectedVendor !== 'google') {
             this.updateAsrLanguageDropdown(selectedVendor);
         }
     }

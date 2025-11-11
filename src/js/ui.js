@@ -1034,6 +1034,13 @@ window.UI = class UI {
             "playhtVoiceBlock",
             "playhtSpeedBlock"
         ];
+        const amazonPollyBlocks = [
+            "amazonPollyAccessKeyBlock",
+            "amazonPollySecretKeyBlock",
+            "amazonPollyRegionBlock",
+            "amazonPollyVoiceBlock",
+            "amazonPollyEngineBlock"
+        ];
 
         msBlocks.forEach(block => {
             const element = document.getElementById(block);
@@ -1109,6 +1116,13 @@ window.UI = class UI {
             const element = document.getElementById(block);
             if (element) {
                 element.classList.toggle("hidden", vendor !== "playht");
+            }
+        });
+
+        amazonPollyBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "amazon");
             }
         });
 

@@ -1446,9 +1446,15 @@
     if (startOutboundCallBtn) {
       startOutboundCallBtn.addEventListener('click', async function() {
         try {
+          // Disable button to prevent double-clicks
+          startOutboundCallBtn.disabled = true;
+          startOutboundCallBtn.textContent = 'Starting...';
+          
           const { customerId, customerSecret, appId } = window.Utils.getStoredCredentials();
           if (!customerId || !customerSecret || !appId) {
             alert('Please configure credentials first');
+            startOutboundCallBtn.disabled = false;
+            startOutboundCallBtn.textContent = 'Start Outbound Call';
             return;
           }
 
@@ -1458,6 +1464,8 @@
 
           if (!phoneNumber || !callerId) {
             alert('Please fill in phone number and caller ID');
+            startOutboundCallBtn.disabled = false;
+            startOutboundCallBtn.textContent = 'Start Outbound Call';
             return;
           }
 
@@ -1476,13 +1484,12 @@
               from_number: callerId,
               sip_rtc_uid: agentConfig.properties.agent_rtc_uid || "100",
               sip_rtc_token: agentConfig.properties.token || ""
-        }
+        },
+            pipeline_id: pipelineId || ""
           };
 
-          // Add pipeline ID if provided
+          // If pipeline ID is provided, only need channel, token, and agent_rtc_uid
           if (pipelineId) {
-            callConfig.pipeline_id = pipelineId;
-            // With pipeline ID, only need channel, token, and agent_rtc_uid
             callConfig.properties = {
               channel: agentConfig.properties.channel,
               token: agentConfig.properties.token,
@@ -1501,7 +1508,8 @@
           if (resultDiv) {
             resultDiv.classList.remove('hidden');
             resultDiv.textContent = JSON.stringify(result, null, 2);
-            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto';
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto break-words whitespace-pre-wrap text-white';
+            resultDiv.style.cssText = 'max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box;';
           }
           
           // Populate agent ID (returned from start, like normal start request)
@@ -1523,15 +1531,27 @@
             updateBtn.disabled = true;
             updateBtn.classList.add('opacity-50', 'cursor-not-allowed');
           }
+          
+          // Re-enable button
+          startOutboundCallBtn.disabled = false;
+          startOutboundCallBtn.textContent = 'Start Outbound Call';
         } catch (error) {
+          console.error('Error starting outbound call:', error);
           const resultDiv = document.getElementById('startOutboundCallResult');
           if (resultDiv) {
             resultDiv.classList.remove('hidden');
             resultDiv.textContent = `Error: ${error.message}`;
-            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto';
-                }
-            }
-        });
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto break-words whitespace-pre-wrap';
+            resultDiv.style.cssText = 'max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box;';
+          } else {
+            alert(`Error starting outbound call: ${error.message}`);
+          }
+          
+          // Re-enable button on error
+          startOutboundCallBtn.disabled = false;
+          startOutboundCallBtn.textContent = 'Start Outbound Call';
+        }
+      });
     }
 
     const checkCallStatusBtn = document.getElementById('checkCallStatusBtn');
@@ -1567,30 +1587,57 @@
     }
 
     const hangUpCallBtn = document.getElementById('hangUpCallBtn');
+    console.log('Looking for hang up button...', hangUpCallBtn);
     if (hangUpCallBtn) {
-      hangUpCallBtn.addEventListener('click', async function() {
+      console.log('Hang up button found, attaching event listener');
+      hangUpCallBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Hang up button clicked!', e);
         try {
+          // Disable button to prevent double-clicks
+          hangUpCallBtn.disabled = true;
+          hangUpCallBtn.textContent = 'Hanging up...';
+          
+          console.log('Getting credentials...');
           const { customerId, customerSecret, appId } = window.Utils.getStoredCredentials();
+          console.log('Credentials retrieved:', { customerId: !!customerId, customerSecret: !!customerSecret, appId: !!appId });
+          if (!customerId || !customerSecret || !appId) {
+            alert('Please configure credentials first');
+            hangUpCallBtn.disabled = false;
+            hangUpCallBtn.textContent = 'Hang Up Call';
+            return;
+          }
+          
           const agentIdElement = document.getElementById('agentId');
           if (!agentIdElement || !agentIdElement.value.trim()) {
             alert('Please start an agent first (Agent ID is required)');
+            hangUpCallBtn.disabled = false;
+            hangUpCallBtn.textContent = 'Hang Up Call';
             return;
           }
           const agentId = agentIdElement.value.trim();
+          console.log('Agent ID:', agentId);
 
           if (!confirm('Are you sure you want to hang up this call?')) {
+            console.log('User cancelled hang up');
+            hangUpCallBtn.disabled = false;
+            hangUpCallBtn.textContent = 'Hang Up Call';
             return;
           }
 
+          console.log('Calling hangUpOutboundCall API...');
           const agoraAPI = new window.AgoraAPI(appId);
           const result = await agoraAPI.hangUpOutboundCall(customerId, customerSecret, agentId);
+          console.log('Hang up result:', result);
           
           // Display JSON result
           const resultDiv = document.getElementById('hangUpCallResult');
           if (resultDiv) {
             resultDiv.classList.remove('hidden');
             resultDiv.textContent = JSON.stringify(result, null, 2);
-            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto';
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto break-words whitespace-pre-wrap text-white';
+            resultDiv.style.cssText = 'max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box;';
           }
 
           // Re-enable create and update agent buttons
@@ -1604,15 +1651,30 @@
             updateBtn.disabled = false;
             updateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
           }
+          
+          // Re-enable button
+          hangUpCallBtn.disabled = false;
+          hangUpCallBtn.textContent = 'Hang Up Call';
         } catch (error) {
+          console.error('Error hanging up call:', error);
           const resultDiv = document.getElementById('hangUpCallResult');
           if (resultDiv) {
             resultDiv.classList.remove('hidden');
             resultDiv.textContent = `Error: ${error.message}`;
-            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto';
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto break-words whitespace-pre-wrap';
+            resultDiv.style.cssText = 'max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box;';
+          } else {
+            alert(`Error hanging up call: ${error.message}`);
           }
+          
+          // Re-enable button on error
+          hangUpCallBtn.disabled = false;
+          hangUpCallBtn.textContent = 'Hang Up Call';
         }
       });
+      console.log('Hang up event listener attached successfully');
+    } else {
+      console.error('Hang up button NOT FOUND! Button ID: hangUpCallBtn');
     }
 
     const getCallHistoryBtn = document.getElementById('getCallHistoryBtn');
@@ -3344,6 +3406,8 @@
                 <option value="openai">OpenAI (Beta)</option>
                 <option value="speechmatics">Speechmatics</option>
                 <option value="assemblyai">AssemblyAI (Beta)</option>
+                <option value="amazon">Amazon Transcribe (Beta)</option>
+                <option value="google">Google (Beta)</option>
               </select>
               <div class="tooltip">Select the Automatic Speech Recognition (ASR) vendor to use for speech recognition.</div>
             </div>
@@ -3516,6 +3580,120 @@
               </div>
             </div>
           </div>
+          
+          <!-- Amazon Transcribe ASR Configuration -->
+          <div id="amazonAsrConfig" class="hidden mt-4">
+            <h4 class="text-sm font-semibold mb-2">Amazon Transcribe ASR Settings (Beta)</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="has-tooltip relative">
+                <input
+                  id="amazonAsrRegion"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="AWS Region (Required, e.g., us-east-1)"
+                  value="us-east-1"
+                />
+                <div class="tooltip">The AWS region where the Transcribe service is hosted, for example, us-east-1, us-west-2, or eu-west-1.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="amazonAsrAccessKeyId"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="AWS Access Key ID (Required)"
+                />
+                <div class="tooltip">The AWS access key ID used for authentication. Get your access key from the AWS IAM Console.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="amazonAsrSecretAccessKey"
+                  type="password"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="AWS Secret Access Key (Required)"
+                />
+                <div class="tooltip">The AWS secret access key used for authentication. Get your secret key from the AWS IAM Console.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="amazonAsrLanguageCode"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="Language Code (Required, e.g., en-US)"
+                  value="en-US"
+                />
+                <div class="tooltip">The language code for speech recognition, for example, en-US, es-US, or fr-FR.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="amazonAsrMediaSampleRateHz"
+                  type="number"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="Media Sample Rate Hz (Optional, e.g., 16000)"
+                  value="16000"
+                />
+                <div class="tooltip">The sample rate in Hertz for the audio input, for example, 16000 or 8000.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <select
+                  id="amazonAsrMediaEncoding"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                >
+                  <option value="pcm" selected>pcm</option>
+                  <option value="opus">opus</option>
+                  <option value="flac">flac</option>
+                </select>
+                <div class="tooltip">The encoding format of the audio input, for example, pcm, opus, or flac.</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Google ASR Configuration -->
+          <div id="googleAsrConfig" class="hidden mt-4">
+            <h4 class="text-sm font-semibold mb-2">Google ASR Settings (Beta)</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="has-tooltip relative">
+                <input
+                  id="googleAsrProjectId"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="Google Cloud Project ID (Required)"
+                />
+                <div class="tooltip">The Google Cloud project ID where the Speech-to-Text API is enabled. Get your project ID from the Google Cloud Console.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="googleAsrLocation"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="Location (Required, e.g., global)"
+                  value="global"
+                />
+                <div class="tooltip">The Google Cloud region where the speech service is hosted, for example, global, us-central1, or europe-west1.</div>
+              </div>
+              <div class="has-tooltip relative md:col-span-2">
+                <textarea
+                  id="googleAsrAdcCredentials"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="ADC Credentials JSON String (Required)"
+                  rows="4"
+                ></textarea>
+                <div class="tooltip">The Google Cloud service account credentials JSON string used for authentication. Get your credentials from the Google Cloud Console.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="googleAsrLanguage"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="Language (Required, e.g., en-US)"
+                  value="en-US"
+                />
+                <div class="tooltip">The language code for speech recognition, for example, en-US, es-ES, or fr-FR.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="googleAsrModel"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="Model (Optional, e.g., long)"
+                  value="long"
+                />
+                <div class="tooltip">The recognition model to use.</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Input/Output Modalities -->
@@ -3671,6 +3849,15 @@
           />
           <div class="tooltip">Secret key for Amazon Bedrock LLM (optional). Only used when LLM vendor is Amazon Bedrock.</div>
         </div>
+        <div class="has-tooltip relative">
+          <textarea
+            id="llmHeaders"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="LLM Headers (Optional, Claude Anthropic only, JSON string)"
+            rows="3"
+          ></textarea>
+          <div class="tooltip">Headers for Claude Anthropic LLM (optional). Must be a JSON string, e.g., {"anthropic-version":"2023-06-01"}. Only used when LLM vendor is anthropic or claude.</div>
+        </div>
       </div>
     </div>
 
@@ -3695,6 +3882,7 @@
             <option value="groq">Groq (Beta)</option>
             <option value="google">Google (Beta)</option>
             <option value="playht">PlayHT (Beta)</option>
+            <option value="amazon">Amazon Polly (Beta)</option>
           </select>
           <div class="tooltip">Select the Text-to-Speech vendor to use for voice output.</div>
         </div>
@@ -4271,6 +4459,55 @@
             value="1.0"
           />
           <div class="tooltip">The speed of speech, where 1.0 is the normal speed.</div>
+        </div>
+        
+        <!-- Amazon Polly TTS Settings -->
+        <div id="amazonPollyAccessKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="amazonPollyAccessKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="AWS Access Key ID (Required)"
+          />
+          <div class="tooltip">The AWS access key ID used for authentication. Get your access key from the AWS IAM Console.</div>
+        </div>
+        <div id="amazonPollySecretKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="amazonPollySecretKey"
+            type="password"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="AWS Secret Access Key (Required)"
+          />
+          <div class="tooltip">The AWS secret access key used for authentication. Get your secret key from the AWS IAM Console.</div>
+        </div>
+        <div id="amazonPollyRegionBlock" class="has-tooltip relative hidden">
+          <input
+            id="amazonPollyRegion"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="AWS Region (Required, e.g., us-east-1)"
+            value="us-east-1"
+          />
+          <div class="tooltip">The AWS region where the Polly service is hosted, for example, us-east-1, us-west-2, or eu-west-1.</div>
+        </div>
+        <div id="amazonPollyVoiceBlock" class="has-tooltip relative hidden">
+          <input
+            id="amazonPollyVoice"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Voice ID (Required, e.g., Joanna)"
+            value="Joanna"
+          />
+          <div class="tooltip">The voice ID to use for speech synthesis, for example, Joanna, Matthew, or Ivy.</div>
+        </div>
+        <div id="amazonPollyEngineBlock" class="has-tooltip relative hidden">
+          <select
+            id="amazonPollyEngine"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="neural" selected>neural</option>
+            <option value="standard">standard</option>
+            <option value="long-form">long-form</option>
+            <option value="generative">generative</option>
+          </select>
+          <div class="tooltip">The engine type to use for speech synthesis. Supported values: standard, neural, long-form, generative.</div>
         </div>
         
         <!-- Skip Patterns Section -->
