@@ -2261,10 +2261,27 @@
 
     // Advanced Features Logic
     const enableRtm = document.getElementById('enableRtm');
+    const enableSal = document.getElementById('enableSal');
+    const salConfig = document.getElementById('salConfig');
     const dataChannel = document.getElementById('dataChannel');
     const rtmMetricsConfig = document.getElementById('rtmMetricsConfig');
     const parametersEnabled = document.getElementById('parametersEnabled');
     const clientRtmUid = document.getElementById('clientRtmUid');
+    
+    // Handle SAL enable/disable
+    if (enableSal && salConfig) {
+      enableSal.addEventListener('change', function() {
+        if (this.checked) {
+          salConfig.classList.remove('hidden');
+        } else {
+          salConfig.classList.add('hidden');
+        }
+      });
+      // Initialize visibility
+      if (enableSal.checked) {
+        salConfig.classList.remove('hidden');
+      }
+    }
     
     // Handle MLLM enable/disable
     if (enableMllm) {
@@ -2412,12 +2429,36 @@
     const interruptMode = document.getElementById('interruptMode');
     const interruptKeywordsBlock = document.getElementById('interruptKeywordsBlock');
     
+    // Show/hide interrupt keywords based on interrupt mode
     if (interruptMode && interruptKeywordsBlock) {
-        interruptMode.addEventListener('change', function() {
-            if (this.value === 'keyword') {
+        const updateInterruptKeywordsVisibility = function() {
+            if (interruptMode.value === 'keywords') {
                 interruptKeywordsBlock.classList.remove('hidden');
             } else {
                 interruptKeywordsBlock.classList.add('hidden');
+            }
+        };
+        interruptMode.addEventListener('change', updateInterruptKeywordsVisibility);
+        // Initialize visibility
+        updateInterruptKeywordsVisibility();
+    }
+    
+    // Prevent enabling both keywords mode and AIVAD (mutually exclusive)
+    const enableAivad = document.getElementById('enableAivad');
+    if (interruptMode && enableAivad) {
+        interruptMode.addEventListener('change', function() {
+            if (this.value === 'keywords' && enableAivad.checked) {
+                alert('Keywords interruption mode and AIVAD are mutually exclusive. AIVAD will be disabled.');
+                enableAivad.checked = false;
+            }
+        });
+        enableAivad.addEventListener('change', function() {
+            if (this.checked && interruptMode.value === 'keywords') {
+                alert('AIVAD and keywords interruption mode are mutually exclusive. Interrupt mode will be changed to "interrupt".');
+                interruptMode.value = 'interrupt';
+                if (interruptKeywordsBlock) {
+                    interruptKeywordsBlock.classList.add('hidden');
+                }
             }
         });
     }
@@ -2547,6 +2588,23 @@
       rtmMetricsConfig.classList.remove('hidden');
     } else {
       rtmMetricsConfig.classList.add('hidden');
+      }
+    }
+    
+    // Farewell config show/hide logic
+    const farewellGracefulEnabled = document.getElementById('farewellGracefulEnabled');
+    const farewellConfigFields = document.getElementById('farewellConfigFields');
+    if (farewellGracefulEnabled && farewellConfigFields) {
+      farewellGracefulEnabled.addEventListener('change', function() {
+        if (this.checked) {
+          farewellConfigFields.classList.remove('hidden');
+        } else {
+          farewellConfigFields.classList.add('hidden');
+        }
+      });
+      // Initialize visibility
+      if (farewellGracefulEnabled.checked) {
+        farewellConfigFields.classList.remove('hidden');
       }
     }
 
@@ -4756,7 +4814,7 @@
             <span class="flex items-center">
               <span>Advanced Features</span>
             </span>
-            <span class="text-sm">AIVAD, MLLM, RTM</span>
+            <span class="text-sm">AIVAD, MLLM, RTM, SAL</span>
           </button>
           <div id="advancedFeaturesConfig" class="mt-2 space-y-2">
             <div class="flex items-center space-x-4">
@@ -4770,6 +4828,32 @@
                 <span>Enable RTM</span>
                 <div class="tooltip">Enable Signaling (RTM) service for advanced functions like delivering custom information.</div>
               </label>
+              <label class="flex items-center has-tooltip relative">
+                <input type="checkbox" id="enableSal" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+                <span>Enable SAL</span>
+                <div class="tooltip">Enable Selective Attention Locking (SAL) - Voice Print locking and recognition. Seamless locking in 10 seconds. No audio/data kept.</div>
+              </label>
+            </div>
+            <!-- SAL Configuration -->
+            <div id="salConfig" class="hidden mt-2 space-y-2">
+              <div class="has-tooltip relative">
+                <label class="text-sm">SAL Mode</label>
+                <select id="salMode" class="w-full p-2 rounded bg-gray-600">
+                  <option value="locking">Locking</option>
+                  <option value="recognition">Recognition</option>
+                </select>
+                <div class="tooltip">SAL mode: 'locking' for voice print locking, 'recognition' for voice recognition.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <label class="text-sm">Sample URLs (Optional)</label>
+                <textarea
+                  id="salSampleUrls"
+                  class="w-full p-2 rounded bg-gray-600 text-white border border-gray-500 focus:border-blue-500"
+                  placeholder='JSON format: {"Tomas": "https://xxxxxx/tomas.mp3", "Jay": "https://xxxxxxx/jay.mp3"} or "Name:URL,Name:URL" format'
+                  rows="3"
+                ></textarea>
+                <div class="tooltip">Sample URLs for voice locking/recognition. Can be JSON object or "Name:URL,Name:URL" format. Leave empty for non-sample locking.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -4799,10 +4883,10 @@
                 <option value="interrupt">Interrupt (Stop and process input)</option>
                 <option value="append">Append (Complete current, then process)</option>
                 <option value="ignore">Ignore (Discard input)</option>
-                <option value="keyword">Keyword (Stop on keyword detection)</option>
+                <option value="keywords">Keywords (Stop on keyword detection)</option>
                 <option value="adaptive">Adaptive (Dynamic threshold adjustment)</option>
               </select>
-              <div class="tooltip">Sets the agent's behavior when human voice interrupts the agent while it is interacting. Only interrupt mode is supported when MLLM is enabled. Keyword mode stops on specified keywords. Adaptive mode dynamically adjusts voice continuity threshold.</div>
+              <div class="tooltip">Sets the agent's behavior when human voice interrupts the agent while it is interacting. Only interrupt mode is supported when MLLM is enabled. Keyword mode and AIVAD are mutually exclusive.</div>
             </div>
             <div id="interruptKeywordsBlock" class="has-tooltip relative hidden">
               <label class="text-sm">Interrupt Keywords</label>
@@ -4811,8 +4895,9 @@
                 id="interruptKeywords"
                 class="w-full p-2 rounded bg-gray-600 turn-field"
                 placeholder="Comma-separated keywords (e.g., stop, cancel, wait)"
+                maxlength="5000"
               />
-              <div class="tooltip">Keywords that trigger interruption when keyword mode is enabled. Separate multiple keywords with commas.</div>
+              <div class="tooltip">Keywords that trigger interruption when keyword mode is enabled. Separate multiple keywords with commas. Maximum 128 keywords allowed.</div>
             </div>
             
             <!-- Turn Detection Parameters -->
@@ -4904,6 +4989,25 @@
                   <div class="tooltip">Specifies the silent prompt message. The message use depends on the value of the action parameter.</div>
                 </div>
                 <input type="text" id="silenceContent" class="p-1 rounded bg-gray-600 param-field" placeholder="Silence reminder message">
+              </div>
+            </div>
+            
+            <!-- Farewell Configuration -->
+            <div class="mb-4">
+              <h4 class="text-sm font-semibold mb-2">Farewell Configuration</h4>
+              <div class="flex items-center space-x-4 mb-2">
+                <label class="flex items-center has-tooltip relative">
+                  <input type="checkbox" id="farewellGracefulEnabled" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+                  <span>Enable Graceful Farewell</span>
+                  <div class="tooltip">Enable graceful farewell handling for the agent.</div>
+                </label>
+              </div>
+              <div id="farewellConfigFields" class="hidden">
+                <div class="has-tooltip relative">
+                  <label class="text-sm">Graceful Timeout (seconds)</label>
+                  <input type="number" id="farewellGracefulTimeout" class="w-full p-2 rounded bg-gray-600 param-field" placeholder="30" min="0" max="120">
+                  <div class="tooltip">Timeout in seconds for graceful farewell. Value range: [0, 120]. Default: 30 seconds.</div>
+                </div>
               </div>
             </div>
             

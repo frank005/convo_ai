@@ -137,28 +137,25 @@ class CovSubRenderController {
 
     handleMessage(message, context) {
         try {
-            console.log('=== MESSAGE HANDLER DEBUG ===');
-            console.log('Received message:', message);
-            console.log('Message object:', message.object);
-            console.log('Message module:', message.module);
-            console.log('Context:', context);
+            // Verbose logging removed - uncomment for debugging if needed
+            // console.log('=== MESSAGE HANDLER DEBUG ===');
+            // console.log('Received message:', message);
             
             if (message.object === 'assistant.transcription' || message.object === 'user.transcription') {
                 // Handle transcription messages
-                console.log('Found transcription message:', message.object);
+                // console.log('Found transcription message:', message.object);
                 this.handleTranscriptionMessage(message, context);
             } else if (message.object === 'message.info' || message.object === 'message.error') {
                 // Handle image upload responses
-                console.log('✅ Found image message response:', message);
-                console.log('Message object:', message.object);
-                console.log('Message module:', message.module);
+                // console.log('✅ Found image message response:', message);
                 this.handleImageMessageResponse(message, context);
             } else if (message.text || message.content) {
                 // Handle any message with text content as potential transcription
-                console.log('Found message with text content, treating as transcription:', message);
+                // console.log('Found message with text content, treating as transcription:', message);
                 this.handleTranscriptionMessage(message, context);
             } else {
-                console.log('❌ Unhandled message type:', message.type || message.customType || message.object, message);
+                // Only log unhandled types for debugging
+                // console.log('❌ Unhandled message type:', message.type || message.customType || message.object);
             }
         } catch (error) {
             console.error('Error handling message:', error);
@@ -754,7 +751,8 @@ class ConversationalAIAPI extends EventHelper {
     }
 
     handleRtmMessage(eventArgs) {
-        console.log('TRANSCRIPTION DEBUG - RTM message received:', eventArgs);
+        // Verbose logging removed - uncomment for debugging if needed
+        // console.log('TRANSCRIPTION DEBUG - RTM message received:', eventArgs);
 
         try {
             // RTM v2.x event structure is different
@@ -785,13 +783,13 @@ class ConversationalAIAPI extends EventHelper {
             } else if (messageData instanceof Uint8Array) {
                 const decoder = new TextDecoder('utf-8');
                 const messageString = decoder.decode(messageData);
-                // console.log('🎤 TRANSCRIPTION DECODED MESSAGE:', messageString);
-                console.log('TRANSCRIPTION DEBUG - Decoded binary message:', messageString);
+                // Verbose logging removed - uncomment for debugging if needed
+                // console.log('TRANSCRIPTION DEBUG - Decoded binary message:', messageString);
                 try {
                     parsedMessage = JSON.parse(messageString);
-                    console.log('TRANSCRIPTION DEBUG - Parsed binary message:', parsedMessage);
+                    // console.log('TRANSCRIPTION DEBUG - Parsed binary message:', parsedMessage);
                 } catch (parseError) {
-                    console.log('TRANSCRIPTION DEBUG - Plain text from binary:', messageString);
+                    // console.log('TRANSCRIPTION DEBUG - Plain text from binary:', messageString);
                     parsedMessage = {
                         type: 'transcription',
                         text: messageString,
@@ -801,11 +799,11 @@ class ConversationalAIAPI extends EventHelper {
                     };
                 }
             } else {
-                console.warn('TRANSCRIPTION DEBUG - Unsupported message type received:', typeof messageData, messageData);
+                // console.warn('TRANSCRIPTION DEBUG - Unsupported message type received:', typeof messageData);
                 return;
             }
 
-            console.log('TRANSCRIPTION DEBUG - Sending to controller:', parsedMessage);
+            // console.log('TRANSCRIPTION DEBUG - Sending to controller:', parsedMessage);
             this.covSubRenderController.handleMessage(parsedMessage, {
                 publisher: publisher
             });

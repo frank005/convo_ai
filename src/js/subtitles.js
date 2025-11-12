@@ -1333,43 +1333,32 @@ class SubtitleManager {
 
     // Handle agent stream messages (based on the provided code snippet)
     handleAgentStreamMessage(uid, msgData) {
-        console.log('🔵 Data Stream Subtitles: Processing message from UID:', uid);
-        console.log('🔵 Data Stream Subtitles: Expected agent UID:', this.agentUid);
-        console.log('🔵 Data Stream Subtitles: Raw message data:', msgData);
-        console.log('🔵 Data Stream Subtitles: Message data type:', typeof msgData);
-        console.log('🔵 Data Stream Subtitles: Message data length:', msgData ? msgData.length : 'null/undefined');
-        
-        // Process ALL messages for now to see what we're getting
-        console.log('🔵 Data Stream Subtitles: Processing ALL messages for debugging...');
+        // Verbose logging removed - uncomment for debugging if needed
+        // console.log('🔵 Data Stream Subtitles: Processing message from UID:', uid);
         
         try {
             const decodedMessage = new TextDecoder().decode(msgData);
-            // console.log('🎤 TRANSCRIPTION DECODED MESSAGE:', decodedMessage);
-            console.log('🔵 Data Stream Subtitles: Raw decoded message:', decodedMessage);
             
             let [messageId, messagePart, messageChunks, messageData] = decodedMessage.split("|");
-            console.log('🔵 Data Stream Subtitles: Message parts:', { messageId, messagePart, messageChunks, messageDataLength: messageData?.length });
             
             messageData = atob(messageData);
-            console.log('🔵 Data Stream Subtitles: Base64 decoded message length:', messageData.length);
             
             this.messagesMap.set(messageId, this.messagesMap.get(messageId) ? this.messagesMap.get(messageId) + messageData : messageData);
-            console.log('🔵 Data Stream Subtitles: Messages map size:', this.messagesMap.size);
 
             messageData = this.messagesMap.get(messageId);
             if (parseInt(messagePart) === parseInt(messageChunks)) {
-                console.log('🔵 Data Stream Subtitles: Complete message received, processing...');
+                // console.log('🔵 Data Stream Subtitles: Complete message received, processing...');
                 this.messagesMap.delete(messageId);
             } else {
-                console.log('🔵 Data Stream Subtitles: Partial message, waiting for more chunks...');
+                // console.log('🔵 Data Stream Subtitles: Partial message, waiting for more chunks...');
                 return;
             }
 
             let messageDataJson;
             try {
                 messageDataJson = JSON.parse(messageData);
-                console.log("🔵 Data Stream Subtitles: Parsed message data:", messageDataJson);
-                console.log("🔵 Data Stream Subtitles: Message object type:", messageDataJson.object);
+                // Verbose logging removed - uncomment for debugging if needed
+                // console.log("🔵 Data Stream Subtitles: Parsed message data:", messageDataJson);
             } catch (parseError) {
                 console.error("🔴 Data Stream Subtitles: JSON parse error:", parseError);
                 console.error("🔴 Data Stream Subtitles: Raw message data that failed to parse:", messageData);
@@ -1384,19 +1373,18 @@ class SubtitleManager {
             }
             
             if (messageDataJson.object === "assistant.transcription") {
-                console.log("🔵 Data Stream Subtitles: Processing assistant transcription");
                 // This is agent transcript
                 // Check turn_status - 0 means the message is ready to be processed
                 // We should process messages with turn_status 0 or 1 (final)
                 const turnStatus = messageDataJson.turn_status;
                 if (turnStatus !== 0 && turnStatus !== 1) {
-                    console.log("🔵 Data Stream Subtitles: turn_status not ready for processing:", turnStatus, "skipping");
+                    // console.log("🔵 Data Stream Subtitles: turn_status not ready for processing:", turnStatus, "skipping");
                     return;
                 }
                 
                 const transcriptText = messageDataJson.text;
                 if (!transcriptText || !transcriptText.trim()) {
-                    console.log("🔵 Data Stream Subtitles: Empty transcript text, skipping");
+                    // console.log("🔵 Data Stream Subtitles: Empty transcript text, skipping");
                     return;
                 }
                 
@@ -1408,10 +1396,8 @@ class SubtitleManager {
                 const messageId = messageDataJson.message_id || messageDataJson.messageId;
                 const isFinal = messageDataJson.is_final || messageDataJson.isFinal || messageDataJson.final || false;
                 
-                // console.log("🎤 TRANSCRIPTION TEXT:", transcriptText);
-                console.log("🔵 Data Stream Subtitles: Agent transcript:", transcriptText);
-                console.log("🔵 Data Stream Subtitles: Deduplication fields:", { turnId, messageId, isFinal });
-                console.log("🔵 Data Stream Subtitles: Previous turnId:", this.lastProcessedTurnId, "Current turnId:", turnId);
+                // Verbose logging removed - uncomment for debugging if needed
+                // console.log("🔵 Data Stream Subtitles: Agent transcript:", transcriptText);
                 
                 // Check for duplicates and handle multiple transcription messages for the same turn
                 if (turnId && messageId) {
@@ -1419,7 +1405,7 @@ class SubtitleManager {
                     if (this.lastProcessedTurnId === turnId) {
                         // If it's the exact same message, skip it
                         if (this.lastProcessedMessageId === messageId) {
-                            console.log("🔵 Data Stream Subtitles: Duplicate message detected (turnID/messageID), skipping");
+                            // console.log("🔵 Data Stream Subtitles: Duplicate message detected (turnID/messageID), skipping");
                             return;
                         }
                         
@@ -1429,13 +1415,11 @@ class SubtitleManager {
                         
                         // If the new message is shorter or the same length, skip it (we want the most complete version)
                         if (currentTextLength <= lastTextLength) {
-                            console.log("🔵 Data Stream Subtitles: Shorter/equal length message for same turn, skipping");
-                            console.log("🔵 Data Stream Subtitles: Current length:", currentTextLength, "Previous length:", lastTextLength);
+                            // console.log("🔵 Data Stream Subtitles: Shorter/equal length message for same turn, skipping");
                             return;
                         }
                         
-                        console.log("🔵 Data Stream Subtitles: Longer message for same turn, processing new version");
-                        console.log("🔵 Data Stream Subtitles: Current length:", currentTextLength, "Previous length:", lastTextLength);
+                        // console.log("🔵 Data Stream Subtitles: Longer message for same turn, processing new version");
                         
                         // Remove the previous shorter message from chat history
                         this.removeLastMessageFromChatHistory();
@@ -1463,21 +1447,20 @@ class SubtitleManager {
                 // Handle bracket matches if any
                 const match = transcriptText.match(/\[([^\]]+)\]/);
                 if (match) {
-                    console.log("🔵 Data Stream Subtitles: Bracket match found:", match[1]);
+                    // console.log("🔵 Data Stream Subtitles: Bracket match found:", match[1]);
                     this.handleBracketMatch(match[1]);
                 }
             } else if (messageDataJson.object === "user.transcription") {
-                console.log("🔵 Data Stream Subtitles: Processing user transcription");
                 // This is user transcript - process regardless of UID
                 // User transcripts don't have turn_status, but they have final, turn_id, message_id
                 if (!messageDataJson?.text) {
-                    console.log("🔵 Data Stream Subtitles: No text in user transcript, skipping");
+                    // console.log("🔵 Data Stream Subtitles: No text in user transcript, skipping");
                     return;
                 }
                 
                 const transcriptText = messageDataJson.text;
                 if (!transcriptText || !transcriptText.trim()) {
-                    console.log("🔵 Data Stream Subtitles: Empty user transcript text, skipping");
+                    // console.log("🔵 Data Stream Subtitles: Empty user transcript text, skipping");
                     return;
                 }
                 
@@ -1486,9 +1469,8 @@ class SubtitleManager {
                 const messageId = messageDataJson.message_id || messageDataJson.messageId;
                 const isFinal = messageDataJson.is_final || messageDataJson.isFinal || messageDataJson.final || false;
                 
-                // console.log("🎤 USER TRANSCRIPTION TEXT:", transcriptText);
-                console.log("🔵 Data Stream Subtitles: User transcript:", transcriptText);
-                console.log("🔵 Data Stream Subtitles: User fields:", { turnId, messageId, isFinal });
+                // Verbose logging removed - uncomment for debugging if needed
+                // console.log("🔵 Data Stream Subtitles: User transcript:", transcriptText);
                 
                 // Handle live user message updates
                 this.handleLiveUserMessage(transcriptText, turnId, isFinal);
@@ -1496,8 +1478,8 @@ class SubtitleManager {
                 // Update subtitle overlay with isFinal flag
                 this.updateSubtitle(transcriptText, 'User', isFinal);
             } else {
-                console.log("🔵 Data Stream Subtitles: Unknown message object type:", messageDataJson.object);
-                console.log("🔵 Data Stream Subtitles: Full message data for unknown type:", messageDataJson);
+                // Only log unknown types for debugging
+                // console.log("🔵 Data Stream Subtitles: Unknown message object type:", messageDataJson.object);
             }
         } catch (error) {
             console.error("🔴 Data Stream Subtitles: Error processing agent stream message:", error);
@@ -1512,11 +1494,12 @@ class SubtitleManager {
 
     // Handle live user message updates (like typing in real-time)
     handleLiveUserMessage(text, turnId, isFinal) {
-        console.log("🔵 Data Stream Subtitles: Handling live user message:", { text, turnId, isFinal });
+        // Verbose logging removed - uncomment for debugging if needed
+        // console.log("🔵 Data Stream Subtitles: Handling live user message:", { text, turnId, isFinal });
         
         // If this is a new turn, start a new message
         if (turnId !== this.currentUserTurnId) {
-            console.log("🔵 Data Stream Subtitles: New user turn detected, starting new message");
+            // console.log("🔵 Data Stream Subtitles: New user turn detected, starting new message");
             this.finalizeCurrentUserMessage(); // Finalize any previous message
             
             // Create new message
@@ -1532,11 +1515,11 @@ class SubtitleManager {
             
             // Add to chat history
             this.chatHistoryData.push(this.currentUserMessage);
-            console.log("🔵 Data Stream Subtitles: New user message created:", this.currentUserMessage);
+            // console.log("🔵 Data Stream Subtitles: New user message created:", this.currentUserMessage);
         } else {
             // Same turn, update existing message
             if (this.currentUserMessage) {
-                console.log("🔵 Data Stream Subtitles: Updating existing user message:", text);
+                // console.log("🔵 Data Stream Subtitles: Updating existing user message:", text);
                 this.currentUserMessage.text = text;
                 this.currentUserMessage.isTemp = !isFinal;
             }
@@ -1544,7 +1527,7 @@ class SubtitleManager {
         
         // If message is final, mark it as permanent
         if (isFinal && this.currentUserMessage) {
-            console.log("🔵 Data Stream Subtitles: Finalizing user message");
+            // console.log("🔵 Data Stream Subtitles: Finalizing user message");
             this.currentUserMessage.isTemp = false;
             this.currentUserMessage.timestamp = new Date().toLocaleTimeString();
             this.currentUserMessage = null; // Clear current message
@@ -1558,7 +1541,7 @@ class SubtitleManager {
     // Finalize current user message (called when starting new turn or agent speaks)
     finalizeCurrentUserMessage() {
         if (this.currentUserMessage && this.currentUserMessage.isTemp) {
-            console.log("🔵 Data Stream Subtitles: Finalizing current user message due to turn change");
+            // console.log("🔵 Data Stream Subtitles: Finalizing current user message due to turn change");
             this.currentUserMessage.isTemp = false;
             this.currentUserMessage.timestamp = new Date().toLocaleTimeString();
         }
@@ -1570,7 +1553,8 @@ class SubtitleManager {
     addToChatHistoryDataStream(text, speaker, timestamp) {
         if (!text || !text.trim()) return;
 
-        console.log('🔵 Data Stream Subtitles: Adding to chat history:', { text, speaker, timestamp });
+        // Verbose logging removed - uncomment for debugging if needed
+        // console.log('🔵 Data Stream Subtitles: Adding to chat history:', { text, speaker, timestamp });
 
         // Deduplication check for data stream messages
         const currentTime = Date.now();
@@ -1584,18 +1568,13 @@ class SubtitleManager {
             
             // If the new message is longer, it's likely a replacement, so allow it
             if (text.trim().length > this.lastProcessedText.length) {
-                console.log('🔵 Data Stream Subtitles: Longer replacement message detected, allowing:', { 
-                    newLength: text.trim().length, 
-                    oldLength: this.lastProcessedText.length 
-                });
+                // console.log('🔵 Data Stream Subtitles: Longer replacement message detected, allowing');
             } 
             // If it's a very recent message (within 500ms), it might be a replacement of equal length
             else if (timeDiff < 500) {
-                console.log('🔵 Data Stream Subtitles: Recent message replacement detected, allowing:', { 
-                    text, speaker, timeDiff 
-                });
+                // console.log('🔵 Data Stream Subtitles: Recent message replacement detected, allowing');
             } else {
-                console.log('🔵 Data Stream Subtitles: Duplicate message detected, skipping:', { text, speaker, timeDiff });
+                // console.log('🔵 Data Stream Subtitles: Duplicate message detected, skipping');
                 return;
             }
         }
@@ -1615,16 +1594,17 @@ class SubtitleManager {
 
         this.chatHistoryData.push(message);
         this.updateChatHistoryDisplay();
-        console.log('🔵 Data Stream Subtitles: Chat history updated, total messages:', this.chatHistoryData.length);
+        // Verbose logging removed - uncomment for debugging if needed
+        // console.log('🔵 Data Stream Subtitles: Chat history updated, total messages:', this.chatHistoryData.length);
     }
 
     // Remove the last message from chat history (used when replacing with a longer version)
     removeLastMessageFromChatHistory() {
         if (this.chatHistoryData.length > 0) {
             const removedMessage = this.chatHistoryData.pop();
-            console.log('🔵 Data Stream Subtitles: Removed last message from chat history:', removedMessage);
+            // console.log('🔵 Data Stream Subtitles: Removed last message from chat history:', removedMessage);
             this.updateChatHistoryDisplay();
-            console.log('🔵 Data Stream Subtitles: Chat history updated after removal, total messages:', this.chatHistoryData.length);
+            // console.log('🔵 Data Stream Subtitles: Chat history updated after removal, total messages:', this.chatHistoryData.length);
         }
     }
 

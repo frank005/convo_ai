@@ -56,6 +56,7 @@ window.Utils = class Utils {
         const enableAivad = document.getElementById("enableAivad").checked;
         const enableMllm = document.getElementById("enableMllm").checked;
         const enableRtm = document.getElementById("enableRtm").checked;
+        const enableSal = document.getElementById("enableSal") ? document.getElementById("enableSal").checked : false;
         
         // Get turn detection settings
         const turnDetectionEnabled = document.getElementById("turnDetectionEnabled").checked;
@@ -78,6 +79,12 @@ window.Utils = class Utils {
         const dataChannel = document.getElementById("dataChannel").value;
         const enableMetrics = document.getElementById("enableMetrics").checked;
         const enableErrorMessage = document.getElementById("enableErrorMessage").checked;
+        // Farewell config
+        const farewellGracefulEnabled = document.getElementById("farewellGracefulEnabled") ? document.getElementById("farewellGracefulEnabled").checked : false;
+        const farewellGracefulTimeout = document.getElementById("farewellGracefulTimeout") ? document.getElementById("farewellGracefulTimeout").value || null : null;
+        // SAL config
+        const salMode = document.getElementById("salMode") ? document.getElementById("salMode").value : null;
+        const salSampleUrls = document.getElementById("salSampleUrls") ? document.getElementById("salSampleUrls").value.trim() : '';
         // Transcript config
         const transcriptEnableSet = document.getElementById("transcriptEnableSet").checked;
         const transcriptEnable = document.getElementById("transcriptEnable").value === 'true';
@@ -156,6 +163,7 @@ window.Utils = class Utils {
             enableAivad: enableAivad,
             enableMllm: enableMllm,
             enableRtm: enableRtm,
+            enableSal: enableSal,
             // RTM UID
             agentRtmUid: document.getElementById('agentRtmUid') ? document.getElementById('agentRtmUid').value.trim() : '',
             
@@ -196,6 +204,11 @@ window.Utils = class Utils {
             dataChannel: dataChannel,
             enableMetrics: enableMetrics,
             enableErrorMessage: enableErrorMessage,
+            farewellGracefulEnabled: farewellGracefulEnabled,
+            farewellGracefulTimeout: farewellGracefulTimeout,
+            // SAL config
+            salMode: salMode,
+            salSampleUrls: salSampleUrls,
             // Transcript config
             transcriptEnableSet: transcriptEnableSet,
             transcriptEnable: transcriptEnable,
@@ -582,6 +595,54 @@ window.Utils = class Utils {
         if (formData.enableRtm) {
             advancedFeatures.enable_rtm = true;
         }
+        if (formData.enableSal) {
+            advancedFeatures.enable_sal = true;
+        }
+
+        // Prepare SAL config (optional - only included when enableSal is true)
+        let sal = null;
+        if (formData.enableSal) {
+            sal = {
+                sal_mode: formData.salMode || 'locking' // Default to 'locking' if not provided
+            };
+            
+            // Parse sample URLs - expect JSON format, force to be an object
+            if (formData.salSampleUrls && formData.salSampleUrls.trim()) {
+                let trimmedUrls = formData.salSampleUrls.trim();
+                
+                // Normalize all types of curly quotes to straight quotes for JSON parsing
+                // Handle left/right double quotes (U+201C, U+201D) and left/right single quotes (U+2018, U+2019)
+                // Use explicit Unicode character codes to ensure matching
+                trimmedUrls = trimmedUrls
+                    .replace(/\u201C/g, '"')  // Left double curly quote (")
+                    .replace(/\u201D/g, '"')  // Right double curly quote (")
+                    .replace(/\u2018/g, "'")  // Left single curly quote (')
+                    .replace(/\u2019/g, "'")  // Right single curly quote (')
+                    .replace(/\u201A/g, "'")  // Single low-9 quotation mark
+                    .replace(/\u201B/g, "'")  // Single high-reversed-9 quotation mark
+                    .replace(/\u201E/g, '"')  // Double low-9 quotation mark
+                    .replace(/\u201F/g, '"'); // Double high-reversed-9 quotation mark
+                
+                // Try to parse as JSON
+                try {
+                    const parsed = JSON.parse(trimmedUrls);
+                    // Ensure it's an object (not array or null)
+                    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+                        sal.sample_urls = parsed;
+                    } else {
+                        // If parsed but not an object, use empty object
+                        sal.sample_urls = {};
+                    }
+                } catch (e) {
+                    // If JSON parsing fails, use empty object
+                    console.error('SAL sample URLs JSON parse error:', e, 'Input:', trimmedUrls);
+                    sal.sample_urls = {};
+                }
+            } else {
+                // If no sample URLs provided, use empty object
+                sal.sample_urls = {};
+            }
+        }
 
         // Prepare turn detection config
         let turnDetection = null;
@@ -591,9 +652,16 @@ window.Utils = class Utils {
                 interrupt_mode: formData.turnInterruptMode
             };
             
-            // Add interrupt keywords if keyword mode is selected
-            if (formData.turnInterruptMode === 'keyword' && formData.turnInterruptKeywords) {
-                turnDetection.interrupt_keywords = formData.turnInterruptKeywords.split(',').map(k => k.trim()).filter(k => k.length > 0);
+            // Add interrupt keywords if provided (only for keywords interrupt mode)
+            // Maximum 128 keywords allowed
+            if (formData.turnInterruptKeywords && formData.turnInterruptMode === 'keywords') {
+                const keywords = formData.turnInterruptKeywords.split(',').map(k => k.trim()).filter(k => k.length > 0);
+                if (keywords.length > 128) {
+                    throw new Error('Maximum 128 interrupt keywords allowed. Please reduce the number of keywords.');
+                }
+                if (keywords.length > 0) {
+                    turnDetection.interrupt_keywords = keywords;
+                }
             }
             
             // Add VAD parameters if they have values
@@ -634,6 +702,20 @@ window.Utils = class Utils {
                     action: formData.silenceAction,
                     content: formData.silenceContent
                 };
+            }
+            
+            // Add farewell config if enabled
+            if (formData.farewellGracefulEnabled) {
+                parameters.farewell_config = {
+                    graceful_enabled: true
+                };
+                if (formData.farewellGracefulTimeout) {
+                    const timeout = parseInt(formData.farewellGracefulTimeout, 10);
+                    if (timeout < 0 || timeout > 120) {
+                        throw new Error('Farewell graceful timeout must be between 0 and 120 seconds.');
+                    }
+                    parameters.farewell_config.graceful_timeout_seconds = timeout;
+                }
             }
             
             // Add RTM metrics if enabled
@@ -678,6 +760,7 @@ window.Utils = class Utils {
                 idle_timeout: idleTimeout,
                 ...(formData.enableRtm && formData.agentRtmUid ? { agent_rtm_uid: formData.agentRtmUid } : {}),
                 ...(Object.keys(advancedFeatures).length > 0 ? { advanced_features: advancedFeatures } : {}),
+                ...(sal ? { sal: sal } : {}),
                 ...(formData.enableMllm ? {} : { asr: this.buildAsrConfig(formData) }), // Only include ASR if MLLM is not enabled
                 ...(turnDetection ? { turn_detection: turnDetection } : {}),
                 ...(parameters ? { parameters: parameters } : {}),
