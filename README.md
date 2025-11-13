@@ -39,7 +39,7 @@ convo_ai_studio/
 
    ```bash
    git clone https://github.com/AgoraIO-Community/ConvoAI-Playground.git
-   cd convo_ai
+   cd ConvoAI-Playground
    ```
 
 2. **Set up your API credentials:**
