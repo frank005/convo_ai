@@ -6,7 +6,7 @@ This guide will walk you through setting up and configuring the Conversational A
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/frank005/convo_ai.git
+   git clone https://github.com/AgoraIO-Community/ConvoAI-Playground.git
    cd convo_ai
    ```
 
