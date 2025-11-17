@@ -506,22 +506,50 @@
                 </div>
                 <div class="has-tooltip relative">
                   <input
+                  id="outboundCallSipRtcUid"
+                  class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                  placeholder="SIP RTC UID (e.g., 9999)"
+                  />
+                <div class="tooltip">The RTC UID for the SIP call. This is separate from the agent's RTC UID.</div>
+                </div>
+                <div class="has-tooltip relative">
+                  <input
+                  id="outboundCallSipRtcToken"
+                  class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                  placeholder="SIP RTC Token (optional)"
+                  />
+                <div class="tooltip">Optional RTC token for the SIP call. This is separate from the agent's token.</div>
+                </div>
+                <div class="has-tooltip relative">
+                  <input
                   id="outboundCallPipelineId"
                   class="w-full p-2 rounded bg-gray-800 text-white text-sm"
                   placeholder="Pipeline ID (optional)"
                   />
                 <div class="tooltip">Optional pipeline ID. If provided, only channel, token, and agent_rtc_uid will be used from the configuration. Otherwise, the complete configuration will be used.</div>
                 </div>
-              <div class="grid grid-cols-2 gap-2">
+              <div class="flex gap-2 items-center">
                 <button
                   id="startOutboundCallBtn"
-                  class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-bold"
+                  class="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-bold"
                 >
                   Initiate Outbound Call
                 </button>
+                <div class="has-tooltip relative">
+                  <button
+                    id="copyOutboundCallJson"
+                    class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+                    title="Copy Outbound Call JSON"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8m2 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2z"></path>
+                    </svg>
+                  </button>
+                  <div class="tooltip">Copy Outbound Call JSON - Copy the outbound call configuration JSON to clipboard</div>
+                </div>
                 <button
                   id="hangUpCallBtn"
-                  class="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-bold"
+                  class="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-bold"
                 >
                   Hang-up Call
                 </button>
@@ -1539,9 +1567,18 @@
           const phoneNumber = document.getElementById('outboundCallPhoneNumber').value.trim();
           const callerId = document.getElementById('outboundCallCallerId').value.trim();
           const pipelineId = document.getElementById('outboundCallPipelineId').value.trim();
+          const sipRtcUid = document.getElementById('outboundCallSipRtcUid').value.trim();
+          const sipRtcToken = document.getElementById('outboundCallSipRtcToken').value.trim();
 
           if (!phoneNumber || !callerId) {
             alert('Please fill in phone number and caller ID');
+            startOutboundCallBtn.disabled = false;
+            startOutboundCallBtn.textContent = 'Initiate Outbound Call';
+            return;
+          }
+
+          if (!sipRtcUid) {
+            alert('Please fill in SIP RTC UID');
             startOutboundCallBtn.disabled = false;
             startOutboundCallBtn.textContent = 'Initiate Outbound Call';
             return;
@@ -1560,9 +1597,9 @@
             sip: {
               to_number: phoneNumber,
               from_number: callerId,
-              sip_rtc_uid: agentConfig.properties.agent_rtc_uid || "100",
-              sip_rtc_token: agentConfig.properties.token || ""
-        },
+              sip_rtc_uid: sipRtcUid,
+              sip_rtc_token: sipRtcToken || ""
+            },
             pipeline_id: pipelineId || ""
           };
 
@@ -1619,6 +1656,72 @@
           // Re-enable button on error
           startOutboundCallBtn.disabled = false;
           startOutboundCallBtn.textContent = 'Start Outbound Call';
+        }
+      });
+    }
+
+    // Copy Outbound Call JSON button
+    const copyOutboundCallJsonBtn = document.getElementById('copyOutboundCallJson');
+    if (copyOutboundCallJsonBtn && window.Utils) {
+      copyOutboundCallJsonBtn.addEventListener('click', function() {
+        try {
+          // Get form values
+          const phoneNumber = document.getElementById('outboundCallPhoneNumber').value.trim();
+          const callerId = document.getElementById('outboundCallCallerId').value.trim();
+          const pipelineId = document.getElementById('outboundCallPipelineId').value.trim();
+          const sipRtcUid = document.getElementById('outboundCallSipRtcUid').value.trim();
+          const sipRtcToken = document.getElementById('outboundCallSipRtcToken').value.trim();
+
+          // Get the current agent configuration
+          const formData = window.Utils.getFormData();
+          const agentConfig = window.Utils.buildAgentConfig(formData, {});
+          
+          // Get agent name from form
+          const agentName = formData.uniqueName || `agent-${Math.random().toString(36).substring(2, 8)}`;
+
+          // Build outbound call config (same structure as in startOutboundCallBtn)
+          let callConfig = {
+            name: agentName,
+            sip: {
+              to_number: phoneNumber,
+              from_number: callerId,
+              sip_rtc_uid: sipRtcUid || "",
+              sip_rtc_token: sipRtcToken || ""
+            },
+            pipeline_id: pipelineId || ""
+          };
+
+          // If pipeline ID is provided, only need channel, token, and agent_rtc_uid
+          if (pipelineId) {
+            callConfig.properties = {
+              channel: agentConfig.properties.channel,
+              token: agentConfig.properties.token,
+              agent_rtc_uid: agentConfig.properties.agent_rtc_uid
+            };
+          } else {
+            // Without pipeline ID, use complete configuration
+            callConfig.properties = agentConfig.properties;
+          }
+
+          const jsonString = JSON.stringify(callConfig, null, 2);
+          
+          // Copy to clipboard
+          navigator.clipboard.writeText(jsonString);
+          showCopyMsg();
+          
+          // Show modal with JSON content
+          const jsonModal = document.getElementById('jsonDisplayModal');
+          const jsonModalTitle = document.getElementById('jsonModalTitle');
+          const jsonModalContent = document.getElementById('jsonModalContent');
+          
+          if (jsonModal && jsonModalTitle && jsonModalContent) {
+            jsonModalTitle.textContent = 'Outbound Call JSON Configuration';
+            jsonModalContent.textContent = jsonString;
+            jsonModal.classList.remove('hidden');
+          }
+        } catch (error) {
+          console.error('Error copying outbound call JSON:', error);
+          alert(`Error copying outbound call JSON: ${error.message}`);
         }
       });
     }
