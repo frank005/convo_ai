@@ -602,13 +602,25 @@ window.Utils = class Utils {
         // Prepare SAL config (optional - only included when enableSal is true)
         let sal = null;
         if (formData.enableSal) {
+            const salMode = formData.salMode || 'locking'; // Default to 'locking' if not provided
+            
+            // Validate recognition mode requires custom LLM vendor
+            if (salMode === 'recognition') {
+                const llmVendor = formData.llmVendor ? formData.llmVendor.trim().toLowerCase() : '';
+                if (llmVendor !== 'custom') {
+                    console.warn('SAL Warning: Recognition mode requires LLM vendor to be set to "custom" to process speaker information (vpids in metadata). Current LLM vendor:', llmVendor || '(not set)');
+                }
+            }
+            
             sal = {
-                sal_mode: formData.salMode || 'locking' // Default to 'locking' if not provided
+                sal_mode: salMode
             };
             
-            // Parse sample URLs - expect JSON format, force to be an object
+            // Parse sample URLs - JSON format only
+            // Only include sample_urls in the config if there are actual URLs
             if (formData.salSampleUrls && formData.salSampleUrls.trim()) {
                 let trimmedUrls = formData.salSampleUrls.trim();
+                let parsed = null;
                 
                 // Normalize all types of curly quotes to straight quotes for JSON parsing
                 // Handle left/right double quotes (U+201C, U+201D) and left/right single quotes (U+2018, U+2019)
@@ -623,24 +635,70 @@ window.Utils = class Utils {
                     .replace(/\u201E/g, '"')  // Double low-9 quotation mark
                     .replace(/\u201F/g, '"'); // Double high-reversed-9 quotation mark
                 
-                // Try to parse as JSON
                 try {
-                    const parsed = JSON.parse(trimmedUrls);
+                    parsed = JSON.parse(trimmedUrls);
                     // Ensure it's an object (not array or null)
-                    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
-                        sal.sample_urls = parsed;
-                    } else {
-                        // If parsed but not an object, use empty object
-                        sal.sample_urls = {};
+                    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+                        parsed = null;
                     }
                 } catch (e) {
-                    // If JSON parsing fails, use empty object
                     console.error('SAL sample URLs JSON parse error:', e, 'Input:', trimmedUrls);
-                    sal.sample_urls = {};
+                    parsed = null;
+                }
+                
+                // Validate and apply SAL requirements
+                if (parsed && typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+                    // Validate SAL requirements
+                    const keys = Object.keys(parsed);
+                    
+                    // Check for reserved "unknown" keyword
+                    if (keys.some(key => key.toLowerCase() === 'unknown')) {
+                        console.warn('SAL Warning: "unknown" is a reserved keyword and cannot be used as a voiceprint name. It will be ignored.');
+                        // Remove "unknown" key
+                        delete parsed.unknown;
+                        delete parsed.Unknown;
+                        delete parsed.UNKNOWN;
+                    }
+                    
+                    // Validate quantity based on mode
+                    const validKeys = Object.keys(parsed);
+                    if (validKeys.length === 0) {
+                        // Empty after parsing/validation - check if required for this mode
+                        if (salMode === 'recognition') {
+                            console.warn('SAL Warning: Recognition mode requires at least 1 voiceprint URL.');
+                        }
+                        // Don't include sample_urls if empty
+                    } else if (salMode === 'recognition' && validKeys.length > 1) {
+                        // Recognition mode allows up to 1 URL
+                        console.warn(`SAL Warning: Recognition mode allows up to 1 voiceprint URL, but ${validKeys.length} provided. Only the first one will be used.`);
+                        const limited = {};
+                        limited[validKeys[0]] = parsed[validKeys[0]];
+                        sal.sample_urls = limited;
+                    } else if (salMode === 'locking' && validKeys.length > 3) {
+                        // Locking mode allows 1-3 URLs
+                        console.warn(`SAL Warning: Locking mode allows up to 3 voiceprint URLs, but ${validKeys.length} provided. Only the first 3 will be used.`);
+                        const limited = {};
+                        validKeys.slice(0, 3).forEach(key => {
+                            limited[key] = parsed[key];
+                        });
+                        sal.sample_urls = limited;
+                    } else {
+                        // Valid URLs - include sample_urls
+                        sal.sample_urls = parsed;
+                    }
+                } else {
+                    // If parsing fails, check if required for this mode
+                    if (salMode === 'recognition') {
+                        console.warn('SAL Warning: Recognition mode requires at least 1 voiceprint URL, but parsing failed.');
+                    }
+                    // Don't include sample_urls if parsing failed
                 }
             } else {
-                // If no sample URLs provided, use empty object
-                sal.sample_urls = {};
+                // If no sample URLs provided, check if required for this mode
+                if (salMode === 'recognition') {
+                    console.warn('SAL Warning: Recognition mode requires at least 1 voiceprint URL. Leave empty only for locking mode (seamless mode).');
+                }
+                // For locking mode, empty is valid (seamless mode) - don't include sample_urls
             }
         }
 

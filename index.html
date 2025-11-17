@@ -4906,17 +4906,17 @@
                   <option value="locking">Locking</option>
                   <option value="recognition">Recognition</option>
                 </select>
-                <div class="tooltip">SAL mode: 'locking' for voice print locking, 'recognition' for voice recognition.</div>
+                <div class="tooltip">SAL mode: 'locking' for voice print locking, 'recognition' for voice recognition.<br><br><strong>Important:</strong> Recognition mode requires LLM vendor to be set to "custom" to process speaker information (vpids in metadata).</div>
               </div>
               <div class="has-tooltip relative">
                 <label class="text-sm">Sample URLs (Optional)</label>
                 <textarea
                   id="salSampleUrls"
                   class="w-full p-2 rounded bg-gray-600 text-white border border-gray-500 focus:border-blue-500"
-                  placeholder='JSON format: {"Tomas": "https://xxxxxx/tomas.mp3", "Jay": "https://xxxxxxx/jay.mp3"} or "Name:URL,Name:URL" format'
+                  placeholder='JSON format: {"Tomas": "https://xxxxxx/tomas.pcm", "Jay": "https://xxxxxxx/jay.pcm"}'
                   rows="3"
                 ></textarea>
-                <div class="tooltip">Sample URLs for voice locking/recognition. Can be JSON object or "Name:URL,Name:URL" format. Leave empty for non-sample locking.</div>
+                <div class="tooltip">Sample URLs for voice locking/recognition. Must be a JSON object.<br><br><strong>Mode-specific requirements:</strong><br>• <strong>Locking mode:</strong> Can be empty (seamless mode - auto-recognition) OR 1-3 URLs (personalized mode - pre-registered voiceprints)<br>• <strong>Recognition mode:</strong> Must have 1 voiceprint URL (required, up to 1). <strong>Note:</strong> Requires LLM vendor set to "custom" to process speaker information via vpids in metadata.<br><br><strong>When providing URLs:</strong><br>• Do NOT use "unknown" as a voiceprint name (reserved keyword)<br>• Quantity: Locking mode allows 1-3 URLs, Recognition mode allows up to 1 URL<br>• File size: Max 2 MB per file<br>• Duration: 10-15 seconds, with at least 8 seconds of effective audio (no silent segments)<br>• Format: 16kHz sampling rate, 16-bit depth, mono PCM audio<br>• File extension: Must be ".pcm"</div>
               </div>
             </div>
           </div>
