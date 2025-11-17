@@ -52,6 +52,12 @@ convo_ai_studio/
    - Configure agent settings, TTS/ASR vendors, and optional features
    - Create your agent and start interacting
 
+4. **SIP/Phone Management (Optional):**
+   - Import and manage phone numbers
+   - Initiate outbound calls with pipeline ID support
+   - Use override checkbox to use complete configuration even with pipeline ID
+   - Retrieve call records and status
+
 For detailed setup instructions, see [SETUP.md](DOCS/SETUP.md).
 
 ## Documentation
@@ -67,12 +73,18 @@ For detailed setup instructions, see [SETUP.md](DOCS/SETUP.md).
 ## Key Features
 
 - **Dual AI Model Support**: Traditional LLM and Multimodal LLM (MLLM) configurations
-- **Comprehensive TTS Support**: Microsoft, ElevenLabs, Cartesia, OpenAI, and Hume AI
-- **Advanced ASR Integration**: Agora, Microsoft, and Deepgram speech recognition
+- **Comprehensive TTS Support**: Microsoft, ElevenLabs, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Groq, and Google TTS
+- **Advanced ASR Integration**: Agora, Microsoft, and Deepgram speech recognition with custom model support
 - **AI Avatar Support**: Akool and HeyGen avatar vendors with real-time video streaming
+- **SIP/Phone Management**: Outbound call functionality with phone number management
+  - Initiate outbound calls via SIP
+  - Pipeline ID support with override option for complete configuration
+  - Phone number import, update, and management
+  - Call records and status retrieval
 - **Real-time Audio & Visual**: Live audio visualization, camera integration, and device selection
 - **Live Subtitles & Chat**: Real-time subtitle display and chat history management
-- **Advanced Configuration**: VAD, turn detection, silence management, and custom parameters
+- **Advanced Configuration**: VAD, turn detection, silence management, SAL (Speaker Adaptation Library), farewell configuration, and custom parameters
+- **Smart Validation**: Context-aware validation for agent creation and SIP calls based on pipeline configuration
 
 For a complete feature list, see [FEATURES.md](DOCS/FEATURES.md).
 
@@ -95,4 +107,4 @@ For issues and questions:
 
 ---
 
-**Agora ConversationalAI Backend v1.6** - Enhanced with MLLM support, AI Avatar functionality, advanced configuration options, new TTS/ASR vendors, comprehensive real-time multimodal capabilities, and device selection management. Features professional SVG placeholders, seamless video stream integration, improved chat interface with proper overflow handling and responsive design, and robust device selection with permission management and error recovery.
+**Agora ConversationalAI Backend v2.0** - Enhanced with MLLM support, AI Avatar functionality, SIP/Phone Management, advanced configuration options, new TTS/ASR vendors, comprehensive real-time multimodal capabilities, and device selection management. Features professional SVG placeholders, seamless video stream integration, improved chat interface with proper overflow handling and responsive design, robust device selection with permission management and error recovery, pipeline ID override functionality, smart validation system, and comprehensive phone number management capabilities.
