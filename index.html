@@ -3530,6 +3530,7 @@
                 <option value="assemblyai">AssemblyAI (Beta)</option>
                 <option value="amazon">Amazon Transcribe (Beta)</option>
                 <option value="google">Google (Beta)</option>
+                <option value="custom">Custom</option>
               </select>
               <div class="tooltip">Select the Automatic Speech Recognition (ASR) vendor to use for speech recognition.</div>
             </div>
@@ -3814,6 +3815,20 @@
                 />
                 <div class="tooltip">The recognition model to use.</div>
               </div>
+            </div>
+          </div>
+          
+          <!-- Custom ASR Configuration -->
+          <div id="customAsrConfig" class="hidden mt-4">
+            <h4 class="text-sm font-semibold mb-2">Custom ASR Settings</h4>
+            <div class="has-tooltip relative">
+              <textarea
+                id="customAsrJson"
+                class="w-full p-2 rounded bg-gray-600 text-white border border-gray-500 focus:border-blue-500 font-mono text-sm"
+                placeholder='Enter ASR configuration JSON (e.g., {"language": "auto", "params": {"api_key": "xxx", "language_hints": ["en", "es"], "model": "model-name-v2"}, "rtc_builtin": false, "vendor": "vendor-example"})'
+                rows="8"
+              ></textarea>
+              <div class="tooltip">Enter a valid JSON object for custom ASR configuration. This will populate the "asr" field in the agent config. The JSON should not include the outer "asr" wrapper - just the configuration object itself.</div>
             </div>
           </div>
         </div>

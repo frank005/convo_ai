@@ -431,7 +431,46 @@ window.Utils = class Utils {
         const vendor = formData.asrVendor;
         const asrLanguage = document.getElementById('asrLanguage').value;
         
-        if (vendor === 'ares') {
+        if (vendor === 'custom') {
+            const customAsrJson = document.getElementById('customAsrJson');
+            if (!customAsrJson) {
+                console.error('Custom ASR JSON textarea not found');
+                return {
+                    vendor: 'ares',
+                    language: 'en-US'
+                };
+            }
+            
+            const jsonString = customAsrJson.value.trim();
+            if (!jsonString) {
+                console.error('Custom ASR JSON is empty');
+                throw new Error('Custom ASR configuration is required when using custom vendor');
+            }
+            
+            // Normalize all types of curly quotes to straight quotes for JSON parsing
+            // Handle left/right double quotes (U+201C, U+201D) and left/right single quotes (U+2018, U+2019)
+            let normalizedJson = jsonString
+                .replace(/\u201C/g, '"')  // Left double curly quote (")
+                .replace(/\u201D/g, '"')  // Right double curly quote (")
+                .replace(/\u2018/g, "'")  // Left single curly quote (')
+                .replace(/\u2019/g, "'")  // Right single curly quote (')
+                .replace(/\u201A/g, "'")  // Single low-9 quotation mark
+                .replace(/\u201B/g, "'")  // Single high-reversed-9 quotation mark
+                .replace(/\u201E/g, '"')  // Double low-9 quotation mark
+                .replace(/\u201F/g, '"'); // Double high-reversed-9 quotation mark
+            
+            try {
+                const parsed = JSON.parse(normalizedJson);
+                // Ensure it's an object (not array or null)
+                if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+                    throw new Error('Custom ASR configuration must be a valid JSON object');
+                }
+                return parsed;
+            } catch (e) {
+                console.error('Custom ASR JSON parse error:', e, 'Input:', normalizedJson);
+                throw new Error(`Invalid JSON in custom ASR configuration: ${e.message}`);
+            }
+        } else if (vendor === 'ares') {
             return {
                 vendor: 'ares',
                 language: asrLanguage
