@@ -78,17 +78,17 @@
         Stop Agent
       </button>
     </div>
-    
+
     <!-- Agent Status Messages -->
     <div class="mb-4 space-y-2">
       <div id="createAgentStatus" class="text-sm text-green-400 bg-green-900 bg-opacity-50 p-3 rounded border border-green-600 hidden fixed top-4 right-4 z-50 max-w-md"></div>
       <div id="updateAgentStatus" class="text-sm text-yellow-400 bg-yellow-900 bg-opacity-50 p-3 rounded border border-yellow-600 hidden fixed top-4 right-4 z-50 max-w-md"></div>
       <div id="stopAgentStatus" class="text-sm text-red-400 bg-red-900 bg-opacity-50 p-3 rounded border border-red-600 hidden fixed top-4 right-4 z-50 max-w-md"></div>
     </div>
-    
+
     <!-- Copy Message -->
     <div id="copyJsonMsg" class="text-green-400 text-sm hidden">Copied to clipboard!</div>
-    
+
     <!-- Agent Response Display -->
     <div id="agentResponse" class="bg-gray-800 p-4 rounded-lg text-sm font-mono text-gray-300 min-h-[100px] max-h-[300px] overflow-auto hidden"></div>
 
@@ -104,7 +104,7 @@
         </div>
         <canvas id="audio-wave"></canvas>
       </div>
-      
+
       <!-- Channel controls with mic button -->
       <div class="flex items-center gap-2 mt-4">
         <button id="joinChannel" class="flex-1 px-3 py-2 bg-cyan-500 text-gray-900 rounded disabled:opacity-50 disabled:pointer-events-none hover:bg-cyan-400">
@@ -134,7 +134,7 @@
           Leave Channel
         </button>
       </div>
-      
+
       <!-- Client UID and Token on same line -->
       <div class="flex gap-2 mt-4">
         <div class="flex-1 has-tooltip relative">
@@ -168,7 +168,7 @@
       <!-- Live Subtitles Section -->
           <div class="w-full p-4 bg-gray-700 rounded-lg">
         <h3 class="text-lg font-semibold mb-3 text-cyan-400">Live Subtitles</h3>
-        
+
         <div class="space-y-3">
                     <div class="flex space-x-2 has-tooltip relative">
             <button id="toggleSubtitleOverlay" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50" disabled>
@@ -176,7 +176,7 @@
             </button>
             <div class="tooltip">Toggle the subtitle overlay to show real-time transcription of the conversation</div>
           </div>
-          
+
           <!-- Subtitle Mode Selection -->
           <div class="space-y-2 mt-3">
             <div class="text-sm font-medium text-gray-300">Subtitle Mode:</div>
@@ -201,7 +201,7 @@
               Subtitle mode selection disabled - Agent is running
           </div>
         </div>
-        
+
         <!-- Chat History Section -->
         <div class="mt-4">
           <div class="flex justify-between items-center mb-2">
@@ -236,8 +236,8 @@
                           placeholder="Agent ID to Query"
                         />
                         <div class="tooltip">Enter the ID of the agent you want to query</div>
-        </div>
-        
+                      </div>
+
                       <div class="grid grid-cols-1 gap-2">
                         <div class="has-tooltip relative">
         <button
@@ -248,7 +248,7 @@
         </button>
                           <div class="tooltip">Get the current status of the specified Conversational AI agent instance. Shows status like IDLE, STARTING, RUNNING, STOPPING, STOPPED, RECOVERING, or FAILED.</div>
                         </div>
-        
+
                         <div class="has-tooltip relative">
         <button
                             id="listAgentsBtn"
@@ -257,9 +257,9 @@
                             Retrieve Agent List
         </button>
                           <div class="tooltip">Get a list of Conversational AI agents that meet the specified conditions. Can filter by channel, time range, state, and limit results.</div>
-    </div>
+                        </div>
 
-          <div class="has-tooltip relative">
+                        <div class="has-tooltip relative">
                           <button
                             id="getAgentHistoryBtn"
                             class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
@@ -267,9 +267,9 @@
                             Retrieve Agent History
                           </button>
                           <div class="tooltip">Retrieve the conversation history between the user and the Conversational AI agent while the agent is running. Shows messages with role (user/assistant) and content.</div>
-          </div>
-          </div>
-          
+                        </div>
+                      </div>
+
                       <div class="relative mt-4">
                         <button
                           id="copyQueryResponseBtn"
@@ -424,10 +424,10 @@
                 <button id="sendImageFileBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm flex items-center disabled:opacity-50 disabled:pointer-events-none" disabled title="Image upload disabled when camera is active">
                   <span class="material-icons text-sm">upload</span>
                 </button>
-                      </div>
-                    </div>
-                  </div>
-                  
+              </div>
+            </div>
+          </div>
+
               <!-- Broadcast Message Section -->
               <div class="w-full p-4 bg-gray-700 rounded-lg">
                 <h3 class="text-sm font-semibold mb-3 text-gray-300">Broadcast Messages</h3>
@@ -736,7 +736,7 @@
 
   <!-- GitHub Link -->
   <a
-    href="https://github.com/frank005/convo_ai"
+    href="https://github.com/AgoraIO-Community/ConvoAI-Playground"
     target="_blank"
     rel="noopener noreferrer"
     class="github-link"
@@ -761,19 +761,19 @@
     <div class="bg-gray-800 p-6 rounded-lg max-w-lg w-full mx-4">
       <h3 class="text-xl font-bold mb-4">Audio Configuration Required</h3>
       <p class="text-gray-300 mb-4">For audio from the LLM, make sure to add custom parameters for modalities and audio. Example:</p>
-      
+
       <div class="bg-gray-700 p-4 rounded mb-4">
         <p class="text-sm font-semibold mb-2">Select array and enter:</p>
         <p class="text-blue-400 text-sm">key: modalities</p>
         <p class="text-blue-400 text-sm">value: audio</p>
       </div>
-      
+
       <div class="bg-gray-700 p-4 rounded mb-4">
         <p class="text-sm font-semibold mb-2">Select object and enter:</p>
         <p class="text-blue-400 text-sm">key: audio</p>
         <p class="text-blue-400 text-sm">value: { "voice": "alloy", "format": "pcm16" }</p>
       </div>
-      
+
       <div class="flex justify-end">
         <button id="closeAudioModal" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Got it</button>
       </div>
@@ -1168,7 +1168,7 @@
         if (textCheckbox && !this.checked && !textCheckbox.checked) {
             this.checked = true; // Prevent unchecking if it's the last selected option
         }
-        
+
         // Show modal when audio is checked
         if (this.checked) {
           const audioConfigModal = document.getElementById('audioConfigModal');
@@ -1194,19 +1194,19 @@
     const audioConfigModal = document.getElementById('audioConfigModal');
     if (audioConfigModal) {
       let isDragging = false;
-      
+
       audioConfigModal.addEventListener('mousedown', function(e) {
         if (e.target.tagName === 'PRE' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
           isDragging = true;
         }
       });
-      
+
       audioConfigModal.addEventListener('mouseup', function(e) {
         setTimeout(() => {
           isDragging = false;
         }, 100);
       });
-      
+
       audioConfigModal.addEventListener('click', function(e) {
         if (e.target === this && !isDragging) {
             this.classList.add('hidden');
@@ -1230,16 +1230,16 @@
         const customParams = window.Utils.getCustomParams();
         const config = window.Utils.buildAgentConfig(formData, customParams);
         const jsonString = JSON.stringify(config, null, 2);
-        
+
         // Copy to clipboard
         navigator.clipboard.writeText(jsonString);
-      showCopyMsg();
-        
+        showCopyMsg();
+
         // Show modal with JSON content
         const jsonModal = document.getElementById('jsonDisplayModal');
         const jsonModalTitle = document.getElementById('jsonModalTitle');
         const jsonModalContent = document.getElementById('jsonModalContent');
-        
+
         if (jsonModal && jsonModalTitle && jsonModalContent) {
           jsonModalTitle.textContent = 'Create Agent JSON Configuration';
           jsonModalContent.textContent = jsonString;
@@ -1254,11 +1254,11 @@
         const formData = window.Utils.getFormData();
         const customParams = window.Utils.getCustomParams();
         const config = window.Utils.buildAgentConfig(formData, customParams);
-      
+
       // Check if MLLM is enabled
         const enableMllm = document.getElementById('enableMllm');
         const isMllmEnabled = enableMllm ? enableMllm.checked : false;
-      
+
       let updateJson;
         if (isMllmEnabled) {
         // Include token and mllm params (using custom parameters)
@@ -1282,18 +1282,18 @@
           }
         };
       }
-      
+
       const jsonString = JSON.stringify(updateJson, null, 2);
-      
+
       // Copy to clipboard
       navigator.clipboard.writeText(jsonString);
       showCopyMsg();
-      
+
       // Show modal with JSON content
       const jsonModal = document.getElementById('jsonDisplayModal');
       const jsonModalTitle = document.getElementById('jsonModalTitle');
       const jsonModalContent = document.getElementById('jsonModalContent');
-      
+
       if (jsonModal && jsonModalTitle && jsonModalContent) {
         jsonModalTitle.textContent = 'Update Agent JSON Configuration';
         jsonModalContent.textContent = jsonString;
@@ -1308,7 +1308,7 @@
       getAgentHistoryBtn.addEventListener('click', async function() {
         const agentId = document.getElementById('agentId');
         const queryResponse = document.getElementById('queryResponse');
-      
+
         if (!agentId || !agentId.value) {
           if (queryResponse) {
             queryResponse.textContent = 'Please enter an Agent ID first';
@@ -1458,21 +1458,21 @@
     // Close modal when clicking outside (but prevent closing when dragging)
     if (jsonModal) {
       let isDragging = false;
-      
+
       jsonModal.addEventListener('mousedown', function(e) {
         // Check if user is starting to drag text
         if (e.target.tagName === 'PRE' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
           isDragging = true;
         }
       });
-      
+
       jsonModal.addEventListener('mouseup', function(e) {
         // Reset dragging flag after a short delay
         setTimeout(() => {
           isDragging = false;
         }, 100);
       });
-      
+
       jsonModal.addEventListener('click', function(e) {
         if (e.target === this && !isDragging) {
           this.classList.add('hidden');
@@ -2129,10 +2129,10 @@
     async function populateCameraDevices() {
       try {
         const devices = await AgoraRTC.getCameras();
-        cameraSelect.innerHTML = devices.map(device => 
+        cameraSelect.innerHTML = devices.map(device =>
           `<option value="${device.deviceId}">${device.label}</option>`
         ).join('');
-        
+
         // If no devices found, show message
         if (devices.length === 0) {
           cameraSelect.innerHTML = '<option value="">No cameras found</option>';
@@ -2155,7 +2155,7 @@
           console.error('Error accessing cameras:', error);
           cameraSelect.innerHTML = '<option value="">Camera access denied</option>';
         }
-        
+
         // Show camera button immediately when image input is enabled
         const cameraBtn = document.getElementById("toggleCameraBtn");
         if (cameraBtn) {
@@ -2168,7 +2168,7 @@
           cameraBtn.classList.add("hidden");
         }
       }
-      
+
       // Check if we should show camera button (if already in channel)
       if (window.ui && typeof window.ui.checkAndShowCameraButton === 'function') {
         window.ui.checkAndShowCameraButton();
@@ -2186,7 +2186,7 @@
         cameraConfigModal.classList.add('hidden');
         // Store selected camera ID
         localStorage.setItem('selectedCameraId', cameraSelect.value);
-        
+
         // Check if we should show camera button (if already in channel)
         if (window.ui && typeof window.ui.checkAndShowCameraButton === 'function') {
           window.ui.checkAndShowCameraButton();
@@ -2202,19 +2202,19 @@
 
     // Close modal when clicking outside
     let isDragging = false;
-    
+
     cameraConfigModal.addEventListener('mousedown', function(e) {
       if (e.target.tagName === 'PRE' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
         isDragging = true;
       }
     });
-    
+
     cameraConfigModal.addEventListener('mouseup', function(e) {
       setTimeout(() => {
         isDragging = false;
       }, 100);
     });
-    
+
     cameraConfigModal.addEventListener('click', function(e) {
       if (e.target === this && !isDragging) {
         this.classList.add('hidden');
@@ -2224,7 +2224,7 @@
     }
 
     // v1.6 New Features Logic
-    
+
     // AI Avatar Settings drawer logic
     const avatarSettingsBtn = document.getElementById('avatarSettingsBtn');
     const avatarDrawer = document.getElementById('avatarDrawer');
@@ -2232,7 +2232,7 @@
     const enableAvatar = document.getElementById('enableAvatar');
     const avatarVendor = document.getElementById('avatarVendor');
     const heygenSettings = document.getElementById('heygenSettings');
-    
+
     // AI Avatar drawer functionality
     if (avatarSettingsBtn) {
     avatarSettingsBtn.addEventListener('click', function(e) {
@@ -2243,7 +2243,7 @@
       }
     });
     }
-    
+
     // Close AI Avatar drawer
     const avatarDrawerCloseBtn = document.querySelector('[data-drawer="avatarDrawer"]');
     if (avatarDrawerCloseBtn && avatarDrawer && avatarDrawerBackdrop) {
@@ -2252,7 +2252,7 @@
       avatarDrawerBackdrop.classList.add('hidden');
     });
     }
-    
+
     if (avatarDrawerBackdrop && avatarDrawer) {
     avatarDrawerBackdrop.addEventListener('click', function() {
       avatarDrawer.classList.add('hidden');
@@ -2277,10 +2277,10 @@
       if (enableAvatar && enableAvatar.checked) {
         const clientRtcUid = document.getElementById('clientRtcUid');
         const remoteRtcUids = document.getElementById('remoteRtcUids');
-        
+
         const clientUid = clientRtcUid.value.trim() || '1001';
         remoteRtcUids.value = clientUid;
-        
+
         // Show note about automatic UID setting
         document.getElementById('avatarUidNote').classList.remove('hidden');
       }
@@ -2301,12 +2301,12 @@
       const remoteRtcUids = document.getElementById('remoteRtcUids');
       const agoraRtcUid = document.getElementById('agoraRtcUid');
       const avatarRtcUid = document.getElementById('avatarRtcUid');
-      
+
       if (this.checked) {
         // Show Agora token requirement alert
         const agoraTokenModal = document.getElementById('agoraTokenModal');
         agoraTokenModal.classList.remove('hidden');
-        
+
         // Show placeholder, hide image when AI Avatar is enabled
         avatarImage.style.display = 'none';
         avatarVideo.style.display = 'none';
@@ -2335,28 +2335,28 @@
           </svg>
         `;
         console.log('AI Avatar enabled - SVG should be visible');
-        
+
         // Disable MLLM when AI Avatar is enabled
         enableMllm.checked = false;
         enableMllm.disabled = true;
         mllmSettingsBtn.disabled = true;
         mllmSettingsBtn.classList.add('opacity-50');
-        
+
         // Set required UIDs for AI Avatar
         if (!clientRtcUid.value.trim()) {
           clientRtcUid.value = '1001'; // Default client UID
         }
-        
+
         // Show note about client UID requirement
         document.getElementById('clientUidNote').classList.remove('hidden');
-        
+
         // Set remote RTC UIDs to include only the client UID (for agent configuration)
         const clientUid = clientRtcUid.value.trim() || '1001';
         remoteRtcUids.value = clientUid;
-        
+
         // Show note about automatic UID setting
         document.getElementById('avatarUidNote').classList.remove('hidden');
-        
+
       } else {
         // Show image, hide placeholder when AI Avatar is disabled
         avatarImage.style.display = 'block';
@@ -2364,15 +2364,15 @@
         const avatarPlaceholder = document.getElementById('avatarPlaceholder');
         avatarPlaceholder.style.display = 'none';
         avatarPlaceholder.innerHTML = '';
-        
+
         // Re-enable MLLM when AI Avatar is disabled
         enableMllm.disabled = false;
         mllmSettingsBtn.disabled = false;
         mllmSettingsBtn.classList.remove('opacity-50');
-        
+
         // Reset remote RTC UIDs to default
         remoteRtcUids.value = '*';
-        
+
         // Hide note about automatic UID setting
         document.getElementById('avatarUidNote').classList.add('hidden');
         document.getElementById('clientUidNote').classList.add('hidden');
@@ -2398,7 +2398,7 @@
         });
     }
     const enableMllm = document.getElementById('enableMllm');
-    
+
     // MLLM drawer functionality
     if (mllmSettingsBtn) {
     mllmSettingsBtn.addEventListener('click', function(e) {
@@ -2409,7 +2409,7 @@
       }
     });
     }
-    
+
     // Close MLLM drawer
     const mllmDrawerCloseBtn = document.querySelector('[data-drawer="mllmDrawer"]');
     if (mllmDrawerCloseBtn && mllmDrawer && mllmDrawerBackdrop) {
@@ -2418,7 +2418,7 @@
       mllmDrawerBackdrop.classList.add('hidden');
     });
     }
-    
+
     if (mllmDrawerBackdrop && mllmDrawer) {
     mllmDrawerBackdrop.addEventListener('click', function() {
       mllmDrawer.classList.add('hidden');
@@ -2434,7 +2434,7 @@
     const rtmMetricsConfig = document.getElementById('rtmMetricsConfig');
     const parametersEnabled = document.getElementById('parametersEnabled');
     const clientRtmUid = document.getElementById('clientRtmUid');
-    
+
     // Handle SAL enable/disable
     if (enableSal && salConfig) {
       enableSal.addEventListener('change', function() {
@@ -2449,7 +2449,7 @@
         salConfig.classList.remove('hidden');
       }
     }
-    
+
     // Handle MLLM enable/disable
     if (enableMllm) {
     enableMllm.addEventListener('change', function() {
@@ -2462,7 +2462,7 @@
       const inputImage = document.getElementById('inputImage');
       const inputModalities = document.querySelector('.w-full.p-2.rounded.bg-gray-700.text-white');
       const outputModalities = document.querySelectorAll('.w-full.p-2.rounded.bg-gray-700.text-white')[1];
-      
+
       if (this.checked) {
         // Disable LLM, TTS, ASR sections
         llmSettingsBtn.disabled = true;
@@ -2471,7 +2471,7 @@
         ttsSettingsBtn.classList.add('opacity-50');
         asrConfigBox.classList.add('opacity-50');
         asrConfigBox.style.pointerEvents = 'none';
-        
+
         // Set input modalities: audio checked+disabled, text enabled (can uncheck), image disabled (cannot be checked/unchecked)
         inputAudio.checked = true;
         inputAudio.disabled = true;
@@ -2481,7 +2481,7 @@
         // Enable modality changes for input section (only text can be toggled)
         inputModalities.style.pointerEvents = 'auto';
         outputModalities.style.pointerEvents = 'none';
-        
+
         // Disable AIVAD and AI Avatar when MLLM is enabled
         document.getElementById('enableAivad').checked = false;
         document.getElementById('enableAivad').disabled = true;
@@ -2489,7 +2489,7 @@
         enableAvatar.disabled = true;
         avatarSettingsBtn.disabled = true;
         avatarSettingsBtn.classList.add('opacity-50');
-        
+
         // Update avatar display to show image
         const avatarImage = document.getElementById('avatarImage');
         const avatarVideo = document.getElementById('avatarVideo');
@@ -2504,7 +2504,7 @@
         ttsSettingsBtn.classList.remove('opacity-50');
         asrConfigBox.classList.remove('opacity-50');
         asrConfigBox.style.pointerEvents = 'auto';
-        
+
         // Set input modalities: audio unchecked+disabled, text checked+disabled, image enabled (can check/uncheck)
         inputAudio.checked = false;
         inputAudio.disabled = true;
@@ -2514,13 +2514,13 @@
         // Re-enable modality changes for input section (image can be toggled, audio is disabled)
         inputModalities.style.pointerEvents = 'auto';
         outputModalities.style.pointerEvents = 'auto';
-        
+
         // Re-enable AIVAD and AI Avatar
         document.getElementById('enableAivad').disabled = false;
         enableAvatar.disabled = false;
         avatarSettingsBtn.disabled = false;
         avatarSettingsBtn.classList.remove('opacity-50');
-        
+
         // Update avatar display to show image (since AI Avatar is disabled by default)
         const avatarImage = document.getElementById('avatarImage');
         const avatarVideo = document.getElementById('avatarVideo');
@@ -2536,7 +2536,7 @@
       document.getElementById('agoraChannelName').style.pointerEvents = 'auto';
     });
     }
-    
+
     // Handle RTM enable/disable
     if (enableRtm) {
     enableRtm.addEventListener('change', function() {
@@ -2562,7 +2562,7 @@
       }
     });
     }
-    
+
     // Handle data channel change
     if (dataChannel) {
     dataChannel.addEventListener('change', function() {
@@ -2580,7 +2580,7 @@
     const turnCreateResponse = document.getElementById('turnCreateResponse');
     const turnInterruptResponse = document.getElementById('turnInterruptResponse');
     const turnEagerness = document.getElementById('turnEagerness');
-    
+
     // Show/hide turn detection config
     if (turnDetectionEnabled) {
     turnDetectionEnabled.addEventListener('change', function() {
@@ -2591,7 +2591,7 @@
       }
     });
     }
-    
+
     // Handle turn detection type changes
     const interruptMode = document.getElementById('interruptMode');
     const interruptKeywordsBlock = document.getElementById('interruptKeywordsBlock');
@@ -2634,18 +2634,18 @@
     turnDetectionType.addEventListener('change', function() {
       const isServerVad = this.value === 'server_vad';
       const isSemanticVad = this.value === 'semantic_vad';
-      
+
       // Get the containers for MLLM-specific options
       const mllmOptionsContainer = document.getElementById('mllmOptionsContainer');
       const eagernessContainer = document.getElementById('eagernessContainer');
-      
+
       // Show/hide MLLM-specific options based on turn detection type
       if (isServerVad || isSemanticVad) {
         mllmOptionsContainer.classList.remove('hidden');
       } else {
         mllmOptionsContainer.classList.add('hidden');
       }
-      
+
       // Eagerness is only available for semantic_vad
       if (isSemanticVad) {
         eagernessContainer.classList.remove('hidden');
@@ -2686,7 +2686,7 @@
         if (textCheckbox && !this.checked && !textCheckbox.checked) {
         this.checked = true; // Prevent unchecking if it's the last selected option
       }
-      
+
       // Show modal when audio is checked
       if (this.checked) {
           const audioConfigModal = document.getElementById('audioConfigModal');
@@ -2698,7 +2698,7 @@
     }
 
     let prevOutputModalities = { text: true, audio: false };
-    
+
     // Transcript Configuration Logic
     const transcriptRedundant = document.getElementById('transcriptRedundant');
     // Use already declared parametersEnabled
@@ -2851,19 +2851,19 @@
     const experimentalFeaturesModal = document.getElementById('experimentalFeaturesModal');
     if (experimentalFeaturesModal) {
       let isDragging = false;
-      
+
       experimentalFeaturesModal.addEventListener('mousedown', function(e) {
         if (e.target.tagName === 'PRE' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
           isDragging = true;
         }
       });
-      
+
       experimentalFeaturesModal.addEventListener('mouseup', function(e) {
         setTimeout(() => {
           isDragging = false;
         }, 100);
       });
-      
+
       experimentalFeaturesModal.addEventListener('click', function(e) {
         if (e.target === this && !isDragging) {
           this.classList.add('hidden');
@@ -2900,19 +2900,19 @@
     const agoraTokenModal = document.getElementById('agoraTokenModal');
     if (agoraTokenModal) {
       let isDragging = false;
-      
+
       agoraTokenModal.addEventListener('mousedown', function(e) {
         if (e.target.tagName === 'PRE' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
           isDragging = true;
         }
       });
-      
+
       agoraTokenModal.addEventListener('mouseup', function(e) {
         setTimeout(() => {
           isDragging = false;
         }, 100);
       });
-      
+
       agoraTokenModal.addEventListener('click', function(e) {
       if (e.target === this && !isDragging) {
         this.classList.add('hidden');
@@ -2929,11 +2929,11 @@
       portal.style.display = 'block';
       // Get bounding rect of the hovered field
       const rect = e.currentTarget.getBoundingClientRect();
-      
+
       // Calculate initial position (to the right of the element)
       let left = rect.right + 8;
       let top = rect.top + (rect.height / 2);
-      
+
       // Check if tooltip would go off the right edge
       const portalWidth = 260; // max-width
       const viewportWidth = window.innerWidth;
@@ -2941,7 +2941,7 @@
         // Position to the left instead
         left = rect.left - portalWidth - 8;
       }
-      
+
       // Check if tooltip would go off the top or bottom
       const portalHeight = 80; // approximate height
       const viewportHeight = window.innerHeight;
@@ -2951,7 +2951,7 @@
       if (top < 16) {
         top = 16;
       }
-      
+
       portal.style.left = left + 'px';
       portal.style.top = top + 'px';
       portal.style.background = '#222';
@@ -3090,7 +3090,7 @@
       const agentRtmUidBlock = document.getElementById('agentRtmUidBlock');
       const agentRtmUid = document.getElementById('agentRtmUid');
       const agoraRtcUid = document.getElementById('agoraRtcUid');
-      
+
       if (enableRtm && enableRtm.checked && agentRtmUidBlock) {
         agentRtmUidBlock.style.display = '';
         // Only auto-fill if the field is empty or matches the previous RTC UID
@@ -3146,20 +3146,20 @@
     portal.style.display = 'block';
     // Get bounding rect of the hovered field
     const rect = e.currentTarget.getBoundingClientRect();
-    
+
     // Set portal to visible temporarily to measure its actual size
     portal.style.visibility = 'hidden';
     portal.style.display = 'block';
     const portalRect = portal.getBoundingClientRect();
     const portalWidth = portalRect.width;
     const portalHeight = portalRect.height;
-    
+
     // Calculate optimal position
     let left, top;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const margin = 16;
-    
+
     // Try positioning to the right first
     left = rect.right + 8;
     if (left + portalWidth > viewportWidth - margin) {
@@ -3175,10 +3175,10 @@
         }
       }
     }
-    
+
     // Vertical positioning - center vertically with the element
     top = rect.top + (rect.height / 2) - (portalHeight / 2);
-    
+
     // Ensure it doesn't go off the top or bottom
     if (top < margin) {
       top = margin;
@@ -3186,7 +3186,7 @@
     if (top + portalHeight > viewportHeight - margin) {
       top = viewportHeight - portalHeight - margin;
     }
-    
+
     portal.style.left = left + 'px';
     portal.style.top = top + 'px';
     portal.style.background = '#222';
@@ -3209,7 +3209,7 @@
       el.addEventListener('mouseleave', hidePortalTooltip);
     });
   }
-  
+
   // Attach tooltip listeners when drawers are opened
   function attachTooltipListenersToDrawer(drawerId) {
     const drawer = document.getElementById(drawerId);
@@ -3228,7 +3228,7 @@
       console.warn(`Drawer not found: ${drawerId}`);
     }
   }
-  
+
   // Attach tooltip listeners to modal content
   function attachTooltipListenersToModal(modalId) {
     const modal = document.getElementById(modalId);
@@ -3247,11 +3247,11 @@
       console.warn(`Modal not found: ${modalId}`);
     }
   }
-  
+
   // Make functions available globally
   window.attachTooltipListenersToDrawer = attachTooltipListenersToDrawer;
   window.attachTooltipListenersToModal = attachTooltipListenersToModal;
-  
+
   // Attach portal tooltips to all tooltip elements on the main page as well
   function attachMainPageTooltipListeners() {
     document.querySelectorAll('.has-tooltip:not(.drawer .has-tooltip)').forEach(el => {
@@ -3259,7 +3259,7 @@
       el.addEventListener('mouseleave', hidePortalTooltip);
     });
   }
-  
+
   // Initial attachment
   attachDrawerTooltipListeners();
   attachMainPageTooltipListeners();
@@ -3382,19 +3382,19 @@
     // Close Agent Settings modal when clicking outside
     if (agentSettingsModal) {
       let isDragging = false;
-      
+
       agentSettingsModal.addEventListener('mousedown', function(e) {
         if (e.target.tagName === 'PRE' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
           isDragging = true;
         }
       });
-      
+
       agentSettingsModal.addEventListener('mouseup', function(e) {
         setTimeout(() => {
           isDragging = false;
         }, 100);
       });
-      
+
       agentSettingsModal.addEventListener('click', function(e) {
         if (e.target === this && !isDragging) {
           this.classList.add('hidden');
@@ -3476,7 +3476,7 @@
         <h2 class="text-xl font-bold">Agent Settings</h2>
         <button id="closeAgentSettingsBtn" class="text-gray-400 hover:text-white text-2xl">&times;</button>
       </div>
-      
+
       <div class="space-y-6">
         <!-- Basic Configuration -->
         <div class="bg-gray-700 p-4 rounded-lg">
@@ -3647,7 +3647,7 @@
               <div class="tooltip">Select the language for the selected ASR provider.</div>
             </div>
           </div>
-          
+
           <!-- Microsoft ASR Configuration -->
           <div id="microsoftAsrConfig" class="hidden mt-4">
             <h4 class="text-sm font-semibold mb-2">Microsoft ASR Settings</h4>
@@ -3709,7 +3709,7 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Deepgram ASR Configuration -->
           <div id="deepgramAsrConfig" class="hidden mt-4">
             <h4 class="text-sm font-semibold mb-2">Deepgram ASR Settings</h4>
@@ -4051,7 +4051,7 @@
             id="sMsgContent"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="System Instructions (Required)"
-            value="You are Avi Tar, a smart, friendly voice assistant designed for natural conversations. You always reference yourself by your full name. 
+            value="You are Avi Tar, a smart, friendly voice assistant designed for natural conversations. You always reference yourself by your full name.
             The user speaks to you directly — treat each input as part of a live, spoken dialogue.  Keep your responses clear, concise, and conversational. Speak as if you're part of a real-time exchange. Avoid overly long explanations unless the user asks for more detail.  Maintain a warm, helpful tone. You can answer questions, translate, tell jokes, explain concepts, or help with everyday tasks.  Never refer to yourself as an AI or describe how the system works. Don't mention text, typing, or messages — act as if this is a purely spoken interaction.  Only ask follow-up questions when absolutely necessary. Keep the flow natural and human-like. You appears as a visible, expressive avatar — the user can see your face, gestures, and reactions during the conversation."
           />
           <div class="tooltip">System instructions that define the agent's behavior and personality.</div>
@@ -4126,7 +4126,7 @@
           </select>
           <div class="tooltip">Select the Text-to-Speech vendor to use for voice output.</div>
         </div>
-        
+
         <!-- Microsoft TTS Settings -->
         <div id="microsoftRegionBlock" class="has-tooltip relative">
           <select
@@ -4238,7 +4238,7 @@
           />
           <div class="tooltip">Sample rate for Microsoft TTS audio output.</div>
         </div>
-        
+
         <!-- ElevenLabs TTS Settings -->
         <div id="elevenLabsModelBlock" class="has-tooltip relative hidden">
           <input
@@ -4342,7 +4342,7 @@
           </select>
           <div class="tooltip">Enable or disable speaker boost for ElevenLabs voice.</div>
         </div>
-        
+
         <!-- Cartesia TTS Settings -->
         <div id="cartesiaTtsKeyBlock" class="has-tooltip relative hidden">
           <input
@@ -4370,7 +4370,7 @@
           />
           <div class="tooltip">Enter the Cartesia voice ID for speech output.</div>
         </div>
-        
+
         <!-- OpenAI TTS Settings -->
         <div id="openaiTtsKeyBlock" class="has-tooltip relative hidden">
           <input
@@ -4426,7 +4426,7 @@
           />
           <div class="tooltip">Speed setting for OpenAI TTS (0.25-4.0).</div>
         </div>
-        
+
         <!-- Hume AI TTS Settings -->
         <div id="humeaiTtsKeyBlock" class="has-tooltip relative hidden">
           <input
@@ -4481,7 +4481,7 @@
           />
           <div class="tooltip">Trailing silence duration for Hume AI TTS (0-5000ms).</div>
         </div>
-        
+
         <!-- Rime TTS Settings -->
         <div id="rimeTtsKeyBlock" class="has-tooltip relative hidden">
           <input
@@ -4749,7 +4749,7 @@
           </select>
           <div class="tooltip">The engine type to use for speech synthesis. Supported values: standard, neural, long-form, generative.</div>
         </div>
-        
+
         <!-- Skip Patterns Section -->
         <div class="has-tooltip relative">
           <label class="text-sm font-medium mb-2 block">Skip Patterns (Optional)</label>
@@ -4770,7 +4770,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Apparently, these options don't really exist
      <option value="6">6: Skip content in angle brackets &lt;&gt;</option>
     <option value="7">7: Skip content in quotes ""</option>
@@ -4825,7 +4825,7 @@
           />
           <div class="tooltip">The RTC token for the avatar to join the channel. Optional if your app doesn't require tokens.</div>
         </div>
-        
+
         <!-- HeyGen-specific settings -->
         <div id="heygenSettings" class="hidden">
           <div class="has-tooltip relative">
@@ -5039,7 +5039,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Turn Detection -->
         <div class="mb-4">
           <button id="turnDetectionBtn" class="flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500">
@@ -5081,7 +5081,7 @@
               />
               <div class="tooltip">Keywords that trigger interruption when keyword mode is enabled. Separate multiple keywords with commas. Maximum 128 keywords allowed.</div>
             </div>
-            
+
             <!-- Turn Detection Parameters -->
             <div class="has-tooltip relative">
               <label class="text-sm">Interrupt Duration (ms)</label>
@@ -5103,7 +5103,7 @@
               <input type="number" id="turnThreshold" class="w-full p-2 rounded bg-gray-600 turn-field" placeholder="0.5" min="0" max="1" step="0.1">
               <div class="tooltip">Voice detection sensitivity (0.0-1.0, default: 0.5).</div>
             </div>
-            
+
             <!-- MLLM-specific options -->
             <div id="mllmOptionsContainer" class="hidden">
               <div class="has-tooltip relative">
@@ -5123,7 +5123,7 @@
                 <div class="tooltip">Automatically interrupt ongoing responses when new input is detected.</div>
               </div>
             </div>
-            
+
             <!-- Eagerness setting (only for semantic_vad) -->
             <div id="eagernessContainer" class="hidden">
               <div class="has-tooltip relative">
@@ -5138,7 +5138,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Parameters -->
         <div class="mb-4">
           <button id="parametersBtn" class="flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500">
@@ -5173,7 +5173,7 @@
                 <input type="text" id="silenceContent" class="p-1 rounded bg-gray-600 param-field" placeholder="Silence reminder message">
               </div>
             </div>
-            
+
             <!-- Farewell Configuration -->
             <div class="mb-4">
               <h4 class="text-sm font-semibold mb-2">Farewell Configuration</h4>
@@ -5192,7 +5192,7 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- Data Channel Configuration -->
             <div class="mb-4">
               <h4 class="text-sm font-semibold mb-2">Data Channel Configuration</h4>
@@ -5210,7 +5210,7 @@
                 <div class="tooltip">The RTM UID for the client when RTM is enabled.</div>
               </div>
             </div>
-            
+
             <!-- RTM Metrics Configuration -->
             <div id="rtmMetricsConfig" class="mb-4 hidden">
               <h4 class="text-sm font-semibold mb-2">RTM Metrics Configuration</h4>
@@ -5227,7 +5227,7 @@
                 </div>
               </div>
                         </div>
-            
+
             <!-- Hidden transcript elements for JavaScript compatibility -->
             <div style="display: none;">
               <input type="checkbox" id="transcriptEnableSet">
@@ -5250,7 +5250,7 @@
             </div>
 
 
- 
+
           </div>
         </div>
       </div>
@@ -5261,25 +5261,25 @@
   <div id="signalingRequirementsModal">
     <div class="signaling-modal-content">
       <button class="signaling-modal-close" id="closeSignalingModal">&times;</button>
-      
+
       <div class="signaling-modal-header">
         <svg class="signaling-modal-icon" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
         </svg>
         <h2 class="signaling-modal-title">Signaling Requirements for Live Subtitles</h2>
       </div>
-      
+
       <div class="signaling-modal-body">
         <div class="signaling-modal-section">
           <h3>Choose Your Subtitle Mode</h3>
           <p>You have two options for live subtitles:</p>
-          
+
           <div class="mt-4 space-y-3">
             <div class="bg-blue-900 bg-opacity-50 p-3 rounded border border-blue-600">
               <h4 class="font-semibold text-blue-300">RTM Mode (Full Features)</h4>
               <p class="text-sm text-gray-300">Requires RTM to be enabled on your Agora AppID. Supports both viewing transcripts and sending messages.</p>
             </div>
-            
+
             <div class="bg-green-900 bg-opacity-50 p-3 rounded border border-green-600">
               <h4 class="font-semibold text-green-300">Data Stream Mode (View Only)</h4>
               <p class="text-sm text-gray-300">Uses RTC data stream. No RTM required. View transcripts only, cannot send messages.</p>
@@ -5324,7 +5324,7 @@
           </ol>
         </div>
       </div>
-      
+
       <div class="signaling-modal-footer">
         <button class="signaling-modal-btn signaling-modal-btn-secondary" id="cancelSignalingModal">Cancel</button>
         <button class="signaling-modal-btn signaling-modal-btn-primary" id="enableRTMModal">Enable RTM Mode</button>
@@ -5355,4 +5355,4 @@
     </button>
   </div>
 </body>
-</html> 
+</html>

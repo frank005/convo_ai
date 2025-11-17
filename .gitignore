@@ -64,3 +64,8 @@ coverage/
 
 # Yarn Integrity file
 .yarn-integrity 
+
+#test files
+test-agora-api.html
+test-camera-preview.html
+test-clear-button.html
