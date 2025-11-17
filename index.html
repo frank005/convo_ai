@@ -509,6 +509,7 @@
                   id="outboundCallSipRtcUid"
                   class="w-full p-2 rounded bg-gray-800 text-white text-sm"
                   placeholder="SIP RTC UID (e.g., 9999)"
+                  value="9999"
                   />
                 <div class="tooltip">The RTC UID for the SIP call. This is separate from the agent's RTC UID.</div>
                 </div>
@@ -521,12 +522,23 @@
                 <div class="tooltip">Optional RTC token for the SIP call. This is separate from the agent's token.</div>
                 </div>
                 <div class="has-tooltip relative">
-                  <input
-                  id="outboundCallPipelineId"
-                  class="w-full p-2 rounded bg-gray-800 text-white text-sm"
-                  placeholder="Pipeline ID (optional)"
-                  />
-                <div class="tooltip">Optional pipeline ID. If provided, only channel, token, and agent_rtc_uid will be used from the configuration. Otherwise, the complete configuration will be used.</div>
+                  <div class="flex items-center gap-2">
+                    <input
+                    id="outboundCallPipelineId"
+                    class="flex-1 p-2 rounded bg-gray-800 text-white text-sm"
+                    placeholder="Pipeline ID (optional)"
+                    />
+                    <label class="flex items-center gap-1 text-sm text-gray-300 whitespace-nowrap has-tooltip relative">
+                      <input
+                        type="checkbox"
+                        id="overridePipelineId"
+                        class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded"
+                      />
+                      <span>Override</span>
+                      <div class="tooltip">When checked, use complete configuration even if Pipeline ID is provided</div>
+                    </label>
+                  </div>
+                <div class="tooltip">Optional pipeline ID. If provided, only channel, token, and agent_rtc_uid will be used from the configuration. Otherwise, the complete configuration will be used. Check "Override" to use complete configuration even when Pipeline ID is provided.</div>
                 </div>
               <div class="flex gap-2 items-center">
                 <button
@@ -1567,6 +1579,7 @@
           const phoneNumber = document.getElementById('outboundCallPhoneNumber').value.trim();
           const callerId = document.getElementById('outboundCallCallerId').value.trim();
           const pipelineId = document.getElementById('outboundCallPipelineId').value.trim();
+          const overridePipelineId = document.getElementById('overridePipelineId')?.checked || false;
           const sipRtcUid = document.getElementById('outboundCallSipRtcUid').value.trim();
           const sipRtcToken = document.getElementById('outboundCallSipRtcToken').value.trim();
 
@@ -1603,15 +1616,15 @@
             pipeline_id: pipelineId || ""
           };
 
-          // If pipeline ID is provided, only need channel, token, and agent_rtc_uid
-          if (pipelineId) {
+          // If pipeline ID is provided and override is not checked, only need channel, token, and agent_rtc_uid
+          if (pipelineId && !overridePipelineId) {
             callConfig.properties = {
               channel: agentConfig.properties.channel,
               token: agentConfig.properties.token,
               agent_rtc_uid: agentConfig.properties.agent_rtc_uid
             };
           } else {
-            // Without pipeline ID, use complete configuration
+            // Without pipeline ID or with override checked, use complete configuration
             callConfig.properties = agentConfig.properties;
           }
 
@@ -1669,6 +1682,7 @@
           const phoneNumber = document.getElementById('outboundCallPhoneNumber').value.trim();
           const callerId = document.getElementById('outboundCallCallerId').value.trim();
           const pipelineId = document.getElementById('outboundCallPipelineId').value.trim();
+          const overridePipelineId = document.getElementById('overridePipelineId')?.checked || false;
           const sipRtcUid = document.getElementById('outboundCallSipRtcUid').value.trim();
           const sipRtcToken = document.getElementById('outboundCallSipRtcToken').value.trim();
 
@@ -1691,15 +1705,15 @@
             pipeline_id: pipelineId || ""
           };
 
-          // If pipeline ID is provided, only need channel, token, and agent_rtc_uid
-          if (pipelineId) {
+          // If pipeline ID is provided and override is not checked, only need channel, token, and agent_rtc_uid
+          if (pipelineId && !overridePipelineId) {
             callConfig.properties = {
               channel: agentConfig.properties.channel,
               token: agentConfig.properties.token,
               agent_rtc_uid: agentConfig.properties.agent_rtc_uid
             };
           } else {
-            // Without pipeline ID, use complete configuration
+            // Without pipeline ID or with override checked, use complete configuration
             callConfig.properties = agentConfig.properties;
           }
 
@@ -3449,7 +3463,7 @@
 
   <!-- Non-module scripts -->
   <script src="src/js/utils.js?v=1.2"></script>
-  <script src="src/js/api.js?v=1.2"></script>
+  <script src="src/js/api.js?v=1.3"></script>
   <script src="src/js/audio.js?v=1.2"></script>
   <script src="src/js/camera-preview.js?v=1.0"></script>
   <script src="src/js/conversational-ai-api.js?v=1.2"></script>
