@@ -1583,6 +1583,7 @@
           const sipRtcUid = document.getElementById('outboundCallSipRtcUid').value.trim();
           const sipRtcToken = document.getElementById('outboundCallSipRtcToken').value.trim();
 
+          // Validate SIP fields (always required)
           if (!phoneNumber || !callerId) {
             alert('Please fill in phone number and caller ID');
             startOutboundCallBtn.disabled = false;
@@ -1599,6 +1600,37 @@
 
           // Get the current agent configuration
           const formData = window.Utils.getFormData();
+
+          // Validation based on pipeline ID and override checkbox
+          if (!overridePipelineId) {
+            if (!pipelineId) {
+              // Empty pipeline ID: validate all required fields in normal properties + SIP fields (already validated above)
+              try {
+                window.Utils.validateFormData(formData);
+              } catch (error) {
+                alert(error.message);
+                startOutboundCallBtn.disabled = false;
+                startOutboundCallBtn.textContent = 'Initiate Outbound Call';
+                return;
+              }
+            } else {
+              // Filled pipeline ID: only validate channel and agent_rtc_uid
+              if (!formData.channel) {
+                alert('Channel name is required when Pipeline ID is provided');
+                startOutboundCallBtn.disabled = false;
+                startOutboundCallBtn.textContent = 'Initiate Outbound Call';
+                return;
+              }
+              if (!formData.rtcUid) {
+                alert('Agent RTC UID is required when Pipeline ID is provided');
+                startOutboundCallBtn.disabled = false;
+                startOutboundCallBtn.textContent = 'Initiate Outbound Call';
+                return;
+              }
+            }
+          }
+          // If override is checked, skip validation (leave it alone for now)
+
           const agentConfig = window.Utils.buildAgentConfig(formData, {});
           
           // Get agent name from form
