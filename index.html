@@ -292,7 +292,7 @@
           </div>
 
                   <!-- Phone Number Management (Combined) -->
-                  <div class="w-full p-4 bg-gray-700 rounded-lg">
+                  <div class="w-full p-4 bg-gray-700 rounded-lg sip-phone-section" style="display: none;">
                     <h3 class="text-sm font-semibold mb-3 text-gray-300">Phone Number Management</h3>
                     <div class="space-y-2">
               <div class="has-tooltip relative">
@@ -335,40 +335,40 @@
                           id="importPhoneNumberBtn"
                           class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold"
                         >
-                          Import Phone Number
+                          Import Number
           </button>
                         <button
                           id="getPhoneInfoBtn"
                           class="w-full px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm font-bold"
                         >
-                          Get Phone Number Info
+                          Retrieve Number Info
                         </button>
                         <button
                           id="updatePhoneNumberBtn"
                           class="w-full px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm font-bold"
                         >
-                          Update Phone Number
+                          Update Number Configuration
                         </button>
                         <button
                           id="deletePhoneNumberBtn"
                           class="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-bold"
                         >
-                          Delete Phone Number
+                          Delete Number
                         </button>
               </div>
                       <div id="phoneNumberResult" class="hidden mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto break-words whitespace-pre-wrap" style="max-width: 100%; overflow-wrap: break-word; word-wrap: break-word;"></div>
             </div>
           </div>
 
-                  <!-- Get Number List -->
-                  <div class="w-full p-4 bg-gray-700 rounded-lg">
-                    <h3 class="text-sm font-semibold mb-3 text-gray-300">Get Number List</h3>
+                  <!-- Retrieve Number List -->
+                  <div class="w-full p-4 bg-gray-700 rounded-lg sip-phone-section" style="display: none;">
+                    <h3 class="text-sm font-semibold mb-3 text-gray-300">Retrieve Number List</h3>
                     <div class="space-y-2">
                       <button
                         id="listPhoneNumbersBtn"
                         class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-bold"
                       >
-                        Get Number List
+                        Retrieve Number List
                       </button>
                       <div class="relative mt-4 w-full" style="max-width: 100%; overflow: hidden;">
                         <button
@@ -472,9 +472,21 @@
             <div id="broadcastMsgStatus" class="mt-2 text-sm max-h-16 overflow-y-auto break-words"></div>
             </div>
 
-          <!-- Start Outbound Call -->
-          <div class="w-full p-4 bg-gray-700 rounded-lg">
-            <h3 class="text-sm font-semibold mb-3 text-gray-300">Start Outbound Call</h3>
+          <!-- SIP Calling and Phone Number Management Toggle Button -->
+          <div class="mb-4 has-tooltip relative">
+            <button
+              id="toggleSipPhoneManagementBtn"
+              class="w-full px-4 py-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold text-sm flex items-center justify-between"
+            >
+              <span>SIP Calling and Phone Number Management</span>
+              <span id="toggleSipPhoneManagementIcon" class="ml-2">▼</span>
+            </button>
+            <div class="tooltip">Click to expand/collapse SIP calling and phone number management options. When expanded, the regular Create/Stop Agent buttons are disabled. Collapse this section to re-enable them.</div>
+          </div>
+
+          <!-- Initiate Outbound Call -->
+          <div class="w-full p-4 bg-gray-700 rounded-lg sip-phone-section" style="display: none;">
+            <h3 class="text-sm font-semibold mb-3 text-gray-300">Initiate Outbound Call</h3>
               <div class="space-y-2">
                 <div class="has-tooltip relative">
                   <input
@@ -505,13 +517,13 @@
                   id="startOutboundCallBtn"
                   class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-bold"
                 >
-                  Start Outbound Call
+                  Initiate Outbound Call
                 </button>
                 <button
                   id="hangUpCallBtn"
                   class="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-bold"
                 >
-                  Hang Up Call
+                  Hang-up Call
                 </button>
             </div>
               <div id="startOutboundCallResult" class="hidden mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto break-words whitespace-pre-wrap" style="max-width: 100%; overflow-wrap: break-word; word-wrap: break-word;"></div>
@@ -519,15 +531,15 @@
             </div>
           </div>
 
-          <!-- Check Call Status -->
-          <div class="w-full p-4 bg-gray-700 rounded-lg">
-            <h3 class="text-sm font-semibold mb-3 text-gray-300">Check Call Status</h3>
+          <!-- Retrieve Call Status -->
+          <div class="w-full p-4 bg-gray-700 rounded-lg sip-phone-section" style="display: none;">
+            <h3 class="text-sm font-semibold mb-3 text-gray-300">Retrieve Call Status</h3>
             <div class="space-y-2">
             <button
                 id="checkCallStatusBtn"
                 class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold"
             >
-                Check Status
+                Retrieve Call Status
             </button>
               <div class="relative mt-4 w-full" style="max-width: 100%; overflow: hidden;">
             <button
@@ -551,9 +563,9 @@
             </div>
           </div>
 
-          <!-- Get Call Records -->
-          <div class="w-full p-4 bg-gray-700 rounded-lg">
-            <h3 class="text-sm font-semibold mb-3 text-gray-300">Call Records</h3>
+          <!-- Retrieve Call Records -->
+          <div class="w-full p-4 bg-gray-700 rounded-lg sip-phone-section" style="display: none;">
+            <h3 class="text-sm font-semibold mb-3 text-gray-300">Retrieve Call Records</h3>
             <div class="space-y-2">
               <div class="grid grid-cols-2 gap-2">
                 <div class="has-tooltip relative">
@@ -621,7 +633,7 @@
                 id="getCallHistoryBtn"
                 class="w-full px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm font-bold"
           >
-                Get Call Records
+                Retrieve Call Records
           </button>
                       <div class="relative mt-4 w-full" style="max-width: 100%; overflow: hidden;">
           <button
@@ -645,7 +657,6 @@
             </div>
           </div>
         </div>
-      </div>
     </div>
       </div>
 
@@ -1441,6 +1452,73 @@
       });
     }
 
+    // Helper function to manage create/stop agent button states
+    function setAgentControlButtonsEnabled(enabled) {
+      const createBtn = document.getElementById('createAgentBtn');
+      const stopBtn = document.getElementById('stopAgentBtn');
+      const updateBtn = document.getElementById('updateAgentBtn');
+      
+      if (createBtn) {
+        createBtn.disabled = !enabled;
+        if (enabled) {
+          createBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+          createBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+      }
+      if (stopBtn) {
+        stopBtn.disabled = !enabled;
+        if (enabled) {
+          stopBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+          stopBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+      }
+      if (updateBtn) {
+        updateBtn.disabled = !enabled;
+        if (enabled) {
+          updateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+          updateBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+      }
+    }
+
+    // SIP Calling and Phone Number Management Toggle
+    const toggleSipPhoneManagementBtn = document.getElementById('toggleSipPhoneManagementBtn');
+    const toggleSipPhoneManagementIcon = document.getElementById('toggleSipPhoneManagementIcon');
+    
+    if (toggleSipPhoneManagementBtn) {
+      toggleSipPhoneManagementBtn.addEventListener('click', function() {
+        // Get all sections with the sip-phone-section class
+        const sections = document.querySelectorAll('.sip-phone-section');
+        if (sections.length === 0) return;
+        
+        // Check if first section is currently hidden to determine state
+        const isHidden = sections[0].style.display === 'none';
+        
+        // Toggle all sections
+        sections.forEach(section => {
+          if (isHidden) {
+            section.style.display = '';
+          } else {
+            section.style.display = 'none';
+          }
+        });
+        
+        // Update icon and button states
+        if (isHidden) {
+          // Expanding - show sections and disable create/stop agent buttons
+          toggleSipPhoneManagementIcon.textContent = '▲';
+          setAgentControlButtonsEnabled(false);
+        } else {
+          // Collapsing - hide sections and enable create/stop agent buttons
+          toggleSipPhoneManagementIcon.textContent = '▼';
+          setAgentControlButtonsEnabled(true);
+        }
+      });
+    }
+
     // Outbound Call Event Handlers
     const startOutboundCallBtn = document.getElementById('startOutboundCallBtn');
     if (startOutboundCallBtn) {
@@ -1454,7 +1532,7 @@
           if (!customerId || !customerSecret || !appId) {
             alert('Please configure credentials first');
             startOutboundCallBtn.disabled = false;
-            startOutboundCallBtn.textContent = 'Start Outbound Call';
+            startOutboundCallBtn.textContent = 'Initiate Outbound Call';
             return;
           }
 
@@ -1465,7 +1543,7 @@
           if (!phoneNumber || !callerId) {
             alert('Please fill in phone number and caller ID');
             startOutboundCallBtn.disabled = false;
-            startOutboundCallBtn.textContent = 'Start Outbound Call';
+            startOutboundCallBtn.textContent = 'Initiate Outbound Call';
             return;
           }
 
@@ -1520,17 +1598,8 @@
             }
           }
 
-          // Disable create and update agent buttons
-          const createBtn = document.getElementById('createAgentBtn');
-          const updateBtn = document.getElementById('updateAgentBtn');
-          if (createBtn) {
-            createBtn.disabled = true;
-            createBtn.classList.add('opacity-50', 'cursor-not-allowed');
-          }
-          if (updateBtn) {
-            updateBtn.disabled = true;
-            updateBtn.classList.add('opacity-50', 'cursor-not-allowed');
-          }
+          // Disable create, stop, and update agent buttons (SIP calling manages agent lifecycle)
+          setAgentControlButtonsEnabled(false);
           
           // Re-enable button
           startOutboundCallBtn.disabled = false;
@@ -1605,7 +1674,7 @@
           if (!customerId || !customerSecret || !appId) {
             alert('Please configure credentials first');
             hangUpCallBtn.disabled = false;
-            hangUpCallBtn.textContent = 'Hang Up Call';
+            hangUpCallBtn.textContent = 'Hang-up Call';
             return;
           }
           
@@ -1613,7 +1682,7 @@
           if (!agentIdElement || !agentIdElement.value.trim()) {
             alert('Please start an agent first (Agent ID is required)');
             hangUpCallBtn.disabled = false;
-            hangUpCallBtn.textContent = 'Hang Up Call';
+            hangUpCallBtn.textContent = 'Hang-up Call';
             return;
           }
           const agentId = agentIdElement.value.trim();
@@ -1622,7 +1691,7 @@
           if (!confirm('Are you sure you want to hang up this call?')) {
             console.log('User cancelled hang up');
             hangUpCallBtn.disabled = false;
-            hangUpCallBtn.textContent = 'Hang Up Call';
+            hangUpCallBtn.textContent = 'Hang-up Call';
             return;
           }
 
@@ -1640,16 +1709,11 @@
             resultDiv.style.cssText = 'max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box;';
           }
 
-          // Re-enable create and update agent buttons
-          const createBtn = document.getElementById('createAgentBtn');
-          const updateBtn = document.getElementById('updateAgentBtn');
-          if (createBtn) {
-            createBtn.disabled = false;
-            createBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-          }
-          if (updateBtn) {
-            updateBtn.disabled = false;
-            updateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          // Re-enable create, stop, and update agent buttons (only if SIP sections are collapsed)
+          const sipSections = document.querySelectorAll('.sip-phone-section');
+          const allHidden = sipSections.length > 0 && Array.from(sipSections).every(section => section.style.display === 'none');
+          if (allHidden) {
+            setAgentControlButtonsEnabled(true);
           }
           
           // Re-enable button
