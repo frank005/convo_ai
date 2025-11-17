@@ -32,16 +32,16 @@ window.Utils = class Utils {
             ttsKey = document.getElementById("openaiTtsKey").value.trim();
         } else if (ttsVendor === "rime") {
             ttsKey = document.getElementById("rimeTtsKey") ? document.getElementById("rimeTtsKey").value.trim() : '';
-        } else if (ttsVendor === "minimax") {
-            ttsKey = document.getElementById("minimaxTtsKey") ? document.getElementById("minimaxTtsKey").value.trim() : '';
+        // } else if (ttsVendor === "minimax") { // COMMENTED OUT: Not in Agora 2.0 official docs
+        //     ttsKey = document.getElementById("minimaxTtsKey") ? document.getElementById("minimaxTtsKey").value.trim() : '';
         } else if (ttsVendor === "fishaudio") {
             ttsKey = document.getElementById("fishaudioTtsKey") ? document.getElementById("fishaudioTtsKey").value.trim() : '';
         } else if (ttsVendor === "groq") {
             ttsKey = document.getElementById("groqTtsKey") ? document.getElementById("groqTtsKey").value.trim() : '';
         } else if (ttsVendor === "google") {
             ttsKey = document.getElementById("googleTtsCredentials") ? document.getElementById("googleTtsCredentials").value.trim() : '';
-        } else if (ttsVendor === "playht") {
-            ttsKey = document.getElementById("playhtTtsKey") ? document.getElementById("playhtTtsKey").value.trim() : '';
+        // } else if (ttsVendor === "playht") { // COMMENTED OUT: Not in Agora 2.0 official docs
+        //     ttsKey = document.getElementById("playhtTtsKey") ? document.getElementById("playhtTtsKey").value.trim() : '';
         } else if (ttsVendor === "amazon") {
             // Amazon Polly uses access key and secret key, not a single ttsKey
             // We'll handle this in buildAgentConfig
@@ -942,20 +942,20 @@ window.Utils = class Utils {
                         modelId: document.getElementById("rimeModelId").value
                     }
                 };
-            } else if (formData.vendor === "minimax") {
-                config.properties.tts = {
-                    vendor: "minimax",
-                    ...(skip_patterns ? { skip_patterns } : {}),
-                    params: {
-                        api_key: document.getElementById("minimaxTtsKey").value,
-                        group_id: document.getElementById("minimaxGroupId").value,
-                        model: document.getElementById("minimaxModel").value,
-                        voice_setting: {
-                            voice_id: document.getElementById("minimaxVoiceId").value
-                        },
-                        url: document.getElementById("minimaxUrl").value
-                    }
-                };
+            // } else if (formData.vendor === "minimax") { // COMMENTED OUT: Not in Agora 2.0 official docs
+            //     config.properties.tts = {
+            //         vendor: "minimax",
+            //         ...(skip_patterns ? { skip_patterns } : {}),
+            //         params: {
+            //             api_key: document.getElementById("minimaxTtsKey").value,
+            //             group_id: document.getElementById("minimaxGroupId").value,
+            //             model: document.getElementById("minimaxModel").value,
+            //             voice_setting: {
+            //                 voice_id: document.getElementById("minimaxVoiceId").value
+            //             },
+            //             url: document.getElementById("minimaxUrl").value
+            //         }
+            //     };
             } else if (formData.vendor === "fishaudio") {
                 config.properties.tts = {
                     vendor: "fishaudio",
@@ -996,18 +996,18 @@ window.Utils = class Utils {
                         ...(Object.keys(audioConfig).length > 0 ? { AudioConfig: audioConfig } : {})
                     }
                 };
-            } else if (formData.vendor === "playht") {
-                config.properties.tts = {
-                    vendor: "playht",
-                    ...(skip_patterns ? { skip_patterns } : {}),
-                    params: {
-                        api_key: document.getElementById("playhtTtsKey").value,
-                        user_id: document.getElementById("playhtUserId").value,
-                        voice_engine: document.getElementById("playhtVoiceEngine").value,
-                        voice: document.getElementById("playhtVoice").value,
-                        ...(document.getElementById("playhtSpeed")?.value ? { speed: parseFloat(document.getElementById("playhtSpeed").value) } : {})
-                    }
-                };
+            // } else if (formData.vendor === "playht") { // COMMENTED OUT: Not in Agora 2.0 official docs
+            //     config.properties.tts = {
+            //         vendor: "playht",
+            //         ...(skip_patterns ? { skip_patterns } : {}),
+            //         params: {
+            //             api_key: document.getElementById("playhtTtsKey").value,
+            //             user_id: document.getElementById("playhtUserId").value,
+            //             voice_engine: document.getElementById("playhtVoiceEngine").value,
+            //             voice: document.getElementById("playhtVoice").value,
+            //             ...(document.getElementById("playhtSpeed")?.value ? { speed: parseFloat(document.getElementById("playhtSpeed").value) } : {})
+            //         }
+            //     };
             } else if (formData.vendor === "amazon") {
                 config.properties.tts = {
                     vendor: "amazon",
