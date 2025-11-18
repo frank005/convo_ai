@@ -1784,13 +1784,17 @@
             pipeline_id: pipelineId || ""
           };
 
-          // If pipeline ID is provided and override is not checked, only need channel, token, and agent_rtc_uid
+          // If pipeline ID is provided and override is not checked, need channel, token, agent_rtc_uid, and remote_rtc_uids
           if (pipelineId && !overridePipelineId) {
             callConfig.properties = {
               channel: agentConfig.properties.channel,
               token: agentConfig.properties.token,
               agent_rtc_uid: agentConfig.properties.agent_rtc_uid
             };
+            // Include remote_rtc_uids if it exists in agent config
+            if (agentConfig.properties.remote_rtc_uids) {
+              callConfig.properties.remote_rtc_uids = agentConfig.properties.remote_rtc_uids;
+            }
           } else {
             // Without pipeline ID or with override checked, use complete configuration
             callConfig.properties = agentConfig.properties;
@@ -1873,13 +1877,17 @@
             pipeline_id: pipelineId || ""
           };
 
-          // If pipeline ID is provided and override is not checked, only need channel, token, and agent_rtc_uid
+          // If pipeline ID is provided and override is not checked, need channel, token, agent_rtc_uid, and remote_rtc_uids
           if (pipelineId && !overridePipelineId) {
             callConfig.properties = {
               channel: agentConfig.properties.channel,
               token: agentConfig.properties.token,
               agent_rtc_uid: agentConfig.properties.agent_rtc_uid
             };
+            // Include remote_rtc_uids if it exists in agent config
+            if (agentConfig.properties.remote_rtc_uids) {
+              callConfig.properties.remote_rtc_uids = agentConfig.properties.remote_rtc_uids;
+            }
           } else {
             // Without pipeline ID or with override checked, use complete configuration
             callConfig.properties = agentConfig.properties;
