@@ -299,56 +299,174 @@
                 <input
                           id="phoneNumberInput"
                           class="w-full p-2 rounded bg-gray-800 text-white text-sm"
-                          placeholder="Phone Number (e.g., +1234567890)"
+                          placeholder="Phone Number (E.164 format, e.g., +1234567890)"
                 />
-                        <div class="tooltip">The phone number for import, get info, update, or delete operations.</div>
+                        <div class="tooltip">The phone number for import, get info, update, or delete operations. Must be in E.164 format.</div>
               </div>
-                      <div class="grid grid-cols-2 gap-2">
-              <div class="has-tooltip relative">
-                <input
-                            id="phoneCountryCode"
+                      
+                      <!-- Import Number Fields -->
+                      <div id="importPhoneFields" class="space-y-2 border-t border-gray-600 pt-2">
+                        <div class="has-tooltip relative">
+                          <input
+                            id="phoneProvider"
                             class="w-full p-2 rounded bg-gray-800 text-white text-sm"
-                            placeholder="Country Code (e.g., US)"
-                />
-                          <div class="tooltip">Country code for the phone number (required for import).</div>
-              </div>
-              <div class="has-tooltip relative">
-                <input
-                            id="phoneAreaCode"
+                            placeholder="Provider (e.g., twilio, byo, aliyun)"
+                            value="byo"
+                          />
+                          <div class="tooltip">Number provider: byo, twilio, aliyun, or other providers (required for import).</div>
+                        </div>
+                        
+                        <div class="has-tooltip relative">
+                          <input
+                            id="phoneLabel"
                             class="w-full p-2 rounded bg-gray-800 text-white text-sm"
-                            placeholder="Area Code (e.g., 415)"
-                />
-                          <div class="tooltip">Area code for the phone number (required for import).</div>
-              </div>
-              </div>
-              <div class="has-tooltip relative">
-                        <textarea
-                          id="phoneUpdateData"
-                          class="w-full p-2 rounded bg-gray-800 text-white text-sm"
-                          placeholder='Update Data (JSON, e.g., {"display_name": "My Number"}) - Only used for Update button'
-                          rows="2"
-                        ></textarea>
-                        <div class="tooltip">JSON object with fields to update. Only used when clicking the Update button.</div>
-              </div>
+                            placeholder="Label (required for import)"
+                          />
+                          <div class="tooltip">A label used to identify the number (required for import).</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                          <div class="has-tooltip relative">
+                            <label class="flex items-center space-x-2 text-sm text-gray-300">
+                              <input
+                                type="checkbox"
+                                id="phoneOutbound"
+                                checked
+                                class="rounded bg-gray-800"
+                              />
+                              <span>Outbound (default: true)</span>
+                            </label>
+                            <div class="tooltip">Whether the number supports outbound calls.</div>
+                          </div>
+                          <div class="has-tooltip relative">
+                            <label class="flex items-center space-x-2 text-sm text-gray-300">
+                              <input
+                                type="checkbox"
+                                id="phoneInbound"
+                                class="rounded bg-gray-800"
+                              />
+                              <span>Inbound (default: false)</span>
+                            </label>
+                            <div class="tooltip">Whether the number supports inbound calls.</div>
+                          </div>
+                        </div>
+                        
+                        <!-- Outbound Configuration (shown first) -->
+                        <div id="outboundConfigSection" class="space-y-2">
+                          <div class="text-xs text-gray-400 font-semibold">Outbound Configuration</div>
+                          <div class="grid grid-cols-2 gap-2">
+                            <div class="has-tooltip relative">
+                              <input
+                                id="phoneOutboundAddress"
+                                class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                                placeholder="Outbound SIP Address (required)"
+                              />
+                              <div class="tooltip">SIP address for outbound calls (e.g., xxx:xxx@sip.example.com). Required field (even if outbound is disabled or using placeholder values).</div>
+                            </div>
+                            <div class="has-tooltip relative">
+                              <select
+                                id="phoneOutboundTransport"
+                                class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                              >
+                                <option value="">Select Transport (required)</option>
+                                <option value="tcp">TCP</option>
+                                <option value="udp">UDP</option>
+                                <option value="tls">TLS</option>
+                              </select>
+                              <div class="tooltip">Transport protocol for outbound calls. Required field (even if outbound is disabled or using placeholder values).</div>
+                            </div>
+                          </div>
+                          <div class="grid grid-cols-2 gap-2">
+                            <div class="has-tooltip relative">
+                              <input
+                                id="phoneOutboundPrefix"
+                                class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                                placeholder="Prefix (e.g., 6036)"
+                              />
+                              <div class="tooltip">Number prefix for outbound calls (e.g., 6036).</div>
+                            </div>
+                            <div class="has-tooltip relative">
+                              <input
+                                id="phoneOutboundPipelineId"
+                                class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                                placeholder="Outbound Pipeline ID (update only)"
+                              />
+                              <div class="tooltip">Pipeline ID for outbound configuration. Only used for Update Number Config operation. Leave empty or set to null to clear.</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Inbound Configuration (shown after outbound) -->
+                        <div id="inboundConfigSection" class="space-y-2">
+                          <div class="text-xs text-gray-400 font-semibold">Inbound Configuration</div>
+                          <div class="grid grid-cols-2 gap-2">
+                            <div class="has-tooltip relative">
+                              <input
+                                id="phoneInboundAllowedAddresses"
+                                class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                                placeholder="Inbound Allowed Addresses (comma-separated, e.g., 112.126.15.64/27)"
+                              />
+                              <div class="tooltip">List of allowed IP addresses for inbound calls. Comma-separated (e.g., 112.126.15.64/27, 192.168.1.0/24).</div>
+                            </div>
+                            <div class="has-tooltip relative">
+                              <input
+                                id="phoneInboundPipelineId"
+                                class="w-full p-2 rounded bg-gray-800 text-white text-sm"
+                                placeholder="Inbound Pipeline ID (update only)"
+                              />
+                              <div class="tooltip">Pipeline ID for inbound configuration. Only used for Update Number Config operation. Leave empty or set to null to clear.</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
                       <div class="grid grid-cols-2 gap-2">
-                        <button
-                          id="importPhoneNumberBtn"
-                          class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold"
-                        >
-                          Import Number
-          </button>
+                        <div class="flex gap-1 items-stretch">
+                          <button
+                            id="importPhoneNumberBtn"
+                            class="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold"
+                          >
+                            Import Number
+                          </button>
+                          <div class="has-tooltip relative flex items-center">
+                            <button
+                              id="copyImportPhoneJson"
+                              class="bg-blue-600 hover:bg-blue-700 px-2 py-2 rounded font-bold text-sm h-full flex items-center justify-center"
+                              style="min-width: 40px;"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8m2 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2z"></path>
+                              </svg>
+                            </button>
+                            <div class="tooltip">Copy Import JSON - Copy the import phone number configuration JSON to clipboard</div>
+                          </div>
+                        </div>
                         <button
                           id="getPhoneInfoBtn"
                           class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-bold"
                         >
                           Retrieve Number Info
                         </button>
-                        <button
-                          id="updatePhoneNumberBtn"
-                          class="w-full px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm font-bold"
-                        >
-                          Update Number Configuration
-                        </button>
+                        <div class="flex gap-1 items-stretch">
+                          <button
+                            id="updatePhoneNumberBtn"
+                            class="flex-1 px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm font-bold"
+                          >
+                            Update Number Config
+                          </button>
+                          <div class="has-tooltip relative flex items-center">
+                            <button
+                              id="copyUpdatePhoneJson"
+                              class="bg-blue-600 hover:bg-blue-700 px-2 py-2 rounded font-bold text-sm h-full flex items-center justify-center"
+                              style="min-width: 40px;"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8m2 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2z"></path>
+                              </svg>
+                            </button>
+                            <div class="tooltip">Copy Update JSON - Copy the update phone number configuration JSON to clipboard</div>
+                          </div>
+                        </div>
                         <button
                           id="deletePhoneNumberBtn"
                           class="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-bold"
@@ -356,7 +474,25 @@
                           Delete Number
                         </button>
               </div>
-                      <div id="phoneNumberResult" class="hidden mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto break-words whitespace-pre-wrap" style="max-width: 100%; overflow-wrap: break-word; word-wrap: break-word;"></div>
+                      <div class="relative mt-2 w-full" style="max-width: 100%; overflow: hidden;">
+                        <button
+                          id="copyPhoneNumberBtn"
+                          class="absolute top-2 right-2 bg-transparent hover:bg-gray-600 rounded p-0.5 focus:outline-none"
+                          title="Copy response"
+                          style="z-index:10;width:24px;height:24px;display:flex;align-items:center;justify-content:center;"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <rect x="9" y="9" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <rect x="3" y="3" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                          </svg>
+                        </button>
+                        <span id="copyPhoneNumberMsg" class="absolute top-2 right-10 text-green-400 text-xs hidden" style="z-index:10;">Copied!</span>
+                        <div
+                          id="phoneNumberResult"
+                          class="hidden mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto break-words whitespace-pre-wrap"
+                          style="max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box; width: 100%;"
+                        ></div>
+                      </div>
             </div>
           </div>
 
@@ -1963,22 +2099,78 @@
     }
 
     // Phone Number Management Event Handlers (Combined)
+    // Note: Inbound configuration section is always visible regardless of checkbox state
+
     const importPhoneNumberBtn = document.getElementById('importPhoneNumberBtn');
     if (importPhoneNumberBtn) {
       importPhoneNumberBtn.addEventListener('click', async function() {
         try {
           const { customerId, customerSecret, appId } = window.Utils.getStoredCredentials();
           const phoneNumber = document.getElementById('phoneNumberInput').value.trim();
-          const country = document.getElementById('phoneCountryCode').value.trim();
-          const areaCode = document.getElementById('phoneAreaCode').value.trim();
+          const provider = document.getElementById('phoneProvider').value.trim();
+          const label = document.getElementById('phoneLabel').value.trim();
+          const inbound = document.getElementById('phoneInbound').checked;
+          const outbound = document.getElementById('phoneOutbound').checked;
+          const inboundAllowedAddresses = document.getElementById('phoneInboundAllowedAddresses').value.trim();
+          const outboundAddress = document.getElementById('phoneOutboundAddress').value.trim();
+          const outboundTransport = document.getElementById('phoneOutboundTransport').value.trim();
+          const outboundPrefix = document.getElementById('phoneOutboundPrefix').value.trim();
 
-          if (!phoneNumber || !country || !areaCode) {
-            alert('Please fill in phone number, country code, and area code');
+          // Validate required fields
+          if (!phoneNumber) {
+            alert('Please enter a phone number in E.164 format');
+            return;
+          }
+          if (!provider) {
+            alert('Please enter a provider (e.g., twilio, byo, aliyun)');
+            return;
+          }
+          if (!label) {
+            alert('Please enter a label for the number');
+            return;
+          }
+          // Validate outbound config - address and transport are always required
+          if (!outboundAddress || !outboundTransport) {
+            alert('Both SIP Address and Transport are required fields for outbound configuration (even if outbound is disabled or using placeholder values)');
             return;
           }
 
+          // Build import configuration
+          const importConfig = {
+            provider: provider,
+            phone_number: phoneNumber,
+            label: label,
+            inbound: inbound,
+            outbound: outbound
+          };
+
+          // Build inbound_config - always include as object, add allowed_addresses if provided
+          importConfig.inbound_config = {};
+          if (inboundAllowedAddresses) {
+            // Split by comma and trim each address
+            const addresses = inboundAllowedAddresses.split(',').map(addr => addr.trim()).filter(addr => addr);
+            if (addresses.length > 0) {
+              importConfig.inbound_config.allowed_addresses = addresses;
+            } else {
+              importConfig.inbound_config.allowed_addresses = [];
+            }
+          } else {
+            // If no addresses provided, include empty array to make object non-empty
+            importConfig.inbound_config.allowed_addresses = [];
+          }
+
+          // Build outbound_config - always include with address and transport (required fields)
+          // address and transport are required even if outbound is disabled
+          importConfig.outbound_config = {};
+          importConfig.outbound_config.address = outboundAddress || "";
+          importConfig.outbound_config.transport = outboundTransport || "";
+          // prefix is optional
+          if (outboundPrefix) {
+            importConfig.outbound_config.prefix = outboundPrefix;
+          }
+
           const agoraAPI = new window.AgoraAPI(appId);
-          const result = await agoraAPI.importPhoneNumber(customerId, customerSecret, phoneNumber, country, areaCode);
+          const result = await agoraAPI.importPhoneNumber(customerId, customerSecret, importConfig);
           
           // Display JSON result
           const resultDiv = document.getElementById('phoneNumberResult');
@@ -2037,25 +2229,46 @@
         try {
           const { customerId, customerSecret, appId } = window.Utils.getStoredCredentials();
           const phoneNumber = document.getElementById('phoneNumberInput').value.trim();
-          const updateDataStr = document.getElementById('phoneUpdateData').value.trim();
+          const inboundPipelineId = document.getElementById('phoneInboundPipelineId').value.trim();
+          const outboundPipelineId = document.getElementById('phoneOutboundPipelineId').value.trim();
 
           if (!phoneNumber) {
             alert('Please enter a phone number');
             return;
           }
 
-          let updateData = {};
-          if (updateDataStr) {
-            try {
-              updateData = JSON.parse(updateDataStr);
-            } catch (e) {
-              alert('Invalid JSON in update data field');
-              return;
-            }
+          // Build update configuration
+          const updateConfig = {};
+
+          // Handle inbound_config
+          if (inboundPipelineId === '' || inboundPipelineId.toLowerCase() === 'null') {
+            // Clear inbound config
+            updateConfig.inbound_config = null;
+          } else if (inboundPipelineId) {
+            updateConfig.inbound_config = {
+              pipeline_id: inboundPipelineId
+            };
+          }
+
+          // Handle outbound_config
+          if (outboundPipelineId === '' || outboundPipelineId.toLowerCase() === 'null') {
+            // Clear outbound config
+            updateConfig.outbound_config = null;
+          } else if (outboundPipelineId) {
+            updateConfig.outbound_config = {
+              pipeline_id: outboundPipelineId
+            };
+          }
+
+          // Allow sending update even if both are null (to clear both configs)
+          // Only block if neither field was touched (both are undefined)
+          if (updateConfig.inbound_config === undefined && updateConfig.outbound_config === undefined) {
+            alert('Please provide at least one pipeline ID to update, or leave empty to clear');
+            return;
           }
 
           const agoraAPI = new window.AgoraAPI(appId);
-          const result = await agoraAPI.updatePhoneNumber(customerId, customerSecret, phoneNumber, updateData);
+          const result = await agoraAPI.updatePhoneNumber(customerId, customerSecret, phoneNumber, updateConfig);
           
           // Display JSON result
           const resultDiv = document.getElementById('phoneNumberResult');
@@ -2141,6 +2354,151 @@
           navigator.clipboard.writeText(text.trim());
           msg.classList.remove('hidden');
           setTimeout(() => msg.classList.add('hidden'), 1200);
+        }
+      });
+    }
+
+    const copyPhoneNumberBtn = document.getElementById('copyPhoneNumberBtn');
+    if (copyPhoneNumberBtn) {
+      copyPhoneNumberBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const resultDiv = document.getElementById('phoneNumberResult');
+        const msg = document.getElementById('copyPhoneNumberMsg');
+        if (resultDiv && msg) {
+          let text = resultDiv.innerText || resultDiv.textContent;
+          text = text.replace(/Copied!\s*/, '');
+          navigator.clipboard.writeText(text.trim());
+          msg.classList.remove('hidden');
+          setTimeout(() => msg.classList.add('hidden'), 1200);
+        }
+      });
+    }
+
+    // Copy Import Phone Number JSON
+    const copyImportPhoneJsonBtn = document.getElementById('copyImportPhoneJson');
+    if (copyImportPhoneJsonBtn) {
+      copyImportPhoneJsonBtn.addEventListener('click', function() {
+        try {
+          const phoneNumber = document.getElementById('phoneNumberInput').value.trim();
+          const provider = document.getElementById('phoneProvider').value.trim();
+          const label = document.getElementById('phoneLabel').value.trim();
+          const inbound = document.getElementById('phoneInbound').checked;
+          const outbound = document.getElementById('phoneOutbound').checked;
+          const inboundAllowedAddresses = document.getElementById('phoneInboundAllowedAddresses').value.trim();
+          const outboundAddress = document.getElementById('phoneOutboundAddress').value.trim();
+          const outboundTransport = document.getElementById('phoneOutboundTransport').value.trim();
+          const outboundPrefix = document.getElementById('phoneOutboundPrefix').value.trim();
+
+          // Build import configuration (same logic as import handler)
+          const importConfig = {
+            provider: provider || 'twilio',
+            phone_number: phoneNumber || '+1234567890',
+            label: label || 'My Phone Number',
+            inbound: inbound,
+            outbound: outbound
+          };
+
+          // Build inbound_config - always include as object, add allowed_addresses if provided
+          importConfig.inbound_config = {};
+          if (inboundAllowedAddresses) {
+            const addresses = inboundAllowedAddresses.split(',').map(addr => addr.trim()).filter(addr => addr);
+            if (addresses.length > 0) {
+              importConfig.inbound_config.allowed_addresses = addresses;
+            } else {
+              importConfig.inbound_config.allowed_addresses = [];
+            }
+          } else {
+            // If no addresses provided, include empty array to make object non-empty
+            importConfig.inbound_config.allowed_addresses = [];
+          }
+
+          // Build outbound_config - always include with address and transport (required fields)
+          // address and transport are required even if outbound is disabled
+          importConfig.outbound_config = {};
+          importConfig.outbound_config.address = outboundAddress || "";
+          importConfig.outbound_config.transport = outboundTransport || "";
+          // prefix is optional
+          if (outboundPrefix) {
+            importConfig.outbound_config.prefix = outboundPrefix;
+          }
+
+          const jsonString = JSON.stringify(importConfig, null, 2);
+
+          // Copy to clipboard
+          navigator.clipboard.writeText(jsonString);
+          showCopyMsg();
+
+          // Show modal with JSON content
+          const jsonModal = document.getElementById('jsonDisplayModal');
+          const jsonModalTitle = document.getElementById('jsonModalTitle');
+          const jsonModalContent = document.getElementById('jsonModalContent');
+
+          if (jsonModal && jsonModalTitle && jsonModalContent) {
+            jsonModalTitle.textContent = 'Import Phone Number JSON Configuration';
+            jsonModalContent.textContent = jsonString;
+            jsonModal.classList.remove('hidden');
+          }
+        } catch (error) {
+          console.error('Error copying import phone JSON:', error);
+          alert(`Error copying import phone JSON: ${error.message}`);
+        }
+      });
+    }
+
+    // Copy Update Phone Number JSON
+    const copyUpdatePhoneJsonBtn = document.getElementById('copyUpdatePhoneJson');
+    if (copyUpdatePhoneJsonBtn) {
+      copyUpdatePhoneJsonBtn.addEventListener('click', function() {
+        try {
+          const inboundPipelineId = document.getElementById('phoneInboundPipelineId').value.trim();
+          const outboundPipelineId = document.getElementById('phoneOutboundPipelineId').value.trim();
+
+          // Build update configuration (same logic as update handler)
+          const updateConfig = {};
+
+          // Handle inbound_config
+          if (inboundPipelineId === '' || inboundPipelineId.toLowerCase() === 'null') {
+            updateConfig.inbound_config = null;
+          } else if (inboundPipelineId) {
+            updateConfig.inbound_config = {
+              pipeline_id: inboundPipelineId
+            };
+          }
+
+          // Handle outbound_config
+          if (outboundPipelineId === '' || outboundPipelineId.toLowerCase() === 'null') {
+            updateConfig.outbound_config = null;
+          } else if (outboundPipelineId) {
+            updateConfig.outbound_config = {
+              pipeline_id: outboundPipelineId
+            };
+          }
+
+          // If both are empty, show both as null to clear them
+          if (!updateConfig.inbound_config && !updateConfig.outbound_config) {
+            updateConfig.inbound_config = null;
+            updateConfig.outbound_config = null;
+          }
+
+          const jsonString = JSON.stringify(updateConfig, null, 2);
+
+          // Copy to clipboard
+          navigator.clipboard.writeText(jsonString);
+          showCopyMsg();
+
+          // Show modal with JSON content
+          const jsonModal = document.getElementById('jsonDisplayModal');
+          const jsonModalTitle = document.getElementById('jsonModalTitle');
+          const jsonModalContent = document.getElementById('jsonModalContent');
+
+          if (jsonModal && jsonModalTitle && jsonModalContent) {
+            jsonModalTitle.textContent = 'Update Phone Number JSON Configuration';
+            jsonModalContent.textContent = jsonString;
+            jsonModal.classList.remove('hidden');
+          }
+        } catch (error) {
+          console.error('Error copying update phone JSON:', error);
+          alert(`Error copying update phone JSON: ${error.message}`);
         }
       });
     }

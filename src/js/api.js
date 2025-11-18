@@ -304,7 +304,7 @@ window.AgoraAPI = class AgoraAPI {
         }
     }
 
-    async importPhoneNumber(customerId, customerSecret, phoneNumber, country, areaCode) {
+    async importPhoneNumber(customerId, customerSecret, importConfig) {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/phone-numbers`;
 
@@ -312,11 +312,7 @@ window.AgoraAPI = class AgoraAPI {
             const response = await fetch(url, {
                 method: "POST",
                 headers,
-                body: JSON.stringify({
-                    phone_number: phoneNumber,
-                    country: country,
-                    area_code: areaCode
-                })
+                body: JSON.stringify(importConfig)
             });
             if (!response.ok) {
                 const errorText = await response.text();
@@ -347,7 +343,7 @@ window.AgoraAPI = class AgoraAPI {
         }
     }
 
-    async updatePhoneNumber(customerId, customerSecret, phoneNumber, updateData) {
+    async updatePhoneNumber(customerId, customerSecret, phoneNumber, updateConfig) {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/phone-numbers/${encodeURIComponent(phoneNumber)}`;
 
@@ -355,7 +351,7 @@ window.AgoraAPI = class AgoraAPI {
             const response = await fetch(url, {
                 method: "PATCH",
                 headers,
-                body: JSON.stringify(updateData)
+                body: JSON.stringify(updateConfig)
             });
             if (!response.ok) {
                 const errorText = await response.text();
@@ -380,7 +376,14 @@ window.AgoraAPI = class AgoraAPI {
                 const errorText = await response.text();
                 throw new Error(errorText || response.statusText);
             }
-            return await response.json();
+            // Handle empty response (204 No Content) or response with no body
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                const text = await response.text();
+                return text ? JSON.parse(text) : { success: true };
+            }
+            // Return success object for empty responses
+            return { success: true, message: "Phone number deleted successfully" };
         } catch (error) {
             throw new Error(`Failed to delete phone number: ${error.message}`);
         }
