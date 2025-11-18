@@ -487,11 +487,11 @@
                           </svg>
                         </button>
                         <span id="copyPhoneNumberMsg" class="absolute top-2 right-10 text-green-400 text-xs hidden" style="z-index:10;">Copied!</span>
-                        <div
+                        <pre
                           id="phoneNumberResult"
-                          class="hidden mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto break-words whitespace-pre-wrap"
+                          class="hidden mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto break-words whitespace-pre-wrap font-mono"
                           style="max-width: 100%; overflow-wrap: break-word; word-wrap: break-word; box-sizing: border-box; width: 100%;"
-                        ></div>
+                        ></pre>
                       </div>
             </div>
           </div>
@@ -2177,7 +2177,7 @@
           if (resultDiv) {
             resultDiv.classList.remove('hidden');
             resultDiv.textContent = JSON.stringify(result, null, 2);
-            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto';
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto break-words whitespace-pre-wrap';
           }
         } catch (error) {
           const resultDiv = document.getElementById('phoneNumberResult');
@@ -2210,7 +2210,7 @@
           if (resultDiv) {
             resultDiv.classList.remove('hidden');
             resultDiv.textContent = JSON.stringify(result, null, 2);
-            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto';
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto break-words whitespace-pre-wrap';
           }
         } catch (error) {
           const resultDiv = document.getElementById('phoneNumberResult');
@@ -2275,7 +2275,7 @@
           if (resultDiv) {
             resultDiv.classList.remove('hidden');
             resultDiv.textContent = JSON.stringify(result, null, 2);
-            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto';
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto break-words whitespace-pre-wrap';
           }
         } catch (error) {
           const resultDiv = document.getElementById('phoneNumberResult');
@@ -2312,7 +2312,7 @@
           if (resultDiv) {
             resultDiv.classList.remove('hidden');
             resultDiv.textContent = JSON.stringify(result, null, 2);
-            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto';
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs max-h-32 overflow-y-auto break-words whitespace-pre-wrap';
           }
         } catch (error) {
           const resultDiv = document.getElementById('phoneNumberResult');
