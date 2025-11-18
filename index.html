@@ -2183,8 +2183,23 @@
           const resultDiv = document.getElementById('phoneNumberResult');
           if (resultDiv) {
             resultDiv.classList.remove('hidden');
-            resultDiv.textContent = `Error: ${error.message}`;
-            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto';
+            // Try to parse error message as JSON for better formatting
+            let errorText = error.message;
+            try {
+              // Check if error message contains JSON
+              const jsonMatch = errorText.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                const jsonStr = jsonMatch[0];
+                const parsed = JSON.parse(jsonStr);
+                errorText = `Error: ${errorText.replace(jsonStr, JSON.stringify(parsed, null, 2))}`;
+              } else {
+                errorText = `Error: ${errorText}`;
+              }
+            } catch (e) {
+              errorText = `Error: ${errorText}`;
+            }
+            resultDiv.textContent = errorText;
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto break-words whitespace-pre-wrap font-mono';
           }
         }
       });
@@ -2216,8 +2231,23 @@
           const resultDiv = document.getElementById('phoneNumberResult');
           if (resultDiv) {
             resultDiv.classList.remove('hidden');
-            resultDiv.textContent = `Error: ${error.message}`;
-            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto';
+            // Try to parse error message as JSON for better formatting
+            let errorText = error.message;
+            try {
+              // Check if error message contains JSON
+              const jsonMatch = errorText.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                const jsonStr = jsonMatch[0];
+                const parsed = JSON.parse(jsonStr);
+                errorText = `Error: ${errorText.replace(jsonStr, JSON.stringify(parsed, null, 2))}`;
+              } else {
+                errorText = `Error: ${errorText}`;
+              }
+            } catch (e) {
+              errorText = `Error: ${errorText}`;
+            }
+            resultDiv.textContent = errorText;
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto break-words whitespace-pre-wrap font-mono';
           }
         }
       });
@@ -2281,8 +2311,23 @@
           const resultDiv = document.getElementById('phoneNumberResult');
           if (resultDiv) {
             resultDiv.classList.remove('hidden');
-            resultDiv.textContent = `Error: ${error.message}`;
-            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto';
+            // Try to parse error message as JSON for better formatting
+            let errorText = error.message;
+            try {
+              // Check if error message contains JSON
+              const jsonMatch = errorText.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                const jsonStr = jsonMatch[0];
+                const parsed = JSON.parse(jsonStr);
+                errorText = `Error: ${errorText.replace(jsonStr, JSON.stringify(parsed, null, 2))}`;
+              } else {
+                errorText = `Error: ${errorText}`;
+              }
+            } catch (e) {
+              errorText = `Error: ${errorText}`;
+            }
+            resultDiv.textContent = errorText;
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto break-words whitespace-pre-wrap font-mono';
           }
         }
       });
@@ -2318,8 +2363,23 @@
           const resultDiv = document.getElementById('phoneNumberResult');
           if (resultDiv) {
             resultDiv.classList.remove('hidden');
-            resultDiv.textContent = `Error: ${error.message}`;
-            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto';
+            // Try to parse error message as JSON for better formatting
+            let errorText = error.message;
+            try {
+              // Check if error message contains JSON
+              const jsonMatch = errorText.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                const jsonStr = jsonMatch[0];
+                const parsed = JSON.parse(jsonStr);
+                errorText = `Error: ${errorText.replace(jsonStr, JSON.stringify(parsed, null, 2))}`;
+              } else {
+                errorText = `Error: ${errorText}`;
+              }
+            } catch (e) {
+              errorText = `Error: ${errorText}`;
+            }
+            resultDiv.textContent = errorText;
+            resultDiv.className = 'mt-2 p-2 bg-gray-800 rounded text-xs text-red-400 max-h-32 overflow-y-auto break-words whitespace-pre-wrap font-mono';
           }
         }
       });
