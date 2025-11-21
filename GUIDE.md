@@ -427,6 +427,39 @@ Agora supports multiple TTS vendors, each with different characteristics:
 - Trailing Silence: Configurable trailing silence duration
 - Characteristics: Customizable speaking rate, emotional tone control, trailing silence management
 
+**Rime TTS** (Beta):
+
+- Vendor: `rime`
+- Required: API Key, Speaker, Model ID
+- Characteristics: High-quality voice synthesis with speaker and model configuration
+
+**Fish Audio TTS** (Beta):
+
+- Vendor: `fishaudio`
+- Required: API Key, Reference ID, Backend
+- Characteristics: Advanced voice synthesis with reference-based voice cloning
+
+**Groq TTS** (Beta):
+
+- Vendor: `groq`
+- Required: API Key, Model, Voice
+- Characteristics: Fast inference with high-quality voice synthesis
+
+**Google TTS** (Beta):
+
+- Vendor: `google`
+- Required: Credentials (JSON), Voice Name
+- Optional Parameters:
+  - `speaking_rate`: Speaking rate (configurable)
+  - `sample_rate_hertz`: Audio sampling rate in Hz
+- Characteristics: Google Cloud Text-to-Speech integration with extensive language support
+
+**Amazon Polly TTS** (Beta):
+
+- Vendor: `amazon`
+- Required: AWS Access Key ID, AWS Secret Access Key, Region, Voice, Engine
+- Characteristics: Amazon Polly integration with neural and standard voices
+
 For this example, we'll use Microsoft Azure TTS for its reliability and quality.
 
 **ASR Configuration:**
@@ -456,7 +489,98 @@ Agora supports multiple ASR vendors:
 - Language: `en`
 - Characteristics: Lowest latency (50-150ms), excellent accuracy, real-time streaming. Consider if ultra-low latency is critical for your use case.
 
+**OpenAI ASR** (Beta):
+
+- Vendor: `openai`
+- Required: API Key, Language
+- Language Support: Standard language codes (en-US, en-GB, es-ES, fr-FR, de-DE, it-IT, pt-BR, ja-JP, ko-KR, zh-CN, etc.)
+- Characteristics: OpenAI speech recognition integration, high accuracy
+
+**Speechmatics ASR**:
+
+- Vendor: `speechmatics`
+- Required: API Key, Language
+- Language Support: Simple language codes (en, es, fr, de, it, pt, ja, ko, zh, etc.)
+- Characteristics: High-accuracy transcription with extensive language support
+
+**AssemblyAI ASR** (Beta):
+
+- Vendor: `assemblyai`
+- Required: API Key, Language
+- Language Support: BCP-47 language codes (en-US, en-GB, es-ES, fr-FR, de-DE, it-IT, pt-BR, ja-JP, ko-KR, zh-CN, etc.)
+- Characteristics: Real-time transcription with advanced features
+
+**Amazon Transcribe** (Beta):
+
+- Vendor: `amazon`
+- Required: AWS Access Key ID, AWS Secret Access Key, Region, Language Code
+- Optional Parameters:
+  - `media_sample_rate_hz`: Audio sample rate in Hz
+  - `media_encoding`: Audio encoding format
+- Characteristics: Amazon Transcribe integration with automatic language identification support
+
+**Google ASR** (Beta):
+
+- Vendor: `google`
+- Required: Project ID, Location, ADC Credentials (JSON string), Language
+- Optional Parameters:
+  - `model`: Speech recognition model identifier
+- Characteristics: Google Cloud Speech-to-Text integration with advanced features
+
+**Custom ASR**:
+
+- Vendor: `custom`
+- Required: Valid JSON configuration object
+- Characteristics: Full flexibility to configure any ASR provider that follows Agora's ASR interface. Provide complete configuration as JSON.
+
 Agora ASR is the recommended choice for most production deployments due to its seamless integration, zero configuration overhead, and reliable performance. Microsoft ASR and Deepgram are alternatives if you need specific features like extensive language support or ultra-low latency.
+
+**OpenAI ASR** (Beta):
+
+- Vendor: `openai`
+- API Key: Required
+- Language: Standard language codes (e.g., `en-US`)
+- Characteristics: OpenAI speech recognition integration, high accuracy
+
+**Speechmatics ASR**:
+
+- Vendor: `speechmatics`
+- API Key: Required
+- Language: Simple language codes (e.g., `en`)
+- Characteristics: High-accuracy transcription with extensive language support
+
+**AssemblyAI ASR** (Beta):
+
+- Vendor: `assemblyai`
+- API Key: Required
+- Language: BCP-47 language codes (e.g., `en-US`)
+- Characteristics: Real-time transcription with advanced features
+
+**Amazon Transcribe** (Beta):
+
+- Vendor: `amazon`
+- AWS Access Key ID: Required
+- AWS Secret Access Key: Required
+- Region: Required
+- Language Code: Required
+- Optional: Media sample rate, media encoding
+- Characteristics: Amazon Transcribe integration with automatic language identification support
+
+**Google ASR** (Beta):
+
+- Vendor: `google`
+- Project ID: Required
+- Location: Required
+- ADC Credentials: Required (JSON string)
+- Language: Required
+- Optional: Model identifier
+- Characteristics: Google Cloud Speech-to-Text integration with advanced features
+
+**Custom ASR**:
+
+- Vendor: `custom`
+- Configuration: Valid JSON configuration object
+- Characteristics: Full flexibility to configure any ASR provider that follows Agora's ASR interface
 
 ## Advanced Configuration
 
@@ -991,9 +1115,9 @@ The code is modular. Swap LLM providers without touching the audio pipeline. Cha
 
 **LLM Providers**: OpenAI, Azure OpenAI, Google Gemini, Google Vertex AI, Anthropic Claude, Dify, custom endpoints
 
-**TTS Vendors**: Microsoft Azure, ElevenLabs, Cartesia, OpenAI, Hume AI
+**TTS Vendors**: Microsoft Azure, ElevenLabs, Cartesia, OpenAI, Hume AI, Rime (Beta), Fish Audio (Beta), Groq (Beta), Google (Beta), Amazon Polly (Beta)
 
-**ASR Vendors**: Agora (ARES with 36 languages), Microsoft Azure (100+ languages), Deepgram (50+ languages)
+**ASR Vendors**: Agora (ARES with 36 languages), Microsoft Azure (100+ languages with phrase list support), Deepgram (50+ languages), OpenAI (Beta), Speechmatics, AssemblyAI (Beta), Amazon Transcribe (Beta), Google (Beta), Custom
 
 **AI Avatars**: Akool (Beta), HeyGen (Alpha)
 
