@@ -1038,7 +1038,7 @@
   </div>
 
   <!-- Experimental Features Modal (hidden, triggered by Konami code) -->
-  <div id="experimentalFeaturesModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+  <div id="experimentalFeaturesModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 103;">
     <div class="bg-gray-800 p-4 rounded-lg max-w-xl w-full mx-4 overflow-y-auto max-h-[90vh] text-base" style="font-size: 14px;">
       <h3 class="text-lg font-bold mb-2">Experimental Features</h3>
       <form id="experimentalFeaturesForm" class="space-y-3">
@@ -1182,6 +1182,36 @@
               <span class="tooltip-drawer hidden">If not ignore, override user input as such</span>
             </div>
             <input id="expLlmEmptyFlag" type="text" class="w-full p-1 rounded bg-gray-700 text-white" placeholder="e.g. &lt;unclear&gt;" value="" disabled />
+            <div class="flex items-center has-tooltip-drawer">
+              <input type="checkbox" id="expSetLlmAutoMerge" class="mr-1 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+              <label for="expLlmAutoMerge" class="text-sm font-medium" style="margin-left:0;">auto_merge</label>
+              <span class="tooltip-drawer hidden">Whether to merge close user messages</span>
+            </div>
+            <select id="expLlmAutoMerge" class="w-full p-1 rounded bg-gray-700 text-white" disabled>
+              <option value="false">False</option>
+              <option value="true">True</option>
+            </select>
+            <div class="flex items-center has-tooltip-drawer">
+              <input type="checkbox" id="expSetLlmGreetingInterruptable" class="mr-1 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+              <label for="expLlmGreetingInterruptable" class="text-sm font-medium" style="margin-left:0;">greeting_interruptable</label>
+              <span class="tooltip-drawer hidden">Make greeting uninterruptable</span>
+            </div>
+            <select id="expLlmGreetingInterruptable" class="w-full p-1 rounded bg-gray-700 text-white" disabled>
+              <option value="true">True</option>
+              <option value="false">False</option>
+            </select>
+          </div>
+        </div>
+        <!-- 5.5. ASR -->
+        <div class="mb-1">
+          <h4 class="text-base font-semibold mb-1">ASR</h4>
+          <div class="grid grid-cols-2 gap-x-1 gap-y-2 items-center">
+            <div class="flex items-center has-tooltip-drawer col-span-2">
+              <input type="checkbox" id="expSetAsrHotwords" class="mr-1 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+              <label for="expAsrHotwords" class="text-sm font-medium" style="margin-left:0;">hotwords</label>
+              <span class="tooltip-drawer hidden">Array of hotwords with priority (format: "word|priority", e.g. "SD-RTN|2", "Agora|1")</span>
+            </div>
+            <textarea id="expAsrHotwords" class="w-full col-span-2 p-1 rounded bg-gray-700 text-white" rows="3" placeholder='e.g. ["SD-RTN|2", "Agora|1", "AIVAD|1"]' disabled></textarea>
           </div>
         </div>
         <!-- 6. Turn Detector -->
@@ -1251,6 +1281,18 @@
               <span class="tooltip-drawer hidden">Transcript protocol version</span>
             </div>
             <input id="expTranscriptProtocolVersion" class="w-full p-1 rounded bg-gray-700 text-white" placeholder="e.g. v2" disabled />
+          </div>
+        </div>
+        <!-- 8. RTM Presence -->
+        <div class="mb-1">
+          <h4 class="text-base font-semibold mb-1">RTM Presence</h4>
+          <div class="grid grid-cols-2 gap-x-1 gap-y-2 items-center">
+            <div class="flex items-center has-tooltip-drawer">
+              <input type="checkbox" id="expSetRtmEmbeddingsFilters" class="mr-1 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+              <label for="expRtmEmbeddingsFilters" class="text-sm font-medium" style="margin-left:0;">Enable RTM Presence Context</label>
+              <span class="tooltip-drawer hidden">Enable to automatically include RTM presence data in LLM context (uses default filter: ["$.presence.*"])</span>
+            </div>
+            <div class="text-sm text-gray-400">Automatically captures RTM presence data</div>
           </div>
         </div>
         <div class="flex justify-end space-x-2 mt-4">
@@ -3328,6 +3370,9 @@
       ['expSetLlmIgnoreEmpty', 'expLlmIgnoreEmpty'],
       ['expSetLlmNonFinalForEmpty', 'expLlmNonFinalForEmpty'],
       ['expSetLlmEmptyFlag', 'expLlmEmptyFlag'],
+      ['expSetLlmAutoMerge', 'expLlmAutoMerge'],
+      ['expSetLlmGreetingInterruptable', 'expLlmGreetingInterruptable'],
+      ['expSetAsrHotwords', 'expAsrHotwords'],
       ['expSetTurnEosTimeout', 'expTurnEosTimeout'],
       ['expSetTurnStrategy', 'expTurnStrategy'],
       ['expSetTurnStrictTimestamp', 'expTurnStrictTimestamp'],
@@ -3534,12 +3579,36 @@
       if (document.getElementById('expSetAivadForceThreshold').checked) {
         exp.aivad = { force_threshold: parseInt(document.getElementById('expAivadForceThreshold').value, 10) };
       }
+      // ASR
+      if (document.getElementById('expSetAsrHotwords').checked) {
+        const hotwordsText = document.getElementById('expAsrHotwords').value.trim();
+        if (hotwordsText) {
+          try {
+            // Normalize curly quotes to straight quotes
+            const normalized = hotwordsText
+              .replace(/\u201C/g, '"')
+              .replace(/\u201D/g, '"')
+              .replace(/\u2018/g, "'")
+              .replace(/\u2019/g, "'");
+            const parsed = JSON.parse(normalized);
+            if (Array.isArray(parsed)) {
+              exp.asr = { hotwords: parsed };
+            } else {
+              console.warn('ASR hotwords must be an array');
+            }
+          } catch (e) {
+            console.error('Failed to parse ASR hotwords JSON:', e);
+          }
+        }
+      }
       // LLM
       if (
         document.getElementById('expSetLlmInterruptFlag').checked ||
         document.getElementById('expSetLlmIgnoreEmpty').checked ||
         document.getElementById('expSetLlmNonFinalForEmpty').checked ||
-        document.getElementById('expSetLlmEmptyFlag').checked
+        document.getElementById('expSetLlmEmptyFlag').checked ||
+        document.getElementById('expSetLlmAutoMerge').checked ||
+        document.getElementById('expSetLlmGreetingInterruptable').checked
       ) {
         exp.llm = {};
         if (document.getElementById('expSetLlmInterruptFlag').checked) {
@@ -3553,6 +3622,12 @@
         }
         if (document.getElementById('expSetLlmEmptyFlag').checked) {
           exp.llm.empty_flag = document.getElementById('expLlmEmptyFlag').value.trim() || '';
+        }
+        if (document.getElementById('expSetLlmAutoMerge').checked) {
+          exp.llm.auto_merge = document.getElementById('expLlmAutoMerge').value === 'true';
+        }
+        if (document.getElementById('expSetLlmGreetingInterruptable').checked) {
+          exp.llm.greeting_interruptable = document.getElementById('expLlmGreetingInterruptable').value === 'true';
         }
       }
       // Turn Detector
@@ -3587,6 +3662,14 @@
         exp.transcript.protocol_version = document.getElementById('expTranscriptProtocolVersion').value.trim();
       }
       if (Object.keys(exp.transcript).length === 0) delete exp.transcript;
+      // RTM Presence - if enabled, use default filter to capture all presence data
+      // This tells Agora's backend to automatically include RTM presence data in LLM context
+      // The filter ["$.presence.*"] means "include all fields under presence"
+      // Agora's backend will automatically grab RTM presence data and include it in LLM requests
+      if (document.getElementById('expSetRtmEmbeddingsFilters').checked) {
+        exp.embeddings_filters = ["$.presence.*"];
+        console.log('RTM Presence Context enabled: embeddings_filters set to ["$.presence.*"]');
+      }
       return exp;
     }
 
@@ -3609,6 +3692,22 @@
       if (exp.aivad) config.properties.parameters.aivad = exp.aivad;
       if (exp.turn_detector) config.properties.parameters.turn_detector = exp.turn_detector;
       if (exp.transcript) config.properties.parameters.transcript = exp.transcript;
+      // RTM Presence: embeddings_filters tells Agora backend to include RTM presence data in LLM context
+      // The backend automatically captures presence data based on the JSONPath filter
+      if (exp.embeddings_filters) {
+        config.properties.parameters.embeddings_filters = exp.embeddings_filters;
+        console.log('RTM Presence Context configured in agent config:', exp.embeddings_filters);
+      }
+      // ASR - merge hotwords into existing ASR config
+      if (exp.asr && exp.asr.hotwords) {
+        if (!config.properties.asr) {
+          // If ASR doesn't exist, we can't add hotwords (ASR must be configured first)
+          console.warn('ASR hotwords require ASR to be configured first');
+        } else {
+          // Merge hotwords into existing ASR config
+          config.properties.asr.hotwords = exp.asr.hotwords;
+        }
+      }
       // LLM
       if (exp.llm && config.properties.llm) {
         Object.assign(config.properties.llm, exp.llm);
