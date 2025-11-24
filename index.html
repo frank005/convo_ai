@@ -1148,7 +1148,43 @@
             <input id="expAivadForceThreshold" type="number" class="w-full p-1 rounded bg-gray-700 text-white" placeholder="e.g. 5000" disabled />
           </div>
         </div>
-        <!-- 5. Turn Detector -->
+        <!-- 5. LLM -->
+        <div class="mb-1">
+          <h4 class="text-base font-semibold mb-1">LLM</h4>
+          <div class="grid grid-cols-2 gap-x-1 gap-y-2 items-center">
+            <div class="flex items-center has-tooltip-drawer">
+              <input type="checkbox" id="expSetLlmInterruptFlag" class="mr-1 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+              <label for="expLlmInterruptFlag" class="text-sm font-medium" style="margin-left:0;">interrupt_flag</label>
+              <span class="tooltip-drawer hidden">What to set for interrupted response, "" as default</span>
+            </div>
+            <input id="expLlmInterruptFlag" type="text" class="w-full p-1 rounded bg-gray-700 text-white" placeholder="e.g. &lt;interrupted&gt;" value="" disabled />
+            <div class="flex items-center has-tooltip-drawer">
+              <input type="checkbox" id="expSetLlmIgnoreEmpty" class="mr-1 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+              <label for="expLlmIgnoreEmpty" class="text-sm font-medium" style="margin-left:0;">ignore_empty</label>
+              <span class="tooltip-drawer hidden">Whether ignore empty user input</span>
+            </div>
+            <select id="expLlmIgnoreEmpty" class="w-full p-1 rounded bg-gray-700 text-white" disabled>
+              <option value="false">False</option>
+              <option value="true">True</option>
+            </select>
+            <div class="flex items-center has-tooltip-drawer">
+              <input type="checkbox" id="expSetLlmNonFinalForEmpty" class="mr-1 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+              <label for="expLlmNonFinalForEmpty" class="text-sm font-medium" style="margin-left:0;">non_final_for_empty</label>
+              <span class="tooltip-drawer hidden">If not ignore, whether use last non-empty non-final result instead</span>
+            </div>
+            <select id="expLlmNonFinalForEmpty" class="w-full p-1 rounded bg-gray-700 text-white" disabled>
+              <option value="false">False</option>
+              <option value="true">True</option>
+            </select>
+            <div class="flex items-center has-tooltip-drawer">
+              <input type="checkbox" id="expSetLlmEmptyFlag" class="mr-1 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+              <label for="expLlmEmptyFlag" class="text-sm font-medium" style="margin-left:0;">empty_flag</label>
+              <span class="tooltip-drawer hidden">If not ignore, override user input as such</span>
+            </div>
+            <input id="expLlmEmptyFlag" type="text" class="w-full p-1 rounded bg-gray-700 text-white" placeholder="e.g. &lt;unclear&gt;" value="" disabled />
+          </div>
+        </div>
+        <!-- 6. Turn Detector -->
         <div class="mb-1">
           <h4 class="text-base font-semibold mb-1">Turn Detector</h4>
           <div class="grid grid-cols-2 gap-x-1 gap-y-2 items-center">
@@ -1178,7 +1214,7 @@
             </select>
           </div>
         </div>
-        <!-- 6. Transcript Config -->
+        <!-- 7. Transcript Config -->
         <div class="mb-1">
           <h4 class="text-base font-semibold mb-1">Transcript Configuration</h4>
           <div class="grid grid-cols-2 gap-x-1 gap-y-2 items-center">
@@ -3288,6 +3324,10 @@
       ['expSetAudioAnsModeType', 'expAudioAnsModeType'],
       ['expSetAudioAnsSuppressionMode', 'expAudioAnsSuppressionMode'],
       ['expSetAivadForceThreshold', 'expAivadForceThreshold'],
+      ['expSetLlmInterruptFlag', 'expLlmInterruptFlag'],
+      ['expSetLlmIgnoreEmpty', 'expLlmIgnoreEmpty'],
+      ['expSetLlmNonFinalForEmpty', 'expLlmNonFinalForEmpty'],
+      ['expSetLlmEmptyFlag', 'expLlmEmptyFlag'],
       ['expSetTurnEosTimeout', 'expTurnEosTimeout'],
       ['expSetTurnStrategy', 'expTurnStrategy'],
       ['expSetTurnStrictTimestamp', 'expTurnStrictTimestamp'],
@@ -3494,6 +3534,27 @@
       if (document.getElementById('expSetAivadForceThreshold').checked) {
         exp.aivad = { force_threshold: parseInt(document.getElementById('expAivadForceThreshold').value, 10) };
       }
+      // LLM
+      if (
+        document.getElementById('expSetLlmInterruptFlag').checked ||
+        document.getElementById('expSetLlmIgnoreEmpty').checked ||
+        document.getElementById('expSetLlmNonFinalForEmpty').checked ||
+        document.getElementById('expSetLlmEmptyFlag').checked
+      ) {
+        exp.llm = {};
+        if (document.getElementById('expSetLlmInterruptFlag').checked) {
+          exp.llm.interrupt_flag = document.getElementById('expLlmInterruptFlag').value.trim() || '';
+        }
+        if (document.getElementById('expSetLlmIgnoreEmpty').checked) {
+          exp.llm.ignore_empty = document.getElementById('expLlmIgnoreEmpty').value === 'true';
+        }
+        if (document.getElementById('expSetLlmNonFinalForEmpty').checked) {
+          exp.llm.non_final_for_empty = document.getElementById('expLlmNonFinalForEmpty').value === 'true';
+        }
+        if (document.getElementById('expSetLlmEmptyFlag').checked) {
+          exp.llm.empty_flag = document.getElementById('expLlmEmptyFlag').value.trim() || '';
+        }
+      }
       // Turn Detector
       if (
         document.getElementById('expSetTurnEosTimeout').checked ||
@@ -3548,6 +3609,10 @@
       if (exp.aivad) config.properties.parameters.aivad = exp.aivad;
       if (exp.turn_detector) config.properties.parameters.turn_detector = exp.turn_detector;
       if (exp.transcript) config.properties.parameters.transcript = exp.transcript;
+      // LLM
+      if (exp.llm && config.properties.llm) {
+        Object.assign(config.properties.llm, exp.llm);
+      }
       return config;
     };
     }
