@@ -481,7 +481,6 @@ window.UI = class UI {
     async sendTextMessage() {
         const messageInput = document.getElementById("messageInput");
         const text = messageInput.value.trim();
-        if (!text) return;
 
         try {
             const agoraRtcUid = document.getElementById("agoraRtcUid").value.trim();

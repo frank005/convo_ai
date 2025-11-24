@@ -900,10 +900,7 @@ class ConversationalAIAPI extends EventHelper {
         
         // Validate message based on type
         if (message.messageType === 'TEXT') {
-            if (!message.text || message.text.trim() === '') {
-                console.error('TEXT message validation failed: text is empty');
-                throw new Error('Text message cannot be empty');
-            }
+            // Allow empty text messages
         } else if (message.messageType === 'IMAGE') {
             // Check for either url or base64
             if ((!message.url || message.url.trim() === '') && 
