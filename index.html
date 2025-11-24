@@ -3686,7 +3686,13 @@
       // RTC/audio/turn/aivad/transcript
       if (!config.properties.parameters) config.properties.parameters = {};
       if (exp.output_audio_codec) config.properties.parameters.output_audio_codec = exp.output_audio_codec;
-      if (exp.audio_scenario) config.properties.parameters.audio_scenario = exp.audio_scenario;
+      // Override hardcoded "chorus" audio_scenario if experimental feature is set
+      if (document.getElementById('expSetRtcScenario') && document.getElementById('expSetRtcScenario').checked) {
+        const expAudioScenario = document.getElementById('expRtcScenario').value.trim();
+        if (expAudioScenario) {
+          config.properties.parameters.audio_scenario = expAudioScenario;
+        }
+      }
       if (exp.agent_rtc_sdk_params) config.properties.parameters.agent_rtc_sdk_params = exp.agent_rtc_sdk_params;
       if (exp.audio3a_downstream) config.properties.parameters.audio3a_downstream = exp.audio3a_downstream;
       if (exp.aivad) config.properties.parameters.aivad = exp.aivad;
@@ -5424,8 +5430,8 @@
             id="avatarVendor"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
           >
-            <option value="akool">Akool</option>
-            <option value="heygen">HeyGen</option>
+            <option value="akool">Akool (Beta)</option>
+            <option value="heygen">HeyGen (Beta)</option>
           </select>
           <div class="tooltip">Select the AI Avatar vendor to use for video generation.</div>
         </div>
