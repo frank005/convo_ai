@@ -114,6 +114,25 @@ class CovSubRenderController {
         
         this.agentStates = new Map(); // Track agent states
         this.processedContentHashes = new Set(); // Track processed content hashes to prevent duplicates
+        this.greetingMessage = options.greetingMessage || null; // Store greeting message for duplicate detection
+        this.lastGreetingMessageTime = null; // Track when we last processed a greeting message
+    }
+
+    // Helper method to get greeting message from DOM if not provided
+    getGreetingMessage() {
+        if (this.greetingMessage) {
+            return this.greetingMessage;
+        }
+        // Try to get from DOM elements
+        const gMsgElement = document.getElementById('gMsg');
+        const mllmGreetingElement = document.getElementById('mllmGreetingMessage');
+        if (gMsgElement && gMsgElement.value) {
+            return gMsgElement.value.trim();
+        }
+        if (mllmGreetingElement && mllmGreetingElement.value) {
+            return mllmGreetingElement.value.trim();
+        }
+        return null;
     }
 
     setMode(mode) {
@@ -192,13 +211,59 @@ class CovSubRenderController {
             isFinal = message.turn_status === 1;
         }
         
+        // Check if this is an assistant/agent message
+        const isAssistantMessage = message.type === EMessageType.AGENT_TRANSCRIPTION || 
+            message.customType === 'assistant.transcription' ||
+            message.object === 'assistant.transcription';
+        
+        // Check if this message exactly matches the greeting message
+        const greetingMessage = this.getGreetingMessage();
+        const isExactGreetingMatch = isAssistantMessage && greetingMessage && text.trim() === greetingMessage;
+        
         // Check for duplicate using the content key, but allow final messages to override non-final ones
+        // Also allow greeting messages if they exactly match the configured greeting message (and enough time has passed)
         if (this.processedMessageIds.has(contentKey)) {
             // If this is a final message and we've already processed a non-final version, allow it
             if (isFinal) {
                 console.log('Allowing final message to override non-final version:', contentKey);
                 // Remove the non-final version from processed set so we can process the final one
                 this.processedMessageIds.delete(contentKey);
+            } else if (isExactGreetingMatch) {
+            // For greeting messages, check if a final version already exists in chat history
+            // We only want one greeting message that goes final, and don't display duplicates within 1-2 seconds
+            const existingFinalGreeting = this.chatHistory.find(item => 
+                item.data && 
+                item.data.text === text.trim() &&
+                item.data.speaker && item.data.speaker.includes('Assistant') &&
+                !item.id.toString().startsWith('temp-')
+            );
+            
+            const now = Date.now();
+            if (existingFinalGreeting) {
+                // There's already a final greeting in chat history
+                if (this.lastGreetingMessageTime && (now - this.lastGreetingMessageTime) < 2000) {
+                    // Final greeting was added within last 2 seconds, skip it to prevent duplicates
+                    console.log('Skipping duplicate greeting message (final version exists and was added recently):', contentKey);
+                    return;
+                } else {
+                    // Final greeting exists but enough time has passed - this might be agent restart
+                    // However, we should still skip it to prevent duplicates in the same conversation
+                    // Only allow if we can determine it's truly a new conversation (which is hard to detect)
+                    // For now, skip it if a final greeting already exists
+                    console.log('Skipping duplicate greeting message (final version already exists in chat history):', contentKey);
+                    return;
+                }
+            } else if (this.lastGreetingMessageTime && (now - this.lastGreetingMessageTime) < 2000) {
+                // No final greeting exists but one was processed recently, skip it
+                console.log('Skipping duplicate greeting message (processed recently):', contentKey);
+                return;
+            } else {
+                // No final greeting exists and enough time has passed (or first time), allow it
+                console.log('Allowing greeting message (no final version exists):', contentKey);
+                // Remove from processed set so we can process it
+                this.processedMessageIds.delete(contentKey);
+                // Note: We don't set lastGreetingMessageTime here - only set it when we add final message to chat history
+            }
             } else {
                 console.log('Skipping duplicate content in turn:', contentKey);
                 return;
@@ -206,6 +271,8 @@ class CovSubRenderController {
         }
         
         // Add content key to processed set
+        // Note: We don't set lastGreetingMessageTime here for non-final messages
+        // We only set it when we actually add a final greeting to chat history
         this.processedMessageIds.add(contentKey);
         
         // Periodically clear old turn_ids to prevent memory bloat
@@ -292,23 +359,67 @@ class CovSubRenderController {
 
         // Add to chat history if it's a final transcription
         if (transcriptionData.transcription.isFinal) {
-            // Check if we already have this exact message in chat history to prevent duplicates
+            // Check if this message exactly matches the greeting message
+            const greetingMessage = this.getGreetingMessage();
+            const isExactGreetingMatch = isAssistantMessage && greetingMessage && transcriptionData.transcription.text.trim() === greetingMessage;
+            
+            // For greeting messages, check if a final version already exists (by exact text match, not turnId)
+            // We only want one greeting message that goes final, and don't display duplicates within 1-2 seconds
+            if (isExactGreetingMatch) {
+                // Check if there's already a final greeting with this exact text (regardless of turnId)
+                const existingFinalGreeting = this.chatHistory.find(item => 
+                    item.data && 
+                    item.data.text === transcriptionData.transcription.text &&
+                    item.data.speaker && item.data.speaker.includes('Assistant') &&
+                    !item.id.toString().startsWith('temp-')
+                );
+                
+                if (existingFinalGreeting) {
+                    // There's already a final greeting message in chat history
+                    // We only want one greeting message that goes final, so skip duplicates
+                    const now = Date.now();
+                    if (this.lastGreetingMessageTime && (now - this.lastGreetingMessageTime) < 2000) {
+                        // Final greeting was added within last 2 seconds, skip it to prevent duplicates
+                        console.log('Skipping duplicate greeting message in chat history (final version added recently):', transcriptionData.transcription.text.substring(0, 50) + '...');
+                        return;
+                    } else {
+                        // Final greeting exists - skip it to prevent duplicates in the same conversation
+                        // We only want one greeting message that goes final
+                        console.log('Skipping duplicate greeting message in chat history (final version already exists):', transcriptionData.transcription.text.substring(0, 50) + '...');
+                        return;
+                    }
+                } else {
+                    // No existing final greeting, always allow it (first time)
+                }
+            }
+            
+            // Check if we already have this exact message in chat history to prevent duplicates (for non-greeting messages)
             const existingMessage = this.chatHistory.find(item => 
                 item.data && 
                 item.data.text === transcriptionData.transcription.text &&
                 item.data.speaker === transcriptionData.transcription.speaker &&
+                item.data.turnId === transcriptionData.transcription.turnId &&
                 !item.id.toString().startsWith('temp-')
             );
             
-            if (!existingMessage) {
-                this.chatHistory.push({
-                    id: Date.now() + Math.random(),
-                    timestamp: transcriptionData.transcription.timestamp,
-                    agentUserId: transcriptionData.agentUserId,
-                    data: transcriptionData.transcription
-                });
-            } else {
+            if (existingMessage && !isExactGreetingMatch) {
+                // Not a greeting message and it already exists, skip it
                 console.log('Skipping duplicate final message in chat history:', transcriptionData.transcription.text.substring(0, 50) + '...');
+                return;
+            }
+            
+            // Add to chat history
+            this.chatHistory.push({
+                id: Date.now() + Math.random(),
+                timestamp: transcriptionData.transcription.timestamp,
+                agentUserId: transcriptionData.agentUserId,
+                data: transcriptionData.transcription
+            });
+            
+            // Track when we add a greeting message to chat history (update time when actually added)
+            // This prevents duplicate additions within the time window
+            if (isExactGreetingMatch) {
+                this.lastGreetingMessageTime = Date.now();
             }
         }
 
@@ -430,8 +541,15 @@ class CovSubRenderController {
         const pending = this.pendingAssistantTranscriptions.get(agentUserId);
         if (!pending) return;
 
-        // Check if we already have this message in chat history to prevent duplicates
         const text = pending.message.text || pending.message.content || '';
+        
+        // Check if this message exactly matches the greeting message
+        const greetingMessage = this.getGreetingMessage();
+        const isExactGreetingMatch = greetingMessage && text.trim() === greetingMessage;
+
+        // Check if we already have this message in chat history to prevent duplicates
+        // But allow greeting messages if they exactly match the configured greeting message (and enough time has passed)
+        // Check both final and temp messages
         const existingMessage = this.chatHistory.find(item => 
             item.data && 
             item.data.text === text &&
@@ -439,9 +557,60 @@ class CovSubRenderController {
             !item.id.toString().startsWith('temp-')
         );
         
-        if (existingMessage) {
+        // Also check for temp messages that match (these should be finalized)
+        const existingTempMessage = this.chatHistory.find(item => 
+            item.data && 
+            item.data.text === text &&
+            item.data.speaker && item.data.speaker.includes('Assistant') &&
+            item.id.toString().startsWith('temp-')
+        );
+        
+        // For greeting messages, check if a final version was already added recently (within 2 seconds)
+        // This prevents duplicate greeting messages from being finalized within the time window
+        // But we should always finalize if there's only a temp message or no message at all
+        let shouldSkipFinalization = false;
+        const now = Date.now();
+        
+        if (isExactGreetingMatch) {
+            // We only want one greeting message that goes final
+            // If a final version already exists, only allow it if enough time has passed (more than 2 seconds)
+            if (existingMessage) {
+                // There's already a final greeting message in chat history
+                if (this.lastGreetingMessageTime && (now - this.lastGreetingMessageTime) < 2000) {
+                    // Final greeting was added within last 2 seconds, skip it to prevent duplicates
+                    console.log('Skipping duplicate greeting message finalization (final version added recently):', text.substring(0, 50) + '...');
+                    shouldSkipFinalization = true;
+                } else {
+                    // Final greeting exists but enough time has passed, allow it (agent restarted)
+                    console.log('Allowing duplicate greeting message finalization (enough time passed) - will add as final');
+                    // We'll update the time when we actually add it to chat history
+                }
+            } else if (existingTempMessage) {
+                // Greeting exists as temp message - remove it and we'll add it as final
+                // This is the normal case for first-time greeting finalization
+                const tempIndex = this.chatHistory.findIndex(item => 
+                    item.data && 
+                    item.data.text === text &&
+                    item.data.speaker && item.data.speaker.includes('Assistant') &&
+                    item.id.toString().startsWith('temp-')
+                );
+                if (tempIndex >= 0) {
+                    this.chatHistory.splice(tempIndex, 1);
+                    console.log('Removing temp greeting message to finalize it');
+                }
+                // We'll update the time when we actually add it to chat history
+            } else {
+                // First time seeing this greeting - always allow finalization
+                console.log('Finalizing first-time greeting message');
+                // We'll update the time when we actually add it to chat history
+            }
+        } else if (existingMessage && !isExactGreetingMatch) {
+            // Not a greeting message and it already exists, skip it
             console.log('Skipping duplicate finalization - message already exists:', text.substring(0, 50) + '...');
-            // Clear the pending transcription without adding to chat history
+            shouldSkipFinalization = true;
+        }
+        
+        if (shouldSkipFinalization) {
             this.pendingAssistantTranscriptions.delete(agentUserId);
             return;
         }
@@ -479,6 +648,12 @@ class CovSubRenderController {
             agentUserId: finalTranscription.agentUserId,
             data: finalTranscription.transcription
         });
+
+        // Track when we finalize a greeting message (update time when actually added to chat history)
+        // This prevents duplicate finalizations within the time window
+        if (isExactGreetingMatch) {
+            this.lastGreetingMessageTime = Date.now();
+        }
 
         // Clear the pending transcription
         this.pendingAssistantTranscriptions.delete(agentUserId);
