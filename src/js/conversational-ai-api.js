@@ -863,13 +863,13 @@ class ConversationalAIAPI extends EventHelper {
         });
 
         try {
-            // Use correct RTM format: publish to agent rtc uid (8888) with correct options
+            // Use correct RTM format: publish to agent rtc uid with correct options
             const publishOptions = {
                 channelType: "USER",
                 customType: "user.transcription"
             };
-            const result = await rtmEngine.publish("8888", messageStr, publishOptions);
-            console.log('Successfully sent interrupt message to agent RTC UID 8888');
+            const result = await rtmEngine.publish(agentUserId.toString(), messageStr, publishOptions);
+            console.log('Successfully sent interrupt message to agent RTC UID', agentUserId);
             return result;
         } catch (error) {
             console.error('Failed to send interrupt message:', error);
@@ -1117,19 +1117,19 @@ class ConversationalAIAPI extends EventHelper {
         console.log('📤 Preparing to send message:', {
             type: message.messageType,
             data: messageData,
-            agentRtcUid: '8888'
+            agentRtcUid: agentUserId
         });
 
         const messageStr = JSON.stringify(messageData);
 
         try {
-            // Use correct RTM format: publish to agent rtc uid (8888) with correct options
+            // Use correct RTM format: publish to agent rtc uid with correct options
             const publishOptions = {
                 channelType: "USER",
                 customType: message.messageType === "TEXT" ? "user.transcription" : "image.upload"
             };
-            const result = await rtmEngine.publish("8888", messageStr, publishOptions);
-            console.log('✅ Successfully sent', message.messageType, 'message to agent RTC UID 8888:', messageData);
+            const result = await rtmEngine.publish(agentUserId.toString(), messageStr, publishOptions);
+            console.log('✅ Successfully sent', message.messageType, 'message to agent RTC UID', agentUserId, ':', messageData);
             return result;
         } catch (error) {
             console.error('❌ Failed to send message:', error);
