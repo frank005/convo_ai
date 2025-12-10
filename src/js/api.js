@@ -106,9 +106,19 @@ window.AgoraAPI = class AgoraAPI {
         }
     }
 
-    async listAgents(customerId, customerSecret) {
+    async listAgents(customerId, customerSecret, params = {}) {
         const headers = this.getAuthHeaders(customerId, customerSecret);
-        const url = `${this.baseUrl}/projects/${this.appId}/agents`;
+        const queryParams = new URLSearchParams();
+        
+        // Add query parameters if provided
+        if (params.channel) queryParams.append('channel', params.channel);
+        if (params.from_time !== undefined && params.from_time !== null) queryParams.append('from_time', params.from_time);
+        if (params.to_time !== undefined && params.to_time !== null) queryParams.append('to_time', params.to_time);
+        if (params.state !== undefined && params.state !== null && params.state !== '') queryParams.append('state', params.state);
+        if (params.limit) queryParams.append('limit', params.limit);
+        if (params.cursor) queryParams.append('cursor', params.cursor);
+        
+        const url = `${this.baseUrl}/projects/${this.appId}/agents${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
 
         try {
             const response = await fetch(url, {

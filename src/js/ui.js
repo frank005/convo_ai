@@ -8,6 +8,10 @@ window.UI = class UI {
         this.agoraAPI = null;
         this.subtitleManager = null;
         this.params = {};
+        this.lastAgentListCursor = null;
+        this.agentListPageHistory = []; // History of accumulated results for back navigation
+        this.agentListCurrentPageIndex = -1; // Current position in history (-1 = first page)
+        this.agentListCumulativeCount = 0; // Total agents loaded across all pages
     }
 
     initialize(mediaProcessor, agoraAPI, subtitleManager = null) {
@@ -108,6 +112,25 @@ window.UI = class UI {
         const listAgentsBtn = document.getElementById("listAgentsBtn");
         if (listAgentsBtn) {
             listAgentsBtn.addEventListener("click", () => this.listAgents());
+        }
+        const toggleAgentListFilters = document.getElementById("toggleAgentListFilters");
+        if (toggleAgentListFilters) {
+            toggleAgentListFilters.addEventListener("click", () => this.toggleAgentListFilters());
+        }
+        const agentListNextPageBtn = document.getElementById("agentListNextPageBtn");
+        if (agentListNextPageBtn) {
+            agentListNextPageBtn.addEventListener("click", () => this.listAgentsNextPage());
+        }
+        const agentListPrevPageBtn = document.getElementById("agentListPrevPageBtn");
+        if (agentListPrevPageBtn) {
+            agentListPrevPageBtn.addEventListener("click", () => this.listAgentsPrevPage());
+        }
+        
+        // Auto-populate to_time with current time when filters are shown
+        const agentListFilterToTime = document.getElementById("agentListFilterToTime");
+        if (agentListFilterToTime) {
+            // Set current time when the input is first shown
+            this.setCurrentTimeForToTime();
         }
 
         // Device settings
@@ -1522,16 +1545,255 @@ window.UI = class UI {
         }
     }
 
-    async listAgents() {
+    setCurrentTimeForToTime() {
+        const toTimeInput = document.getElementById("agentListFilterToTime");
+        if (toTimeInput && !toTimeInput.value) {
+            // Format current time as datetime-local (YYYY-MM-DDTHH:mm)
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            toTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    }
+
+    toggleAgentListFilters() {
+        const filtersDiv = document.getElementById("agentListFilters");
+        const toggleText = document.getElementById("toggleAgentListFiltersText");
+        if (filtersDiv && toggleText) {
+            const isHidden = filtersDiv.classList.contains("hidden");
+            if (isHidden) {
+                filtersDiv.classList.remove("hidden");
+                toggleText.textContent = "Hide Advanced Filters";
+                // Set current time when filters are shown
+                this.setCurrentTimeForToTime();
+            } else {
+                filtersDiv.classList.add("hidden");
+                toggleText.textContent = "Show Advanced Filters";
+            }
+        }
+    }
+
+    // Convert datetime-local string to Unix timestamp in seconds
+    datetimeLocalToSeconds(datetimeLocal) {
+        if (!datetimeLocal) return null;
+        const date = new Date(datetimeLocal);
+        return Math.floor(date.getTime() / 1000);
+    }
+
+    async listAgents(useCursor = false, useHistoryIndex = null) {
         const output = document.getElementById("queryResponse");
         output.textContent = "Retrieving agents...";
 
+        // Reset pagination state when starting a new search (not using cursor or history)
+        if (!useCursor && useHistoryIndex === null) {
+            const paginationInfo = document.getElementById("agentListPaginationInfo");
+            if (paginationInfo) {
+                paginationInfo.classList.add("hidden");
+            }
+            this.lastAgentListCursor = null;
+            this.agentListPageHistory = [];
+            this.agentListCurrentPageIndex = -1;
+            this.agentListCumulativeCount = 0;
+        }
+
         try {
             const { customerId, customerSecret } = Utils.getStoredCredentials();
-            const data = await this.agoraAPI.listAgents(customerId, customerSecret);
-            output.textContent = JSON.stringify(data, null, 2);
+            
+            // Collect filter parameters
+            const params = {};
+            const channel = document.getElementById("agentListFilterChannel")?.value.trim();
+            const fromTimeInput = document.getElementById("agentListFilterFromTime")?.value;
+            const toTimeInput = document.getElementById("agentListFilterToTime")?.value;
+            const state = document.getElementById("agentListFilterState")?.value;
+            const limit = document.getElementById("agentListFilterLimit")?.value.trim();
+            
+            // Handle back navigation - restore from history without API call
+            if (useHistoryIndex !== null && useHistoryIndex >= 0 && this.agentListPageHistory[useHistoryIndex]) {
+                // Restore from history (no API call needed)
+                const historyEntry = this.agentListPageHistory[useHistoryIndex];
+                output.textContent = JSON.stringify(historyEntry.data, null, 2);
+                this.agentListCumulativeCount = historyEntry.cumulativeCount;
+                this.agentListCurrentPageIndex = useHistoryIndex;
+                // Get the next cursor from the history entry's meta for forward navigation
+                const nextCursor = historyEntry.data.meta?.cursor || '';
+                this.lastAgentListCursor = nextCursor;
+                // Calculate current page info for display
+                const limit = parseInt(document.getElementById("agentListFilterLimit")?.value || "20", 10);
+                const currentPageStart = useHistoryIndex * limit + 1;
+                const currentPageEnd = historyEntry.cumulativeCount;
+                const currentPageCount = historyEntry.cumulativeCount - (useHistoryIndex > 0 ? this.agentListPageHistory[useHistoryIndex - 1].cumulativeCount : 0);
+                this.updateAgentListPagination(historyEntry.data, useHistoryIndex > 0, nextCursor, currentPageCount, currentPageStart, currentPageEnd);
+                return; // Exit early - no API call needed
+            }
+            
+            // Get cursor from stored value (for next page navigation)
+            let cursor = null;
+            if (useCursor && this.lastAgentListCursor) {
+                // Use stored cursor for next page
+                cursor = this.lastAgentListCursor;
+            }
+            
+            if (channel) params.channel = channel;
+            if (fromTimeInput) {
+                params.from_time = this.datetimeLocalToSeconds(fromTimeInput);
+            }
+            if (toTimeInput) {
+                params.to_time = this.datetimeLocalToSeconds(toTimeInput);
+            }
+            if (state !== undefined && state !== '') params.state = state;
+            if (limit) params.limit = parseInt(limit, 10);
+            if (cursor) params.cursor = cursor;
+            
+            const data = await this.agoraAPI.listAgents(customerId, customerSecret, params);
+            
+            // Handle results accumulation and history
+            if (useCursor) {
+                // Append to existing results (next page)
+                const previousData = this.agentListPageHistory.length > 0 
+                    ? this.agentListPageHistory[this.agentListPageHistory.length - 1].data
+                    : { data: { list: [] } };
+                
+                if (data.data && data.data.list) {
+                    const accumulatedData = JSON.parse(JSON.stringify(previousData)); // Deep copy
+                    accumulatedData.data.list = accumulatedData.data.list.concat(data.data.list);
+                    accumulatedData.data.count = accumulatedData.data.list.length;
+                    accumulatedData.meta = data.meta;
+                    accumulatedData.status = data.status;
+                    
+                    // Save to history
+                    this.agentListPageHistory.push({
+                        data: JSON.parse(JSON.stringify(accumulatedData)), // Deep copy
+                        cursor: data.meta?.cursor || '',
+                        cumulativeCount: accumulatedData.data.list.length
+                    });
+                    
+                    output.textContent = JSON.stringify(accumulatedData, null, 2);
+                    this.agentListCumulativeCount = accumulatedData.data.list.length;
+                    this.agentListCurrentPageIndex = this.agentListPageHistory.length - 1;
+                    // Calculate current page info
+                    const limit = parseInt(document.getElementById("agentListFilterLimit")?.value || "20", 10);
+                    const previousCount = this.agentListPageHistory.length > 1 
+                        ? this.agentListPageHistory[this.agentListPageHistory.length - 2].cumulativeCount 
+                        : 0;
+                    const currentPageStart = previousCount + 1;
+                    const currentPageEnd = accumulatedData.data.list.length;
+                    const currentPageCount = data.data.count || 0;
+                    this.updateAgentListPagination(data, true, data.meta?.cursor || '', currentPageCount, currentPageStart, currentPageEnd);
+                } else {
+                    output.textContent = JSON.stringify(data, null, 2);
+                    this.updateAgentListPagination(data, true, data.meta?.cursor || '');
+                }
+            } else {
+                // New search - start fresh
+                output.textContent = JSON.stringify(data, null, 2);
+                this.agentListPageHistory = [{
+                    data: JSON.parse(JSON.stringify(data)), // Deep copy
+                    cursor: data.meta?.cursor || '',
+                    cumulativeCount: data.data?.count || 0
+                }];
+                this.agentListCurrentPageIndex = 0;
+                this.agentListCumulativeCount = data.data?.count || 0;
+                // Calculate current page info for first page
+                const limit = parseInt(document.getElementById("agentListFilterLimit")?.value || "20", 10);
+                const currentPageStart = 1;
+                const currentPageEnd = data.data?.count || 0;
+                const currentPageCount = data.data?.count || 0;
+                this.updateAgentListPagination(data, false, data.meta?.cursor || '', currentPageCount, currentPageStart, currentPageEnd);
+            }
         } catch (error) {
             output.textContent = `Error: ${error.message}`;
+            // Hide pagination on error
+            const paginationInfo = document.getElementById("agentListPaginationInfo");
+            if (paginationInfo) {
+                paginationInfo.classList.add("hidden");
+            }
+        }
+    }
+
+    async listAgentsNextPage() {
+        // If we're in the middle of history (not at the latest page), we need to continue from current position
+        if (this.agentListCurrentPageIndex >= 0 && 
+            this.agentListCurrentPageIndex < this.agentListPageHistory.length - 1) {
+            // We're not at the latest page - go forward in history
+            const nextIndex = this.agentListCurrentPageIndex + 1;
+            await this.listAgents(false, nextIndex);
+        } else if (this.lastAgentListCursor) {
+            // We're at the latest page - fetch next page from API
+            await this.listAgents(true);
+        }
+    }
+
+    async listAgentsPrevPage() {
+        if (this.agentListCurrentPageIndex > 0) {
+            // Go back one page in history
+            const prevIndex = this.agentListCurrentPageIndex - 1;
+            await this.listAgents(false, prevIndex);
+        }
+    }
+
+    updateAgentListPagination(data, isPaginating = false, nextCursor = null, currentPageCount = null, pageStart = null, pageEnd = null) {
+        const paginationInfo = document.getElementById("agentListPaginationInfo");
+        const currentCountEl = document.getElementById("agentListCurrentCount");
+        const totalCountEl = document.getElementById("agentListTotalCount");
+        const limitDisplayEl = document.getElementById("agentListLimitDisplay");
+        const cursorInfoEl = document.getElementById("agentListCursorInfo");
+        const nextPageBtn = document.getElementById("agentListNextPageBtn");
+        const prevPageBtn = document.getElementById("agentListPrevPageBtn");
+        
+        if (!paginationInfo || !data || !data.data) {
+            if (paginationInfo) paginationInfo.classList.add("hidden");
+            return;
+        }
+        
+        const count = data.data.count || 0;
+        const total = data.meta?.total || 0;
+        const cursor = nextCursor !== null ? nextCursor : (data.meta?.cursor || '');
+        const limit = parseInt(document.getElementById("agentListFilterLimit")?.value || "20", 10);
+        
+        // Store cursor for next page
+        this.lastAgentListCursor = cursor;
+        
+        // Update display - show current page range if provided, otherwise show cumulative
+        if (currentCountEl) {
+            if (pageStart !== null && pageEnd !== null && currentPageCount !== null) {
+                // Show current page info: "Showing 1-20 of 111"
+                currentCountEl.textContent = `${pageStart}-${pageEnd}`;
+            } else {
+                // Show cumulative count
+                currentCountEl.textContent = this.agentListCumulativeCount;
+            }
+        }
+        if (totalCountEl) totalCountEl.textContent = total;
+        if (limitDisplayEl) limitDisplayEl.textContent = limit;
+        
+        if (cursorInfoEl) {
+            if (cursor) {
+                cursorInfoEl.textContent = `Next cursor: ${cursor.substring(0, 20)}...`;
+            } else {
+                cursorInfoEl.textContent = "No more pages";
+            }
+        }
+        
+        // Update next page button
+        if (nextPageBtn) {
+            nextPageBtn.disabled = !cursor;
+            nextPageBtn.textContent = cursor ? "Next Page" : "No More Pages";
+        }
+        
+        // Update previous page button
+        if (prevPageBtn) {
+            const canGoBack = this.agentListCurrentPageIndex > 0;
+            prevPageBtn.disabled = !canGoBack;
+        }
+        
+        // Show pagination info if we have results
+        if (this.agentListCumulativeCount > 0 || total > 0) {
+            paginationInfo.classList.remove("hidden");
+        } else {
+            paginationInfo.classList.add("hidden");
         }
     }
 

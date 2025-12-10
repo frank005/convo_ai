@@ -268,28 +268,125 @@
                           </button>
                           <div class="tooltip">Retrieve the conversation history between the user and the Conversational AI agent while the agent is running. Shows messages with role (user/assistant) and content.</div>
                         </div>
+
+                        <div class="has-tooltip relative">
+                          <button
+                            id="toggleAgentListFilters"
+                            class="w-full text-xs text-gray-400 hover:text-gray-300 underline focus:outline-none text-left p-2"
+                            type="button"
+                          >
+                            <span id="toggleAgentListFiltersText">Show Advanced Filters</span>
+                          </button>
+                          <div class="tooltip">Advanced filters only apply to "Retrieve Agent List". Fill only the fields you need - all fields are optional.</div>
+                        </div>
                       </div>
 
-                      <div class="relative mt-4">
-                        <button
-                          id="copyQueryResponseBtn"
-                          class="absolute top-2 right-2 bg-transparent hover:bg-gray-600 rounded p-0.5 focus:outline-none"
-                          title="Copy response"
-                          style="z-index:10;width:24px;height:24px;display:flex;align-items:center;justify-content:center;"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <rect x="9" y="9" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
-                            <rect x="3" y="3" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
-                          </svg>
-                        </button>
-                        <span id="copyQueryResponseMsg" class="absolute top-2 right-10 text-green-400 text-xs hidden" style="z-index:10;">Copied!</span>
-                        <pre
-                          id="queryResponse"
-                          class="p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto"
-                        ></pre>
-            </div>
-          </div>
-          </div>
+                      <!-- Advanced Filters Panel - Below Buttons -->
+                      <div>
+                        <div id="agentListFilters" class="hidden mt-2 p-3 bg-gray-800 rounded border border-gray-600">
+                          <div class="text-xs text-gray-500 mb-3 italic">All fields are optional - fill only what you need</div>
+                          <div class="grid grid-cols-2 gap-4">
+                            <div>
+                              <label class="block text-xs text-gray-400 mb-1">From Date/Time</label>
+                              <input
+                                id="agentListFilterFromTime"
+                                type="datetime-local"
+                                class="w-full p-2 rounded bg-gray-700 text-white text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label class="block text-xs text-gray-400 mb-1">To Date/Time</label>
+                              <input
+                                id="agentListFilterToTime"
+                                type="datetime-local"
+                                class="w-full p-2 rounded bg-gray-700 text-white text-sm"
+                              />
+                              <span class="text-xs text-gray-500 mt-1 block">(auto-filled with current time)</span>
+                            </div>
+                            <div>
+                              <label class="block text-xs text-gray-400 mb-1">Channel</label>
+                              <input
+                                id="agentListFilterChannel"
+                                type="text"
+                                class="w-full p-2 rounded bg-gray-700 text-white text-sm"
+                                placeholder="Filter by channel"
+                              />
+                            </div>
+                            <div>
+                              <label class="block text-xs text-gray-400 mb-1">State</label>
+                              <select
+                                id="agentListFilterState"
+                                class="w-full p-2 rounded bg-gray-700 text-white text-sm"
+                              >
+                                <option value="">All States</option>
+                                <option value="0">IDLE</option>
+                                <option value="1">STARTING</option>
+                                <option value="2" selected>RUNNING</option>
+                                <option value="3">STOPPING</option>
+                                <option value="4">STOPPED</option>
+                                <option value="5">RECOVERING</option>
+                                <option value="6">FAILED</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label class="block text-xs text-gray-400 mb-1">Limit per page (max 20)</label>
+                              <input
+                                id="agentListFilterLimit"
+                                type="number"
+                                class="w-full p-2 rounded bg-gray-700 text-white text-sm"
+                                placeholder="20"
+                                value="20"
+                                min="1"
+                                max="20"
+                              />
+                            </div>
+                          </div>
+                          <div id="agentListPaginationInfo" class="hidden text-xs text-gray-400 space-y-1 pt-4 mt-4 border-t border-gray-600">
+                            <div>Showing <span id="agentListCurrentCount">0</span> of <span id="agentListTotalCount">0</span> agents (limit: <span id="agentListLimitDisplay">20</span> per page)</div>
+                            <div id="agentListCursorInfo" class="text-gray-500"></div>
+                            <div class="grid grid-cols-2 gap-2 mt-2">
+                              <button
+                                id="agentListPrevPageBtn"
+                                class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                type="button"
+                                disabled
+                              >
+                                Previous Page
+                              </button>
+                              <button
+                                id="agentListNextPageBtn"
+                                class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                type="button"
+                                disabled
+                              >
+                                Next Page
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Response Box - Full Width Below Everything -->
+                    <div class="relative mt-4">
+                      <button
+                        id="copyQueryResponseBtn"
+                        class="absolute top-2 right-2 bg-transparent hover:bg-gray-600 rounded p-0.5 focus:outline-none"
+                        title="Copy response"
+                        style="z-index:10;width:24px;height:24px;display:flex;align-items:center;justify-content:center;"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <rect x="9" y="9" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                          <rect x="3" y="3" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                      </button>
+                      <span id="copyQueryResponseMsg" class="absolute top-2 right-10 text-green-400 text-xs hidden" style="z-index:10;">Copied!</span>
+                      <pre
+                        id="queryResponse"
+                        class="p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto"
+                      >                      </pre>
+                    </div>
+                  </div>
 
                   <!-- Phone Number Management (Combined) -->
                   <div class="w-full p-4 bg-gray-700 rounded-lg sip-phone-section" style="display: none;">
