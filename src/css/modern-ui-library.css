@@ -260,7 +260,7 @@ dialog button {
   border-radius: 0.625rem;
   margin-top: 0.125rem;
   font-size: 0.875rem;
-  transition: all 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
   backdrop-filter: blur(10px);
 }
 
@@ -389,6 +389,43 @@ dialog button {
 .modern-input input[type="password"]::placeholder,
 .modern-input input[type="email"]::placeholder {
   color: #64748b;
+}
+
+/* Override browser autocomplete/autofill styling - prevents white background when selecting from history */
+/* This must come AFTER the base input styles and use higher specificity */
+.modern-input input[type="text"]:-webkit-autofill,
+.modern-input input[type="text"]:-webkit-autofill:hover,
+.modern-input input[type="text"]:-webkit-autofill:focus,
+.modern-input input[type="text"]:-webkit-autofill:active,
+.modern-input input:not([type]):-webkit-autofill,
+.modern-input input:not([type]):-webkit-autofill:hover,
+.modern-input input:not([type]):-webkit-autofill:focus,
+.modern-input input:not([type]):-webkit-autofill:active,
+.modern-input input[type="email"]:-webkit-autofill,
+.modern-input input[type="email"]:-webkit-autofill:hover,
+.modern-input input[type="email"]:-webkit-autofill:focus,
+.modern-input input[type="email"]:-webkit-autofill:active,
+.modern-input input[type="password"]:-webkit-autofill,
+.modern-input input[type="password"]:-webkit-autofill:hover,
+.modern-input input[type="password"]:-webkit-autofill:focus,
+.modern-input input[type="password"]:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px rgba(30, 41, 59, 0.6) inset !important;
+  -webkit-text-fill-color: white !important;
+  background-color: rgba(30, 41, 59, 0.6) !important;
+  background: rgba(30, 41, 59, 0.6) !important;
+  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+  box-shadow: 0 0 0 1000px rgba(30, 41, 59, 0.6) inset !important;
+  color: white !important;
+  transition: background-color 5000s ease-in-out 0s, border-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+/* Ensure autofill doesn't change input size */
+.modern-input input:-webkit-autofill {
+  width: 100% !important;
+  padding: 0.5rem 0.75rem !important;
+  box-sizing: border-box !important;
+  margin-top: 0.125rem !important;
 }
 
 /* Global input enhancements (non-breaking) - only visual improvements */

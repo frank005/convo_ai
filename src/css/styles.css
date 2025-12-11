@@ -990,6 +990,7 @@ select:focus, .drawer select:focus {
   background: rgba(30, 41, 59, 0.8) !important;
 }
 
+
 .drawer label {
   display: block;
   margin-bottom: 0.5rem;
@@ -1029,6 +1030,41 @@ input[type="checkbox"]:disabled + span {
 
 input[type="checkbox"]:disabled {
   cursor: not-allowed;
+}
+
+/* Override browser autocomplete/autofill styling for drawer inputs - prevents white background when selecting from history */
+.drawer input[type="text"]:-webkit-autofill,
+.drawer input[type="text"]:-webkit-autofill:hover,
+.drawer input[type="text"]:-webkit-autofill:focus,
+.drawer input[type="text"]:-webkit-autofill:active,
+.drawer input:not([type]):-webkit-autofill,
+.drawer input:not([type]):-webkit-autofill:hover,
+.drawer input:not([type]):-webkit-autofill:focus,
+.drawer input:not([type]):-webkit-autofill:active,
+.drawer input[type="email"]:-webkit-autofill,
+.drawer input[type="email"]:-webkit-autofill:hover,
+.drawer input[type="email"]:-webkit-autofill:focus,
+.drawer input[type="email"]:-webkit-autofill:active,
+.drawer input[type="password"]:-webkit-autofill,
+.drawer input[type="password"]:-webkit-autofill:hover,
+.drawer input[type="password"]:-webkit-autofill:focus,
+.drawer input[type="password"]:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px rgba(30, 41, 59, 0.6) inset !important;
+  -webkit-text-fill-color: white !important;
+  background-color: rgba(30, 41, 59, 0.6) !important;
+  background: rgba(30, 41, 59, 0.6) !important;
+  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+  box-shadow: 0 0 0 1000px rgba(30, 41, 59, 0.6) inset !important;
+  color: white !important;
+  transition: background-color 5000s ease-in-out 0s, border-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+/* Ensure autofill doesn't change input size in drawers */
+.drawer input:-webkit-autofill {
+  width: 100% !important;
+  padding: 0.5rem 0.75rem !important;
+  box-sizing: border-box !important;
 }
 
 /* Force two-column layout for debugging */

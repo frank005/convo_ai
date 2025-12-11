@@ -10,6 +10,44 @@
   <script src="src/lib/microsoftVoicesByLang.js"></script>
   <link rel="stylesheet" href="src/css/styles.css?v=1.3">
   <link rel="stylesheet" href="src/css/modern-ui-library.css">
+  <!-- Critical autofill fix - must be inline and load early to override browser autofill styles -->
+  <!-- This is a known browser issue: autofill styles are applied with very high specificity at runtime -->
+  <!-- The box-shadow trick is the ONLY reliable way to override browser autofill -->
+  <style>
+    /* Universal autofill override - applies to ALL inputs regardless of class or type */
+    /* Using maximum specificity and the box-shadow trick */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active,
+    input:-webkit-autofill:visited,
+    input:-webkit-autofill:checked {
+      -webkit-box-shadow: 0 0 0 1000px rgba(30, 41, 59, 0.6) inset !important;
+      box-shadow: 0 0 0 1000px rgba(30, 41, 59, 0.6) inset !important;
+      -webkit-text-fill-color: #ffffff !important;
+      color: #ffffff !important;
+      background-color: rgba(30, 41, 59, 0.6) !important;
+      background: rgba(30, 41, 59, 0.6) !important;
+      border: 1px solid rgba(148, 163, 184, 0.2) !important;
+      border-color: rgba(148, 163, 184, 0.2) !important;
+      /* Long transition prevents browser from reverting the background */
+      transition: background-color 5000s ease-in-out 0s, border-color 0.3s ease, box-shadow 0.3s ease !important;
+      /* Force box-sizing to prevent size changes */
+      box-sizing: border-box !important;
+    }
+    
+    /* Additional specificity for inputs with classes */
+    .modern-input input:-webkit-autofill,
+    .drawer input:-webkit-autofill,
+    input.modern-input:-webkit-autofill {
+      -webkit-box-shadow: 0 0 0 1000px rgba(30, 41, 59, 0.6) inset !important;
+      box-shadow: 0 0 0 1000px rgba(30, 41, 59, 0.6) inset !important;
+      -webkit-text-fill-color: #ffffff !important;
+      color: #ffffff !important;
+      background-color: rgba(30, 41, 59, 0.6) !important;
+      background: rgba(30, 41, 59, 0.6) !important;
+    }
+  </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen py-10 px-4">
   <div class="max-w-6xl mx-auto">
