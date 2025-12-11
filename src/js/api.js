@@ -173,11 +173,18 @@ window.AgoraAPI = class AgoraAPI {
                 const conversationalAI = window.ConversationalAIAPI.getInstance();
                 if (conversationalAI && conversationalAI.isReady()) {
                     console.log('Using Conversational AI toolkit interrupt method');
-                    await conversationalAI.interrupt(agentId);
+                    // Get agent RTC UID from UI instead of using agent ID
+                    const agoraRtcUidElement = document.getElementById('agoraRtcUid');
+                    const agentRtcUid = agoraRtcUidElement ? agoraRtcUidElement.value.trim() : null;
+                    if (!agentRtcUid) {
+                        throw new Error('Agent RTC UID is required. Please enter it in the Agent RTC UID field.');
+                    }
+                    await conversationalAI.interrupt(agentRtcUid);
                     return { 
                         success: true, 
                         method: 'conversational-ai-toolkit',
                         agent_id: agentId,
+                        agent_rtc_uid: agentRtcUid,
                         timestamp: Date.now()
                     };
                 }

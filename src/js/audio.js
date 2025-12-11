@@ -388,8 +388,13 @@ window.MediaProcessor = class MediaProcessor {
         if (!this.subtitleManager || !this.subtitleManager.isDataStreamMode) return;
 
         try {
-            // Get the agent UID from the agent ID or use a default
-            const agentUid = agentId || '8888'; // Default agent UID
+            // Get the agent RTC UID from the UI
+            const agoraRtcUidElement = document.getElementById('agoraRtcUid');
+            const agentUid = agoraRtcUidElement ? agoraRtcUidElement.value.trim() : null;
+            if (!agentUid) {
+                console.warn('Agent RTC UID not found in UI, data stream subtitles may not work correctly');
+                return;
+            }
             
             console.log('Initializing data stream subtitle handling for agent:', agentUid);
             

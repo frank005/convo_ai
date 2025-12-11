@@ -9,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/agora-rtm-sdk@2.2.2/agora-rtm.js"></script>
   <script src="src/lib/microsoftVoicesByLang.js"></script>
   <link rel="stylesheet" href="src/css/styles.css?v=1.3">
+  <link rel="stylesheet" href="src/css/modern-ui-library.css">
 </head>
 <body class="bg-gray-900 text-white min-h-screen py-10 px-4">
   <div class="max-w-6xl mx-auto">
@@ -16,19 +17,19 @@
     <div class="mb-6 flex items-center space-x-2">
       <button
         id="setCredsBtn"
-        class="bg-gray-600 hover:bg-gray-700 p-2 rounded font-bold"
+        class="modern-btn modern-btn-secondary"
       >
         Set API Credentials
       </button>
       <button
         id="agentSettingsBtn"
-        class="bg-gray-600 hover:bg-gray-700 p-2 rounded font-bold"
+        class="modern-btn modern-btn-secondary"
       >
         Agent Settings
       </button>
       <button
         id="deviceSettingsBtn"
-        class="bg-gray-600 hover:bg-gray-700 p-2 rounded font-bold"
+        class="modern-btn modern-btn-secondary"
       >
         Device Settings
       </button>
@@ -39,14 +40,14 @@
     <div class="mb-6 flex gap-2">
       <button
         id="createAgentBtn"
-        class="bg-green-600 hover:bg-green-700 p-2 rounded font-bold"
+        class="modern-btn modern-btn-success"
       >
         Create Agent
     </button>
       <div class="has-tooltip relative">
         <button
           id="copyCreateJson"
-          class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+          class="modern-btn modern-btn-primary modern-btn-icon"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8m2 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2z"></path>
@@ -56,14 +57,14 @@
       </div>
       <button
         id="updateAgentBtn"
-        class="bg-yellow-600 hover:bg-yellow-700 p-2 rounded font-bold"
+        class="modern-btn modern-btn-warning"
       >
         Update Agent
       </button>
       <div class="has-tooltip relative">
         <button
           id="copyUpdateJson"
-          class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+          class="modern-btn modern-btn-primary modern-btn-icon"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8m2 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2z"></path>
@@ -73,7 +74,7 @@
       </div>
       <button
         id="stopAgentBtn"
-        class="bg-red-600 hover:bg-red-700 p-2 rounded font-bold"
+        class="modern-btn modern-btn-danger"
       >
         Stop Agent
       </button>
@@ -107,10 +108,10 @@
 
       <!-- Channel controls with mic button -->
       <div class="flex items-center gap-2 mt-4">
-        <button id="joinChannel" class="flex-1 px-3 py-2 bg-cyan-500 text-gray-900 rounded disabled:opacity-50 disabled:pointer-events-none hover:bg-cyan-400">
+        <button id="joinChannel" class="modern-btn modern-btn-primary flex-1">
           Join Channel
         </button>
-        <button id="toggleMicBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-2 rounded flex items-center justify-center flex-shrink-0" title="Mute Microphone">
+        <button id="toggleMicBtn" class="modern-btn modern-btn-secondary modern-btn-icon" title="Mute Microphone">
           <svg class="w-4 h-4 mic-icon" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0019 10a1 1 0 10-2 0A5 5 0 015 10a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd"></path>
           </svg>
@@ -119,7 +120,7 @@
             <path d="M3.707 2.293L16.293 17.707" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
           </svg>
         </button>
-        <button id="toggleCameraBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-2 rounded flex items-center justify-center flex-shrink-0 hidden" title="Mute Camera">
+        <button id="toggleCameraBtn" class="modern-btn modern-btn-secondary modern-btn-icon hidden" title="Mute Camera">
           <svg class="w-4 h-4 camera-icon" fill="currentColor" viewBox="0 0 20 20">
             <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/>
             <path d="M15 7a1 1 0 011 1v4a1 1 0 01-1 1h-1a1 1 0 01-1-1V8a1 1 0 011-1h1z"/>
@@ -130,17 +131,16 @@
             <path d="M3.707 2.293L16.293 17.707" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
           </svg>
         </button>
-        <button id="leaveChannel" class="flex-1 px-3 py-2 bg-cyan-500 text-gray-900 rounded hover:bg-cyan-400 disabled:opacity-50 disabled:pointer-events-none" disabled>
+        <button id="leaveChannel" class="modern-btn modern-btn-primary flex-1" disabled>
           Leave Channel
         </button>
       </div>
 
       <!-- Client UID and Token on same line -->
       <div class="flex gap-2 mt-4">
-        <div class="flex-1 has-tooltip relative">
+        <div class="modern-input flex-1 has-tooltip relative">
         <input
           id="clientRtcUid"
-            class="w-full px-3 py-2 rounded bg-gray-700 text-white"
           placeholder="Client UID (if token required)"
         />
         <div class="tooltip">Your unique identifier in the Agora channel. Required when using tokens or AI Avatar.</div>
@@ -151,11 +151,10 @@
           Note: Remote RTC UIDs have been automatically set to match your Client RTC UID.
       </div>
       </div>
-        <div class="flex-1 has-tooltip relative">
+        <div class="modern-input flex-1 has-tooltip relative">
       <input
         id="clientRtcToken"
-            class="w-full px-3 py-2 rounded bg-gray-700 text-white"
-            placeholder="Agora token (if token required)"
+        placeholder="Agora token (if token required)"
       />
         <div class="tooltip">Authentication token for Agora RTC. Required if your project has token authentication enabled.</div>
         </div>
@@ -171,7 +170,7 @@
 
         <div class="space-y-3">
                     <div class="flex space-x-2 has-tooltip relative">
-            <button id="toggleSubtitleOverlay" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50" disabled>
+            <button id="toggleSubtitleOverlay" class="modern-btn modern-btn-primary text-sm" disabled>
               Show Overlay
             </button>
             <div class="tooltip">Toggle the subtitle overlay to show real-time transcription of the conversation</div>
@@ -210,10 +209,10 @@
               <div class="tooltip">Real-time conversation history between you and the AI agent. Messages are displayed as they occur.</div>
             </div>
             <div class="space-x-2 has-tooltip relative">
-              <button id="copyChatBtn" class="px-2 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-500">
+              <button id="copyChatBtn" class="modern-btn modern-btn-secondary text-xs">
                 Copy
               </button>
-              <button id="clearChatBtn" class="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-500">
+              <button id="clearChatBtn" class="modern-btn modern-btn-danger text-xs">
                 Clear
               </button>
               <div class="tooltip">Copy or clear the chat history. Copy saves the conversation to clipboard, Clear removes all messages.</div>
@@ -242,7 +241,7 @@
                         <div class="has-tooltip relative">
         <button
                             id="queryAgentBtn"
-                            class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+                            class="modern-btn modern-btn-primary w-full text-sm"
         >
                             Query Agent Status
         </button>
@@ -252,7 +251,7 @@
                         <div class="has-tooltip relative">
         <button
                             id="listAgentsBtn"
-                            class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+                            class="modern-btn modern-btn-primary w-full text-sm"
         >
                             Retrieve Agent List
         </button>
@@ -262,7 +261,7 @@
                         <div class="has-tooltip relative">
                           <button
                             id="getAgentHistoryBtn"
-                            class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+                            class="modern-btn modern-btn-primary w-full text-sm"
                           >
                             Retrieve Agent History
                           </button>
@@ -347,7 +346,7 @@
                             <div class="grid grid-cols-2 gap-2 mt-2">
                               <button
                                 id="agentListPrevPageBtn"
-                                class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                class="modern-btn modern-btn-secondary text-sm"
                                 type="button"
                                 disabled
                               >
@@ -355,7 +354,7 @@
                               </button>
                               <button
                                 id="agentListNextPageBtn"
-                                class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                class="modern-btn modern-btn-secondary text-sm"
                                 type="button"
                                 disabled
                               >
@@ -521,14 +520,14 @@
                         <div class="flex gap-1 items-stretch">
                           <button
                             id="importPhoneNumberBtn"
-                            class="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold"
+                            class="modern-btn modern-btn-success flex-1 text-sm"
                           >
                             Import Number
                           </button>
                           <div class="has-tooltip relative flex items-center">
                             <button
                               id="copyImportPhoneJson"
-                              class="bg-blue-600 hover:bg-blue-700 px-2 py-2 rounded font-bold text-sm h-full flex items-center justify-center"
+                              class="modern-btn modern-btn-primary modern-btn-icon"
                               style="min-width: 40px;"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -540,21 +539,21 @@
                         </div>
                         <button
                           id="getPhoneInfoBtn"
-                          class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-bold"
+                          class="modern-btn modern-btn-primary w-full text-sm"
                         >
                           Retrieve Number Info
                         </button>
                         <div class="flex gap-1 items-stretch">
                           <button
                             id="updatePhoneNumberBtn"
-                            class="flex-1 px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm font-bold"
+                            class="modern-btn modern-btn-warning flex-1 text-sm"
                           >
                             Update Number Config
                           </button>
                           <div class="has-tooltip relative flex items-center">
                             <button
                               id="copyUpdatePhoneJson"
-                              class="bg-blue-600 hover:bg-blue-700 px-2 py-2 rounded font-bold text-sm h-full flex items-center justify-center"
+                              class="modern-btn modern-btn-primary modern-btn-icon"
                               style="min-width: 40px;"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -566,7 +565,7 @@
                         </div>
                         <button
                           id="deletePhoneNumberBtn"
-                          class="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-bold"
+                          class="modern-btn modern-btn-danger w-full text-sm"
                         >
                           Delete Number
                         </button>
@@ -599,7 +598,7 @@
                     <div class="space-y-2">
                       <button
                         id="listPhoneNumbersBtn"
-                        class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-bold"
+                        class="modern-btn modern-btn-primary w-full text-sm"
                       >
                         Retrieve Number List
                       </button>
@@ -632,29 +631,29 @@
             <h3 class="text-sm font-semibold mb-3 text-gray-300">Send Messages</h3>
             <div class="space-y-2">
               <div class="flex items-center gap-2">
-                <div class="flex-grow has-tooltip relative">
-                  <input type="text" id="messageInput" placeholder="Type a message..." class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm disabled:opacity-50 disabled:bg-gray-700" disabled>
+                <div class="modern-input flex-grow has-tooltip relative">
+                  <input type="text" id="messageInput" placeholder="Type a message..." class="text-sm" disabled>
                   <div class="tooltip">Type a text message to send to the agent. Press Enter or click Send to submit. Disabled when RTM is not enabled.</div>
                 </div>
-                <button id="sendTextBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm disabled:opacity-50 disabled:pointer-events-none" disabled title="Text messages disabled when RTM is not enabled">
+                <button id="sendTextBtn" class="modern-btn modern-btn-secondary modern-btn-icon" disabled title="Text messages disabled when RTM is not enabled">
                   <span class="material-icons text-sm">send</span>
           </button>
                   </div>
               <div class="flex items-center gap-2">
-                <div class="flex-grow has-tooltip relative">
-                  <input type="text" id="imageUrlInput" placeholder="Enter image URL..." class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm disabled:opacity-50 disabled:bg-gray-700" disabled>
+                <div class="modern-input flex-grow has-tooltip relative">
+                  <input type="text" id="imageUrlInput" placeholder="Enter image URL..." class="text-sm" disabled>
                   <div class="tooltip">Enter a URL to an image to send to the agent for analysis. Press Enter or click Send to submit. Disabled when camera is active.</div>
                 </div>
-                <button id="sendImageBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm flex items-center disabled:opacity-50 disabled:pointer-events-none" disabled title="Image upload disabled when camera is active">
+                <button id="sendImageBtn" class="modern-btn modern-btn-secondary modern-btn-icon flex items-center" disabled title="Image upload disabled when camera is active">
                   <span class="material-icons text-sm">send</span>
                 </button>
                   </div>
               <div class="flex items-center gap-2">
-                <div class="flex-grow has-tooltip relative">
-                  <input type="file" id="imageFileInput" accept="image/*" class="w-full bg-gray-800 text-white px-2 py-1 rounded text-sm file:bg-gray-700 file:text-white file:border-0 file:rounded file:px-2 file:py-1 file:mr-2 disabled:opacity-50 disabled:bg-gray-700" disabled>
+                <div class="modern-input flex-grow has-tooltip relative">
+                  <input type="file" id="imageFileInput" accept="image/*" class="text-sm" disabled>
                   <div class="tooltip">Upload an image file to send to the agent for analysis. The image will be converted to base64. Disabled when camera is active.</div>
                   </div>
-                <button id="sendImageFileBtn" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 rounded text-sm flex items-center disabled:opacity-50 disabled:pointer-events-none" disabled title="Image upload disabled when camera is active">
+                <button id="sendImageFileBtn" class="modern-btn modern-btn-secondary modern-btn-icon flex items-center" disabled title="Image upload disabled when camera is active">
                   <span class="material-icons text-sm">upload</span>
                 </button>
               </div>
@@ -692,13 +691,14 @@
               </div>
             <button
               id="sendBroadcastBtn"
-              class="mt-2 px-3 py-2 bg-cyan-500 text-gray-900 rounded disabled:opacity-50 disabled:pointer-events-none hover:bg-cyan-400 w-full font-bold"
+              class="modern-btn modern-btn-primary mt-2 w-full"
+              disabled
             >
               Send Msg
             </button>
             <button
                id="interruptAgentBtn"
-               class="mt-2 px-3 py-2 bg-red-600 text-white rounded font-bold w-full hover:bg-red-500"
+               class="modern-btn modern-btn-danger mt-2 w-full"
             >
                Interrupt Agent
             </button>
@@ -709,7 +709,7 @@
           <div class="mb-4 has-tooltip relative">
             <button
               id="toggleSipPhoneManagementBtn"
-              class="w-full px-4 py-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold text-sm flex items-center justify-between"
+              class="modern-btn modern-btn-purple w-full text-sm flex items-center justify-between"
             >
               <span>SIP Calling and Phone Number Management</span>
               <span id="toggleSipPhoneManagementIcon" class="ml-2">▼</span>
@@ -776,14 +776,14 @@
               <div class="flex gap-2 items-center">
                 <button
                   id="startOutboundCallBtn"
-                  class="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold"
+                  class="modern-btn modern-btn-success flex-1 text-sm"
                 >
                   Initiate Outbound Call
                 </button>
                 <div class="has-tooltip relative">
                   <button
                     id="copyOutboundCallJson"
-                    class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm"
+                    class="modern-btn modern-btn-primary modern-btn-icon"
                     title="Copy Outbound Call JSON"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -794,7 +794,7 @@
                 </div>
                 <button
                   id="hangUpCallBtn"
-                  class="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-bold"
+                  class="modern-btn modern-btn-danger flex-1 text-sm"
                 >
                   Hang-up Call
                 </button>
@@ -810,7 +810,7 @@
             <div class="space-y-2">
             <button
                 id="checkCallStatusBtn"
-                class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-bold"
+                class="modern-btn modern-btn-primary w-full text-sm"
             >
                 Retrieve Call Status
             </button>
@@ -904,7 +904,7 @@
               </div>
           <button
                 id="getCallHistoryBtn"
-                class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-bold"
+                class="modern-btn modern-btn-primary w-full text-sm"
           >
                 Retrieve Call Records
           </button>
@@ -943,36 +943,35 @@
     class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
 
   >
-    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-sm">
+    <div class="modern-card w-full max-w-sm">
       <h2 class="text-lg font-bold mb-4">API Credentials</h2>
-      <div class="has-tooltip relative">
-        <input
-          id="customerId"
-          class="w-full p-2 mb-2 rounded bg-gray-700 text-white"
-          placeholder="Customer ID (Required)"
-        />
-        <div class="tooltip">Your customer ID for RESTful API authentication</div>
-      </div>
-      <div class="has-tooltip relative">
-        <input
-          id="customerSecret"
-          class="w-full p-2 mb-2 rounded bg-gray-700 text-white"
-          placeholder="Customer Secret (Required)"
-          type="password"
-        />
-        <div class="tooltip">Your customer secret for RESTful API authentication</div>
-      </div>
-      <div class="has-tooltip relative">
-        <input
-          id="appId"
-          class="w-full p-2 mb-4 rounded bg-gray-700 text-white"
-          placeholder="App ID (Required)"
-        />
-        <div class="tooltip">Your AppID from the projects section of the console</div>
+      <div class="modern-input space-y-4">
+        <div class="has-tooltip relative">
+          <input
+            id="customerId"
+            placeholder="Customer ID (Required)"
+          />
+          <div class="tooltip">Your customer ID for RESTful API authentication</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="customerSecret"
+            placeholder="Customer Secret (Required)"
+            type="password"
+          />
+          <div class="tooltip">Your customer secret for RESTful API authentication</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="appId"
+            placeholder="App ID (Required)"
+          />
+          <div class="tooltip">Your AppID from the projects section of the console</div>
+        </div>
       </div>
       <button
         id="saveCredsBtn"
-        class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold"
+        class="modern-btn modern-btn-primary w-full mt-4"
       >
         Save & Close
       </button>
@@ -1003,42 +1002,42 @@
 
   <!-- Audio Configuration Modal -->
   <div id="audioConfigModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 101;">
-    <div class="bg-gray-800 p-6 rounded-lg max-w-lg w-full mx-4">
+    <div class="modern-card max-w-lg w-full mx-4">
       <h3 class="text-xl font-bold mb-4">Audio Configuration Required</h3>
       <p class="text-gray-300 mb-4">For audio from the LLM, make sure to add custom parameters for modalities and audio. Example:</p>
 
-      <div class="bg-gray-700 p-4 rounded mb-4">
+      <div class="modern-panel mb-4">
         <p class="text-sm font-semibold mb-2">Select array and enter:</p>
         <p class="text-blue-400 text-sm">key: modalities</p>
         <p class="text-blue-400 text-sm">value: audio</p>
       </div>
 
-      <div class="bg-gray-700 p-4 rounded mb-4">
+      <div class="modern-panel mb-4">
         <p class="text-sm font-semibold mb-2">Select object and enter:</p>
         <p class="text-blue-400 text-sm">key: audio</p>
         <p class="text-blue-400 text-sm">value: { "voice": "alloy", "format": "pcm16" }</p>
       </div>
 
       <div class="flex justify-end">
-        <button id="closeAudioModal" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Got it</button>
+        <button id="closeAudioModal" class="modern-btn modern-btn-primary">Got it</button>
       </div>
     </div>
   </div>
 
   <!-- Device Settings Modal -->
   <div id="deviceSettingsModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 101;">
-    <div class="bg-gray-800 p-6 rounded-lg max-w-lg w-full mx-4">
+    <div class="modern-card max-w-lg w-full mx-4">
       <h3 class="text-xl font-bold mb-4">Device Settings</h3>
-      <div class="space-y-4">
+      <div class="modern-input space-y-4">
         <div>
           <label for="micSelect" class="block text-sm font-medium mb-2">Microphone:</label>
-          <select id="micSelect" class="w-full p-2 rounded bg-gray-700 text-white">
+          <select id="micSelect">
             <option value="">Loading microphones...</option>
           </select>
         </div>
         <div>
           <label for="cameraSelect" class="block text-sm font-medium mb-2">Camera:</label>
-          <select id="cameraSelect" class="w-full p-2 rounded bg-gray-700 text-white">
+          <select id="cameraSelect">
             <option value="">Loading cameras...</option>
           </select>
           <div class="text-xs text-gray-400 mt-1">
@@ -1055,10 +1054,10 @@
         </div>
       </div>
       <div class="flex space-x-2 mt-6">
-        <button id="saveDeviceSettings" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        <button id="saveDeviceSettings" class="modern-btn modern-btn-primary flex-1">
           Save
         </button>
-        <button id="cancelDeviceSettings" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+        <button id="cancelDeviceSettings" class="modern-btn modern-btn-secondary flex-1">
           Cancel
         </button>
       </div>
@@ -1067,7 +1066,7 @@
 
   <!-- Camera Configuration Modal -->
   <div id="cameraConfigModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 101;">
-    <div class="bg-gray-800 p-6 rounded-lg max-w-lg w-full mx-4">
+    <div class="modern-card max-w-lg w-full mx-4">
       <h3 class="text-xl font-bold mb-4">Camera Configuration</h3>
       <p class="mb-4">Enabling image input will:</p>
       <ul class="list-disc list-inside mb-4 text-gray-300">
@@ -1076,9 +1075,9 @@
         <li>Send these images to the agent for processing</li>
         <li>Ask the agent to analyze the images and respond to the user</li>
       </ul>
-      <div class="mb-4">
+      <div class="modern-input mb-4">
         <label for="cameraConfigSelect" class="block text-sm font-medium mb-2">Select Camera:</label>
-        <select id="cameraConfigSelect" class="w-full p-2 rounded bg-gray-700 text-white">
+        <select id="cameraConfigSelect">
           <option value="">Loading cameras...</option>
         </select>
       </div>
@@ -1087,10 +1086,10 @@
         <label for="cameraAcknowledge" class="text-sm">I understand and agree to share my camera feed</label>
       </div>
       <div class="flex space-x-2">
-        <button id="saveCameraConfig" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:pointer-events-none">
+        <button id="saveCameraConfig" class="modern-btn modern-btn-primary flex-1" disabled>
           Save & Enable
         </button>
-        <button id="cancelCameraConfig" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+        <button id="cancelCameraConfig" class="modern-btn modern-btn-secondary flex-1">
           Cancel
         </button>
       </div>
@@ -1099,7 +1098,7 @@
 
   <!-- Agora Token Requirement Modal -->
   <div id="agoraTokenModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 101;">
-    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md mx-4">
+    <div class="modern-card w-full max-w-md mx-4">
       <div class="flex items-center mb-4">
         <div class="flex-shrink-0">
           <svg class="h-8 w-8 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
@@ -1114,7 +1113,7 @@
         <p class="text-gray-300 mb-3">
           The AI Avatar feature requires Agora tokens to be enabled in your Agora project. You cannot use an AppID that does not have tokens turned on.
         </p>
-        <div class="bg-gray-700 p-3 rounded border-l-4 border-yellow-400">
+        <div class="modern-panel border-l-4 border-yellow-400">
           <p class="text-sm text-gray-300">
             <strong>To enable tokens:</strong>
           </p>
@@ -1127,7 +1126,7 @@
         </div>
       </div>
       <div class="flex justify-end">
-        <button id="closeAgoraTokenModal" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        <button id="closeAgoraTokenModal" class="modern-btn modern-btn-primary">
           I Understand
         </button>
       </div>
@@ -1136,9 +1135,9 @@
 
   <!-- Experimental Features Modal (hidden, triggered by Konami code) -->
   <div id="experimentalFeaturesModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 103;">
-    <div class="bg-gray-800 p-4 rounded-lg max-w-xl w-full mx-4 overflow-y-auto max-h-[90vh] text-base" style="font-size: 14px;">
+    <div class="modern-card max-w-xl w-full mx-4 overflow-y-auto max-h-[90vh] text-base" style="font-size: 14px;">
       <h3 class="text-lg font-bold mb-2">Experimental Features</h3>
-      <form id="experimentalFeaturesForm" class="space-y-3">
+      <form id="experimentalFeaturesForm" class="modern-input space-y-3">
         <!-- 1. Base URL Settings -->
         <div class="mb-1">
           <h4 class="text-base font-semibold mb-1">Base URL Setting</h4>
@@ -1148,10 +1147,10 @@
               <label for="expBaseUrl" class="text-sm font-medium" style="margin-left:0;">baseUrl</label>
               <span class="tooltip-drawer hidden">Custom base URL for API requests (e.g., staging environment)</span>
             </div>
-            <input id="expBaseUrl" class="w-full p-1 rounded bg-gray-700 text-white text-sm" placeholder="e.g. https://api.example.com" disabled />
+            <input id="expBaseUrl" placeholder="e.g. https://api.example.com" disabled />
           </div>
           <div class="flex space-x-2 mt-1">
-            <button type="button" id="expResetBaseUrlBtn" class="text-xs bg-gray-600 hover:bg-gray-700 px-2 py-1 rounded">Reset to Default</button>
+            <button type="button" id="expResetBaseUrlBtn" class="modern-btn modern-btn-secondary text-xs">Reset to Default</button>
             <span id="expCurrentBaseUrl" class="text-xs text-gray-400 flex-1 truncate"></span>
           </div>
         </div>
@@ -1393,8 +1392,8 @@
           </div>
         </div>
         <div class="flex justify-end space-x-2 mt-4">
-          <button type="button" id="expFeaturesCancel" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-1 px-3 rounded text-sm">Cancel</button>
-          <button type="submit" id="expFeaturesSave" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm">Save</button>
+          <button type="button" id="expFeaturesCancel" class="modern-btn modern-btn-secondary text-sm">Cancel</button>
+          <button type="submit" id="expFeaturesSave" class="modern-btn modern-btn-primary text-sm">Save</button>
         </div>
       </form>
     </div>
@@ -1402,7 +1401,7 @@
 
   <!-- JSON Display Modal -->
   <div id="jsonDisplayModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 102;">
-    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] min-h-[400px] flex flex-col">
+    <div class="modern-card w-full max-w-4xl mx-4 max-h-[90vh] min-h-[400px] flex flex-col">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-xl font-bold text-white" id="jsonModalTitle">JSON Configuration</h3>
         <button id="closeJsonModal" class="text-gray-400 hover:text-white text-2xl font-bold leading-none">
@@ -1413,10 +1412,10 @@
         <pre id="jsonModalContent" class="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-auto h-full font-mono whitespace-pre-wrap max-h-full"></pre>
       </div>
       <div class="flex justify-end mt-4 space-x-2">
-        <button id="copyJsonFromModal" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        <button id="copyJsonFromModal" class="modern-btn modern-btn-primary">
           Copy to Clipboard
         </button>
-        <button id="closeJsonModalBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+        <button id="closeJsonModalBtn" class="modern-btn modern-btn-secondary">
           Close
         </button>
       </div>
@@ -4210,7 +4209,7 @@
 
   <!-- Agent Settings Modal -->
   <div id="agentSettingsModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 100;">
-    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <div class="modern-card w-full max-w-4xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold">Agent Settings</h2>
         <button id="closeAgentSettingsBtn" class="text-gray-400 hover:text-white text-2xl">&times;</button>
@@ -4218,13 +4217,12 @@
 
       <div class="space-y-6">
         <!-- Basic Configuration -->
-        <div class="bg-gray-700 p-4 rounded-lg">
+        <div class="modern-panel">
           <h3 class="text-lg font-semibold mb-3">Basic Configuration</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="has-tooltip relative">
               <input
                 id="uniqueName"
-                class="w-full p-2 rounded bg-gray-600 text-white"
                 placeholder="The unique identifier of the agent (Required)"
               />
               <div class="tooltip">A unique name to identify this agent instance</div>
@@ -4232,7 +4230,6 @@
             <div class="has-tooltip relative">
               <input
                 id="agoraChannelName"
-                class="w-full p-2 rounded bg-gray-600 text-white"
                 placeholder="Agora channel name (Required)"
               />
               <div class="tooltip">The Agora channel name where the agent will operate</div>
@@ -4240,7 +4237,6 @@
             <div class="has-tooltip relative">
               <input
                 id="agoraRtcUid"
-                class="w-full p-2 rounded bg-gray-600 text-white"
                 placeholder="Agora RTC UID (Required)"
                 value="8888"
               />
@@ -4249,7 +4245,6 @@
             <div class="has-tooltip relative">
               <input
                 id="agoraRtcToken"
-                class="w-full p-2 rounded bg-gray-600 text-white"
                 placeholder="Agora RTC token"
               />
               <div class="tooltip">Authentication token for Agora RTC (if required)</div>
@@ -4257,7 +4252,6 @@
             <div class="has-tooltip relative">
               <input
                 id="remoteRtcUids"
-                class="w-full p-2 rounded bg-gray-600 text-white"
                 placeholder="Remote RTC UIDs (Required, comma-separated or * for all)"
                 value="*"
               />
@@ -4267,7 +4261,6 @@
               <input
                 id="idleTimeout"
                 type="number"
-                class="w-full p-2 rounded bg-gray-600 text-white"
                 placeholder="Idle Timeout (seconds, 0 = no timeout)"
                 value="30"
               />
@@ -4284,7 +4277,6 @@
             <div id="agentRtmUidBlock" class="has-tooltip relative" style="display: none;">
               <input
                 id="agentRtmUid"
-                class="w-full p-2 rounded bg-gray-600 text-white"
                 placeholder="Agent RTM UID (Required when RTM enabled)"
               />
               <div class="tooltip">The RTM UID for the agent when RTM is enabled.</div>
@@ -4295,19 +4287,19 @@
         <!-- Settings Categories -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- LLM Settings -->
-          <button id="llmSettingsBtn" class="drawer-btn flex items-center justify-between w-full p-3 bg-gray-600 rounded hover:bg-gray-500 relative">
+          <button id="llmSettingsBtn" class="modern-btn modern-btn-secondary flex items-center justify-between w-full">
             <span>LLM Settings</span>
             <span class="text-sm">Language Model & Prompts</span>
           </button>
 
           <!-- TTS Settings -->
-          <button id="ttsSettingsBtn" class="drawer-btn flex items-center justify-between w-full p-3 bg-gray-600 rounded hover:bg-gray-500 relative">
+          <button id="ttsSettingsBtn" class="modern-btn modern-btn-secondary flex items-center justify-between w-full">
             <span>TTS Settings</span>
             <span class="text-sm">Voice & API Configuration</span>
           </button>
 
           <!-- AI Avatar Settings -->
-          <button id="avatarSettingsBtn" class="drawer-btn flex items-center justify-between w-full p-3 bg-gray-600 rounded hover:bg-gray-500 relative">
+          <button id="avatarSettingsBtn" class="modern-btn modern-btn-secondary flex items-center justify-between w-full">
             <span class="flex items-center">
               <input type="checkbox" id="enableAvatar" class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
               AI Avatar Settings
@@ -4316,7 +4308,7 @@
           </button>
 
           <!-- MLLM Settings -->
-          <button id="mllmSettingsBtn" class="drawer-btn flex items-center justify-between w-full p-3 bg-gray-600 rounded hover:bg-gray-500 relative" style="min-width:200px">
+          <button id="mllmSettingsBtn" class="modern-btn modern-btn-secondary flex items-center justify-between w-full" style="min-width:200px">
             <span class="flex items-center">
               <input type="checkbox" id="enableMllm" class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
               MLLM Settings
@@ -4325,14 +4317,14 @@
           </button>
 
           <!-- Advanced Config -->
-          <button id="advConfigBtn" class="drawer-btn flex items-center justify-between w-full p-3 bg-gray-600 rounded hover:bg-gray-500 relative">
+          <button id="advConfigBtn" class="modern-btn modern-btn-secondary flex items-center justify-between w-full">
             <span>Advanced Config</span>
             <span class="text-sm">Advanced Features, Turn Detection & Parameters</span>
           </button>
         </div>
 
         <!-- Live Subtitles Settings -->
-        <div class="bg-gray-700 p-4 rounded-lg">
+        <div class="modern-panel">
           <h3 class="text-lg font-semibold mb-3">Live Subtitles</h3>
           <div class="flex items-center space-x-2 mb-3 has-tooltip relative">
             <input type="checkbox" id="enableSubtitles" class="rounded">
@@ -4356,13 +4348,12 @@
         </div>
 
         <!-- ASR Configuration -->
-        <div id="asrConfigBox" class="bg-gray-700 p-4 rounded-lg">
+        <div id="asrConfigBox" class="modern-panel">
           <h3 class="text-lg font-semibold mb-3">ASR Configuration</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="has-tooltip relative">
               <select
                 id="asrVendor"
-                class="w-full p-2 rounded bg-gray-600 text-white"
               >
                 <option value="ares">ARES (Default)</option>
                 <option value="microsoft">Microsoft</option>
@@ -4379,7 +4370,6 @@
             <div class="has-tooltip relative">
               <select
                 id="asrLanguage"
-                class="w-full p-2 rounded bg-gray-600 text-white"
               >
                 <!-- Language options will be populated dynamically based on selected vendor -->
               </select>
@@ -4390,11 +4380,10 @@
           <!-- Microsoft ASR Configuration -->
           <div id="microsoftAsrConfig" class="hidden mt-4">
             <h4 class="text-sm font-semibold mb-2">Microsoft ASR Settings</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="has-tooltip relative">
                 <input
                   id="microsoftAsrKey"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
                   placeholder="Microsoft ASR API Key (Required)"
                 />
                 <div class="tooltip">API key for Microsoft Speech Services.</div>
@@ -4402,7 +4391,6 @@
               <div class="has-tooltip relative">
                 <select
                   id="microsoftAsrRegion"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
                 >
                   <option value="southafricanorth">south africa north</option>
                   <option value="eastasia">east asia</option>
@@ -4440,7 +4428,6 @@
               <div class="has-tooltip relative md:col-span-2">
                 <textarea
                   id="microsoftAsrPhraseList"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
                   placeholder="Phrase List (Optional) - Enter phrases separated by commas"
                   rows="2"
                 ></textarea>
@@ -4452,11 +4439,10 @@
           <!-- Deepgram ASR Configuration -->
           <div id="deepgramAsrConfig" class="hidden mt-4">
             <h4 class="text-sm font-semibold mb-2">Deepgram ASR Settings</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="has-tooltip relative">
                 <input
                   id="deepgramAsrKey"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
                   placeholder="Deepgram API Key (Required)"
                 />
                 <div class="tooltip">API key for Deepgram ASR service.</div>
@@ -4464,7 +4450,6 @@
               <div class="has-tooltip relative">
                 <input
                   id="deepgramAsrUrl"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
                   placeholder="Deepgram URL (Optional)"
                   value="wss://api.deepgram.com/v1/listen"
                 />
@@ -4473,7 +4458,6 @@
               <div class="has-tooltip relative">
                 <input
                   id="deepgramAsrModel"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
                   placeholder="Deepgram Model (Optional)"
                   value="nova-2"
                 />
@@ -4486,11 +4470,10 @@
           <!-- OpenAI ASR Configuration -->
           <div id="openaiAsrConfig" class="hidden mt-4">
             <h4 class="text-sm font-semibold mb-2">OpenAI ASR Settings (Beta)</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="has-tooltip relative">
                 <input
                   id="openaiAsrKey"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
                   placeholder="OpenAI API Key (Required)"
                 />
                 <div class="tooltip">API key for OpenAI ASR service.</div>
@@ -4501,11 +4484,10 @@
           <!-- Speechmatics ASR Configuration -->
           <div id="speechmaticsAsrConfig" class="hidden mt-4">
             <h4 class="text-sm font-semibold mb-2">Speechmatics ASR Settings</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="has-tooltip relative">
                 <input
                   id="speechmaticsAsrKey"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
                   placeholder="Speechmatics API Key (Required)"
                 />
                 <div class="tooltip">API key for Speechmatics ASR service.</div>
@@ -4513,7 +4495,6 @@
               <div class="has-tooltip relative">
                 <input
                   id="speechmaticsAsrLanguage"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
                   placeholder="Language Code (e.g., en)"
                   value="en"
                 />
@@ -4525,11 +4506,10 @@
           <!-- AssemblyAI ASR Configuration -->
           <div id="assemblyaiAsrConfig" class="hidden mt-4">
             <h4 class="text-sm font-semibold mb-2">AssemblyAI ASR Settings (Beta)</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="has-tooltip relative">
                 <input
                   id="assemblyaiAsrKey"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
                   placeholder="AssemblyAI API Key (Required)"
                 />
                 <div class="tooltip">API key for AssemblyAI ASR service.</div>
@@ -4537,7 +4517,6 @@
               <div class="has-tooltip relative">
                 <input
                   id="assemblyaiAsrLanguage"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
                   placeholder="Language Code (e.g., en-US)"
                   value="en-US"
                 />
@@ -4724,7 +4703,7 @@
               <div class="tooltip">Add custom key-value parameters for the LLM or MLLM. These are passed directly to the LLM/MLLM API and can control advanced model behavior. For LLM: parameters are included in llm.params. For MLLM: parameters are included in mllm.params.</div>
             </div>
             <div class="has-tooltip relative">
-              <button id="addParamBtn" class="bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold text-sm">
+              <button id="addParamBtn" class="modern-btn modern-btn-primary text-sm">
                 Add Parameter
               </button>
               <div class="tooltip">Add a new custom parameter row.</div>
@@ -4740,11 +4719,10 @@
     <div id="llmDrawerBackdrop" class="drawer-backdrop hidden"></div>
     <div id="llmDrawer" class="drawer hidden">
       <button class="drawer-close absolute top-2 right-2" data-drawer="llmDrawer">&times;</button>
-      <div class="drawer-content space-y-4">
+      <div class="drawer-content modern-input space-y-4">
         <div class="has-tooltip relative">
           <input
             id="llmModel"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="llmModel"
             value="gpt-4o-mini"
           />
@@ -4753,7 +4731,6 @@
         <div class="has-tooltip relative">
           <input
             id="llmApiKey"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="LLM API Key (Required)"
           />
           <div class="tooltip">Your API key for accessing the language model service.</div>
@@ -4761,7 +4738,6 @@
         <div class="has-tooltip relative">
           <input
             id="llmUrl"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="LLM URL (Required)"
             value="https://api.openai.com/v1/chat/completions"
           />
@@ -4770,7 +4746,6 @@
         <div class="has-tooltip relative">
           <input
             id="gMsg"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Greeting Message (Required)"
             value="Hello, how can I help you?"
           />
@@ -4779,7 +4754,6 @@
         <div class="has-tooltip relative">
           <input
             id="fMsg"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Failure Message(Required)"
             value="Sorry, I do not know how to answer this question."
           />
@@ -4788,7 +4762,7 @@
         <div class="has-tooltip relative">
           <textarea
             id="sMsgContent"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500 resize-y min-h-[100px]"
+            class="resize-y min-h-[100px]"
             placeholder="System Instructions (Required)"
             rows="6"
           >You are Avi Tar, a smart, friendly voice assistant designed for natural conversations. You always reference yourself by your full name.
@@ -4798,7 +4772,6 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         <div class="has-tooltip relative">
           <input
             id="llmVendor"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="LLM Vendor (Optional)"
           />
           <div class="tooltip">LLM provider (optional). Supports: custom (for custom LLMs), openai, gemini, anthropic, etc. If set to 'custom', the agent includes turn_id and timestamp in requests. Leave blank to omit.</div>
@@ -4806,7 +4779,6 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         <div class="has-tooltip relative">
           <input
             id="llmStyle"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="LLM Style (Optional, e.g. openai)"
           />
           <div class="tooltip">Request style for chat completion (optional). Use 'openai' for OpenAI-compatible APIs or custom LLM. Possible values: openai, gemini, anthropic. Leave blank to omit.</div>
@@ -4814,7 +4786,6 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         <div class="has-tooltip relative">
           <input
             id="llmAccessKey"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="LLM Access Key (Optional, Amazon Bedrock only)"
           />
           <div class="tooltip">Access key for Amazon Bedrock LLM (optional). Only used when LLM vendor is Amazon Bedrock.</div>
@@ -4822,7 +4793,6 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         <div class="has-tooltip relative">
           <input
             id="llmSecret"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="LLM Secret (Optional, Amazon Bedrock only)"
             type="password"
           />
@@ -4831,7 +4801,6 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         <div class="has-tooltip relative">
           <textarea
             id="llmHeaders"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="LLM Headers (Optional, Claude Anthropic only, JSON string)"
             rows="3"
           ></textarea>
@@ -4844,11 +4813,10 @@ The user speaks to you directly — treat each input as part of a live, spoken d
     <div id="ttsDrawerBackdrop" class="drawer-backdrop hidden"></div>
     <div id="ttsDrawer" class="drawer hidden">
       <button class="drawer-close absolute top-2 right-2" data-drawer="ttsDrawer">&times;</button>
-      <div class="drawer-content space-y-4">
+      <div class="drawer-content modern-input space-y-4">
         <div class="has-tooltip relative">
           <select
             id="ttsVendor"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
           >
             <option value="microsoft">Microsoft</option>
             <option value="elevenlabs">ElevenLabs</option>
@@ -5731,7 +5699,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
       <div class="drawer-content space-y-4">
         <!-- Advanced Features -->
         <div class="mb-4">
-          <button id="advancedFeaturesBtn" class="flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500">
+          <button id="advancedFeaturesBtn" class="modern-btn modern-btn-secondary flex items-center justify-between w-full">
             <span class="flex items-center">
               <span>Advanced Features</span>
             </span>
@@ -6065,9 +6033,9 @@ The user speaks to you directly — treat each input as part of a live, spoken d
       </div>
 
       <div class="signaling-modal-footer">
-        <button class="signaling-modal-btn signaling-modal-btn-secondary" id="cancelSignalingModal">Cancel</button>
-        <button class="signaling-modal-btn signaling-modal-btn-primary" id="enableRTMModal">Enable RTM Mode</button>
-        <button class="signaling-modal-btn signaling-modal-btn-success" id="enableDataStreamModal">Enable Data Stream Mode</button>
+        <button class="modern-btn modern-btn-secondary" id="cancelSignalingModal">Cancel</button>
+        <button class="modern-btn modern-btn-primary" id="enableRTMModal">Enable RTM Mode</button>
+        <button class="modern-btn modern-btn-success" id="enableDataStreamModal">Enable Data Stream Mode</button>
       </div>
     </div>
   </div>
