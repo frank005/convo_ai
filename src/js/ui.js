@@ -76,6 +76,20 @@ window.UI = class UI {
             saveCredsBtn.addEventListener("click", () => this.saveCreds());
         }
 
+        // Token generation buttons
+        const generateAgoraRtcTokenBtn = document.getElementById("generateAgoraRtcTokenBtn");
+        if (generateAgoraRtcTokenBtn) {
+            generateAgoraRtcTokenBtn.addEventListener("click", () => this.generateAgoraRtcToken());
+        }
+        const generateAvatarRtcTokenBtn = document.getElementById("generateAvatarRtcTokenBtn");
+        if (generateAvatarRtcTokenBtn) {
+            generateAvatarRtcTokenBtn.addEventListener("click", () => this.generateAvatarRtcToken());
+        }
+        const generateClientRtcTokenBtn = document.getElementById("generateClientRtcTokenBtn");
+        if (generateClientRtcTokenBtn) {
+            generateClientRtcTokenBtn.addEventListener("click", () => this.generateClientRtcToken());
+        }
+
         // Volume widget (hidden in new layout)
         const toggleVolumeBtn = document.getElementById("toggleVolumeBtn");
         if (toggleVolumeBtn) {
@@ -792,10 +806,11 @@ window.UI = class UI {
     }
 
     openCredsModal() {
-        const { customerId, customerSecret, appId } = Utils.getStoredCredentials();
+        const { customerId, customerSecret, appId, appCertificate } = Utils.getStoredCredentials();
         document.getElementById("customerId").value = customerId || '';
         document.getElementById("customerSecret").value = customerSecret || '';
         document.getElementById("appId").value = appId || '';
+        document.getElementById("appCertificate").value = appCertificate || '';
         
         document.getElementById("credsModal").classList.remove("hidden");
     }
@@ -804,6 +819,7 @@ window.UI = class UI {
         const customerId = document.getElementById("customerId").value.trim();
         const customerSecret = document.getElementById("customerSecret").value.trim();
         const appId = document.getElementById("appId").value.trim();
+        const appCertificate = document.getElementById("appCertificate").value.trim();
 
         if (!customerId || !customerSecret || !appId) {
             alert("Please fill in all required fields");
@@ -811,7 +827,7 @@ window.UI = class UI {
         }
 
         try {
-            Utils.saveCredentials(customerId, customerSecret, appId);
+            Utils.saveCredentials(customerId, customerSecret, appId, appCertificate);
             
             document.getElementById("credsModal").classList.add("hidden");
             // Update the AgoraAPI instance with new appId
@@ -820,6 +836,114 @@ window.UI = class UI {
             this.updateBaseUrlIndicator();
         } catch (error) {
             alert(error.message);
+        }
+    }
+
+    async generateAgoraRtcToken() {
+        try {
+            const { appId, appCertificate } = Utils.getStoredCredentials();
+            if (!appId || !appCertificate) {
+                alert("Please set App ID and App Certificate in API Credentials first");
+                return;
+            }
+
+            const channelName = document.getElementById("agoraChannelName").value.trim();
+            if (!channelName) {
+                alert("Please enter a channel name in Agent Settings");
+                return;
+            }
+
+            const agoraRtcUid = document.getElementById("agoraRtcUid").value.trim();
+            if (!agoraRtcUid) {
+                alert("Please enter an Agora RTC UID");
+                return;
+            }
+
+            const token = await Utils.generateAgoraToken(
+                appId,
+                appCertificate,
+                channelName,
+                agoraRtcUid,
+                1 // PUBLISHER role
+            );
+
+            document.getElementById("agoraRtcToken").value = token;
+            alert("Token generated successfully!");
+        } catch (error) {
+            alert("Error generating token: " + error.message);
+            console.error("Token generation error:", error);
+        }
+    }
+
+    async generateAvatarRtcToken() {
+        try {
+            const { appId, appCertificate } = Utils.getStoredCredentials();
+            if (!appId || !appCertificate) {
+                alert("Please set App ID and App Certificate in API Credentials first");
+                return;
+            }
+
+            const channelName = document.getElementById("agoraChannelName").value.trim();
+            if (!channelName) {
+                alert("Please enter a channel name in Agent Settings");
+                return;
+            }
+
+            const avatarRtcUid = document.getElementById("avatarRtcUid").value.trim();
+            if (!avatarRtcUid) {
+                alert("Please enter an Avatar RTC UID");
+                return;
+            }
+
+            const token = await Utils.generateAgoraToken(
+                appId,
+                appCertificate,
+                channelName,
+                avatarRtcUid,
+                1 // PUBLISHER role
+            );
+
+            document.getElementById("avatarRtcToken").value = token;
+            alert("Token generated successfully!");
+        } catch (error) {
+            alert("Error generating token: " + error.message);
+            console.error("Token generation error:", error);
+        }
+    }
+
+    async generateClientRtcToken() {
+        try {
+            const { appId, appCertificate } = Utils.getStoredCredentials();
+            if (!appId || !appCertificate) {
+                alert("Please set App ID and App Certificate in API Credentials first");
+                return;
+            }
+
+            const channelName = document.getElementById("agoraChannelName").value.trim();
+            if (!channelName) {
+                alert("Please enter a channel name in Agent Settings");
+                return;
+            }
+
+            const clientRtcUid = document.getElementById("clientRtcUid").value.trim();
+            if (!clientRtcUid) {
+                alert("Please enter a Client RTC UID");
+                return;
+            }
+
+            const token = await Utils.generateAgoraToken(
+                appId,
+                appCertificate,
+                channelName,
+                clientRtcUid,
+                1 // PUBLISHER role
+            );
+
+            document.getElementById("clientRtcToken").value = token;
+            alert("Token generated successfully!");
+        } catch (error) {
+            alert("Error generating token: " + error.message);
+            console.error("Token generation error:", error);
         }
     }
 

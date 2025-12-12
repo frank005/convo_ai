@@ -4,17 +4,23 @@ window.Utils = class Utils {
         return {
             customerId: localStorage.getItem("customerId") || "",
             customerSecret: localStorage.getItem("customerSecret") || "",
-            appId: localStorage.getItem("appId") || ""
+            appId: localStorage.getItem("appId") || "",
+            appCertificate: localStorage.getItem("appCertificate") || ""
         };
     }
 
-    static saveCredentials(customerId, customerSecret, appId) {
+    static saveCredentials(customerId, customerSecret, appId, appCertificate = "") {
         if (!customerId || !customerSecret || !appId) {
             throw new Error("All credentials are required");
         }
         localStorage.setItem("customerId", customerId);
         localStorage.setItem("customerSecret", customerSecret);
         localStorage.setItem("appId", appId);
+        if (appCertificate) {
+            localStorage.setItem("appCertificate", appCertificate);
+        } else {
+            localStorage.removeItem("appCertificate");
+        }
     }
 
     static getFormData() {
@@ -1121,5 +1127,45 @@ window.Utils = class Utils {
         }
 
         return config;
+    }
+
+    /**
+     * Generate Agora RTC + RTM token
+     * @param {string} appId - Agora App ID
+     * @param {string} appCertificate - Agora App Certificate
+     * @param {string} channelName - Channel name
+     * @param {string|number} userAccount - User account (UID)
+     * @param {number} role - Role (1 = PUBLISHER, 2 = SUBSCRIBER)
+     * @returns {Promise<string>} Generated token
+     */
+    static async generateAgoraToken(appId, appCertificate, channelName, userAccount, role = 1) {
+        if (!appId || !appCertificate) {
+            throw new Error("App ID and App Certificate are required to generate tokens");
+        }
+        if (!channelName) {
+            throw new Error("Channel name is required");
+        }
+        if (!userAccount) {
+            throw new Error("User account (UID) is required");
+        }
+
+        const TOKEN_EXPIRE = 1800; // 30 minutes in seconds
+        const PRIVILEGE_EXPIRE = 1800; // 30 minutes in seconds
+
+        try {
+            const token = await RtcTokenBuilder.buildTokenWithRtm(
+                appId,
+                appCertificate,
+                channelName,
+                userAccount.toString(),
+                role,
+                TOKEN_EXPIRE,
+                PRIVILEGE_EXPIRE
+            );
+            return token;
+        } catch (error) {
+            console.error("Error generating token:", error);
+            throw new Error("Failed to generate token: " + error.message);
+        }
     }
 } 

@@ -47,6 +47,7 @@ convo_ai_studio/
 
    - Click the "Set API Credentials" button
    - Enter your Agora Customer ID, Customer Secret, and App ID
+   - Optionally enter your App Certificate (required for local token generation)
 
 3. **Configure and create your agent:**
    - Choose your AI mode (LLM or MLLM)
@@ -86,9 +87,41 @@ For detailed setup instructions, see [SETUP.md](DOCS/SETUP.md).
 - **Live Subtitles & Chat**: Real-time subtitle display and chat history management
 - **Advanced Configuration**: VAD, turn detection, silence management, SAL (Speaker Adaptation Library), farewell configuration, and custom parameters
 - **Smart Validation**: Context-aware validation for agent creation and SIP calls based on pipeline configuration
+- **Local Token Generation**: Built-in Agora RTC + RTM token generator with one-click token generation for agent, avatar, and client UIDs
 - **Modern UI Design**: Beautiful gradient buttons, modern form inputs, and enhanced visual styling with smooth animations
 
 For a complete feature list, see [FEATURES.md](DOCS/FEATURES.md).
+
+## Token Generation
+
+The application includes a built-in Agora token generator that creates RTC + RTM tokens locally. This feature allows you to generate tokens without relying on a server-side token service.
+
+### How to Use Token Generation
+
+1. **Set App Certificate** (Optional but required for token generation):
+   - Open "Set API Credentials"
+   - Enter your App Certificate (optional field with tooltip)
+   - Save credentials
+
+2. **Generate Tokens**:
+   - **Agent RTC Token**: Click "Generate" next to the Agora RTC Token field in Agent Settings
+   - **Avatar RTC Token**: Click "Generate" next to the Avatar RTC Token field in AI Avatar Settings
+   - **Client RTC Token**: Click "Generate" next to the Client RTC Token field on the main page
+
+3. **Token Configuration**:
+   - All tokens use the channel name from Agent Settings
+   - Token expiration: 30 minutes (1800 seconds)
+   - Privilege expiration: 30 minutes (1800 seconds)
+   - Role: PUBLISHER (allows publishing audio, video, and data streams)
+
+### Requirements
+
+- App ID (required)
+- App Certificate (required for token generation)
+- Channel Name (from Agent Settings)
+- UID (Agent RTC UID, Avatar RTC UID, or Client RTC UID)
+
+The token generator uses the `buildTokenWithRtm` method from the RtcTokenBuilder2 library, which creates tokens that support both RTC (Real-Time Communication) and RTM (Real-Time Messaging) services.
 
 ## Contributing
 

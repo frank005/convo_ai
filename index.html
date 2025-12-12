@@ -190,11 +190,21 @@
       </div>
       </div>
         <div class="modern-input flex-1 has-tooltip relative">
-      <input
-        id="clientRtcToken"
-        placeholder="Agora token (if token required)"
-      />
-        <div class="tooltip">Authentication token for Agora RTC. Required if your project has token authentication enabled.</div>
+          <div class="flex gap-2">
+            <input
+              id="clientRtcToken"
+              placeholder="Agora token (if token required)"
+              class="flex-1"
+            />
+            <button
+              id="generateClientRtcTokenBtn"
+              class="modern-btn modern-btn-secondary"
+              title="Generate Token"
+            >
+              Generate
+            </button>
+          </div>
+          <div class="tooltip">Authentication token for Agora RTC. Required if your project has token authentication enabled.</div>
         </div>
       </div>
 
@@ -1005,6 +1015,13 @@
             placeholder="App ID (Required)"
           />
           <div class="tooltip">Your AppID from the projects section of the console</div>
+        </div>
+        <div class="has-tooltip relative">
+          <input
+            id="appCertificate"
+            placeholder="App Certificate (Optional)"
+          />
+          <div class="tooltip">Optional, only needed if you want or need to generate a local token for this app</div>
         </div>
       </div>
       <button
@@ -4224,6 +4241,10 @@
   </script>
 
   <!-- Non-module scripts -->
+  <script src="src/js/pako.min.js"></script>
+  <script src="src/js/AccessToken2.js"></script>
+  <script src="src/js/RtcTokenBuilder2.js"></script>
+  <script src="src/js/RtmTokenBuilder2.js"></script>
   <script src="src/js/utils.js?v=1.2"></script>
   <script src="src/js/api.js?v=1.3"></script>
   <script src="src/js/audio.js?v=1.2"></script>
@@ -4281,10 +4302,20 @@
               <div class="tooltip">The unique identifier for this agent in the Agora channel</div>
             </div>
             <div class="has-tooltip relative">
-              <input
-                id="agoraRtcToken"
-                placeholder="Agora RTC token"
-              />
+              <div class="flex gap-2">
+                <input
+                  id="agoraRtcToken"
+                  placeholder="Agora RTC token"
+                  class="flex-1"
+                />
+                <button
+                  id="generateAgoraRtcTokenBtn"
+                  class="modern-btn modern-btn-secondary"
+                  title="Generate Token"
+                >
+                  Generate
+                </button>
+              </div>
               <div class="tooltip">Authentication token for Agora RTC (if required)</div>
             </div>
             <div class="has-tooltip relative">
@@ -5563,11 +5594,20 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           <div class="tooltip">The RTC UID for the avatar in the channel.</div>
         </div>
         <div class="has-tooltip relative">
-          <input
-            id="avatarRtcToken"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-            placeholder="Avatar RTC Token (Optional)"
-          />
+          <div class="flex gap-2">
+            <input
+              id="avatarRtcToken"
+              class="flex-1 w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Avatar RTC Token (Optional)"
+            />
+            <button
+              id="generateAvatarRtcTokenBtn"
+              class="modern-btn modern-btn-secondary"
+              title="Generate Token"
+            >
+              Generate
+            </button>
+          </div>
           <div class="tooltip">The RTC token for the avatar to join the channel. Optional if your app doesn't require tokens.</div>
         </div>
 
