@@ -89,6 +89,10 @@ window.UI = class UI {
         if (generateClientRtcTokenBtn) {
             generateClientRtcTokenBtn.addEventListener("click", () => this.generateClientRtcToken());
         }
+        const generateSipRtcTokenBtn = document.getElementById("generateSipRtcTokenBtn");
+        if (generateSipRtcTokenBtn) {
+            generateSipRtcTokenBtn.addEventListener("click", () => this.generateSipRtcToken());
+        }
 
         // Volume widget (hidden in new layout)
         const toggleVolumeBtn = document.getElementById("toggleVolumeBtn");
@@ -940,6 +944,42 @@ window.UI = class UI {
             );
 
             document.getElementById("clientRtcToken").value = token;
+            alert("Token generated successfully!");
+        } catch (error) {
+            alert("Error generating token: " + error.message);
+            console.error("Token generation error:", error);
+        }
+    }
+
+    async generateSipRtcToken() {
+        try {
+            const { appId, appCertificate } = Utils.getStoredCredentials();
+            if (!appId || !appCertificate) {
+                alert("Please set App ID and App Certificate in API Credentials first");
+                return;
+            }
+
+            const channelName = document.getElementById("agoraChannelName").value.trim();
+            if (!channelName) {
+                alert("Please enter a channel name in Agent Settings");
+                return;
+            }
+
+            const sipRtcUid = document.getElementById("outboundCallSipRtcUid").value.trim();
+            if (!sipRtcUid) {
+                alert("Please enter a SIP RTC UID");
+                return;
+            }
+
+            const token = await Utils.generateAgoraToken(
+                appId,
+                appCertificate,
+                channelName,
+                sipRtcUid,
+                1 // PUBLISHER role
+            );
+
+            document.getElementById("outboundCallSipRtcToken").value = token;
             alert("Token generated successfully!");
         } catch (error) {
             alert("Error generating token: " + error.message);

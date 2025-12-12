@@ -204,7 +204,7 @@
               Generate
             </button>
           </div>
-          <div class="tooltip">Authentication token for Agora RTC. Required if your project has token authentication enabled.</div>
+          <div class="tooltip">Authentication token for Agora RTC. Required if your project has token authentication enabled. Generated tokens are valid for 30 minutes.</div>
         </div>
       </div>
 
@@ -795,12 +795,21 @@
                 <div class="tooltip">The RTC UID for the SIP call. This is separate from the agent's RTC UID.</div>
                 </div>
                 <div class="has-tooltip relative">
-                  <input
-                  id="outboundCallSipRtcToken"
-                  class="w-full p-2 rounded bg-gray-800 text-white text-sm"
-                  placeholder="SIP RTC Token (optional)"
-                  />
-                <div class="tooltip">Optional RTC token for the SIP call. This is separate from the agent's token.</div>
+                  <div class="flex gap-2">
+                    <input
+                      id="outboundCallSipRtcToken"
+                      class="flex-1 w-full p-2 rounded bg-gray-800 text-white text-sm"
+                      placeholder="SIP RTC Token (optional)"
+                    />
+                    <button
+                      id="generateSipRtcTokenBtn"
+                      class="modern-btn modern-btn-secondary"
+                      title="Generate Token"
+                    >
+                      Generate
+                    </button>
+                  </div>
+                  <div class="tooltip">Optional RTC token for the SIP call. This is separate from the agent's token. Generated tokens are valid for 30 minutes.</div>
                 </div>
                 <div class="has-tooltip relative">
                   <div class="flex items-center gap-2">
@@ -4316,7 +4325,7 @@
                   Generate
                 </button>
               </div>
-              <div class="tooltip">Authentication token for Agora RTC (if required)</div>
+              <div class="tooltip">Authentication token for Agora RTC (if required). Generated tokens are valid for 30 minutes.</div>
             </div>
             <div class="has-tooltip relative">
               <input
@@ -5608,7 +5617,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               Generate
             </button>
           </div>
-          <div class="tooltip">The RTC token for the avatar to join the channel. Optional if your app doesn't require tokens.</div>
+          <div class="tooltip">The RTC token for the avatar to join the channel. Optional if your app doesn't require tokens. Generated tokens are valid for 30 minutes.</div>
         </div>
 
         <!-- HeyGen-specific settings -->
