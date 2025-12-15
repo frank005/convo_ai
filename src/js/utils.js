@@ -163,7 +163,7 @@ window.Utils = class Utils {
             sMsgContent: document.getElementById("sMsgContent").value.trim(),
             geofenceArea: document.getElementById("geofenceArea") ? document.getElementById("geofenceArea").value : '',
             geofenceAreaCustom: document.getElementById("geofenceAreaCustom") ? document.getElementById("geofenceAreaCustom").value.trim() : '',
-            geofenceExclude: document.getElementById("geofenceExclude") ? Array.from(document.getElementById("geofenceExclude").selectedOptions).map(opt => opt.value) : [],
+            geofenceExclude: document.getElementById("geofenceExclude") ? document.getElementById("geofenceExclude").value : '',
             geofenceExcludeCustom: document.getElementById("geofenceExcludeCustom") ? document.getElementById("geofenceExcludeCustom").value.trim() : '',
             asrVendor: document.getElementById("asrVendor").value,
             vendor: ttsVendor,
@@ -912,26 +912,17 @@ window.Utils = class Utils {
             };
             
             // Add exclude_area only if area is GLOBAL and exclude is selected
-            if (areaValue === "GLOBAL" && formData.geofenceExclude && formData.geofenceExclude.length > 0) {
-                const excludeAreas = [];
+            if (areaValue === "GLOBAL" && formData.geofenceExclude && formData.geofenceExclude !== "") {
+                let excludeValue = formData.geofenceExclude;
                 
-                // Process selected exclude options
-                formData.geofenceExclude.forEach(excludeValue => {
-                    if (excludeValue === "custom") {
-                        // Handle custom exclude areas - split by comma and trim
-                        if (formData.geofenceExcludeCustom && formData.geofenceExcludeCustom.trim()) {
-                            const customAreas = formData.geofenceExcludeCustom.split(',').map(a => a.trim()).filter(a => a.length > 0);
-                            excludeAreas.push(...customAreas);
-                        }
-                    } else {
-                        excludeAreas.push(excludeValue);
+                if (excludeValue === "custom") {
+                    if (!formData.geofenceExcludeCustom || !formData.geofenceExcludeCustom.trim()) {
+                        throw new Error('Custom exclude area code is required when "Custom" is selected for geofence exclude area');
                     }
-                });
-                
-                if (excludeAreas.length > 0) {
-                    // Format as comma-separated string
-                    geofence.exclude_area = excludeAreas.join(',');
+                    excludeValue = formData.geofenceExcludeCustom.trim();
                 }
+                
+                geofence.exclude_area = excludeValue;
             }
         }
 

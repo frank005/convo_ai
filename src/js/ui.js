@@ -1452,10 +1452,8 @@ window.UI = class UI {
             return;
         }
         
-        const selectedOptions = Array.from(geofenceExcludeSelect.selectedOptions);
-        const hasCustom = selectedOptions.some(option => option.value === "custom");
-        
-        geofenceExcludeCustomBlock.classList.toggle("hidden", !hasCustom);
+        const excludeValue = geofenceExcludeSelect.value;
+        geofenceExcludeCustomBlock.classList.toggle("hidden", excludeValue !== "custom");
     }
 
     populateMicrosoftLangList() {

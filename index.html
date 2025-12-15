@@ -4373,28 +4373,29 @@
             </div>
             <div id="geofenceExcludeBlock" class="has-tooltip relative hidden">
               <label class="text-sm font-medium mb-2 block">Exclude Area (Only when Area is GLOBAL)</label>
-              <select
-                id="geofenceExclude"
-                class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500 mb-2"
-                multiple
-                size="6"
-              >
-                <option value="NORTH_AMERICA">NORTH_AMERICA</option>
-                <option value="EUROPE">EUROPE</option>
-                <option value="ASIA">ASIA</option>
-                <option value="INDIA">INDIA</option>
-                <option value="JAPAN">JAPAN</option>
-                <option value="custom">Custom</option>
-              </select>
-              <div class="tooltip">Select one or more regions to exclude. Hold Ctrl/Cmd to select multiple. Only available when Area is set to GLOBAL.</div>
-            </div>
-            <div id="geofenceExcludeCustomBlock" class="has-tooltip relative hidden">
-              <input
-                id="geofenceExcludeCustom"
-                class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500 mb-2"
-                placeholder="Custom Exclude Areas (comma-separated, e.g., REGION1, REGION2)"
-              />
-              <div class="tooltip">Enter custom exclude area codes separated by commas.</div>
+              <div class="flex gap-2">
+                <select
+                  id="geofenceExclude"
+                  class="flex-1 p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500 mb-2"
+                >
+                  <option value="">Not Set (Optional)</option>
+                  <option value="NORTH_AMERICA">NORTH_AMERICA</option>
+                  <option value="EUROPE">EUROPE</option>
+                  <option value="ASIA">ASIA</option>
+                  <option value="INDIA">INDIA</option>
+                  <option value="JAPAN">JAPAN</option>
+                  <option value="custom">Custom</option>
+                </select>
+                <div id="geofenceExcludeCustomBlock" class="has-tooltip relative hidden flex-1">
+                  <input
+                    id="geofenceExcludeCustom"
+                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500 mb-2"
+                    placeholder="Custom Exclude Area (e.g., CUSTOM_REGION)"
+                  />
+                  <div class="tooltip">Enter a custom exclude area code (single value only).</div>
+                </div>
+              </div>
+              <div class="tooltip">Select a region to exclude. Only available when Area is set to GLOBAL.</div>
             </div>
             <div class="flex items-center">
               <input
