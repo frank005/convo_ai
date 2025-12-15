@@ -4344,6 +4344,19 @@
               />
               <div class="tooltip">Timeout after all users leave the channel. 0 means the agent doesn't exit until stopped manually. Default: 30</div>
             </div>
+            <div class="has-tooltip relative">
+              <input
+                id="geofence"
+                placeholder="Geofence (Optional, JSON string)"
+              />
+              <div class="tooltip">
+                Limit backend region. JSON only.<br/>
+                Format: {"area":"<AREA>","exclude_area":"<EXCLUDE>?"}<br/>
+                area (required): GLOBAL, NORTH_AMERICA, EUROPE, ASIA, INDIA, JAPAN<br/>
+                exclude_area (optional, area=GLOBAL only): NORTH_AMERICA, EUROPE, ASIA, INDIA, JAPAN<br/>
+                Examples: {"area":"NORTH_AMERICA"} or {"area":"GLOBAL","exclude_area":"EUROPE"}
+              </div>
+            </div>
             <div class="flex items-center">
               <input
                 type="checkbox"
@@ -4830,6 +4843,15 @@
           <div class="tooltip">The initial greeting message the agent will use.</div>
         </div>
         <div class="has-tooltip relative">
+          <select
+            id="greetingMode"
+          >
+            <option value="single_every" selected>single_every (Default)</option>
+            <option value="single_first">single_first</option>
+          </select>
+          <div class="tooltip">Determines when the agent sends greeting messages to users joining the channel. single_every: Broadcasts a greeting every time a user joins the channel. single_first: Broadcasts a greeting only once to the first user who joins the channel.</div>
+        </div>
+        <div class="has-tooltip relative">
           <input
             id="fMsg"
             placeholder="Failure Message(Required)"
@@ -4906,7 +4928,8 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="fishaudio">Fish Audio (Beta)</option>
             <option value="groq">Groq (Beta)</option>
             <option value="google">Google (Beta)</option>
-            <!-- <option value="playht">PlayHT (Beta)</option> --> <!-- Not in Agora 2.0 official docs -->
+            <option value="playht">PlayHT (Beta)</option>
+            <option value="sarvam">Sarvam (Beta)</option>
             <option value="amazon">Amazon Polly (Beta)</option>
           </select>
           <div class="tooltip">Select the Text-to-Speech vendor to use for voice output.</div>
@@ -5068,6 +5091,15 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           />
           <div class="tooltip">API key for ElevenLabs TTS service.</div>
         </div>
+        <div id="elevenLabsBaseUrlBlock" class="has-tooltip relative hidden">
+          <input
+            id="elevenLabsBaseUrl"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Base URL (Optional, e.g., wss://api.elevenlabs.io/v1)"
+            value="wss://api.elevenlabs.io/v1"
+          />
+          <div class="tooltip">The endpoint URL for the ElevenLabs TTS service. Default: wss://api.elevenlabs.io/v1</div>
+        </div>
         <div id="elevenLabsSampleRateBlock" class="has-tooltip relative hidden">
           <input
             id="elevenLabsSampleRate"
@@ -5164,6 +5196,15 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             placeholder="OpenAI API Key (Required)"
           />
           <div class="tooltip">API key for OpenAI TTS service.</div>
+        </div>
+        <div id="openaiBaseUrlBlock" class="has-tooltip relative hidden">
+          <input
+            id="openaiBaseUrl"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Base URL (Optional, e.g., https://api.openai.com/v1)"
+            value="https://api.openai.com/v1"
+          />
+          <div class="tooltip">The endpoint URL for the OpenAI TTS service. Default: https://api.openai.com/v1</div>
         </div>
         <div id="openaiModelBlock" class="has-tooltip relative hidden">
           <select
@@ -5436,14 +5477,14 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           <div class="tooltip">The sample rate in Hertz for the audio output.</div>
         </div>
         
-        <!-- PlayHT TTS Settings - COMMENTED OUT: Not in Agora 2.0 official docs -->
-        <!-- <div id="playhtTtsKeyBlock" class="has-tooltip relative hidden">
+        <!-- PlayHT TTS Settings -->
+        <div id="playhtTtsKeyBlock" class="has-tooltip relative hidden">
           <input
             id="playhtTtsKey"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="PlayHT API Key (Required)"
           />
-          <div class="tooltip">API key for PlayHT TTS service.</div>
+          <div class="tooltip">API key for PlayHT TTS service. Get your API key from the PlayHT Dashboard.</div>
         </div>
         <div id="playhtUserIdBlock" class="has-tooltip relative hidden">
           <input
@@ -5451,7 +5492,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="User ID (Required)"
           />
-          <div class="tooltip">The user ID associated with your PlayHT account.</div>
+          <div class="tooltip">The user ID associated with your PlayHT account. Get your user ID from the PlayHT Dashboard.</div>
         </div>
         <div id="playhtVoiceEngineBlock" class="has-tooltip relative hidden">
           <select
@@ -5459,10 +5500,10 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
           >
             <option value="PlayDialog">PlayDialog</option>
-            <option value="Play3.0-mini">Play3.0-mini</option>
+            <option value="Play3.0-mini" selected>Play3.0-mini</option>
             <option value="PlayHT2.0-turbo">PlayHT2.0-turbo</option>
           </select>
-          <div class="tooltip">The voice engine to use for speech synthesis.</div>
+          <div class="tooltip">The voice engine to use for speech synthesis. Supported values: PlayDialog, Play3.0-mini, PlayHT2.0-turbo.</div>
         </div>
         <div id="playhtVoiceBlock" class="has-tooltip relative hidden">
           <input
@@ -5470,7 +5511,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Voice ID (e.g., alex)"
           />
-          <div class="tooltip">The voice ID to use for speech generation.</div>
+          <div class="tooltip">The voice ID to use for speech generation, for example, alex. See available voices for supported voice IDs.</div>
         </div>
         <div id="playhtSpeedBlock" class="has-tooltip relative hidden">
           <input
@@ -5483,8 +5524,113 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             placeholder="Speed (Optional, 1.0 = normal)"
             value="1.0"
           />
-          <div class="tooltip">The speed of speech, where 1.0 is the normal speed.</div>
-        </div> -->
+          <div class="tooltip">The speed of speech, where 1.0 is the normal speed. Values less than 1.0 slow down the speech, while values greater than 1.0 speed it up.</div>
+        </div>
+        
+        <!-- Sarvam TTS Settings -->
+        <div id="sarvamTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="sarvamTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Sarvam API Key (Required)"
+          />
+          <div class="tooltip">API key for Sarvam TTS service. Get your API key from the Sarvam dashboard.</div>
+        </div>
+        <div id="sarvamSpeakerBlock" class="has-tooltip relative hidden">
+          <select
+            id="sarvamSpeaker"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="anushka">anushka (Female)</option>
+            <option value="manisha">manisha (Female)</option>
+            <option value="vidya">vidya (Female)</option>
+            <option value="arya">arya (Female)</option>
+            <option value="abhilash">abhilash (Male)</option>
+            <option value="karun">karun (Male)</option>
+            <option value="hitesh">hitesh (Male)</option>
+            <option value="other">Custom</option>
+          </select>
+          <div class="tooltip">The voice ID to use for speech generation. Female voices: anushka, manisha, vidya, arya. Male voices: abhilash, karun, hitesh. Select "Custom" to enter a custom speaker ID.</div>
+        </div>
+        <div id="sarvamSpeakerIdBlock" class="has-tooltip relative hidden">
+          <input
+            id="sarvamSpeakerId"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Custom Speaker ID (Required when Custom selected)"
+          />
+          <div class="tooltip">Enter a custom Sarvam speaker ID.</div>
+        </div>
+        <div id="sarvamLanguageCodeBlock" class="has-tooltip relative hidden">
+          <select
+            id="sarvamLanguageCode"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="en-IN" selected>en-IN (English - India)</option>
+            <option value="hi-IN">hi-IN (Hindi)</option>
+            <option value="bn-IN">bn-IN (Bengali)</option>
+            <option value="ta-IN">ta-IN (Tamil)</option>
+            <option value="te-IN">te-IN (Telugu)</option>
+            <option value="kn-IN">kn-IN (Kannada)</option>
+            <option value="ml-IN">ml-IN (Malayalam)</option>
+            <option value="mr-IN">mr-IN (Marathi)</option>
+            <option value="gu-IN">gu-IN (Gujarati)</option>
+            <option value="pa-IN">pa-IN (Punjabi)</option>
+            <option value="or-IN">or-IN (Odia)</option>
+          </select>
+          <div class="tooltip">The language code for speech synthesis.</div>
+        </div>
+        <div id="sarvamPitchBlock" class="has-tooltip relative hidden">
+          <input
+            id="sarvamPitch"
+            type="number"
+            step="0.01"
+            min="-0.75"
+            max="0.75"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Pitch (Optional, -0.75 to 0.75)"
+            value="0"
+          />
+          <div class="tooltip">The pitch adjustment for the voice. Range: [-0.75, 0.75]. Positive values make the voice sharper; negative values make it deeper.</div>
+        </div>
+        <div id="sarvamPaceBlock" class="has-tooltip relative hidden">
+          <input
+            id="sarvamPace"
+            type="number"
+            step="0.1"
+            min="0.3"
+            max="3.0"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Pace (Optional, 0.3 to 3.0)"
+            value="1.0"
+          />
+          <div class="tooltip">The speed of speech. Range: [0.3, 3.0]. 1.0 is the normal speed. Values less than 1.0 slow down the speech; values greater than 1.0 speed it up.</div>
+        </div>
+        <div id="sarvamLoudnessBlock" class="has-tooltip relative hidden">
+          <input
+            id="sarvamLoudness"
+            type="number"
+            step="0.1"
+            min="0.1"
+            max="3.0"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Loudness (Optional, 0.1 to 3.0)"
+            value="1.0"
+          />
+          <div class="tooltip">The volume level of the speech. Range: [0.1, 3.0]. Higher values increase the loudness.</div>
+        </div>
+        <div id="sarvamSampleRateBlock" class="has-tooltip relative hidden">
+          <select
+            id="sarvamSampleRate"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="">Default</option>
+            <option value="8000">8000 Hz</option>
+            <option value="16000">16000 Hz</option>
+            <option value="22050">22050 Hz</option>
+            <option value="24000" selected>24000 Hz</option>
+          </select>
+          <div class="tooltip">The audio sample rate in Hz. Possible values: 8000, 16000, 22050, 24000.</div>
+        </div>
         
         <!-- Amazon Polly TTS Settings -->
         <div id="amazonPollyAccessKeyBlock" class="has-tooltip relative hidden">

@@ -46,8 +46,10 @@ window.Utils = class Utils {
             ttsKey = document.getElementById("groqTtsKey") ? document.getElementById("groqTtsKey").value.trim() : '';
         } else if (ttsVendor === "google") {
             ttsKey = document.getElementById("googleTtsCredentials") ? document.getElementById("googleTtsCredentials").value.trim() : '';
-        // } else if (ttsVendor === "playht") { // COMMENTED OUT: Not in Agora 2.0 official docs
-        //     ttsKey = document.getElementById("playhtTtsKey") ? document.getElementById("playhtTtsKey").value.trim() : '';
+        } else if (ttsVendor === "playht") {
+            ttsKey = document.getElementById("playhtTtsKey") ? document.getElementById("playhtTtsKey").value.trim() : '';
+        } else if (ttsVendor === "sarvam") {
+            ttsKey = document.getElementById("sarvamTtsKey") ? document.getElementById("sarvamTtsKey").value.trim() : '';
         } else if (ttsVendor === "amazon") {
             // Amazon Polly uses access key and secret key, not a single ttsKey
             // We'll handle this in buildAgentConfig
@@ -156,8 +158,10 @@ window.Utils = class Utils {
             llmStyle: document.getElementById("llmStyle") ? document.getElementById("llmStyle").value.trim() : '',
             ttsKey: ttsKey,
             gMsg: document.getElementById("gMsg").value.trim(),
+            greetingMode: document.getElementById("greetingMode") ? document.getElementById("greetingMode").value : "single_every",
             fMsg: document.getElementById("fMsg").value.trim(),
             sMsgContent: document.getElementById("sMsgContent").value.trim(),
+            geofence: document.getElementById("geofence") ? document.getElementById("geofence").value.trim() : '',
             asrVendor: document.getElementById("asrVendor").value,
             vendor: ttsVendor,
             isStringUid: document.getElementById('enableStringUid').checked,
@@ -344,6 +348,42 @@ window.Utils = class Utils {
                 }
                 if (!openaiVoice) {
                     throw new Error('OpenAI Voice is required');
+                }
+            } else if (ttsVendor === 'playht') {
+                const playhtTtsKey = document.getElementById('playhtTtsKey').value.trim();
+                const playhtUserId = document.getElementById('playhtUserId').value.trim();
+                const playhtVoiceEngine = document.getElementById('playhtVoiceEngine').value.trim();
+                const playhtVoice = document.getElementById('playhtVoice').value.trim();
+                
+                if (!playhtTtsKey) {
+                    throw new Error('PlayHT API Key is required');
+                }
+                if (!playhtUserId) {
+                    throw new Error('PlayHT User ID is required');
+                }
+                if (!playhtVoiceEngine) {
+                    throw new Error('PlayHT Voice Engine is required');
+                }
+                if (!playhtVoice) {
+                    throw new Error('PlayHT Voice is required');
+                }
+            } else if (ttsVendor === 'sarvam') {
+                const sarvamTtsKey = document.getElementById('sarvamTtsKey').value.trim();
+                const sarvamSpeakerSelect = document.getElementById('sarvamSpeaker').value.trim();
+                const sarvamSpeakerId = document.getElementById('sarvamSpeakerId') ? document.getElementById('sarvamSpeakerId').value.trim() : '';
+                const sarvamLanguageCode = document.getElementById('sarvamLanguageCode').value.trim();
+                
+                if (!sarvamTtsKey) {
+                    throw new Error('Sarvam API Key is required');
+                }
+                if (sarvamSpeakerSelect === 'other' && !sarvamSpeakerId) {
+                    throw new Error('Sarvam Custom Speaker ID is required when "Custom" is selected');
+                }
+                if (sarvamSpeakerSelect !== 'other' && !sarvamSpeakerSelect) {
+                    throw new Error('Sarvam Speaker is required');
+                }
+                if (!sarvamLanguageCode) {
+                    throw new Error('Sarvam Language Code is required');
                 }
             }
 
@@ -852,6 +892,16 @@ window.Utils = class Utils {
             });
         } */
 
+        // Parse geofence if provided
+        let geofence = null;
+        if (formData.geofence && formData.geofence.trim()) {
+            try {
+                geofence = JSON.parse(formData.geofence.trim());
+            } catch (e) {
+                throw new Error(`Invalid JSON in geofence configuration: ${e.message}`);
+            }
+        }
+
         const config = {
             name: formData.uniqueName,
             properties: {
@@ -861,6 +911,7 @@ window.Utils = class Utils {
                 remote_rtc_uids: remoteRtcUids,
                 enable_string_uid: formData.isStringUid,
                 idle_timeout: idleTimeout,
+                ...(geofence ? { geofence: geofence } : {}),
                 ...(formData.enableRtm && formData.agentRtmUid ? { agent_rtm_uid: formData.agentRtmUid } : {}),
                 ...(Object.keys(advancedFeatures).length > 0 ? { advanced_features: advancedFeatures } : {}),
                 ...(sal ? { sal: sal } : {}),
@@ -878,6 +929,11 @@ window.Utils = class Utils {
                         ...(formData.llmStyle ? { style: formData.llmStyle } : {}),
                         system_messages: systemMessages,
                         greeting_message: formData.gMsg,
+                        ...(formData.greetingMode && formData.greetingMode !== "single_every" ? {
+                            greeting_configs: {
+                                mode: formData.greetingMode
+                            }
+                        } : {}),
                         failure_message: formData.fMsg,
                         max_history: 32,
                         input_modalities: formData.inputModalities,
@@ -989,6 +1045,7 @@ window.Utils = class Utils {
                     ...(skip_patterns ? { skip_patterns } : {}),
                     params: {
                         key: document.getElementById("elevenLabsTtsKey").value,
+                        ...(document.getElementById("elevenLabsBaseUrl")?.value ? { base_url: document.getElementById("elevenLabsBaseUrl").value.trim() } : {}),
                         model_id: modelId,
                         voice_id: finalVoiceId,
                         ...(document.getElementById("elevenLabsSampleRate")?.value ? { sample_rate: parseInt(document.getElementById("elevenLabsSampleRate").value, 10) } : {}),
@@ -1017,6 +1074,7 @@ window.Utils = class Utils {
                     ...(skip_patterns ? { skip_patterns } : {}),
                     params: {
                         api_key: document.getElementById("openaiTtsKey").value,
+                        ...(document.getElementById("openaiBaseUrl")?.value ? { base_url: document.getElementById("openaiBaseUrl").value.trim() } : {}),
                         model: document.getElementById("openaiModel").value,
                         voice: document.getElementById("openaiVoice").value,
                         ...(document.getElementById("openaiInstructions")?.value ? { instructions: document.getElementById("openaiInstructions").value } : {}),
@@ -1099,18 +1157,48 @@ window.Utils = class Utils {
                         ...(Object.keys(audioConfig).length > 0 ? { AudioConfig: audioConfig } : {})
                     }
                 };
-            // } else if (formData.vendor === "playht") { // COMMENTED OUT: Not in Agora 2.0 official docs
-            //     config.properties.tts = {
-            //         vendor: "playht",
-            //         ...(skip_patterns ? { skip_patterns } : {}),
-            //         params: {
-            //             api_key: document.getElementById("playhtTtsKey").value,
-            //             user_id: document.getElementById("playhtUserId").value,
-            //             voice_engine: document.getElementById("playhtVoiceEngine").value,
-            //             voice: document.getElementById("playhtVoice").value,
-            //             ...(document.getElementById("playhtSpeed")?.value ? { speed: parseFloat(document.getElementById("playhtSpeed").value) } : {})
-            //         }
-            //     };
+            } else if (formData.vendor === "playht") {
+                config.properties.tts = {
+                    vendor: "playht",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: {
+                        api_key: document.getElementById("playhtTtsKey").value,
+                        user_id: document.getElementById("playhtUserId").value,
+                        voice_engine: document.getElementById("playhtVoiceEngine").value,
+                        voice: document.getElementById("playhtVoice").value,
+                        ...(document.getElementById("playhtSpeed")?.value ? { speed: parseFloat(document.getElementById("playhtSpeed").value) } : {})
+                    }
+                };
+            } else if (formData.vendor === "sarvam") {
+                const sarvamSpeakerSelect = document.getElementById("sarvamSpeaker").value;
+                const finalSpeaker = sarvamSpeakerSelect === "other" 
+                    ? document.getElementById("sarvamSpeakerId").value.trim()
+                    : sarvamSpeakerSelect;
+                
+                const sarvamParams = {
+                    api_subscription_key: document.getElementById("sarvamTtsKey").value,
+                    speaker: finalSpeaker,
+                    target_language_code: document.getElementById("sarvamLanguageCode").value
+                };
+                
+                if (document.getElementById("sarvamPitch")?.value) {
+                    sarvamParams.pitch = parseFloat(document.getElementById("sarvamPitch").value);
+                }
+                if (document.getElementById("sarvamPace")?.value) {
+                    sarvamParams.pace = parseFloat(document.getElementById("sarvamPace").value);
+                }
+                if (document.getElementById("sarvamLoudness")?.value) {
+                    sarvamParams.loudness = parseFloat(document.getElementById("sarvamLoudness").value);
+                }
+                if (document.getElementById("sarvamSampleRate")?.value) {
+                    sarvamParams.sample_rate = parseInt(document.getElementById("sarvamSampleRate").value, 10);
+                }
+                
+                config.properties.tts = {
+                    vendor: "sarvam",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: sarvamParams
+                };
             } else if (formData.vendor === "amazon") {
                 config.properties.tts = {
                     vendor: "amazon",

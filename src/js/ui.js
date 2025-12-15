@@ -56,6 +56,12 @@ window.UI = class UI {
         if (elevenLabsVoiceSelect) {
             elevenLabsVoiceSelect.addEventListener("change", () => this.handleElevenLabsVoiceChange());
         }
+        
+        // Sarvam speaker change handler
+        const sarvamSpeakerSelect = document.getElementById("sarvamSpeaker");
+        if (sarvamSpeakerSelect) {
+            sarvamSpeakerSelect.addEventListener("change", () => this.handleSarvamSpeakerChange());
+        }
 
         // Add parameter field button
         const addParamBtn = document.getElementById("addParamBtn");
@@ -1160,6 +1166,7 @@ window.UI = class UI {
             "elevenLabsVoiceBlock", 
             "elevenLabsVoiceIdBlock",
             "elevenLabsTtsKeyBlock",
+            "elevenLabsBaseUrlBlock",
             "elevenLabsSampleRateBlock",
             "elevenLabsStabilityBlock",
             "elevenLabsSimilarityBoostBlock",
@@ -1173,6 +1180,7 @@ window.UI = class UI {
         ];
         const openaiBlocks = [
             "openaiTtsKeyBlock",
+            "openaiBaseUrlBlock",
             "openaiModelBlock",
             "openaiVoiceBlock",
             "openaiInstructionsBlock",
@@ -1214,14 +1222,23 @@ window.UI = class UI {
             "googleSpeakingRateBlock",
             "googleSampleRateBlock"
         ];
-        // COMMENTED OUT: Not in Agora 2.0 official docs
-        // const playhtBlocks = [
-        //     "playhtTtsKeyBlock",
-        //     "playhtUserIdBlock",
-        //     "playhtVoiceEngineBlock",
-        //     "playhtVoiceBlock",
-        //     "playhtSpeedBlock"
-        // ];
+        const playhtBlocks = [
+            "playhtTtsKeyBlock",
+            "playhtUserIdBlock",
+            "playhtVoiceEngineBlock",
+            "playhtVoiceBlock",
+            "playhtSpeedBlock"
+        ];
+        const sarvamBlocks = [
+            "sarvamTtsKeyBlock",
+            "sarvamSpeakerBlock",
+            "sarvamSpeakerIdBlock",
+            "sarvamLanguageCodeBlock",
+            "sarvamPitchBlock",
+            "sarvamPaceBlock",
+            "sarvamLoudnessBlock",
+            "sarvamSampleRateBlock"
+        ];
         const amazonPollyBlocks = [
             "amazonPollyAccessKeyBlock",
             "amazonPollySecretKeyBlock",
@@ -1301,13 +1318,19 @@ window.UI = class UI {
             }
         });
 
-        // COMMENTED OUT: Not in Agora 2.0 official docs
-        // playhtBlocks.forEach(block => {
-        //     const element = document.getElementById(block);
-        //     if (element) {
-        //         element.classList.toggle("hidden", vendor !== "playht");
-        //     }
-        // });
+        playhtBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "playht");
+            }
+        });
+
+        sarvamBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "sarvam");
+            }
+        });
 
         amazonPollyBlocks.forEach(block => {
             const element = document.getElementById(block);
@@ -1319,6 +1342,11 @@ window.UI = class UI {
         // Handle Microsoft language population when vendor changes to Microsoft
         if (vendor === "microsoft") {
             this.populateMicrosoftLangList();
+        }
+        
+        // Handle Sarvam speaker visibility when vendor changes to Sarvam
+        if (vendor === "sarvam") {
+            this.handleSarvamSpeakerChange();
         }
 
         // Check if AI Avatar is enabled and disable it if TTS is not configured
@@ -1340,6 +1368,19 @@ window.UI = class UI {
         
         const voiceSel = elevenLabsVoiceSelect.value;
         voiceIdBlk.classList.toggle("hidden", voiceSel !== "other");
+    }
+
+    handleSarvamSpeakerChange() {
+        const sarvamSpeakerSelect = document.getElementById("sarvamSpeaker");
+        const speakerIdBlk = document.getElementById("sarvamSpeakerIdBlock");
+        
+        if (!sarvamSpeakerSelect || !speakerIdBlk) {
+            console.warn('Sarvam TTS elements not found');
+            return;
+        }
+        
+        const speakerSel = sarvamSpeakerSelect.value;
+        speakerIdBlk.classList.toggle("hidden", speakerSel !== "other");
     }
 
     populateMicrosoftLangList() {
