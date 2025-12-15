@@ -4345,17 +4345,56 @@
               <div class="tooltip">Timeout after all users leave the channel. 0 means the agent doesn't exit until stopped manually. Default: 30</div>
             </div>
             <div class="has-tooltip relative">
-              <input
-                id="geofence"
-                placeholder="Geofence (Optional, JSON string)"
-              />
-              <div class="tooltip">
-                Limit backend region. JSON only.<br/>
-                Format: {"area":"<AREA>","exclude_area":"<EXCLUDE>?"}<br/>
-                area (required): GLOBAL, NORTH_AMERICA, EUROPE, ASIA, INDIA, JAPAN<br/>
-                exclude_area (optional, area=GLOBAL only): NORTH_AMERICA, EUROPE, ASIA, INDIA, JAPAN<br/>
-                Examples: {"area":"NORTH_AMERICA"} or {"area":"GLOBAL","exclude_area":"EUROPE"}
+              <label class="text-sm font-medium mb-2 block">Geofence (Optional)</label>
+              <div class="flex gap-2">
+                <select
+                  id="geofenceArea"
+                  class="flex-1 p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500 mb-2"
+                >
+                  <option value="">Not Set (Optional)</option>
+                  <option value="GLOBAL">GLOBAL</option>
+                  <option value="NORTH_AMERICA">NORTH_AMERICA</option>
+                  <option value="EUROPE">EUROPE</option>
+                  <option value="ASIA">ASIA</option>
+                  <option value="INDIA">INDIA</option>
+                  <option value="JAPAN">JAPAN</option>
+                  <option value="custom">Custom</option>
+                </select>
+                <div id="geofenceAreaCustomBlock" class="has-tooltip relative hidden flex-1">
+                  <input
+                    id="geofenceAreaCustom"
+                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500 mb-2"
+                    placeholder="Custom Area Code (e.g., CUSTOM_REGION)"
+                  />
+                  <div class="tooltip">Enter a custom area code (single value only).</div>
+                </div>
               </div>
+              <div class="tooltip">Select the allowed region for server access. Leave as "Not Set" to omit geofence configuration.</div>
+            </div>
+            <div id="geofenceExcludeBlock" class="has-tooltip relative hidden">
+              <label class="text-sm font-medium mb-2 block">Exclude Area (Only when Area is GLOBAL)</label>
+              <select
+                id="geofenceExclude"
+                class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500 mb-2"
+                multiple
+                size="6"
+              >
+                <option value="NORTH_AMERICA">NORTH_AMERICA</option>
+                <option value="EUROPE">EUROPE</option>
+                <option value="ASIA">ASIA</option>
+                <option value="INDIA">INDIA</option>
+                <option value="JAPAN">JAPAN</option>
+                <option value="custom">Custom</option>
+              </select>
+              <div class="tooltip">Select one or more regions to exclude. Hold Ctrl/Cmd to select multiple. Only available when Area is set to GLOBAL.</div>
+            </div>
+            <div id="geofenceExcludeCustomBlock" class="has-tooltip relative hidden">
+              <input
+                id="geofenceExcludeCustom"
+                class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500 mb-2"
+                placeholder="Custom Exclude Areas (comma-separated, e.g., REGION1, REGION2)"
+              />
+              <div class="tooltip">Enter custom exclude area codes separated by commas.</div>
             </div>
             <div class="flex items-center">
               <input

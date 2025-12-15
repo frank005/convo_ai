@@ -161,7 +161,10 @@ window.Utils = class Utils {
             greetingMode: document.getElementById("greetingMode") ? document.getElementById("greetingMode").value : "single_every",
             fMsg: document.getElementById("fMsg").value.trim(),
             sMsgContent: document.getElementById("sMsgContent").value.trim(),
-            geofence: document.getElementById("geofence") ? document.getElementById("geofence").value.trim() : '',
+            geofenceArea: document.getElementById("geofenceArea") ? document.getElementById("geofenceArea").value : '',
+            geofenceAreaCustom: document.getElementById("geofenceAreaCustom") ? document.getElementById("geofenceAreaCustom").value.trim() : '',
+            geofenceExclude: document.getElementById("geofenceExclude") ? Array.from(document.getElementById("geofenceExclude").selectedOptions).map(opt => opt.value) : [],
+            geofenceExcludeCustom: document.getElementById("geofenceExcludeCustom") ? document.getElementById("geofenceExcludeCustom").value.trim() : '',
             asrVendor: document.getElementById("asrVendor").value,
             vendor: ttsVendor,
             isStringUid: document.getElementById('enableStringUid').checked,
@@ -892,13 +895,43 @@ window.Utils = class Utils {
             });
         } */
 
-        // Parse geofence if provided
+        // Build geofence from dropdowns if provided
         let geofence = null;
-        if (formData.geofence && formData.geofence.trim()) {
-            try {
-                geofence = JSON.parse(formData.geofence.trim());
-            } catch (e) {
-                throw new Error(`Invalid JSON in geofence configuration: ${e.message}`);
+        if (formData.geofenceArea && formData.geofenceArea !== "") {
+            // Determine the area value
+            let areaValue = formData.geofenceArea;
+            if (areaValue === "custom") {
+                if (!formData.geofenceAreaCustom || !formData.geofenceAreaCustom.trim()) {
+                    throw new Error('Custom area code is required when "Custom" is selected for geofence area');
+                }
+                areaValue = formData.geofenceAreaCustom.trim();
+            }
+            
+            geofence = {
+                area: areaValue
+            };
+            
+            // Add exclude_area only if area is GLOBAL and exclude is selected
+            if (areaValue === "GLOBAL" && formData.geofenceExclude && formData.geofenceExclude.length > 0) {
+                const excludeAreas = [];
+                
+                // Process selected exclude options
+                formData.geofenceExclude.forEach(excludeValue => {
+                    if (excludeValue === "custom") {
+                        // Handle custom exclude areas - split by comma and trim
+                        if (formData.geofenceExcludeCustom && formData.geofenceExcludeCustom.trim()) {
+                            const customAreas = formData.geofenceExcludeCustom.split(',').map(a => a.trim()).filter(a => a.length > 0);
+                            excludeAreas.push(...customAreas);
+                        }
+                    } else {
+                        excludeAreas.push(excludeValue);
+                    }
+                });
+                
+                if (excludeAreas.length > 0) {
+                    // Format as comma-separated string
+                    geofence.exclude_area = excludeAreas.join(',');
+                }
             }
         }
 

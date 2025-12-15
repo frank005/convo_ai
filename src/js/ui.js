@@ -62,6 +62,18 @@ window.UI = class UI {
         if (sarvamSpeakerSelect) {
             sarvamSpeakerSelect.addEventListener("change", () => this.handleSarvamSpeakerChange());
         }
+        
+        // Geofence area change handler
+        const geofenceAreaSelect = document.getElementById("geofenceArea");
+        if (geofenceAreaSelect) {
+            geofenceAreaSelect.addEventListener("change", () => this.handleGeofenceAreaChange());
+        }
+        
+        // Geofence exclude change handler
+        const geofenceExcludeSelect = document.getElementById("geofenceExclude");
+        if (geofenceExcludeSelect) {
+            geofenceExcludeSelect.addEventListener("change", () => this.handleGeofenceExcludeChange());
+        }
 
         // Add parameter field button
         const addParamBtn = document.getElementById("addParamBtn");
@@ -1381,6 +1393,69 @@ window.UI = class UI {
         
         const speakerSel = sarvamSpeakerSelect.value;
         speakerIdBlk.classList.toggle("hidden", speakerSel !== "other");
+    }
+
+    handleGeofenceAreaChange() {
+        const geofenceAreaSelect = document.getElementById("geofenceArea");
+        const geofenceAreaCustomBlock = document.getElementById("geofenceAreaCustomBlock");
+        const geofenceExcludeBlock = document.getElementById("geofenceExcludeBlock");
+        const geofenceExcludeCustomBlock = document.getElementById("geofenceExcludeCustomBlock");
+        
+        if (!geofenceAreaSelect) {
+            return;
+        }
+        
+        const areaValue = geofenceAreaSelect.value;
+        
+        // Show/hide custom area input
+        if (geofenceAreaCustomBlock) {
+            geofenceAreaCustomBlock.classList.toggle("hidden", areaValue !== "custom");
+        }
+        
+        // Show/hide exclude area dropdown (only when area is GLOBAL)
+        if (geofenceExcludeBlock) {
+            geofenceExcludeBlock.classList.toggle("hidden", areaValue !== "GLOBAL");
+        }
+        
+        // Hide exclude custom if exclude block is hidden
+        if (geofenceExcludeCustomBlock) {
+            if (areaValue !== "GLOBAL") {
+                geofenceExcludeCustomBlock.classList.add("hidden");
+            } else {
+                // Check if custom is selected in exclude
+                this.handleGeofenceExcludeChange();
+            }
+        }
+        
+        // Clear exclude selections if area is not GLOBAL
+        if (areaValue !== "GLOBAL" && geofenceExcludeBlock) {
+            const geofenceExcludeSelect = document.getElementById("geofenceExclude");
+            if (geofenceExcludeSelect) {
+                Array.from(geofenceExcludeSelect.options).forEach(option => {
+                    option.selected = false;
+                });
+            }
+            if (geofenceExcludeCustomBlock) {
+                const geofenceExcludeCustom = document.getElementById("geofenceExcludeCustom");
+                if (geofenceExcludeCustom) {
+                    geofenceExcludeCustom.value = "";
+                }
+            }
+        }
+    }
+
+    handleGeofenceExcludeChange() {
+        const geofenceExcludeSelect = document.getElementById("geofenceExclude");
+        const geofenceExcludeCustomBlock = document.getElementById("geofenceExcludeCustomBlock");
+        
+        if (!geofenceExcludeSelect || !geofenceExcludeCustomBlock) {
+            return;
+        }
+        
+        const selectedOptions = Array.from(geofenceExcludeSelect.selectedOptions);
+        const hasCustom = selectedOptions.some(option => option.value === "custom");
+        
+        geofenceExcludeCustomBlock.classList.toggle("hidden", !hasCustom);
     }
 
     populateMicrosoftLangList() {
