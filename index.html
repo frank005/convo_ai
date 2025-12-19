@@ -740,7 +740,6 @@
             <button
               id="sendBroadcastBtn"
               class="modern-btn modern-btn-primary mt-2 w-full"
-              disabled
             >
               Send Msg
             </button>
@@ -1732,6 +1731,24 @@
 
     // Broadcast Message Logic
     const sendBroadcastBtn = document.getElementById('sendBroadcastBtn');
+    const broadcastTextInput = document.getElementById('broadcastText');
+    
+    // Function to update send button state
+    function updateBroadcastButtonState() {
+      if (sendBroadcastBtn && broadcastTextInput) {
+        const text = broadcastTextInput.value.trim();
+        sendBroadcastBtn.disabled = !text || text.length === 0;
+      }
+    }
+    
+    // Update button state when input changes
+    if (broadcastTextInput) {
+      broadcastTextInput.addEventListener('input', updateBroadcastButtonState);
+      broadcastTextInput.addEventListener('paste', updateBroadcastButtonState);
+      // Initial state check
+      updateBroadcastButtonState();
+    }
+    
     if (sendBroadcastBtn) {
       sendBroadcastBtn.addEventListener('click', async function() {
       const statusDiv = document.getElementById('broadcastMsgStatus');
@@ -1762,6 +1779,8 @@
         statusDiv.textContent = 'Broadcast sent successfully!';
         statusDiv.className = 'mt-2 text-sm text-green-400';
         document.getElementById('broadcastText').value = '';
+        // Update button state after clearing input
+        updateBroadcastButtonState();
       } catch (err) {
         statusDiv.textContent = `Error: ${err.message}`;
         statusDiv.className = 'mt-2 text-sm text-red-400 whitespace-pre-line break-words max-h-16 overflow-y-auto';
