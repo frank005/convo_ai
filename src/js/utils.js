@@ -240,7 +240,11 @@ window.Utils = class Utils {
             avatarRtcToken: avatarRtcToken,
             heygenQuality: heygenQuality,
             heygenDisableIdleTimeout: heygenDisableIdleTimeout,
-            heygenActivityIdleTimeout: heygenActivityIdleTimeout
+            heygenActivityIdleTimeout: heygenActivityIdleTimeout,
+            // RTC Encryption settings
+            rtcEncryptionMode: document.getElementById('rtcEncryptionMode') ? document.getElementById('rtcEncryptionMode').value : '',
+            rtcEncryptionKey: document.getElementById('rtcEncryptionKey') ? document.getElementById('rtcEncryptionKey').value.trim() : '',
+            rtcEncryptionSalt: document.getElementById('rtcEncryptionSalt') ? document.getElementById('rtcEncryptionSalt').value.trim() : ''
         };
     }
 
@@ -652,6 +656,17 @@ window.Utils = class Utils {
             return {
                 vendor: 'google',
                 params: params
+            };
+        } else if (vendor === 'sarvam') {
+            const sarvamAsrKey = document.getElementById('sarvamAsrKey').value.trim();
+            const sarvamAsrLanguage = document.getElementById('sarvamAsrLanguage').value.trim();
+            
+            return {
+                vendor: 'sarvam',
+                params: {
+                    api_key: sarvamAsrKey,
+                    language: sarvamAsrLanguage
+                }
             };
         }
         
@@ -1237,6 +1252,40 @@ window.Utils = class Utils {
                 };
             }
         }
+
+        // Add RTC encryption configuration if enabled (only if mode is selected and not empty)
+        // If no encryption mode is selected (empty string), the rtc parameter will not be included
+        if (formData.rtcEncryptionMode && formData.rtcEncryptionMode.trim() !== '') {
+            const encryptionMode = parseInt(formData.rtcEncryptionMode, 10);
+            
+            // Validate that we got a valid mode number
+            if (isNaN(encryptionMode) || encryptionMode < 1 || encryptionMode > 8) {
+                throw new Error('Invalid RTC encryption mode selected');
+            }
+            
+            const encryptionKey = formData.rtcEncryptionKey;
+            
+            if (!encryptionKey || encryptionKey.trim() === '') {
+                throw new Error('Encryption key is required when RTC encryption mode is set');
+            }
+            
+            const rtc = {
+                encryption_mode: encryptionMode,
+                encryption_key: encryptionKey.trim()
+            };
+            
+            // For GCM2 modes (7 and 8), salt is required
+            if (encryptionMode === 7 || encryptionMode === 8) {
+                const encryptionSalt = formData.rtcEncryptionSalt;
+                if (!encryptionSalt || encryptionSalt.trim() === '') {
+                    throw new Error('Encryption salt is required for AES-128-GCM2 (7) and AES-256-GCM2 (8) modes');
+                }
+                rtc.encryption_salt = encryptionSalt.trim();
+            }
+            
+            config.properties.rtc = rtc;
+        }
+        // If no encryption mode is selected, rtc property is not added to config.properties
 
         return config;
     }

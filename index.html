@@ -4223,6 +4223,65 @@
       });
     }
 
+    // RTC Encryption Event Handlers
+    const rtcEncryptionMode = document.getElementById('rtcEncryptionMode');
+    const rtcEncryptionSaltBlock = document.getElementById('rtcEncryptionSaltBlock');
+    const generateRtcEncryptionKeyBtn = document.getElementById('generateRtcEncryptionKeyBtn');
+    const generateRtcEncryptionSaltBtn = document.getElementById('generateRtcEncryptionSaltBtn');
+
+    // Show/hide salt field based on encryption mode
+    if (rtcEncryptionMode) {
+      rtcEncryptionMode.addEventListener('change', function() {
+        const mode = this.value;
+        const keyInput = document.getElementById('rtcEncryptionKey');
+        const saltInput = document.getElementById('rtcEncryptionSalt');
+        
+        // If "None" is selected (empty string), clear all encryption fields
+        if (mode === '') {
+          if (rtcEncryptionSaltBlock) {
+            rtcEncryptionSaltBlock.classList.add('hidden');
+          }
+          if (keyInput) keyInput.value = '';
+          if (saltInput) saltInput.value = '';
+        } else if (rtcEncryptionSaltBlock) {
+          // Show salt field for GCM2 modes (7 and 8)
+          if (mode === '7' || mode === '8') {
+            rtcEncryptionSaltBlock.classList.remove('hidden');
+          } else {
+            rtcEncryptionSaltBlock.classList.add('hidden');
+            // Clear salt value when hidden (but keep key)
+            if (saltInput) saltInput.value = '';
+          }
+        }
+      });
+    }
+
+    // Generate random encryption key (32 bytes hex)
+    if (generateRtcEncryptionKeyBtn) {
+      generateRtcEncryptionKeyBtn.addEventListener('click', function() {
+        const array = new Uint8Array(32);
+        window.crypto.getRandomValues(array);
+        const hexKey = Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+        const keyInput = document.getElementById('rtcEncryptionKey');
+        if (keyInput) {
+          keyInput.value = hexKey;
+        }
+      });
+    }
+
+    // Generate random encryption salt (32 bytes base64)
+    if (generateRtcEncryptionSaltBtn) {
+      generateRtcEncryptionSaltBtn.addEventListener('click', function() {
+        const array = new Uint8Array(32);
+        window.crypto.getRandomValues(array);
+        const base64Salt = btoa(String.fromCharCode(...array));
+        const saltInput = document.getElementById('rtcEncryptionSalt');
+        if (saltInput) {
+          saltInput.value = base64Salt;
+        }
+      });
+    }
+
     // Close drawer buttons
     document.querySelectorAll('[data-drawer]').forEach(button => {
       button.addEventListener('click', function() {
@@ -4434,6 +4493,63 @@
           </div>
         </div>
 
+        <!-- RTC Encryption Configuration -->
+        <div class="modern-panel">
+          <h3 class="text-lg font-semibold mb-3">RTC Media Encryption</h3>
+          <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="has-tooltip relative">
+              <select
+                id="rtcEncryptionMode"
+              >
+                <option value="">None (No Encryption)</option>
+                <option value="1">AES-128-XTS</option>
+                <option value="2">AES-128-ECB</option>
+                <option value="3">AES-256-XTS</option>
+                <option value="4">SM4-128-ECB</option>
+                <option value="5">AES-128-GCM</option>
+                <option value="6">AES-256-GCM</option>
+                <option value="7">AES-128-GCM2 (with salt)</option>
+                <option value="8">AES-256-GCM2 (with salt)</option>
+              </select>
+              <div class="tooltip">The built-in encryption mode for RTC media content. Agora recommends using AES-128-GCM2 (7) or AES-256-GCM2 (8) mode.</div>
+            </div>
+            <div class="has-tooltip relative">
+              <div class="flex gap-2">
+                <input
+                  id="rtcEncryptionKey"
+                  placeholder="Encryption Key (32-byte recommended)"
+                  class="flex-1"
+                />
+                <button
+                  id="generateRtcEncryptionKeyBtn"
+                  class="modern-btn modern-btn-secondary"
+                  title="Generate Random Key"
+                >
+                  Generate
+                </button>
+              </div>
+              <div class="tooltip">The encryption key for RTC media content. The key has no length limit. Agora recommends using a 32-byte key.</div>
+            </div>
+            <div id="rtcEncryptionSaltBlock" class="has-tooltip relative hidden">
+              <div class="flex gap-2">
+                <input
+                  id="rtcEncryptionSalt"
+                  placeholder="Encryption Salt (Base64, 32 bytes)"
+                  class="flex-1"
+                />
+                <button
+                  id="generateRtcEncryptionSaltBtn"
+                  class="modern-btn modern-btn-secondary"
+                  title="Generate Random Salt"
+                >
+                  Generate
+                </button>
+              </div>
+              <div class="tooltip">The salt value used for encryption. This is a Base64-encoded string that is 32 bytes long after decoding. Required for AES-128-GCM2 (7) and AES-256-GCM2 (8) modes.</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Settings Categories -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- LLM Settings -->
@@ -4513,6 +4629,7 @@
                 <option value="assemblyai">AssemblyAI (Beta)</option>
                 <option value="amazon">Amazon Transcribe (Beta)</option>
                 <option value="google">Google (Beta)</option>
+                <option value="sarvam">Sarvam (Beta)</option>
                 <option value="custom">Custom</option>
               </select>
               <div class="tooltip">Select the Automatic Speech Recognition (ASR) vendor to use for speech recognition.</div>
@@ -4785,6 +4902,30 @@
                   value="long"
                 />
                 <div class="tooltip">The recognition model to use.</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Sarvam ASR Configuration -->
+          <div id="sarvamAsrConfig" class="hidden mt-4">
+            <h4 class="text-sm font-semibold mb-2">Sarvam ASR Settings</h4>
+            <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="has-tooltip relative">
+                <input
+                  id="sarvamAsrKey"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="Sarvam API Key (Required)"
+                />
+                <div class="tooltip">Your Sarvam API key. Get your API key from the Sarvam dashboard.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="sarvamAsrLanguage"
+                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  placeholder="Language (Required, e.g., hi-IN)"
+                  value="hi-IN"
+                />
+                <div class="tooltip">The language code for transcription. Set to unknown for automatic language detection.</div>
               </div>
             </div>
           </div>
