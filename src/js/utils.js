@@ -1269,17 +1269,32 @@ window.Utils = class Utils {
                 throw new Error('Encryption key is required when RTC encryption mode is set');
             }
             
+            // Use encryption key directly (max 31 characters, no conversion needed)
+            const trimmedKey = encryptionKey.trim();
+            
+            // Validate key length
+            if (trimmedKey.length > 31) {
+                throw new Error('Encryption key must be 31 characters or less');
+            }
+            
+            if (trimmedKey.length === 0) {
+                throw new Error('Encryption key cannot be empty');
+            }
+            
             const rtc = {
                 encryption_mode: encryptionMode,
-                encryption_key: encryptionKey.trim()
+                encryption_key: trimmedKey
             };
             
             // For GCM2 modes (7 and 8), salt is required
+            // Note: Salt is sent as base64 string (not converted to Uint8Array for API)
+            // The API expects base64 string, client SDK expects Uint8Array
             if (encryptionMode === 7 || encryptionMode === 8) {
                 const encryptionSalt = formData.rtcEncryptionSalt;
                 if (!encryptionSalt || encryptionSalt.trim() === '') {
                     throw new Error('Encryption salt is required for AES-128-GCM2 (7) and AES-256-GCM2 (8) modes');
                 }
+                // Salt is sent as base64 string to the API (API will handle conversion)
                 rtc.encryption_salt = encryptionSalt.trim();
             }
             

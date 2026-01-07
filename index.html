@@ -4256,15 +4256,17 @@
       });
     }
 
-    // Generate random encryption key (32 bytes hex)
+    // Generate random encryption key (31 characters, alphanumeric + safe special chars)
     if (generateRtcEncryptionKeyBtn) {
       generateRtcEncryptionKeyBtn.addEventListener('click', function() {
-        const array = new Uint8Array(32);
+        // Generate 31 characters using alphanumeric and safe characters that won't break JSON
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+        const array = new Uint8Array(31);
         window.crypto.getRandomValues(array);
-        const hexKey = Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+        const key = Array.from(array).map(b => chars[b % chars.length]).join('');
         const keyInput = document.getElementById('rtcEncryptionKey');
         if (keyInput) {
-          keyInput.value = hexKey;
+          keyInput.value = key;
         }
       });
     }
@@ -4517,8 +4519,9 @@
               <div class="flex gap-2">
                 <input
                   id="rtcEncryptionKey"
-                  placeholder="Encryption Key (32-byte recommended)"
+                  placeholder="Encryption Key (max 31 characters)"
                   class="flex-1"
+                  maxlength="31"
                 />
                 <button
                   id="generateRtcEncryptionKeyBtn"
@@ -4528,7 +4531,7 @@
                   Generate
                 </button>
               </div>
-              <div class="tooltip">The encryption key for RTC media content. The key has no length limit. Agora recommends using a 32-byte key.</div>
+              <div class="tooltip">The encryption key for RTC media content. Maximum 31 characters to avoid JSON encoding issues with special characters.</div>
             </div>
             <div id="rtcEncryptionSaltBlock" class="has-tooltip relative hidden">
               <div class="flex gap-2">

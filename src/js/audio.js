@@ -65,16 +65,6 @@ window.MediaProcessor = class MediaProcessor {
         drawWave();
     }
 
-    // Helper function to convert hex string to ASCII
-    hex2ascii(hexx) {
-        const hex = hexx.toString();
-        let str = '';
-        for (let i = 0; i < hex.length; i += 2) {
-            str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-        }
-        return str;
-    }
-
     // Helper function to convert base64 string to Uint8Array
     async base64ToUint8Array(string) {
         const raw = window.atob(string);
@@ -102,12 +92,21 @@ window.MediaProcessor = class MediaProcessor {
 
     // Apply RTC encryption to client if encryption is configured
     async applyRtcEncryption(client) {
+        console.log('🔐 applyRtcEncryption called - checking for encryption settings...');
+        
         const encryptionMode = document.getElementById('rtcEncryptionMode');
         const encryptionKey = document.getElementById('rtcEncryptionKey');
         const encryptionSalt = document.getElementById('rtcEncryptionSalt');
         
+        console.log('🔐 Form elements found:', {
+            encryptionMode: !!encryptionMode,
+            encryptionKey: !!encryptionKey,
+            encryptionSalt: !!encryptionSalt
+        });
+        
         if (!encryptionMode || !encryptionKey) {
             console.log('🔐 Encryption form elements not found - encryption will not be applied');
+            console.log('🔐 Make sure Agent Settings modal is accessible and encryption fields exist');
             return; // No encryption configured
         }
         
@@ -116,14 +115,18 @@ window.MediaProcessor = class MediaProcessor {
         
         console.log('🔐 Reading encryption settings:', {
             mode,
+            modeType: typeof mode,
             hasKey: !!key,
             keyLength: key ? key.length : 0,
-            hasSaltElement: !!encryptionSalt
+            keyPreview: key ? key.substring(0, 10) + '...' : 'empty',
+            hasSaltElement: !!encryptionSalt,
+            saltValue: encryptionSalt ? encryptionSalt.value.trim().substring(0, 10) + '...' : 'N/A'
         });
         
         // If no encryption mode is selected (empty string), don't apply encryption
         if (!mode || mode === '' || !key || key === '') {
             console.log('🔐 No RTC encryption configured (mode or key is empty), skipping encryption setup');
+            console.log('🔐 Mode value:', mode, 'Key value:', key ? 'has value' : 'empty');
             return;
         }
         
@@ -143,14 +146,17 @@ window.MediaProcessor = class MediaProcessor {
                 return;
             }
             
-            // Convert hex key to ASCII (same as octopiencryption)
-            const asciiSecret = this.hex2ascii(key);
+            // Use key directly (max 31 characters, no conversion needed)
+            // Validate key length
+            if (key.length > 31) {
+                console.warn('🔐 Encryption key exceeds 31 characters, truncating');
+                key = key.substring(0, 31);
+            }
             
             console.log('🔐 Encryption config:', {
                 modeNum,
                 modeString,
                 keyLength: key.length,
-                asciiSecretLength: asciiSecret.length,
                 hasSalt: modeNum === 7 || modeNum === 8
             });
             
@@ -164,12 +170,21 @@ window.MediaProcessor = class MediaProcessor {
                 
                 const saltArray = await this.base64ToUint8Array(salt);
                 console.log('🔐 Setting RTC encryption (GCM2): mode', modeString, 'salt length:', saltArray.length);
-                console.log('🔐 Calling setEncryptionConfig with:', [modeString, asciiSecret, saltArray]);
-                await client.setEncryptionConfig(modeString, asciiSecret, saltArray);
+                console.log('🔐 About to call client.setEncryptionConfig with:', {
+                    mode: modeString,
+                    secretLength: key.length,
+                    saltLength: saltArray.length
+                });
+                await client.setEncryptionConfig(modeString, key, saltArray);
+                console.log('🔐 client.setEncryptionConfig called successfully (GCM2)');
             } else {
                 console.log('🔐 Setting RTC encryption: mode', modeString);
-                console.log('🔐 Calling setEncryptionConfig with:', [modeString, asciiSecret]);
-                await client.setEncryptionConfig(modeString, asciiSecret);
+                console.log('🔐 About to call client.setEncryptionConfig with:', {
+                    mode: modeString,
+                    secretLength: key.length
+                });
+                await client.setEncryptionConfig(modeString, key);
+                console.log('🔐 client.setEncryptionConfig called successfully');
             }
             
             console.log('🔐 RTC encryption applied successfully');
@@ -186,6 +201,7 @@ window.MediaProcessor = class MediaProcessor {
     }
 
     async joinChannel(appId, channelName, token, uid, subtitleManager = null, agentId = null) {
+        console.log('🔵🔵🔵 JOIN CHANNEL CALLED - Starting join process...');
         this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
         this.appId = appId; // Store appId for later use
         this.subtitleManager = subtitleManager;
@@ -195,7 +211,18 @@ window.MediaProcessor = class MediaProcessor {
         console.log('🔵 MediaProcessor: Initial UID for RTM initialization:', this.uid, '(original uid param:', uid, ')');
         
         // Apply RTC encryption if configured (must be done before joining)
-        await this.applyRtcEncryption(this.client);
+        console.log('🔵🔵🔵 ABOUT TO CALL applyRtcEncryption...');
+        try {
+            console.log('🔵 MediaProcessor: About to apply RTC encryption...');
+            await this.applyRtcEncryption(this.client);
+            console.log('🔵 MediaProcessor: RTC encryption application completed');
+        } catch (error) {
+            console.error('🔵 MediaProcessor: Error in applyRtcEncryption:', error);
+            console.error('🔵 MediaProcessor: Error stack:', error.stack);
+            // Don't throw - allow join to proceed even if encryption fails
+            // User will see the error in console and can fix it
+        }
+        console.log('🔵🔵🔵 CONTINUING WITH JOIN AFTER ENCRYPTION...');
         
         // Listen for join success to capture the actual assigned UID
         this.client.on("user-joined", (user) => {
