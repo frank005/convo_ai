@@ -748,12 +748,9 @@ window.Utils = class Utils {
         if (formData.enableSal) {
             advancedFeatures.enable_sal = true;
         }
-        // Enable tools if MCP servers are configured and vendor is custom
+        // Enable tools if MCP servers are configured
         if (formData.enableTools) {
-            const llmVendor = formData.llmVendor ? formData.llmVendor.trim().toLowerCase() : '';
-            if (llmVendor === 'custom') {
-                advancedFeatures.enable_tools = true;
-            }
+            advancedFeatures.enable_tools = true;
         }
 
         // Prepare SAL config (optional - only included when enableSal is true)
@@ -1035,7 +1032,7 @@ window.Utils = class Utils {
                             model: formData.llmModel,
                             ...customParams
                         },
-                        ...(formData.enableTools && formData.llmVendor && formData.llmVendor.trim().toLowerCase() === 'custom' ? (() => {
+                        ...(formData.enableTools ? (() => {
                             const mcpServers = this.getMcpServers();
                             if (mcpServers.length > 0) {
                                 return { mcp_servers: mcpServers };

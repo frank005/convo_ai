@@ -90,17 +90,6 @@ window.UI = class UI {
             }
         });
         
-        document.addEventListener("input", (e) => {
-            if (e.target.id === "llmVendor") {
-                this.handleLlmVendorChange();
-            }
-        });
-        
-        document.addEventListener("change", (e) => {
-            if (e.target.id === "llmVendor") {
-                this.handleLlmVendorChange();
-            }
-        });
         
         document.addEventListener("click", (e) => {
             if (e.target.id === "addMcpServerBtn") {
@@ -1596,73 +1585,23 @@ window.UI = class UI {
     handleEnableToolsChange() {
         const enableToolsCheckbox = document.getElementById("enableTools");
         const mcpServersConfig = document.getElementById("mcpServersConfig");
-        const llmVendor = document.getElementById("llmVendor");
         
-        if (!enableToolsCheckbox || !mcpServersConfig || !llmVendor) {
+        if (!enableToolsCheckbox || !mcpServersConfig) {
             return;
         }
         
         const isChecked = enableToolsCheckbox.checked;
-        const vendor = llmVendor.value.trim().toLowerCase();
         
         // Show the section when checked
         if (isChecked) {
             mcpServersConfig.classList.remove("hidden");
             mcpServersConfig.style.display = "";
-            
-            // Show warning if vendor is not custom
-            if (vendor !== "custom") {
-                // Add warning message if it doesn't exist
-                let warningMsg = mcpServersConfig.querySelector('.vendor-warning');
-                if (!warningMsg) {
-                    warningMsg = document.createElement('div');
-                    warningMsg.className = 'vendor-warning text-yellow-400 text-sm mb-3 p-2 bg-yellow-900 bg-opacity-50 rounded border border-yellow-600';
-                    warningMsg.textContent = '⚠️ Warning: MCP servers only work when LLM Vendor is set to "custom". Please set the vendor to "custom" for this feature to work.';
-                    mcpServersConfig.insertBefore(warningMsg, mcpServersConfig.firstChild);
-                }
-            } else {
-                // Remove warning if vendor is custom
-                const warningMsg = mcpServersConfig.querySelector('.vendor-warning');
-                if (warningMsg) {
-                    warningMsg.remove();
-                }
-            }
         } else {
             mcpServersConfig.classList.add("hidden");
             mcpServersConfig.style.display = "none";
         }
     }
 
-    handleLlmVendorChange() {
-        const llmVendor = document.getElementById("llmVendor");
-        const enableToolsCheckbox = document.getElementById("enableTools");
-        const mcpServersConfig = document.getElementById("mcpServersConfig");
-        
-        if (!llmVendor || !enableToolsCheckbox || !mcpServersConfig) return;
-        
-        const vendor = llmVendor.value.trim().toLowerCase();
-        const isChecked = enableToolsCheckbox.checked;
-        
-        // If checkbox is checked, show the section and update warning
-        if (isChecked) {
-            mcpServersConfig.classList.remove("hidden");
-            
-            // Show or hide warning based on vendor
-            let warningMsg = mcpServersConfig.querySelector('.vendor-warning');
-            if (vendor !== "custom") {
-                if (!warningMsg) {
-                    warningMsg = document.createElement('div');
-                    warningMsg.className = 'vendor-warning text-yellow-400 text-sm mb-3 p-2 bg-yellow-900 bg-opacity-50 rounded border border-yellow-600';
-                    warningMsg.textContent = '⚠️ Warning: MCP servers only work when LLM Vendor is set to "custom". Please set the vendor to "custom" for this feature to work.';
-                    mcpServersConfig.insertBefore(warningMsg, mcpServersConfig.firstChild);
-                }
-            } else {
-                if (warningMsg) {
-                    warningMsg.remove();
-                }
-            }
-        }
-    }
 
     addMcpServerField() {
         const container = document.getElementById("mcp-servers-container");

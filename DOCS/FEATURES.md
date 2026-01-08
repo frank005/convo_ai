@@ -14,13 +14,21 @@
 
 - **Traditional LLM Mode**
 
-  - Support for OpenAI, Anthropic, Gemini, and custom LLM providers
+  - Support for OpenAI, Anthropic, Gemini, Vertex AI, and custom LLM providers
   - Configurable system messages and greeting/failure messages
   - Custom parameter injection for advanced model control
   - Flexible vendor-specific request formatting
+  - MCP (Model Context Protocol) servers support for tool calling
+  - Amazon Bedrock support with access key and secret configuration
+  - Claude Anthropic headers configuration
 
 - **Multimodal LLM (MLLM) Mode**
   - Real-time multimodal conversations with OpenAI Realtime API
+  - Google Vertex AI MLLM support with native audio
+    - ADC credentials configuration
+    - Project ID and location settings
+    - Voice selection and custom instructions
+    - Automatic transcription for agent and user
   - Direct WebSocket connection to OpenAI Realtime API
   - Support for text, audio, and image inputs simultaneously
   - Streaming audio and text processing
@@ -197,6 +205,30 @@
   - Data channel configuration (RTC datastream or RTM)
   - Performance metrics collection (with RTM enabled)
   - Signaling requirements validation
+
+- **MCP Servers (Model Context Protocol)**
+
+  - Tool calling support with multiple server configurations
+  - Configure multiple MCP servers with unique names and endpoints
+  - Transport protocol options: http, sse, streamable_http
+  - Tool availability toggle (is_tool_call_available)
+  - Allowed tools configuration (comma-separated list or "*" for all)
+  - Automatic enable_tools flag in advanced_features when enabled
+  - mcp_servers array added to LLM configuration in JSON output
+  - Comprehensive tooltips for all configuration fields
+
+- **SAL (Speaker Adaptation Library)**
+
+  - Voice print locking and recognition capabilities
+  - **Locking Mode**: Seamless voice locking in 10 seconds
+    - Seamless mode: Auto-recognition without pre-registered voiceprints
+    - Personalized mode: Pre-registered voiceprints (1-3 URLs)
+  - **Recognition Mode**: Voice recognition with speaker identification
+    - Requires voiceprint URLs for speaker identification
+    - Processes speaker information via vpids in metadata
+  - Sample URL management for voiceprints
+  - File requirements: 16kHz, 16-bit, mono PCM, 10-15 seconds duration
+  - Maximum file size: 2 MB per voiceprint
 
 - **Custom Parameters**
 

@@ -75,20 +75,54 @@ For detailed setup instructions, see [SETUP.md](DOCS/SETUP.md).
 ## Key Features
 
 - **Dual AI Model Support**: Traditional LLM and Multimodal LLM (MLLM) configurations
-- **Comprehensive TTS Support**: Microsoft, ElevenLabs, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Groq, and Google TTS
-- **Advanced ASR Integration**: Agora, Microsoft, and Deepgram speech recognition with custom model support
+  - **LLM Mode**: Support for OpenAI, Anthropic, Gemini, Vertex AI, and custom LLM providers
+  - **MLLM Mode**: Real-time multimodal conversations with OpenAI Realtime API and Google Vertex AI
+  - Vertex AI MLLM support with native audio, ADC credentials, and project configuration
+- **Comprehensive TTS Support**: Microsoft, ElevenLabs, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Groq, Google, PlayHT, Sarvam, and Amazon Polly TTS
+- **Advanced ASR Integration**: Agora (ARES), Microsoft, Deepgram, OpenAI, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, and Custom ASR with extensive language support
 - **AI Avatar Support**: Akool and HeyGen avatar vendors with real-time video streaming
-- **SIP/Phone Management**: Outbound call functionality with phone number management
-  - Initiate outbound calls via SIP
-  - Pipeline ID support with override option for complete configuration
-  - Phone number import, update, and management
-  - Call records and status retrieval
-- **Real-time Audio & Visual**: Live audio visualization, camera integration, and device selection
-- **Live Subtitles & Chat**: Real-time subtitle display and chat history management
-- **Advanced Configuration**: VAD, turn detection, silence management, SAL (Speaker Adaptation Library), farewell configuration, and custom parameters
-- **Smart Validation**: Context-aware validation for agent creation and SIP calls based on pipeline configuration
-- **Local Token Generation**: Built-in Agora RTC + RTM token generator with one-click token generation for agent, avatar, and client UIDs
-- **Modern UI Design**: Beautiful gradient buttons, modern form inputs, and enhanced visual styling with smooth animations
+  - HeyGen-specific settings: quality control, idle timeout, and activity timeout
+  - Automatic client UID configuration for avatar-agent communication
+- **MCP Servers (Model Context Protocol)**: Tool calling support with multiple server configurations
+  - Configure multiple MCP servers with custom endpoints
+  - Support for http, sse, and streamable_http transport protocols
+  - Tool availability and allowed tools configuration
+  - Automatic enable_tools flag in advanced_features when enabled
+- **SIP/Phone Management**: Complete phone number and call management
+  - Import, update, and manage phone numbers
+  - Initiate outbound calls via SIP with pipeline ID support
+  - Override checkbox to use complete configuration even with pipeline ID
+  - Retrieve call records and status
+  - Inbound and outbound configuration with allowed addresses
+- **Real-time Audio & Visual**: Comprehensive multimedia experience
+  - Live audio visualization with waveform display
+  - Camera integration with preview overlay and device selection
+  - Multi-camera device selection and configuration
+  - Microphone and camera device management with persistent storage
+  - Permission management with automatic fallback
+- **Live Subtitles & Chat**: Real-time conversation tracking
+  - Real-time subtitle display with overlay functionality
+  - Live chat history with message timestamps
+  - RTM and Data Stream subtitle modes
+  - Copy and clear functionality for chat history
+- **Advanced Configuration**: Extensive customization options
+  - **VAD & Turn Detection**: Agora VAD, Server VAD, and Semantic VAD
+  - **SAL (Speaker Adaptation Library)**: Voice print locking and recognition
+    - Locking mode: Seamless voice locking in 10 seconds
+    - Recognition mode: Voice recognition with speaker identification
+    - Sample URL management for voiceprints
+  - Silence management with configurable timeouts and actions
+  - Farewell configuration with graceful timeout
+  - Custom parameters with type validation (string, number, array, object)
+- **Smart Validation**: Context-aware validation for agent creation and SIP calls
+- **Local Token Generation**: Built-in Agora RTC + RTM token generator
+  - One-click token generation for agent, avatar, and client UIDs
+  - 30-minute token expiration with PUBLISHER role
+- **Modern UI Design**: Professional interface with enhanced user experience
+  - Beautiful gradient buttons and modern form inputs
+  - Enhanced visual styling with smooth animations
+  - Responsive design with proper overflow handling
+  - Comprehensive tooltips and help text
 
 For a complete feature list, see [FEATURES.md](DOCS/FEATURES.md).
 
@@ -142,4 +176,15 @@ For issues and questions:
 
 ---
 
-**Agora ConversationalAI Backend v2.0** - Enhanced with MLLM support, AI Avatar functionality, SIP/Phone Management, advanced configuration options, new TTS/ASR vendors, comprehensive real-time multimodal capabilities, and device selection management. Features professional SVG placeholders, seamless video stream integration, improved chat interface with proper overflow handling and responsive design, robust device selection with permission management and error recovery, pipeline ID override functionality, smart validation system, comprehensive phone number management capabilities, and a modern UI library with gradient buttons, enhanced form styling, and smooth animations.
+**Agora ConversationalAI Backend v2.0** - A comprehensive web dashboard for managing and interacting with Agora's Conversational AI Agents. Features include:
+
+- **Dual AI Model Support**: Traditional LLM and Multimodal LLM (MLLM) with Vertex AI integration
+- **MCP Servers**: Model Context Protocol support for tool calling with multiple server configurations
+- **Comprehensive Vendor Support**: 10+ TTS vendors, 9+ ASR vendors, and 2 AI Avatar vendors
+- **Advanced Features**: AIVAD, RTM, SAL (Speaker Adaptation Library), custom parameters, and more
+- **SIP/Phone Management**: Complete phone number and call management with pipeline support
+- **Real-time Capabilities**: Live subtitles, chat history, audio visualization, and camera integration
+- **Device Management**: Advanced microphone and camera selection with permission handling
+- **Modern UI**: Professional design with gradient buttons, tooltips, and responsive layout
+- **Local Token Generation**: Built-in RTC + RTM token generator for secure authentication
+- **Smart Validation**: Context-aware validation and error handling throughout the application
