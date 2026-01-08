@@ -177,6 +177,7 @@ window.Utils = class Utils {
             enableMllm: enableMllm,
             enableRtm: enableRtm,
             enableSal: enableSal,
+            enableTools: document.getElementById("enableTools") ? document.getElementById("enableTools").checked : false,
             // RTM UID
             agentRtmUid: document.getElementById('agentRtmUid') ? document.getElementById('agentRtmUid').value.trim() : '',
             
@@ -463,6 +464,52 @@ window.Utils = class Utils {
         return params;
     }
 
+    static getMcpServers() {
+        const servers = [];
+        const container = document.getElementById("mcp-servers-container");
+        if (!container) return servers;
+
+        const serverElements = container.children;
+
+        for (let element of serverElements) {
+            // Get server ID from element ID (format: mcp-server-0, mcp-server-1, etc.)
+            const serverId = element.id;
+            if (!serverId || !serverId.startsWith("mcp-server-")) continue;
+
+            const nameInput = document.getElementById(`${serverId}-name`);
+            const endpointInput = document.getElementById(`${serverId}-endpoint`);
+            const transportSelect = document.getElementById(`${serverId}-transport`);
+            const isToolCallSelect = document.getElementById(`${serverId}-isToolCallAvailable`);
+            const allowedToolsInput = document.getElementById(`${serverId}-allowedTools`);
+
+            if (nameInput && endpointInput && transportSelect && isToolCallSelect && allowedToolsInput) {
+                const name = nameInput.value.trim();
+                const endpoint = endpointInput.value.trim();
+                const transport = transportSelect.value;
+                const isToolCallAvailable = isToolCallSelect.value === "true";
+                const allowedToolsValue = allowedToolsInput.value.trim();
+
+                // Only add if name and endpoint are provided
+                if (name && endpoint) {
+                    let allowedTools = ["*"];
+                    if (allowedToolsValue && allowedToolsValue !== "") {
+                        allowedTools = allowedToolsValue.split(",").map(v => v.trim()).filter(v => v !== "");
+                    }
+
+                    servers.push({
+                        name: name,
+                        endpoint: endpoint,
+                        transport: transport,
+                        is_tool_call_available: isToolCallAvailable,
+                        allowed_tools: allowedTools
+                    });
+                }
+            }
+        }
+
+        return servers;
+    }
+
     static parseParamValue(type, value) {
         switch (type) {
             case 'array':
@@ -700,6 +747,13 @@ window.Utils = class Utils {
         }
         if (formData.enableSal) {
             advancedFeatures.enable_sal = true;
+        }
+        // Enable tools if MCP servers are configured and vendor is custom
+        if (formData.enableTools) {
+            const llmVendor = formData.llmVendor ? formData.llmVendor.trim().toLowerCase() : '';
+            if (llmVendor === 'custom') {
+                advancedFeatures.enable_tools = true;
+            }
         }
 
         // Prepare SAL config (optional - only included when enableSal is true)
@@ -980,7 +1034,14 @@ window.Utils = class Utils {
                         params: {
                             model: formData.llmModel,
                             ...customParams
-                        }
+                        },
+                        ...(formData.enableTools && formData.llmVendor && formData.llmVendor.trim().toLowerCase() === 'custom' ? (() => {
+                            const mcpServers = this.getMcpServers();
+                            if (mcpServers.length > 0) {
+                                return { mcp_servers: mcpServers };
+                            }
+                            return {};
+                        })() : {})
                     }
                 }),
                 ...(formData.enableMllm ? { // Include MLLM if enabled

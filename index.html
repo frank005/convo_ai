@@ -2208,7 +2208,6 @@
     const hangUpCallBtn = document.getElementById('hangUpCallBtn');
     console.log('Looking for hang up button...', hangUpCallBtn);
     if (hangUpCallBtn) {
-      console.log('Hang up button found, attaching event listener');
       hangUpCallBtn.addEventListener('click', async function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -4036,7 +4035,6 @@
     const drawer = document.getElementById(drawerId);
     if (drawer) {
       const tooltipElements = drawer.querySelectorAll('.has-tooltip');
-      console.log(`Attaching tooltip listeners to ${tooltipElements.length} elements in drawer: ${drawerId}`);
       tooltipElements.forEach(el => {
         // Remove existing listeners to prevent duplicates
         el.removeEventListener('mouseenter', showPortalTooltip);
@@ -4046,7 +4044,6 @@
         el.addEventListener('mouseleave', hidePortalTooltip);
       });
     } else {
-      console.warn(`Drawer not found: ${drawerId}`);
     }
   }
 
@@ -4055,7 +4052,6 @@
     const modal = document.getElementById(modalId);
     if (modal) {
       const tooltipElements = modal.querySelectorAll('.has-tooltip');
-      console.log(`Attaching tooltip listeners to ${tooltipElements.length} elements in modal: ${modalId}`);
       tooltipElements.forEach(el => {
         // Remove existing listeners to prevent duplicates
         el.removeEventListener('mouseenter', showPortalTooltip);
@@ -4065,7 +4061,6 @@
         el.addEventListener('mouseleave', hidePortalTooltip);
       });
     } else {
-      console.warn(`Modal not found: ${modalId}`);
     }
   }
 
@@ -4091,7 +4086,6 @@
   function openDrawer(drawerId) {
     const drawer = document.getElementById(drawerId);
     const backdrop = document.getElementById(drawerId + 'Backdrop');
-    console.log(`Opening drawer: ${drawerId}`, { drawer: !!drawer, backdrop: !!backdrop });
     if (drawer && backdrop) {
       drawer.classList.remove('hidden');
       backdrop.classList.remove('hidden');
@@ -4105,7 +4099,6 @@
   function closeDrawer(drawerId) {
     const drawer = document.getElementById(drawerId);
     const backdrop = document.getElementById(drawerId + 'Backdrop');
-    console.log(`Closing drawer: ${drawerId}`, { drawer: !!drawer, backdrop: !!backdrop });
     if (drawer && backdrop) {
       drawer.classList.add('hidden');
       backdrop.classList.add('hidden');
@@ -5108,6 +5101,32 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             rows="3"
           ></textarea>
           <div class="tooltip">Headers for Claude Anthropic LLM (optional). Must be a JSON string, e.g., {"anthropic-version":"2023-06-01"}. Only used when LLM vendor is anthropic or claude.</div>
+        </div>
+        
+        <!-- Enable Tools Checkbox -->
+        <div class="has-tooltip relative">
+          <label class="flex items-center">
+            <input type="checkbox" id="enableTools" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+            <span>Enable Tools</span>
+          </label>
+          <div class="tooltip">Enable MCP (Model Context Protocol) servers for tool calling. Only works when LLM vendor is set to "custom".</div>
+        </div>
+        
+        <!-- MCP Servers Configuration -->
+        <div id="mcpServersConfig" class="hidden bg-gray-700 p-4 rounded-lg mt-4">
+          <div class="flex justify-between items-center mb-3">
+            <div class="has-tooltip relative">
+              <h3 class="text-lg font-semibold">MCP Servers</h3>
+              <div class="tooltip">Configure MCP servers for tool calling. Each server requires a name, endpoint, transport protocol, tool call availability, and allowed tools.</div>
+            </div>
+            <div class="has-tooltip relative">
+              <button id="addMcpServerBtn" class="modern-btn modern-btn-primary text-sm">
+                Add MCP Server
+              </button>
+              <div class="tooltip">Add a new MCP server configuration.</div>
+            </div>
+          </div>
+          <div id="mcp-servers-container" class="space-y-2"></div>
         </div>
       </div>
     </div>

@@ -8,7 +8,6 @@ class ASRManager {
         console.log('initializeEventListeners called');
         // ASR vendor selection logic
         const asrVendor = document.getElementById('asrVendor');
-        console.log('asrVendor element:', asrVendor);
         if (asrVendor) {
             asrVendor.addEventListener('change', () => this.updateAsrConfigVisibility());
         }
@@ -49,7 +48,6 @@ class ASRManager {
     }
 
     updateAsrConfigVisibility() {
-        console.log('updateAsrConfigVisibility called');
         const asrVendor = document.getElementById('asrVendor');
         const asrLanguageContainer = document.getElementById('asrLanguage')?.parentElement; // Get the container div
         const microsoftAsrConfig = document.getElementById('microsoftAsrConfig');
@@ -62,22 +60,7 @@ class ASRManager {
         const sarvamAsrConfig = document.getElementById('sarvamAsrConfig');
         const customAsrConfig = document.getElementById('customAsrConfig');
 
-        console.log('ASR elements found:', {
-            asrVendor: !!asrVendor,
-            asrLanguageContainer: !!asrLanguageContainer,
-            microsoftAsrConfig: !!microsoftAsrConfig,
-            deepgramAsrConfig: !!deepgramAsrConfig,
-            openaiAsrConfig: !!openaiAsrConfig,
-            speechmaticsAsrConfig: !!speechmaticsAsrConfig,
-            assemblyaiAsrConfig: !!assemblyaiAsrConfig,
-            amazonAsrConfig: !!amazonAsrConfig,
-            googleAsrConfig: !!googleAsrConfig,
-            sarvamAsrConfig: !!sarvamAsrConfig,
-            customAsrConfig: !!customAsrConfig
-        });
-
         if (!asrVendor) {
-            console.warn('ASR vendor element not found');
             return;
         }
 
@@ -136,9 +119,7 @@ class ASRManager {
     updateAsrLanguageDropdown(vendor) {
         console.log('updateAsrLanguageDropdown called with vendor:', vendor);
         const langSelect = document.getElementById('asrLanguage');
-        console.log('langSelect element:', langSelect);
         if (!langSelect) {
-            console.warn('asrLanguage element not found');
             return;
         }
         

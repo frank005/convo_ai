@@ -92,41 +92,19 @@ window.MediaProcessor = class MediaProcessor {
 
     // Apply RTC encryption to client if encryption is configured
     async applyRtcEncryption(client) {
-        console.log('🔐 applyRtcEncryption called - checking for encryption settings...');
-        
         const encryptionMode = document.getElementById('rtcEncryptionMode');
         const encryptionKey = document.getElementById('rtcEncryptionKey');
         const encryptionSalt = document.getElementById('rtcEncryptionSalt');
         
-        console.log('🔐 Form elements found:', {
-            encryptionMode: !!encryptionMode,
-            encryptionKey: !!encryptionKey,
-            encryptionSalt: !!encryptionSalt
-        });
-        
         if (!encryptionMode || !encryptionKey) {
-            console.log('🔐 Encryption form elements not found - encryption will not be applied');
-            console.log('🔐 Make sure Agent Settings modal is accessible and encryption fields exist');
             return; // No encryption configured
         }
         
         const mode = encryptionMode.value;
         const key = encryptionKey.value.trim();
         
-        console.log('🔐 Reading encryption settings:', {
-            mode,
-            modeType: typeof mode,
-            hasKey: !!key,
-            keyLength: key ? key.length : 0,
-            keyPreview: key ? key.substring(0, 10) + '...' : 'empty',
-            hasSaltElement: !!encryptionSalt,
-            saltValue: encryptionSalt ? encryptionSalt.value.trim().substring(0, 10) + '...' : 'N/A'
-        });
-        
         // If no encryption mode is selected (empty string), don't apply encryption
         if (!mode || mode === '' || !key || key === '') {
-            console.log('🔐 No RTC encryption configured (mode or key is empty), skipping encryption setup');
-            console.log('🔐 Mode value:', mode, 'Key value:', key ? 'has value' : 'empty');
             return;
         }
         
@@ -135,59 +113,33 @@ window.MediaProcessor = class MediaProcessor {
             
             // Validate mode
             if (isNaN(modeNum) || modeNum < 1 || modeNum > 8) {
-                console.warn('🔐 Invalid encryption mode:', mode);
                 return;
             }
             
             // Convert numeric mode to Agora SDK string format
             const modeString = this.getEncryptionModeString(modeNum);
             if (!modeString) {
-                console.warn('🔐 Unknown encryption mode:', modeNum);
                 return;
             }
             
             // Use key directly (max 31 characters, no conversion needed)
             // Validate key length
             if (key.length > 31) {
-                console.warn('🔐 Encryption key exceeds 31 characters, truncating');
                 key = key.substring(0, 31);
             }
-            
-            console.log('🔐 Encryption config:', {
-                modeNum,
-                modeString,
-                keyLength: key.length,
-                hasSalt: modeNum === 7 || modeNum === 8
-            });
             
             // For GCM2 modes (7 and 8), salt is required
             if (modeNum === 7 || modeNum === 8) {
                 const salt = encryptionSalt ? encryptionSalt.value.trim() : '';
                 if (!salt || salt === '') {
-                    console.warn('🔐 Encryption salt is required for GCM2 modes (7 and 8)');
                     return;
                 }
                 
                 const saltArray = await this.base64ToUint8Array(salt);
-                console.log('🔐 Setting RTC encryption (GCM2): mode', modeString, 'salt length:', saltArray.length);
-                console.log('🔐 About to call client.setEncryptionConfig with:', {
-                    mode: modeString,
-                    secretLength: key.length,
-                    saltLength: saltArray.length
-                });
                 await client.setEncryptionConfig(modeString, key, saltArray);
-                console.log('🔐 client.setEncryptionConfig called successfully (GCM2)');
             } else {
-                console.log('🔐 Setting RTC encryption: mode', modeString);
-                console.log('🔐 About to call client.setEncryptionConfig with:', {
-                    mode: modeString,
-                    secretLength: key.length
-                });
                 await client.setEncryptionConfig(modeString, key);
-                console.log('🔐 client.setEncryptionConfig called successfully');
             }
-            
-            console.log('🔐 RTC encryption applied successfully');
         } catch (error) {
             console.error('🔐 Error applying RTC encryption:', error);
             console.error('🔐 Error details:', {
@@ -201,28 +153,22 @@ window.MediaProcessor = class MediaProcessor {
     }
 
     async joinChannel(appId, channelName, token, uid, subtitleManager = null, agentId = null) {
-        console.log('🔵🔵🔵 JOIN CHANNEL CALLED - Starting join process...');
         this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
         this.appId = appId; // Store appId for later use
         this.subtitleManager = subtitleManager;
         
         // Store the requested UID initially (will be updated with actual assigned UID)
         this.uid = uid;
-        console.log('🔵 MediaProcessor: Initial UID for RTM initialization:', this.uid, '(original uid param:', uid, ')');
         
         // Apply RTC encryption if configured (must be done before joining)
-        console.log('🔵🔵🔵 ABOUT TO CALL applyRtcEncryption...');
         try {
-            console.log('🔵 MediaProcessor: About to apply RTC encryption...');
             await this.applyRtcEncryption(this.client);
-            console.log('🔵 MediaProcessor: RTC encryption application completed');
         } catch (error) {
             console.error('🔵 MediaProcessor: Error in applyRtcEncryption:', error);
             console.error('🔵 MediaProcessor: Error stack:', error.stack);
             // Don't throw - allow join to proceed even if encryption fails
             // User will see the error in console and can fix it
         }
-        console.log('🔵🔵🔵 CONTINUING WITH JOIN AFTER ENCRYPTION...');
         
         // Listen for join success to capture the actual assigned UID
         this.client.on("user-joined", (user) => {
@@ -275,7 +221,6 @@ window.MediaProcessor = class MediaProcessor {
         });
 
         this.client.on("user-unpublished", async (user, mediaType) => {
-            console.log(`User ${user.uid} unpublished ${mediaType}`);
             if (mediaType === "video") {
                 // Reset avatar display if AI Avatar is enabled
                 const enableAvatar = document.getElementById('enableAvatar');
@@ -314,7 +259,6 @@ window.MediaProcessor = class MediaProcessor {
         
         // Capture the actual assigned UID from the join result
         if (joinResult && joinResult.uid) {
-            console.log('🔵 MediaProcessor: UID updated from join result - requested:', this.uid, 'assigned:', joinResult.uid);
             this.uid = joinResult.uid;
         }
         
@@ -352,20 +296,17 @@ window.MediaProcessor = class MediaProcessor {
             
             try {
                 this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack(audioConfig);
-                console.log('Audio track created successfully', useDeviceId ? `with device ID: ${micId}` : 'with default device');
             } catch (error) {
                 console.error('Failed to create audio track with', useDeviceId ? 'selected device' : 'default device', ':', error);
                 
                 // If we used a device ID and it failed, clear it and try again
                 if (useDeviceId) {
-                    console.log('Clearing invalid device ID and retrying with default device');
                     localStorage.removeItem('selectedMicrophoneId');
                     
                     try {
                         this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
                             encoderConfig: "music_standard"
                         });
-                        console.log('Audio track created successfully with default device after clearing invalid ID');
                     } catch (fallbackError) {
                         console.error('Failed to create audio track with fallback:', fallbackError);
                         // Provide more helpful error message
@@ -414,14 +355,11 @@ window.MediaProcessor = class MediaProcessor {
                 await this.client.publish(this.localTracks.videoTrack);
                 
                 // Initialize camera preview manager and show preview
-                console.log('Video track created successfully, initializing camera preview...');
                 
                 // Log camera resolution
                 const mediaStream = this.localTracks.videoTrack.getMediaStreamTrack();
                 if (mediaStream && mediaStream.getSettings) {
                     const settings = mediaStream.getSettings();
-                    console.log('Camera resolution:', settings.width + 'x' + settings.height);
-                    console.log('Camera aspect ratio:', (settings.width / settings.height).toFixed(2));
                 }
                 
                 // Add a small delay to ensure the video track is fully initialized
@@ -552,7 +490,6 @@ window.MediaProcessor = class MediaProcessor {
         try {
             if (this.subtitleManager && window.ConversationalAIAPI) {
                 await this.subtitleManager.initializeConversationalAI(appId, channelName, token, uid, agentId);
-                console.log('Conversational AI initialized for subtitles');
             }
         } catch (error) {
             console.error('Failed to initialize Conversational AI:', error);
@@ -564,7 +501,6 @@ window.MediaProcessor = class MediaProcessor {
             if (this.subtitleManager) {
                 await this.subtitleManager.cleanupConversationalAI();
                 this.subtitleManager.cleanupDataStreamSubtitles();
-                console.log('Conversational AI cleaned up');
             }
         } catch (error) {
             console.error('Error cleaning up Conversational AI:', error);
@@ -583,12 +519,10 @@ window.MediaProcessor = class MediaProcessor {
                 return;
             }
             
-            console.log('Initializing data stream subtitle handling for agent:', agentUid);
             
             // Initialize the subtitle manager with the RTC client and agent UID
             await this.subtitleManager.initializeDataStreamSubtitles(this.client, agentUid);
             
-            console.log('Data stream subtitle handling initialized successfully');
         } catch (error) {
             console.error('Failed to initialize data stream subtitle handling:', error);
         }
@@ -626,7 +560,6 @@ window.MediaProcessor = class MediaProcessor {
                     const isCameraEnabled = !cameraBtn || !cameraBtn.classList.contains("muted");
                     this.cameraPreviewManager.updateVisibility(true, isCameraEnabled);
                     
-                    console.log('Camera preview initialized with stream:', stream);
                 } else {
                     console.warn('No media stream track available for camera preview');
                     // Hide preview if no stream is available
@@ -675,11 +608,9 @@ window.MediaProcessor = class MediaProcessor {
     // Method to initialize RTM for existing channel connection
     async initializeRTMForExistingChannel() {
         if (!this.client || !this.appId) {
-            console.log('🔵 RTM: No active channel connection to initialize RTM for');
             return false;
         }
 
-        console.log('🔵 RTM: Initializing RTM for existing channel connection');
         
         // Get channel information
         const channelName = document.getElementById("agoraChannelName")?.value?.trim();
@@ -688,11 +619,9 @@ window.MediaProcessor = class MediaProcessor {
         const agentId = document.getElementById("uniqueName")?.value?.trim();
         
         // Use the actual UID from the join request if Client UID field is empty
-        console.log('🔵 RTM: Debug - clientRtcUid from form:', clientRtcUid, 'this.uid from join:', this.uid);
         
         if (!clientRtcUid && this.uid !== undefined && this.uid !== null) {
             clientRtcUid = this.uid.toString();
-            console.log('🔵 RTM: No Client UID in form field, using UID from join request:', clientRtcUid);
         } else if (!clientRtcUid) {
             console.warn('🔵 RTM: No Client UID available from form field or join request');
             console.warn('🔵 RTM: Form field value:', document.getElementById("clientRtcUid")?.value);
@@ -700,7 +629,6 @@ window.MediaProcessor = class MediaProcessor {
             return false;
         }
         
-        console.log('🔵 RTM: Channel info - channelName:', channelName, 'clientRtcUid:', clientRtcUid, 'agentId:', agentId);
         
         if (!channelName) {
             console.warn('🔵 RTM: Missing channel name for RTM initialization');
@@ -716,7 +644,6 @@ window.MediaProcessor = class MediaProcessor {
                 clientRtcUid,
                 agentId
             );
-            console.log('🔵 RTM: Successfully initialized RTM for existing channel');
             return true;
         } catch (error) {
             console.error('🔵 RTM: Failed to initialize RTM for existing channel:', error);
