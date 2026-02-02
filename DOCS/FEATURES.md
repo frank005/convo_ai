@@ -151,7 +151,7 @@
 
 - **Deepgram ASR**
   - Real-time streaming speech recognition
-  - Advanced models (nova-2, nova, enhanced, base)
+  - Advanced models (nova-3, nova-2, nova, enhanced, base)
   - Multi-language support with custom URLs
 
 ### Voice Activity Detection (VAD) & Turn Detection

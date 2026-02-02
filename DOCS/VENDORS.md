@@ -286,12 +286,12 @@ Real-time streaming speech recognition with advanced models and lowest latency.
 **Default Values:**
 
 - URL: "wss://api.deepgram.com/v1/listen"
-- Model: "nova-2"
+- Model: "nova-3"
 - Language: "en"
 
 **Available Models:**
 
-- nova-2 (recommended - most accurate)
+- nova-3 (recommended - most accurate)
 - nova (faster, good accuracy)
 - enhanced (balanced)
 - base (fastest, lower accuracy)

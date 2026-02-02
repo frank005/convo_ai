@@ -87,6 +87,8 @@ window.UI = class UI {
         document.addEventListener("change", (e) => {
             if (e.target.id === "enableTools") {
                 this.handleEnableToolsChange();
+            } else if (e.target.id === "fillerWordsEnable") {
+                this.handleFillerWordsEnableChange();
             }
         });
         
@@ -1602,6 +1604,12 @@ window.UI = class UI {
         }
     }
 
+    handleFillerWordsEnableChange() {
+        const fillerWordsEnable = document.getElementById("fillerWordsEnable");
+        const fillerWordsConfig = document.getElementById("fillerWordsConfig");
+        if (!fillerWordsEnable || !fillerWordsConfig) return;
+        fillerWordsConfig.classList.toggle("hidden", !fillerWordsEnable.checked);
+    }
 
     addMcpServerField() {
         const container = document.getElementById("mcp-servers-container");
@@ -1620,8 +1628,8 @@ window.UI = class UI {
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div class="has-tooltip relative">
-                    <input type="text" placeholder="Name (e.g., MATH)" class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600" id="${serverId}-name">
-                    <div class="tooltip">Name of the MCP server. This is a unique identifier for the server (e.g., "MATH", "WEATHER", "DATABASE").</div>
+                    <input type="text" placeholder="Name (e.g., MATH or Agora-Docs)" class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600" id="${serverId}-name" maxlength="48">
+                    <div class="tooltip">MCP server name: only letters (a-z, A-Z), numbers (0-9), dots (.), and dashes (-). No spaces or underscores. Max 48 characters.</div>
                 </div>
                 <div class="has-tooltip relative">
                     <input type="text" placeholder="Endpoint URL" class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600" id="${serverId}-endpoint">
@@ -1642,10 +1650,18 @@ window.UI = class UI {
                     </select>
                     <div class="tooltip">Whether tool calls are available for this server. Set to "true" if the server supports tool calling, "false" otherwise.</div>
                 </div>
+                <div class="has-tooltip relative">
+                    <input type="number" placeholder="Timeout ms (1000–100000)" class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600" id="${serverId}-timeoutMs" min="1000" max="100000" step="1000">
+                    <div class="tooltip">MCP server request timeout in milliseconds. Must be between 1000 and 100000. After timeout, the agent stops waiting and continues.</div>
+                </div>
             </div>
             <div class="has-tooltip relative">
                 <input type="text" placeholder="Allowed Tools (comma-separated, default: *)" value="*" class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600" id="${serverId}-allowedTools">
                 <div class="tooltip">Comma-separated list of allowed tools for this server. Use "*" to allow all tools, or specify specific tool names separated by commas (e.g., "calculate,query,search").</div>
+            </div>
+            <div class="has-tooltip relative">
+                <textarea placeholder="Headers (optional, JSON object e.g. {\"Authorization\": \"Bearer xxx\"})" class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600" id="${serverId}-headers" rows="2"></textarea>
+                <div class="tooltip">HTTP headers to include when requesting the MCP server (e.g. authentication). Must be valid JSON object.</div>
             </div>
         `;
         
@@ -1655,6 +1671,8 @@ window.UI = class UI {
         const transportSelect = div.querySelector(`#${serverId}-transport`);
         const isToolCallSelect = div.querySelector(`#${serverId}-isToolCallAvailable`);
         const allowedToolsInput = div.querySelector(`#${serverId}-allowedTools`);
+        const timeoutMsInput = div.querySelector(`#${serverId}-timeoutMs`);
+        const headersInput = div.querySelector(`#${serverId}-headers`);
         const removeBtn = div.querySelector('button');
         
         nameInput.addEventListener('input', () => this.updateMcpServer(serverId, nameInput, 'name'));
@@ -1662,6 +1680,8 @@ window.UI = class UI {
         transportSelect.addEventListener('change', () => this.updateMcpServer(serverId, transportSelect, 'transport'));
         isToolCallSelect.addEventListener('change', () => this.updateMcpServer(serverId, isToolCallSelect, 'isToolCallAvailable'));
         allowedToolsInput.addEventListener('input', () => this.updateMcpServer(serverId, allowedToolsInput, 'allowedTools'));
+        if (timeoutMsInput) timeoutMsInput.addEventListener('input', () => this.updateMcpServer(serverId, timeoutMsInput, 'timeoutMs'));
+        if (headersInput) headersInput.addEventListener('input', () => this.updateMcpServer(serverId, headersInput, 'headers'));
         removeBtn.addEventListener('click', () => this.removeMcpServer(serverId));
         
         container.appendChild(div);
@@ -1670,7 +1690,9 @@ window.UI = class UI {
             endpoint: "",
             transport: "sse",
             is_tool_call_available: true,
-            allowed_tools: ["*"]
+            allowed_tools: ["*"],
+            timeout_ms: null,
+            headers: null
         };
         
         // Initialize tooltips for the new server configuration
@@ -1696,6 +1718,20 @@ window.UI = class UI {
                 this.mcpServers[id].allowed_tools = ["*"];
             } else {
                 this.mcpServers[id].allowed_tools = value.split(",").map(v => v.trim()).filter(v => v !== "");
+            }
+        } else if (fieldType === "timeoutMs") {
+            const val = input.value.trim();
+            this.mcpServers[id].timeout_ms = val === "" ? null : parseInt(input.value, 10);
+        } else if (fieldType === "headers") {
+            const val = input.value.trim();
+            if (val === "") {
+                this.mcpServers[id].headers = null;
+            } else {
+                try {
+                    this.mcpServers[id].headers = JSON.parse(val);
+                } catch (e) {
+                    this.mcpServers[id].headers = null;
+                }
             }
         }
     }
@@ -2197,13 +2233,14 @@ window.UI = class UI {
             if (backdrop) backdrop.classList.add('hidden');
         });
         
-        // When LLM drawer opens, check MCP servers visibility state
+        // When LLM drawer opens, sync MCP and filler words config visibility
         if (drawerId === 'llmDrawer') {
             setTimeout(() => {
                 const enableToolsCheckbox = document.getElementById("enableTools");
                 if (enableToolsCheckbox && enableToolsCheckbox.checked) {
                     this.handleEnableToolsChange();
                 }
+                this.handleFillerWordsEnableChange();
             }, 100);
         }
         // Find the button that triggered this drawer

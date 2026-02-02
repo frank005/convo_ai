@@ -4311,6 +4311,50 @@
       });
     }
 
+    // Deprecated Features: toggle deprecated vs v2.4 Turn Detection sections and AIVAD row
+    const deprecatedFeatures = document.getElementById('deprecatedFeatures');
+    const turnDetectionDeprecatedSection = document.getElementById('turnDetectionDeprecatedSection');
+    const turnDetectionV24Section = document.getElementById('turnDetectionV24Section');
+    const aivadDeprecatedRow = document.getElementById('aivadDeprecatedRow');
+    function updateDeprecatedVisibility() {
+      const useDeprecated = deprecatedFeatures && deprecatedFeatures.checked;
+      if (turnDetectionDeprecatedSection) turnDetectionDeprecatedSection.classList.toggle('hidden', !useDeprecated);
+      if (turnDetectionV24Section) turnDetectionV24Section.classList.toggle('hidden', useDeprecated);
+      if (aivadDeprecatedRow) aivadDeprecatedRow.classList.toggle('hidden', !useDeprecated);
+    }
+    if (deprecatedFeatures) {
+      deprecatedFeatures.addEventListener('change', updateDeprecatedVisibility);
+      updateDeprecatedVisibility();
+    }
+
+    // Turn Detection v2.4 toggle and SoS/EoS mode visibility
+    const turnDetectionV24Btn = document.getElementById('turnDetectionV24Btn');
+    const turnDetectionV24Config = document.getElementById('turnDetectionV24Config');
+    if (turnDetectionV24Btn && turnDetectionV24Config) {
+      turnDetectionV24Btn.addEventListener('click', function() {
+        turnDetectionV24Config.classList.toggle('hidden');
+      });
+    }
+    const turnV24StartOfSpeechMode = document.getElementById('turnV24StartOfSpeechMode');
+    const turnV24SoSVadBlock = document.getElementById('turnV24SoSVadBlock');
+    const turnV24SoSKeywordsBlock = document.getElementById('turnV24SoSKeywordsBlock');
+    const turnV24SoSDisabledBlock = document.getElementById('turnV24SoSDisabledBlock');
+    const turnV24EndOfSpeechMode = document.getElementById('turnV24EndOfSpeechMode');
+    const turnV24EoSVadBlock = document.getElementById('turnV24EoSVadBlock');
+    const turnV24EoSemanticBlock = document.getElementById('turnV24EoSemanticBlock');
+    function updateTurnV24SubVisibility() {
+      const sosMode = turnV24StartOfSpeechMode ? turnV24StartOfSpeechMode.value : 'vad';
+      if (turnV24SoSVadBlock) turnV24SoSVadBlock.classList.toggle('hidden', sosMode !== 'vad');
+      if (turnV24SoSKeywordsBlock) turnV24SoSKeywordsBlock.classList.toggle('hidden', sosMode !== 'keywords');
+      if (turnV24SoSDisabledBlock) turnV24SoSDisabledBlock.classList.toggle('hidden', sosMode !== 'disabled');
+      const eosMode = turnV24EndOfSpeechMode ? turnV24EndOfSpeechMode.value : 'vad';
+      if (turnV24EoSVadBlock) turnV24EoSVadBlock.classList.toggle('hidden', eosMode !== 'vad');
+      if (turnV24EoSemanticBlock) turnV24EoSemanticBlock.classList.toggle('hidden', eosMode !== 'semantic');
+    }
+    if (turnV24StartOfSpeechMode) turnV24StartOfSpeechMode.addEventListener('change', updateTurnV24SubVisibility);
+    if (turnV24EndOfSpeechMode) turnV24EndOfSpeechMode.addEventListener('change', updateTurnV24SubVisibility);
+    updateTurnV24SubVisibility();
+
     // Parameters toggle
     const parametersBtn = document.getElementById('parametersBtn');
     if (parametersBtn) {
@@ -4722,7 +4766,7 @@
                 <input
                   id="deepgramAsrModel"
                   placeholder="Deepgram Model (Optional)"
-                  value="nova-2"
+                  value="nova-3"
                 />
                 <div class="tooltip">The speech recognition model to use (e.g., nova-2, nova, enhanced, base).</div>
               </div>
@@ -5054,6 +5098,38 @@
             value="Sorry, I do not know how to answer this question."
           />
           <div class="tooltip">The message shown when the agent cannot answer a question.</div>
+        </div>
+        <div class="has-tooltip relative">
+          <label class="flex items-center gap-2 mb-1">
+            <input type="checkbox" id="fillerWordsEnable" class="rounded bg-gray-700 border-gray-600">
+            <span>Enable Filler Words</span>
+          </label>
+          <div class="tooltip">Enable filler words to play phrases while waiting for LLM responses. Uses trigger (fixed_time) and content (static phrases).</div>
+        </div>
+        <div id="fillerWordsConfig" class="space-y-2 hidden">
+          <div class="has-tooltip relative">
+            <label class="text-sm">Phrases (comma-separated)</label>
+            <textarea
+              id="fillerWords"
+              class="resize-y min-h-[60px] w-full p-2 rounded bg-gray-700"
+              placeholder='e.g. "Please wait.", "Okay.", "Uh-huh."'
+              rows="2"
+            ></textarea>
+            <div class="tooltip">Static filler phrases. Max 100 phrases, each max 50 words.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <label class="text-sm">Response Wait (ms)</label>
+            <input type="number" id="fillerWordsResponseWaitMs" class="w-full p-2 rounded bg-gray-700" placeholder="1500" min="100" max="10000" value="1500">
+            <div class="tooltip">fixed_time_config: triggers filler when LLM wait exceeds this (100–10000).</div>
+          </div>
+          <div class="has-tooltip relative">
+            <label class="text-sm">Selection Rule</label>
+            <select id="fillerWordsSelectionRule" class="w-full p-2 rounded bg-gray-700">
+              <option value="shuffle">Shuffle</option>
+              <option value="round_robin">Round Robin</option>
+            </select>
+            <div class="tooltip">static_config: shuffle (random, no repeat until all used) or round_robin (sequential).</div>
+          </div>
         </div>
         <div class="has-tooltip relative">
           <textarea
@@ -6152,6 +6228,15 @@ The user speaks to you directly — treat each input as part of a live, spoken d
     <div id="advDrawer" class="drawer hidden">
       <button class="drawer-close absolute top-2 right-2" data-drawer="advDrawer">&times;</button>
       <div class="drawer-content space-y-4">
+        <!-- Deprecated Features (pre-v2.4) -->
+        <div class="mb-4 p-2 rounded bg-gray-700/50">
+          <label class="flex items-center has-tooltip relative cursor-pointer">
+            <input type="checkbox" id="deprecatedFeatures" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+            <span>Deprecated Turn Detection Features</span>
+            <div class="tooltip">Use pre-v2.4 turn detection and advanced_features.enable_aivad. When unchecked, use v2.4 turn_detection (mode + config) and configure AIVAD via Turn Detection → End of Speech → Semantic. When on: old turn_detection fields and AIVAD in Advanced Features. When off: v2.4 turn_detection.config (SoS/EoS) and AIVAD via End of Speech.</div>
+          </label>
+        </div>
+
         <!-- Advanced Features -->
         <div class="mb-4">
           <button id="advancedFeaturesBtn" class="modern-btn modern-btn-secondary flex items-center justify-between w-full">
@@ -6162,11 +6247,13 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           </button>
           <div id="advancedFeaturesConfig" class="mt-2 space-y-2">
             <div class="flex items-center space-x-4">
-              <label class="flex items-center has-tooltip relative">
-                <input type="checkbox" id="enableAivad" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-                <span>Enable AIVAD</span>
-                <div class="tooltip">Enable intelligent interruption handling function (AIVAD). Currently available only for English.</div>
-              </label>
+              <div id="aivadDeprecatedRow">
+                <label class="flex items-center has-tooltip relative">
+                  <input type="checkbox" id="enableAivad" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+                  <span>Enable AIVAD</span>
+                  <div class="tooltip">Enable intelligent interruption handling function (AIVAD). Deprecated in v2.4: use Turn Detection → End of Speech → Semantic when Deprecated Features is off.</div>
+                </label>
+              </div>
               <label class="flex items-center has-tooltip relative">
                 <input type="checkbox" id="enableRtm" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
                 <span>Enable RTM</span>
@@ -6202,14 +6289,14 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           </div>
         </div>
 
-        <!-- Turn Detection -->
-        <div class="mb-4">
+        <!-- Turn Detection (deprecated structure) -->
+        <div id="turnDetectionDeprecatedSection" class="mb-4">
           <button id="turnDetectionBtn" class="flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500">
             <span class="flex items-center">
               <input type="checkbox" id="turnDetectionEnabled" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
               Turn Detection
             </span>
-            <span class="text-sm">Default: agora_vad</span>
+            <span class="text-sm">Default: agora_vad (deprecated)</span>
           </button>
           <div id="turnDetectionConfig" class="hidden mt-2 space-y-2">
             <div class="has-tooltip relative">
@@ -6296,6 +6383,102 @@ The user speaks to you directly — treat each input as part of a live, spoken d
                   <option value="high">High</option>
                 </select>
                 <div class="tooltip">Response timing control for semantic VAD. Low: conservative, High: aggressive, Auto: balanced.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Turn Detection v2.4 (mode + config) -->
+        <div id="turnDetectionV24Section" class="mb-4 hidden">
+          <button id="turnDetectionV24Btn" class="flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500">
+            <span class="flex items-center">
+              <input type="checkbox" id="turnDetectionV24Enabled" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+              Turn Detection (v2.4)
+            </span>
+            <span class="text-sm">mode + config (SoS / EoS)</span>
+          </button>
+          <div id="turnDetectionV24Config" class="hidden mt-2 space-y-2">
+            <div class="has-tooltip relative">
+              <label class="text-sm">Speech Threshold</label>
+              <input type="number" id="turnV24SpeechThreshold" class="w-full p-2 rounded bg-gray-600 turn-v24-field" placeholder="0.5" min="0" max="1" step="0.1">
+              <div class="tooltip">Voice activity detection sensitivity (config.speech_threshold).</div>
+            </div>
+            <h4 class="text-sm font-semibold mt-2">Start of Speech (SoS)</h4>
+            <div class="has-tooltip relative">
+              <label class="text-sm">SoS Mode</label>
+              <select id="turnV24StartOfSpeechMode" class="w-full p-2 rounded bg-gray-600 turn-v24-field">
+                <option value="vad">VAD (voice activity)</option>
+                <option value="keywords">Keywords (Beta)</option>
+                <option value="disabled">Disabled</option>
+              </select>
+              <div class="tooltip">When user begins speaking. VAD: interruption threshold/prefix. Keywords: trigger on keyword. Disabled: append or ignore.</div>
+            </div>
+            <div id="turnV24SoSVadBlock" class="space-y-2">
+              <div class="has-tooltip relative">
+                <label class="text-sm">Interrupt Duration (ms)</label>
+                <input type="number" id="turnV24SoSVadInterruptMs" class="w-full p-2 rounded bg-gray-600 turn-v24-field" placeholder="160" min="0">
+                <div class="tooltip">vad_config: time before interruption triggers.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <label class="text-sm">Speaking Interrupt Duration (ms)</label>
+                <input type="number" id="turnV24SoSVadSpeakingInterruptMs" class="w-full p-2 rounded bg-gray-600 turn-v24-field" placeholder="160" min="0">
+                <div class="tooltip">vad_config: speaking interrupt duration.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <label class="text-sm">Prefix Padding (ms)</label>
+                <input type="number" id="turnV24SoSPrefixPaddingMs" class="w-full p-2 rounded bg-gray-600 turn-v24-field" placeholder="800" min="0">
+                <div class="tooltip">vad_config: forward padding for speech capture.</div>
+              </div>
+            </div>
+            <div id="turnV24SoSKeywordsBlock" class="space-y-2 hidden">
+              <div class="has-tooltip relative">
+                <label class="text-sm">Interrupt Duration (ms)</label>
+                <input type="number" id="turnV24SoSKeywordsInterruptMs" class="w-full p-2 rounded bg-gray-600 turn-v24-field" placeholder="160" min="0">
+                <div class="tooltip">keywords_config: time before interruption triggers.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <label class="text-sm">Prefix Padding (ms)</label>
+                <input type="number" id="turnV24SoSKeywordsPrefixMs" class="w-full p-2 rounded bg-gray-600 turn-v24-field" placeholder="800" min="0">
+                <div class="tooltip">keywords_config: forward padding for speech capture.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <label class="text-sm">Triggered Keywords</label>
+                <input type="text" id="turnV24SoSKeywords" class="w-full p-2 rounded bg-gray-600 turn-v24-field" placeholder='e.g. "Are you there", "hello" (comma-separated)'>
+                <div class="tooltip">keywords_config: phrases that trigger start of speech.</div>
+              </div>
+            </div>
+            <div id="turnV24SoSDisabledBlock" class="has-tooltip relative hidden">
+              <label class="text-sm">Disabled Strategy</label>
+              <select id="turnV24SoSDisabledStrategy" class="w-full p-2 rounded bg-gray-600 turn-v24-field">
+                <option value="append">Append</option>
+                <option value="ignore">Ignore</option>
+              </select>
+              <div class="tooltip">disabled_config: append input or ignore when SoS is disabled. API accepts 'append' or 'ignore'.</div>
+            </div>
+            <h4 class="text-sm font-semibold mt-2">End of Speech (EoS)</h4>
+            <div class="has-tooltip relative">
+              <label class="text-sm">EoS Mode</label>
+              <select id="turnV24EndOfSpeechMode" class="w-full p-2 rounded bg-gray-600 turn-v24-field">
+                <option value="vad">VAD (silence duration)</option>
+                <option value="semantic">Semantic (AIVAD)</option>
+              </select>
+              <div class="tooltip">When user finishes speaking. VAD: silence duration. Semantic (AIVAD): semantic understanding.</div>
+            </div>
+            <div id="turnV24EoSVadBlock" class="has-tooltip relative">
+              <label class="text-sm">Silence Duration (ms)</label>
+              <input type="number" id="turnV24EoSSilenceMs" class="w-full p-2 rounded bg-gray-600 turn-v24-field" placeholder="640" min="0">
+              <div class="tooltip">EoS VAD: time before assuming speech end.</div>
+            </div>
+            <div id="turnV24EoSemanticBlock" class="space-y-2 hidden">
+              <div class="has-tooltip relative">
+                <label class="text-sm">Silence Duration (ms)</label>
+                <input type="number" id="turnV24EoSemanticSilenceMs" class="w-full p-2 rounded bg-gray-600 turn-v24-field" placeholder="320" min="0">
+                <div class="tooltip">semantic_config: time of silence before considering speech end.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <label class="text-sm">Max Wait (ms)</label>
+                <input type="number" id="turnV24EoSemanticMaxWaitMs" class="w-full p-2 rounded bg-gray-600 turn-v24-field" placeholder="3000" min="0">
+                <div class="tooltip">semantic_config: maximum wait time for semantic end-of-speech.</div>
               </div>
             </div>
           </div>
