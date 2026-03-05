@@ -143,6 +143,7 @@ window.Utils = class Utils {
         const heygenQuality = document.getElementById("heygenQuality").value;
         const heygenDisableIdleTimeout = document.getElementById("heygenDisableIdleTimeout").checked;
         const heygenActivityIdleTimeout = document.getElementById("heygenActivityIdleTimeout").value || null;
+        const anamBaseUrl = document.getElementById("anamBaseUrl") ? document.getElementById("anamBaseUrl").value.trim() || 'https://api.anam.ai/v1' : 'https://api.anam.ai/v1';
 
         return {
             uniqueName: document.getElementById("uniqueName").value.trim(),
@@ -265,6 +266,7 @@ window.Utils = class Utils {
             heygenQuality: heygenQuality,
             heygenDisableIdleTimeout: heygenDisableIdleTimeout,
             heygenActivityIdleTimeout: heygenActivityIdleTimeout,
+            anamBaseUrl: anamBaseUrl,
             // RTC Encryption settings
             rtcEncryptionMode: document.getElementById('rtcEncryptionMode') ? document.getElementById('rtcEncryptionMode').value : '',
             rtcEncryptionKey: document.getElementById('rtcEncryptionKey') ? document.getElementById('rtcEncryptionKey').value.trim() : '',
@@ -1197,12 +1199,20 @@ window.Utils = class Utils {
             config.properties.avatar = {
                 vendor: formData.avatarVendor,
                 enable: true,
-                params: {
-                    api_key: formData.avatarApiKey,
-                    agora_uid: formData.avatarRtcUid,
-                    avatar_id: formData.avatarId,
-                    ...(formData.avatarRtcToken && formData.avatarRtcToken !== '' ? { agora_token: formData.avatarRtcToken } : {})
-                }
+                params: formData.avatarVendor === 'anam'
+                    ? {
+                        agora_token: formData.avatarRtcToken || '',
+                        agora_uid: formData.avatarRtcUid,
+                        anam_api_key: formData.avatarApiKey,
+                        anam_avatar_id: formData.avatarId,
+                        anam_base_url: formData.anamBaseUrl || 'https://api.anam.ai/v1'
+                    }
+                    : {
+                        api_key: formData.avatarApiKey,
+                        agora_uid: formData.avatarRtcUid,
+                        avatar_id: formData.avatarId,
+                        ...(formData.avatarRtcToken && formData.avatarRtcToken !== '' ? { agora_token: formData.avatarRtcToken } : {})
+                    }
             };
 
             // Add HeyGen specific parameters
