@@ -1703,7 +1703,8 @@
 
       try {
           const { customerId, customerSecret } = window.Utils.getStoredCredentials();
-          const response = await agoraAPI.getAgentHistory(customerId, customerSecret, agentId.value);
+          const activeAgoraAPI = (window.ui && window.ui.agoraAPI) ? window.ui.agoraAPI : agoraAPI;
+          const response = await activeAgoraAPI.getAgentHistory(customerId, customerSecret, agentId.value);
           if (queryResponse) {
             queryResponse.textContent = JSON.stringify(response, null, 2);
           }
@@ -1775,7 +1776,8 @@
         return;
       }
       try {
-        await agoraAPI.broadcastMessage(customerId, customerSecret, agentId, text, priority, interruptable);
+        const activeAgoraAPI = (window.ui && window.ui.agoraAPI) ? window.ui.agoraAPI : agoraAPI;
+        await activeAgoraAPI.broadcastMessage(customerId, customerSecret, agentId, text, priority, interruptable);
         statusDiv.textContent = 'Broadcast sent successfully!';
         statusDiv.className = 'mt-2 text-sm text-green-400';
         document.getElementById('broadcastText').value = '';
@@ -1802,7 +1804,8 @@
         return;
       }
       try {
-        await agoraAPI.interruptAgent(customerId, customerSecret, agentId);
+        const activeAgoraAPI = (window.ui && window.ui.agoraAPI) ? window.ui.agoraAPI : agoraAPI;
+        await activeAgoraAPI.interruptAgent(customerId, customerSecret, agentId);
         statusDiv.textContent = 'Interrupt sent successfully!';
         statusDiv.className = 'mt-2 text-sm text-green-400';
       } catch (err) {
