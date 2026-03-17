@@ -1541,9 +1541,11 @@ window.Utils = class Utils {
         if (!channelName) {
             throw new Error("Channel name is required");
         }
-        if (!userAccount) {
-            throw new Error("User account (UID) is required");
-        }
+        // Default empty / undefined userAccount to 0 so callers
+        // can omit UID for cases like client tokens.
+        const finalUserAccount = (userAccount === undefined || userAccount === null || userAccount === '')
+            ? 0
+            : userAccount;
 
         const TOKEN_EXPIRE = 1800; // 30 minutes in seconds
         const PRIVILEGE_EXPIRE = 1800; // 30 minutes in seconds
@@ -1553,7 +1555,7 @@ window.Utils = class Utils {
                 appId,
                 appCertificate,
                 channelName,
-                userAccount.toString(),
+                finalUserAccount.toString(),
                 role,
                 TOKEN_EXPIRE,
                 PRIVILEGE_EXPIRE
