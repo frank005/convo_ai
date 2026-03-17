@@ -1488,14 +1488,37 @@ window.Utils = class Utils {
         // If no encryption mode is selected, rtc property is not added to config.properties
 
         // If a pipeline ID is provided, attach it to the top-level config and
-        // remove ASR/LLM/TTS/MLLM blocks, since those are defined in the backend
+        // strip vendor-specific ASR/LLM/TTS/MLLM config while preserving
+        // input/output modalities exactly where they were before (under llm).
         if (formData.pipelineId && formData.pipelineId.trim() !== '') {
             config.pipeline_id = formData.pipelineId.trim();
             if (config.properties) {
+                // Preserve modalities from the existing LLM block
+                let inputModalities = undefined;
+                let outputModalities = undefined;
+                if (config.properties.llm) {
+                    inputModalities = config.properties.llm.input_modalities;
+                    outputModalities = config.properties.llm.output_modalities;
+                }
+
+                // Remove ASR / TTS / MLLM completely
                 delete config.properties.asr;
-                delete config.properties.llm;
                 delete config.properties.tts;
                 delete config.properties.mllm;
+
+                // Replace LLM block with a minimal object that only carries modalities
+                if (inputModalities || outputModalities) {
+                    config.properties.llm = {};
+                    if (inputModalities) {
+                        config.properties.llm.input_modalities = inputModalities;
+                    }
+                    if (outputModalities) {
+                        config.properties.llm.output_modalities = outputModalities;
+                    }
+                } else {
+                    // If no modalities, remove llm entirely
+                    delete config.properties.llm;
+                }
             }
         }
 
