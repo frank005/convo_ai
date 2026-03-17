@@ -3197,14 +3197,47 @@
       const inputModalities = document.querySelector('.w-full.p-2.rounded.bg-gray-700.text-white');
       const outputModalities = document.querySelectorAll('.w-full.p-2.rounded.bg-gray-700.text-white')[1];
 
+      const pipelineIdInput = document.getElementById('pipelineId');
+      const hasPipelineId = pipelineIdInput && pipelineIdInput.value.trim() !== '';
+
+      // Helper to disable LLM/TTS/ASR when either MLLM or pipeline ID is active
+      const disableLlmsForBackendOrMllm = () => {
+        if (llmSettingsBtn) {
+          llmSettingsBtn.disabled = true;
+          llmSettingsBtn.classList.add('opacity-50');
+        }
+        if (ttsSettingsBtn) {
+          ttsSettingsBtn.disabled = true;
+          ttsSettingsBtn.classList.add('opacity-50');
+        }
+        if (asrConfigBox) {
+          asrConfigBox.classList.add('opacity-50');
+          asrConfigBox.style.pointerEvents = 'none';
+        }
+      };
+
+      const enableLlmsWhenAllowed = () => {
+        // Only re-enable if there is no pipeline ID set
+        const hasPipelineNow = pipelineIdInput && pipelineIdInput.value.trim() !== '';
+        if (hasPipelineNow) return;
+
+        if (llmSettingsBtn) {
+          llmSettingsBtn.disabled = false;
+          llmSettingsBtn.classList.remove('opacity-50');
+        }
+        if (ttsSettingsBtn) {
+          ttsSettingsBtn.disabled = false;
+          ttsSettingsBtn.classList.remove('opacity-50');
+        }
+        if (asrConfigBox) {
+          asrConfigBox.classList.remove('opacity-50');
+          asrConfigBox.style.pointerEvents = 'auto';
+        }
+      };
+
       if (this.checked) {
         // Disable LLM, TTS, ASR sections
-        llmSettingsBtn.disabled = true;
-        llmSettingsBtn.classList.add('opacity-50');
-        ttsSettingsBtn.disabled = true;
-        ttsSettingsBtn.classList.add('opacity-50');
-        asrConfigBox.classList.add('opacity-50');
-        asrConfigBox.style.pointerEvents = 'none';
+        disableLlmsForBackendOrMllm();
 
         // Set input modalities: audio checked+disabled, text enabled (can uncheck), image disabled (cannot be checked/unchecked)
         inputAudio.checked = true;
@@ -3231,13 +3264,8 @@
         avatarVideo.style.display = 'none';
         avatarVideo.innerHTML = '';
       } else {
-        // Re-enable LLM, TTS, ASR sections
-        llmSettingsBtn.disabled = false;
-        llmSettingsBtn.classList.remove('opacity-50');
-        ttsSettingsBtn.disabled = false;
-        ttsSettingsBtn.classList.remove('opacity-50');
-        asrConfigBox.classList.remove('opacity-50');
-        asrConfigBox.style.pointerEvents = 'auto';
+        // Re-enable LLM, TTS, ASR sections if no pipeline ID is set
+        enableLlmsWhenAllowed();
 
         // Set input modalities: audio unchecked+disabled, text checked+disabled, image enabled (can check/uncheck)
         inputAudio.checked = false;
@@ -3269,6 +3297,55 @@
       document.getElementById('uniqueName').style.pointerEvents = 'auto';
       document.getElementById('agoraChannelName').style.pointerEvents = 'auto';
     });
+    }
+
+    // Pipeline ID behavior: when set, disable ASR/LLM/TTS sections so that the backend pipeline config is authoritative
+    const pipelineIdInput = document.getElementById('pipelineId');
+    if (pipelineIdInput) {
+      const updateLlmsForPipeline = () => {
+        const hasPipelineId = pipelineIdInput.value.trim() !== '';
+        const llmSettingsBtn = document.getElementById('llmSettingsBtn');
+        const ttsSettingsBtn = document.getElementById('ttsSettingsBtn');
+        const asrConfigBox = document.getElementById('asrConfigBox');
+
+        // If MLLM is enabled, it already controls the state; keep that behavior
+        const enableMllmCheckbox = document.getElementById('enableMllm');
+        const mllmActive = enableMllmCheckbox && enableMllmCheckbox.checked;
+
+        if (hasPipelineId) {
+          if (llmSettingsBtn) {
+            llmSettingsBtn.disabled = true;
+            llmSettingsBtn.classList.add('opacity-50');
+          }
+          if (ttsSettingsBtn) {
+            ttsSettingsBtn.disabled = true;
+            ttsSettingsBtn.classList.add('opacity-50');
+          }
+          if (asrConfigBox) {
+            asrConfigBox.classList.add('opacity-50');
+            asrConfigBox.style.pointerEvents = 'none';
+          }
+        } else if (!mllmActive) {
+          // Only re-enable when MLLM is not active
+          if (llmSettingsBtn) {
+            llmSettingsBtn.disabled = false;
+            llmSettingsBtn.classList.remove('opacity-50');
+          }
+          if (ttsSettingsBtn) {
+            ttsSettingsBtn.disabled = false;
+            ttsSettingsBtn.classList.remove('opacity-50');
+          }
+          if (asrConfigBox) {
+            asrConfigBox.classList.remove('opacity-50');
+            asrConfigBox.style.pointerEvents = 'auto';
+          }
+        }
+      };
+
+      // Initialize on load
+      updateLlmsForPipeline();
+      // Update on every change
+      pipelineIdInput.addEventListener('input', updateLlmsForPipeline);
     }
 
     // Handle RTM enable/disable
@@ -4592,6 +4669,23 @@
                 </button>
               </div>
               <div class="tooltip">The salt value used for encryption. This is a Base64-encoded string that is 32 bytes long after decoding. Required for AES-128-GCM2 (7) and AES-256-GCM2 (8) modes.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pipeline ID / Backend Pipeline Configuration -->
+        <div class="modern-panel">
+          <h3 class="text-lg font-semibold mb-3">Backend Pipeline Configuration</h3>
+          <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="has-tooltip relative">
+              <input
+                id="pipelineId"
+                placeholder="Pipeline ID (optional)"
+              />
+              <div class="tooltip">
+                Optional pipeline ID for backend-configured ASR/LLM/TTS (called <strong>Agent ID</strong> in the Studio console).
+                When set, ASR/LLM/TTS settings in this UI are disabled and the pipeline configuration is used instead.
+              </div>
             </div>
           </div>
         </div>

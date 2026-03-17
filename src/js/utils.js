@@ -152,6 +152,8 @@ window.Utils = class Utils {
             token: document.getElementById("agoraRtcToken").value.trim(),
             remoteRtcUids: remoteRtcUids,
             idleTimeout: idleTimeout,
+            // Optional pipeline ID for backend-configured ASR/LLM/TTS
+            pipelineId: document.getElementById("pipelineId") ? document.getElementById("pipelineId").value.trim() : '',
             llmApiKey: document.getElementById("llmApiKey").value.trim(),
             llmUrl: document.getElementById("llmUrl").value.trim(),
             llmAccessKey: document.getElementById("llmAccessKey") ? document.getElementById("llmAccessKey").value.trim() : '',
@@ -281,6 +283,11 @@ window.Utils = class Utils {
             throw new Error(`Missing required fields: ${missing.join(', ')}`);
         }
 
+        // When a pipeline ID is provided, ASR/LLM/TTS are configured in the backend pipeline
+        // and should not be validated here.
+        const pipelineIdInput = document.getElementById('pipelineId');
+        const hasPipelineId = pipelineIdInput && pipelineIdInput.value.trim() !== '';
+
         // Validate MLLM configuration if enabled
         if (data.enableMllm) {
             if (!data.mllmUrl) {
@@ -325,125 +332,128 @@ window.Utils = class Utils {
                     throw new Error('Remote RTC UIDs cannot be "*" when AI Avatar is enabled. Please set specific UIDs.');
                 }
             }
-            // Validate LLM configuration if MLLM is not enabled
-            if (!data.llmApiKey) {
-                throw new Error('LLM API Key is required');
-            }
-            if (!data.llmUrl) {
-                throw new Error('LLM URL is required');
-            }
+            // When no pipeline ID is used, validate LLM/TTS/ASR configuration
+            if (!hasPipelineId) {
+                // Validate LLM configuration if MLLM is not enabled
+                if (!data.llmApiKey) {
+                    throw new Error('LLM API Key is required');
+                }
+                if (!data.llmUrl) {
+                    throw new Error('LLM URL is required');
+                }
 
-            // Validate TTS configuration based on vendor
-            const ttsVendor = data.vendor;
-            if (ttsVendor === 'microsoft') {
-                if (!data.ttsKey) {
-                    throw new Error('Microsoft TTS Key is required');
+                // Validate TTS configuration based on vendor
+                const ttsVendor = data.vendor;
+                if (ttsVendor === 'microsoft') {
+                    if (!data.ttsKey) {
+                        throw new Error('Microsoft TTS Key is required');
+                    }
+                } else if (ttsVendor === 'elevenlabs') {
+                    const elevenLabsTtsKey = document.getElementById('elevenLabsTtsKey').value.trim();
+                    const elevenLabsModelId = document.getElementById('elevenLabsModelId').value.trim();
+                    const elevenLabsVoiceSelect = document.getElementById('elevenLabsVoiceSelect').value;
+                    const elevenLabsVoiceId = document.getElementById('elevenLabsVoiceId').value.trim();
+                    
+                    if (!elevenLabsTtsKey) {
+                        throw new Error('ElevenLabs TTS Key is required');
+                    }
+                    if (!elevenLabsModelId) {
+                        throw new Error('ElevenLabs Model ID is required');
+                    }
+                    if (elevenLabsVoiceSelect === 'other' && !elevenLabsVoiceId) {
+                        throw new Error('ElevenLabs Voice ID is required when "Other" is selected');
+                    }
+                } else if (ttsVendor === 'cartesia') {
+                    const cartesiaTtsKey = document.getElementById('cartesiaTtsKey').value.trim();
+                    const cartesiaModelId = document.getElementById('cartesiaModelId').value.trim();
+                    const cartesiaVoiceId = document.getElementById('cartesiaVoiceId').value.trim();
+                    
+                    if (!cartesiaTtsKey) {
+                        throw new Error('Cartesia API Key is required');
+                    }
+                    if (!cartesiaModelId) {
+                        throw new Error('Cartesia Model ID is required');
+                    }
+                    if (!cartesiaVoiceId) {
+                        throw new Error('Cartesia Voice ID is required');
+                    }
+                } else if (ttsVendor === 'openai') {
+                    const openaiTtsKey = document.getElementById('openaiTtsKey').value.trim();
+                    const openaiModel = document.getElementById('openaiModel').value.trim();
+                    const openaiVoice = document.getElementById('openaiVoice').value.trim();
+                    
+                    if (!openaiTtsKey) {
+                        throw new Error('OpenAI API Key is required');
+                    }
+                    if (!openaiModel) {
+                        throw new Error('OpenAI Model is required');
+                    }
+                    if (!openaiVoice) {
+                        throw new Error('OpenAI Voice is required');
+                    }
+                } else if (ttsVendor === 'playht') {
+                    const playhtTtsKey = document.getElementById('playhtTtsKey').value.trim();
+                    const playhtUserId = document.getElementById('playhtUserId').value.trim();
+                    const playhtVoiceEngine = document.getElementById('playhtVoiceEngine').value.trim();
+                    const playhtVoice = document.getElementById('playhtVoice').value.trim();
+                    
+                    if (!playhtTtsKey) {
+                        throw new Error('PlayHT API Key is required');
+                    }
+                    if (!playhtUserId) {
+                        throw new Error('PlayHT User ID is required');
+                    }
+                    if (!playhtVoiceEngine) {
+                        throw new Error('PlayHT Voice Engine is required');
+                    }
+                    if (!playhtVoice) {
+                        throw new Error('PlayHT Voice is required');
+                    }
+                } else if (ttsVendor === 'sarvam') {
+                    const sarvamTtsKey = document.getElementById('sarvamTtsKey').value.trim();
+                    const sarvamSpeakerSelect = document.getElementById('sarvamSpeaker').value.trim();
+                    const sarvamSpeakerId = document.getElementById('sarvamSpeakerId') ? document.getElementById('sarvamSpeakerId').value.trim() : '';
+                    const sarvamLanguageCode = document.getElementById('sarvamLanguageCode').value.trim();
+                    
+                    if (!sarvamTtsKey) {
+                        throw new Error('Sarvam API Key is required');
+                    }
+                    if (sarvamSpeakerSelect === 'other' && !sarvamSpeakerId) {
+                        throw new Error('Sarvam Custom Speaker ID is required when "Custom" is selected');
+                    }
+                    if (sarvamSpeakerSelect !== 'other' && !sarvamSpeakerSelect) {
+                        throw new Error('Sarvam Speaker is required');
+                    }
+                    if (!sarvamLanguageCode) {
+                        throw new Error('Sarvam Language Code is required');
+                    }
                 }
-            } else if (ttsVendor === 'elevenlabs') {
-                const elevenLabsTtsKey = document.getElementById('elevenLabsTtsKey').value.trim();
-                const elevenLabsModelId = document.getElementById('elevenLabsModelId').value.trim();
-                const elevenLabsVoiceSelect = document.getElementById('elevenLabsVoiceSelect').value;
-                const elevenLabsVoiceId = document.getElementById('elevenLabsVoiceId').value.trim();
-                
-                if (!elevenLabsTtsKey) {
-                    throw new Error('ElevenLabs TTS Key is required');
-                }
-                if (!elevenLabsModelId) {
-                    throw new Error('ElevenLabs Model ID is required');
-                }
-                if (elevenLabsVoiceSelect === 'other' && !elevenLabsVoiceId) {
-                    throw new Error('ElevenLabs Voice ID is required when "Other" is selected');
-                }
-            } else if (ttsVendor === 'cartesia') {
-                const cartesiaTtsKey = document.getElementById('cartesiaTtsKey').value.trim();
-                const cartesiaModelId = document.getElementById('cartesiaModelId').value.trim();
-                const cartesiaVoiceId = document.getElementById('cartesiaVoiceId').value.trim();
-                
-                if (!cartesiaTtsKey) {
-                    throw new Error('Cartesia API Key is required');
-                }
-                if (!cartesiaModelId) {
-                    throw new Error('Cartesia Model ID is required');
-                }
-                if (!cartesiaVoiceId) {
-                    throw new Error('Cartesia Voice ID is required');
-                }
-            } else if (ttsVendor === 'openai') {
-                const openaiTtsKey = document.getElementById('openaiTtsKey').value.trim();
-                const openaiModel = document.getElementById('openaiModel').value.trim();
-                const openaiVoice = document.getElementById('openaiVoice').value.trim();
-                
-                if (!openaiTtsKey) {
-                    throw new Error('OpenAI API Key is required');
-                }
-                if (!openaiModel) {
-                    throw new Error('OpenAI Model is required');
-                }
-                if (!openaiVoice) {
-                    throw new Error('OpenAI Voice is required');
-                }
-            } else if (ttsVendor === 'playht') {
-                const playhtTtsKey = document.getElementById('playhtTtsKey').value.trim();
-                const playhtUserId = document.getElementById('playhtUserId').value.trim();
-                const playhtVoiceEngine = document.getElementById('playhtVoiceEngine').value.trim();
-                const playhtVoice = document.getElementById('playhtVoice').value.trim();
-                
-                if (!playhtTtsKey) {
-                    throw new Error('PlayHT API Key is required');
-                }
-                if (!playhtUserId) {
-                    throw new Error('PlayHT User ID is required');
-                }
-                if (!playhtVoiceEngine) {
-                    throw new Error('PlayHT Voice Engine is required');
-                }
-                if (!playhtVoice) {
-                    throw new Error('PlayHT Voice is required');
-                }
-            } else if (ttsVendor === 'sarvam') {
-                const sarvamTtsKey = document.getElementById('sarvamTtsKey').value.trim();
-                const sarvamSpeakerSelect = document.getElementById('sarvamSpeaker').value.trim();
-                const sarvamSpeakerId = document.getElementById('sarvamSpeakerId') ? document.getElementById('sarvamSpeakerId').value.trim() : '';
-                const sarvamLanguageCode = document.getElementById('sarvamLanguageCode').value.trim();
-                
-                if (!sarvamTtsKey) {
-                    throw new Error('Sarvam API Key is required');
-                }
-                if (sarvamSpeakerSelect === 'other' && !sarvamSpeakerId) {
-                    throw new Error('Sarvam Custom Speaker ID is required when "Custom" is selected');
-                }
-                if (sarvamSpeakerSelect !== 'other' && !sarvamSpeakerSelect) {
-                    throw new Error('Sarvam Speaker is required');
-                }
-                if (!sarvamLanguageCode) {
-                    throw new Error('Sarvam Language Code is required');
-                }
-            }
 
-            // Validate ASR configuration based on vendor
-            const asrVendor = data.asrVendor;
-            if (asrVendor === 'microsoft') {
-                const microsoftAsrKey = document.getElementById('microsoftAsrKey').value.trim();
-                const microsoftAsrRegion = document.getElementById('microsoftAsrRegion').value.trim();
-                const asrLanguage = document.getElementById('asrLanguage').value;
-                if (!microsoftAsrKey) {
-                    throw new Error('Microsoft ASR Key is required');
-                }
-                if (!microsoftAsrRegion) {
-                    throw new Error('Microsoft ASR Region is required');
-                }
-                if (!asrLanguage) {
-                    throw new Error('ASR Language is required');
-                }
-            } else if (asrVendor === 'deepgram') {
-                const deepgramAsrUrl = document.getElementById('deepgramAsrUrl').value.trim();
-                const deepgramAsrKey = document.getElementById('deepgramAsrKey').value.trim();
-                const asrLanguage = document.getElementById('asrLanguage').value.trim();
-                if (!deepgramAsrKey) {
-                    throw new Error('Deepgram ASR Key is required');
-                }
-                if (!asrLanguage) {
-                    throw new Error('ASR Language is required');
+                // Validate ASR configuration based on vendor
+                const asrVendor = data.asrVendor;
+                if (asrVendor === 'microsoft') {
+                    const microsoftAsrKey = document.getElementById('microsoftAsrKey').value.trim();
+                    const microsoftAsrRegion = document.getElementById('microsoftAsrRegion').value.trim();
+                    const asrLanguage = document.getElementById('asrLanguage').value;
+                    if (!microsoftAsrKey) {
+                        throw new Error('Microsoft ASR Key is required');
+                    }
+                    if (!microsoftAsrRegion) {
+                        throw new Error('Microsoft ASR Region is required');
+                    }
+                    if (!asrLanguage) {
+                        throw new Error('ASR Language is required');
+                    }
+                } else if (asrVendor === 'deepgram') {
+                    const deepgramAsrUrl = document.getElementById('deepgramAsrUrl').value.trim();
+                    const deepgramAsrKey = document.getElementById('deepgramAsrKey').value.trim();
+                    const asrLanguage = document.getElementById('asrLanguage').value.trim();
+                    if (!deepgramAsrKey) {
+                        throw new Error('Deepgram ASR Key is required');
+                    }
+                    if (!asrLanguage) {
+                        throw new Error('ASR Language is required');
+                    }
                 }
             }
         }
@@ -1476,6 +1486,18 @@ window.Utils = class Utils {
             config.properties.rtc = rtc;
         }
         // If no encryption mode is selected, rtc property is not added to config.properties
+
+        // If a pipeline ID is provided, attach it to the top-level config and
+        // remove ASR/LLM/TTS/MLLM blocks, since those are defined in the backend
+        if (formData.pipelineId && formData.pipelineId.trim() !== '') {
+            config.pipeline_id = formData.pipelineId.trim();
+            if (config.properties) {
+                delete config.properties.asr;
+                delete config.properties.llm;
+                delete config.properties.tts;
+                delete config.properties.mllm;
+            }
+        }
 
         return config;
     }
