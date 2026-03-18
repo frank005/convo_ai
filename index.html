@@ -3374,8 +3374,15 @@
 
       // Initialize on load
       updateLlmsForPipeline();
-      // Update on every change
+      // Update on every change (pipeline ID or overrides)
       pipelineIdInput.addEventListener('input', updateLlmsForPipeline);
+
+      const overrideLlmCheckbox = document.getElementById('overrideLlm');
+      const overrideTtsCheckbox = document.getElementById('overrideTts');
+      const overrideAsrCheckbox = document.getElementById('overrideAsr');
+      if (overrideLlmCheckbox) overrideLlmCheckbox.addEventListener('change', updateLlmsForPipeline);
+      if (overrideTtsCheckbox) overrideTtsCheckbox.addEventListener('change', updateLlmsForPipeline);
+      if (overrideAsrCheckbox) overrideAsrCheckbox.addEventListener('change', updateLlmsForPipeline);
     }
 
     // Handle RTM enable/disable
