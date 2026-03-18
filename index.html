@@ -3380,9 +3380,19 @@
       const overrideLlmCheckbox = document.getElementById('overrideLlm');
       const overrideTtsCheckbox = document.getElementById('overrideTts');
       const overrideAsrCheckbox = document.getElementById('overrideAsr');
-      if (overrideLlmCheckbox) overrideLlmCheckbox.addEventListener('change', updateLlmsForPipeline);
-      if (overrideTtsCheckbox) overrideTtsCheckbox.addEventListener('change', updateLlmsForPipeline);
-      if (overrideAsrCheckbox) overrideAsrCheckbox.addEventListener('change', updateLlmsForPipeline);
+      // Use both "input" and "change" because checkbox events can differ by interaction method.
+      if (overrideLlmCheckbox) {
+        overrideLlmCheckbox.addEventListener('input', updateLlmsForPipeline);
+        overrideLlmCheckbox.addEventListener('change', updateLlmsForPipeline);
+      }
+      if (overrideTtsCheckbox) {
+        overrideTtsCheckbox.addEventListener('input', updateLlmsForPipeline);
+        overrideTtsCheckbox.addEventListener('change', updateLlmsForPipeline);
+      }
+      if (overrideAsrCheckbox) {
+        overrideAsrCheckbox.addEventListener('input', updateLlmsForPipeline);
+        overrideAsrCheckbox.addEventListener('change', updateLlmsForPipeline);
+      }
     }
 
     // Handle RTM enable/disable
