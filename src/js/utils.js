@@ -133,6 +133,12 @@ window.Utils = class Utils {
             ...(document.getElementById("outputAudio").checked ? ["audio"] : [])
         ];
 
+        // Pipeline overrides: if Pipeline ID is provided, these determine whether
+        // we still send ASR/LLM/TTS blocks from this UI.
+        const overrideLlm = document.getElementById("overrideLlm") ? document.getElementById("overrideLlm").checked : false;
+        const overrideTts = document.getElementById("overrideTts") ? document.getElementById("overrideTts").checked : false;
+        const overrideAsr = document.getElementById("overrideAsr") ? document.getElementById("overrideAsr").checked : false;
+
         // Get AI Avatar settings
         const enableAvatar = document.getElementById("enableAvatar").checked;
         const avatarVendor = document.getElementById("avatarVendor").value;
@@ -154,6 +160,9 @@ window.Utils = class Utils {
             idleTimeout: idleTimeout,
             // Optional pipeline ID for backend-configured ASR/LLM/TTS
             pipelineId: document.getElementById("pipelineId") ? document.getElementById("pipelineId").value.trim() : '',
+            overrideLlm: overrideLlm,
+            overrideTts: overrideTts,
+            overrideAsr: overrideAsr,
             llmApiKey: document.getElementById("llmApiKey").value.trim(),
             llmUrl: document.getElementById("llmUrl").value.trim(),
             llmAccessKey: document.getElementById("llmAccessKey") ? document.getElementById("llmAccessKey").value.trim() : '',
@@ -283,13 +292,16 @@ window.Utils = class Utils {
             throw new Error(`Missing required fields: ${missing.join(', ')}`);
         }
 
-        // When a pipeline ID is provided, ASR/LLM/TTS are configured in the backend pipeline
-        // and should not be validated here.
-        const pipelineIdInput = document.getElementById('pipelineId');
-        const hasPipelineId = pipelineIdInput && pipelineIdInput.value.trim() !== '';
+        const hasPipelineId = data.pipelineId && data.pipelineId.trim() !== '';
+        const overrideLlm = data.overrideLlm;
+        const overrideTts = data.overrideTts;
+        const overrideAsr = data.overrideAsr;
 
         // Validate MLLM configuration if enabled
         if (data.enableMllm) {
+            if (hasPipelineId) {
+                throw new Error('Disable MLLM when Pipeline ID is provided');
+            }
             if (!data.mllmUrl) {
                 throw new Error('MLLM URL is required when MLLM is enabled');
             }
@@ -316,7 +328,7 @@ window.Utils = class Utils {
                 
                 // AI Avatar requires TTS to be enabled
                 const ttsVendor = data.vendor;
-                if (!ttsVendor) {
+                if (!(hasPipelineId && !overrideTts) && !ttsVendor) {
                     throw new Error('TTS vendor is required when AI Avatar is enabled');
                 }
                 
@@ -332,16 +344,23 @@ window.Utils = class Utils {
                     throw new Error('Remote RTC UIDs cannot be "*" when AI Avatar is enabled. Please set specific UIDs.');
                 }
             }
-            // When no pipeline ID is used, validate LLM/TTS/ASR configuration
-            if (!hasPipelineId) {
-                // Validate LLM configuration if MLLM is not enabled
+
+            // Validate LLM/TTS/ASR only if not using pipeline mode,
+            // or if the corresponding override checkbox is checked.
+            const shouldValidateLlm = !hasPipelineId || overrideLlm;
+            const shouldValidateTts = !hasPipelineId || overrideTts;
+            const shouldValidateAsr = !hasPipelineId || overrideAsr;
+
+            if (shouldValidateLlm) {
                 if (!data.llmApiKey) {
                     throw new Error('LLM API Key is required');
                 }
                 if (!data.llmUrl) {
                     throw new Error('LLM URL is required');
                 }
+            }
 
+            if (shouldValidateTts) {
                 // Validate TTS configuration based on vendor
                 const ttsVendor = data.vendor;
                 if (ttsVendor === 'microsoft') {
@@ -428,7 +447,9 @@ window.Utils = class Utils {
                         throw new Error('Sarvam Language Code is required');
                     }
                 }
+            }
 
+            if (shouldValidateAsr) {
                 // Validate ASR configuration based on vendor
                 const asrVendor = data.asrVendor;
                 if (asrVendor === 'microsoft') {
@@ -445,7 +466,6 @@ window.Utils = class Utils {
                         throw new Error('ASR Language is required');
                     }
                 } else if (asrVendor === 'deepgram') {
-                    const deepgramAsrUrl = document.getElementById('deepgramAsrUrl').value.trim();
                     const deepgramAsrKey = document.getElementById('deepgramAsrKey').value.trim();
                     const asrLanguage = document.getElementById('asrLanguage').value.trim();
                     if (!deepgramAsrKey) {
@@ -1493,31 +1513,37 @@ window.Utils = class Utils {
         if (formData.pipelineId && formData.pipelineId.trim() !== '') {
             config.pipeline_id = formData.pipelineId.trim();
             if (config.properties) {
+                const overrideLlm = !!formData.overrideLlm;
+                const overrideTts = !!formData.overrideTts;
+                const overrideAsr = !!formData.overrideAsr;
+
                 // Preserve modalities from the existing LLM block
                 let inputModalities = undefined;
                 let outputModalities = undefined;
                 if (config.properties.llm) {
                     inputModalities = config.properties.llm.input_modalities;
                     outputModalities = config.properties.llm.output_modalities;
+                } else {
+                    inputModalities = formData.inputModalities;
+                    outputModalities = formData.outputModalities;
                 }
 
-                // Remove ASR / TTS / MLLM completely
-                delete config.properties.asr;
-                delete config.properties.tts;
+                // Pipeline mode: remove MLLM completely
                 delete config.properties.mllm;
 
-                // Replace LLM block with a minimal object that only carries modalities
-                if (inputModalities || outputModalities) {
-                    config.properties.llm = {};
-                    if (inputModalities) {
-                        config.properties.llm.input_modalities = inputModalities;
+                // Conditionally remove vendor-specific blocks
+                if (!overrideAsr) delete config.properties.asr;
+                if (!overrideTts) delete config.properties.tts;
+
+                // Conditionally strip LLM down to modalities only
+                if (!overrideLlm) {
+                    if (inputModalities || outputModalities) {
+                        config.properties.llm = {};
+                        if (inputModalities) config.properties.llm.input_modalities = inputModalities;
+                        if (outputModalities) config.properties.llm.output_modalities = outputModalities;
+                    } else {
+                        delete config.properties.llm;
                     }
-                    if (outputModalities) {
-                        config.properties.llm.output_modalities = outputModalities;
-                    }
-                } else {
-                    // If no modalities, remove llm entirely
-                    delete config.properties.llm;
                 }
             }
         }

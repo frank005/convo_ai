@@ -782,10 +782,13 @@ class SubtitleManager {
 
             // Initialize the Conversational AI toolkit
             if (typeof ConversationalAIAPI !== 'undefined') {
-                // Generate a valid UID if none provided or if invalid
+                // IMPORTANT: RTM tokens are generated for a specific UID.
+                // If caller omits UID and we default token generation to UID=0,
+                // we must NOT replace UID=0 with a random UID here.
+                // Only default when UID is truly missing/empty.
                 let validUid = uid;
-                if (!validUid || validUid === 0 || validUid === '0' || validUid === '') {
-                    validUid = Math.floor(Math.random() * 1000000) + 1000;
+                if (validUid === undefined || validUid === null || validUid === '') {
+                    validUid = 0;
                 }
                 
                 console.log('Initializing RTM with UID:', validUid);

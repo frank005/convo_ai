@@ -862,6 +862,12 @@ window.UI = class UI {
             this.agoraAPI = new AgoraAPI(appId);
             // Update base URL indicator
             this.updateBaseUrlIndicator();
+            // If certificate is present, ensure a deterministic client UID exists
+            // so token generation + RTM login don't end up using UID=0.
+            const clientRtcUidInput = document.getElementById("clientRtcUid");
+            if (clientRtcUidInput && (!clientRtcUidInput.value || clientRtcUidInput.value.trim() === "")) {
+                clientRtcUidInput.value = "1001";
+            }
             // After credentials are saved, try to auto-generate tokens if channel is present
             this.autoGenerateAgentAndClientTokensIfPossible();
         } catch (error) {
@@ -943,10 +949,13 @@ window.UI = class UI {
                 this.scheduleTokenExpiryWarning("agent");
             }
 
-            // Client token (UID may be empty -> defaults to 0)
+            // Client token: if UID is empty, set a deterministic UID when certificate exists
             const clientUidInput = document.getElementById("clientRtcUid");
             const clientTokenInput = document.getElementById("clientRtcToken");
             if (clientTokenInput) {
+                if (clientUidInput && (!clientUidInput.value || clientUidInput.value.trim() === "")) {
+                    clientUidInput.value = "1001";
+                }
                 const clientUid = clientUidInput ? clientUidInput.value.trim() : "";
                 const token = await Utils.generateAgoraToken(
                     appId,
@@ -1080,7 +1089,11 @@ window.UI = class UI {
                 return;
             }
 
-            const clientRtcUid = document.getElementById("clientRtcUid").value.trim();
+            const clientRtcUidInput = document.getElementById("clientRtcUid");
+            if (clientRtcUidInput && (!clientRtcUidInput.value || clientRtcUidInput.value.trim() === "")) {
+                clientRtcUidInput.value = "1001";
+            }
+            const clientRtcUid = clientRtcUidInput ? clientRtcUidInput.value.trim() : "";
 
             const token = await Utils.generateAgoraToken(
                 appId,

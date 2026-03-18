@@ -3308,25 +3308,55 @@
         const ttsSettingsBtn = document.getElementById('ttsSettingsBtn');
         const asrConfigBox = document.getElementById('asrConfigBox');
 
+        const overrideLlm = document.getElementById('overrideLlm') ? document.getElementById('overrideLlm').checked : false;
+        const overrideTts = document.getElementById('overrideTts') ? document.getElementById('overrideTts').checked : false;
+        const overrideAsr = document.getElementById('overrideAsr') ? document.getElementById('overrideAsr').checked : false;
+
         // If MLLM is enabled, it already controls the state; keep that behavior
         const enableMllmCheckbox = document.getElementById('enableMllm');
+        const mllmSettingsBtn = document.getElementById('mllmSettingsBtn');
         const mllmActive = enableMllmCheckbox && enableMllmCheckbox.checked;
 
         if (hasPipelineId) {
+          // Pipeline mode uses backend ASR/LLM/TTS; disable MLLM UI so we don't send mllm.
+          if (enableMllmCheckbox) {
+            enableMllmCheckbox.checked = false;
+            enableMllmCheckbox.disabled = true;
+          }
+          if (mllmSettingsBtn) {
+            mllmSettingsBtn.disabled = true;
+            mllmSettingsBtn.classList.add('opacity-50');
+          }
+
           if (llmSettingsBtn) {
-            llmSettingsBtn.disabled = true;
-            llmSettingsBtn.classList.add('opacity-50');
+            llmSettingsBtn.disabled = !overrideLlm;
+            if (!overrideLlm) llmSettingsBtn.classList.add('opacity-50');
+            else llmSettingsBtn.classList.remove('opacity-50');
           }
           if (ttsSettingsBtn) {
-            ttsSettingsBtn.disabled = true;
-            ttsSettingsBtn.classList.add('opacity-50');
+            ttsSettingsBtn.disabled = !overrideTts;
+            if (!overrideTts) ttsSettingsBtn.classList.add('opacity-50');
+            else ttsSettingsBtn.classList.remove('opacity-50');
           }
           if (asrConfigBox) {
-            asrConfigBox.classList.add('opacity-50');
-            asrConfigBox.style.pointerEvents = 'none';
+            if (!overrideAsr) {
+              asrConfigBox.classList.add('opacity-50');
+              asrConfigBox.style.pointerEvents = 'none';
+            } else {
+              asrConfigBox.classList.remove('opacity-50');
+              asrConfigBox.style.pointerEvents = 'auto';
+            }
           }
         } else if (!mllmActive) {
           // Only re-enable when MLLM is not active
+          if (enableMllmCheckbox) {
+            enableMllmCheckbox.disabled = false;
+          }
+          if (mllmSettingsBtn) {
+            mllmSettingsBtn.classList.remove('opacity-50');
+            mllmSettingsBtn.disabled = false;
+          }
+
           if (llmSettingsBtn) {
             llmSettingsBtn.disabled = false;
             llmSettingsBtn.classList.remove('opacity-50');
@@ -4459,7 +4489,7 @@
   <script src="src/js/audio.js?v=1.2"></script>
   <script src="src/js/camera-preview.js?v=1.0"></script>
   <script src="src/js/conversational-ai-api.js?v=1.2"></script>
-  <script src="src/js/subtitles.js?v=1.2"></script>
+  <script src="src/js/subtitles.js?v=1.3"></script>
   <script src="src/js/ui.js?v=1.2"></script>
   <script src="src/js/asr.js?v=1.0"></script>
 
@@ -4684,7 +4714,25 @@
               />
               <div class="tooltip">
                 Optional pipeline ID for backend-configured ASR/LLM/TTS (called <strong>Agent ID</strong> in the Studio console).
-                When set, ASR/LLM/TTS settings in this UI are disabled and the pipeline configuration is used instead.
+                When set, ASR/LLM/TTS settings in this UI are disabled and the backend pipeline configuration is used instead.
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="flex items-center gap-2 text-sm text-gray-200">
+                <input type="checkbox" id="overrideLlm" class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+                Override LLM
+              </label>
+              <label class="flex items-center gap-2 text-sm text-gray-200">
+                <input type="checkbox" id="overrideTts" class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+                Override TTS
+              </label>
+              <label class="flex items-center gap-2 text-sm text-gray-200">
+                <input type="checkbox" id="overrideAsr" class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+                Override ASR
+              </label>
+              <div class="tooltip">
+                If Pipeline ID is set and an override is checked, the corresponding ASR/LLM/TTS block will also be sent from this UI.
               </div>
             </div>
           </div>
