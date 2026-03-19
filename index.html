@@ -3119,17 +3119,27 @@
     const mllmDrawer = document.getElementById('mllmDrawer');
     const mllmDrawerBackdrop = document.getElementById('mllmDrawerBackdrop');
     const mllmVendor = document.getElementById('mllmVendor');
+    const mllmUrl = document.getElementById('mllmUrl');
+    const mllmApiKey = document.getElementById('mllmApiKey');
+    const openaiMllmConfig = document.getElementById('openaiMllmConfig');
     const vertexaiConfig = document.getElementById('vertexaiConfig');
     
-    // Show/hide Vertex AI config based on vendor selection
-    if (mllmVendor && vertexaiConfig) {
-        mllmVendor.addEventListener('change', function() {
-            if (this.value === 'vertexai') {
+    // Show/hide MLLM vendor-specific sections and defaults
+    if (mllmVendor && vertexaiConfig && openaiMllmConfig) {
+        const updateMllmVendorUI = function() {
+            if (mllmVendor.value === 'vertexai') {
                 vertexaiConfig.classList.remove('hidden');
+                openaiMllmConfig.classList.add('hidden');
+                if (mllmUrl) mllmUrl.value = '';
+                if (mllmApiKey) mllmApiKey.value = '';
             } else {
+                openaiMllmConfig.classList.remove('hidden');
                 vertexaiConfig.classList.add('hidden');
+                if (mllmUrl && !mllmUrl.value.trim()) mllmUrl.value = 'wss://api.openai.com/v1/realtime';
             }
-        });
+        };
+        mllmVendor.addEventListener('change', updateMllmVendorUI);
+        updateMllmVendorUI();
     }
     const enableMllm = document.getElementById('enableMllm');
 
@@ -3239,15 +3249,17 @@
         // Disable LLM, TTS, ASR sections
         disableLlmsForBackendOrMllm();
 
-        // Set input modalities: audio checked+disabled, text enabled (can uncheck), image disabled (cannot be checked/unchecked)
+        // Set input modalities: audio checked+disabled, text enabled (can uncheck), image forced off+disabled
         inputAudio.checked = true;
         inputAudio.disabled = true;
         inputText.disabled = false;
+        inputImage.checked = false;
         inputImage.disabled = true;
+        outputAudio.checked = true;
         // Do not force inputText to be checked
-        // Enable modality changes for input section (only text can be toggled)
+        // Enable modality changes for input/output section while in MLLM mode
         inputModalities.style.pointerEvents = 'auto';
-        outputModalities.style.pointerEvents = 'none';
+        outputModalities.style.pointerEvents = 'auto';
 
         // Disable AIVAD and AI Avatar when MLLM is enabled
         document.getElementById('enableAivad').checked = false;
@@ -3541,6 +3553,11 @@
     if (outputAudio) {
       outputAudio.addEventListener('change', function(e) {
       const textCheckbox = document.getElementById('outputText');
+      const enableMllm = document.getElementById('enableMllm');
+        if (enableMllm && enableMllm.checked && !this.checked) {
+        this.checked = true; // MLLM requires audio output
+        return;
+      }
         if (textCheckbox && !this.checked && !textCheckbox.checked) {
         this.checked = true; // Prevent unchecking if it's the last selected option
       }
@@ -6332,6 +6349,64 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           </select>
           <div class="tooltip">The request style for MLLM completion. Use 'openai' for OpenAI-compatible APIs or Google Gemini Live.</div>
         </div>
+
+        <!-- OpenAI Realtime Specific Settings -->
+        <div id="openaiMllmConfig" class="space-y-4">
+          <div class="has-tooltip relative">
+            <input
+              id="mllmOpenaiModel"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="OpenAI Realtime Model (e.g., gpt-realtime)"
+              value="gpt-realtime"
+            />
+            <div class="tooltip">OpenAI Realtime model identifier.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="mllmOpenaiVoice"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Voice (e.g., coral)"
+              value="coral"
+            />
+            <div class="tooltip">Voice identifier for OpenAI audio output.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <textarea
+              id="mllmOpenaiInstructions"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="System instructions (optional)"
+              rows="3"
+            >You are a Conversational AI Agent, developed by Agora.</textarea>
+            <div class="tooltip">System instructions that define assistant behavior and personality.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="mllmOpenaiTranscriptionLanguage"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Input transcription language (ISO-639-1, e.g., en)"
+            />
+            <div class="tooltip">Optional language hint in ISO-639-1 format for better transcription accuracy and latency.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <select
+              id="mllmOpenaiTranscriptionModel"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            >
+              <option value="gpt-4o-mini-transcribe">gpt-4o-mini-transcribe</option>
+              <option value="gpt-4o-transcribe">gpt-4o-transcribe</option>
+              <option value="whisper-1">whisper-1</option>
+            </select>
+            <div class="tooltip">Model used for OpenAI input audio transcription.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="mllmOpenaiTranscriptionPrompt"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder='Transcription prompt (optional, e.g., "expect words related to real-time engagement")'
+            />
+            <div class="tooltip">Optional prompt to guide transcription style or expected vocabulary.</div>
+          </div>
+        </div>
         
         <!-- Google Gemini Live (Vertex AI) Specific Settings -->
         <div id="vertexaiConfig" class="hidden space-y-4">
@@ -6386,6 +6461,18 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               rows="3"
             ></textarea>
             <div class="tooltip">System instructions that define the agent's behavior or tone.</div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <label class="flex items-center has-tooltip relative">
+              <input type="checkbox" id="vertexaiTranscribeAgent" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded" checked>
+              <span>Transcribe Agent</span>
+              <div class="tooltip">Whether to transcribe the agent's speech in real time.</div>
+            </label>
+            <label class="flex items-center has-tooltip relative">
+              <input type="checkbox" id="vertexaiTranscribeUser" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded" checked>
+              <span>Transcribe User</span>
+              <div class="tooltip">Whether to transcribe the user's speech in real time.</div>
+            </label>
           </div>
         </div>
         <div class="has-tooltip relative">
@@ -6482,10 +6569,10 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               <label class="text-sm">Turn Detection Type</label>
               <select id="turnDetectionType" class="w-full p-2 rounded bg-gray-600 turn-field">
                 <option value="agora_vad">Agora VAD</option>
-                <option value="server_vad">Server VAD (MLLM + OpenAI only)</option>
-                <option value="semantic_vad">Semantic VAD (MLLM + OpenAI only)</option>
+                <option value="server_vad">Server VAD (MLLM)</option>
+                <option value="semantic_vad">Semantic VAD (MLLM)</option>
               </select>
-              <div class="tooltip">Turn detection mechanism. Server VAD and Semantic VAD are only available when MLLM is enabled and OpenAI is selected.</div>
+              <div class="tooltip">Turn detection mechanism. Server VAD and Semantic VAD are only available when MLLM is enabled.</div>
             </div>
             <div class="has-tooltip relative">
               <label class="text-sm">Interrupt Mode</label>

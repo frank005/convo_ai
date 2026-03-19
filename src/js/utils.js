@@ -112,6 +112,12 @@ window.Utils = class Utils {
         const mllmVendor = document.getElementById("mllmVendor").value;
         const mllmStyle = document.getElementById("mllmStyle").value;
         const mllmMaxHistory = document.getElementById("mllmMaxHistory").value || null;
+        const mllmOpenaiModel = document.getElementById("mllmOpenaiModel") ? document.getElementById("mllmOpenaiModel").value.trim() : "";
+        const mllmOpenaiVoice = document.getElementById("mllmOpenaiVoice") ? document.getElementById("mllmOpenaiVoice").value.trim() : "";
+        const mllmOpenaiInstructions = document.getElementById("mllmOpenaiInstructions") ? document.getElementById("mllmOpenaiInstructions").value.trim() : "";
+        const mllmOpenaiTranscriptionLanguage = document.getElementById("mllmOpenaiTranscriptionLanguage") ? document.getElementById("mllmOpenaiTranscriptionLanguage").value.trim() : "";
+        const mllmOpenaiTranscriptionModel = document.getElementById("mllmOpenaiTranscriptionModel") ? document.getElementById("mllmOpenaiTranscriptionModel").value.trim() : "";
+        const mllmOpenaiTranscriptionPrompt = document.getElementById("mllmOpenaiTranscriptionPrompt") ? document.getElementById("mllmOpenaiTranscriptionPrompt").value.trim() : "";
         
         // Get Vertex AI specific settings
         const vertexaiAdcCredentials = document.getElementById("vertexaiAdcCredentials") ? document.getElementById("vertexaiAdcCredentials").value.trim() : '';
@@ -120,6 +126,8 @@ window.Utils = class Utils {
         const vertexaiModel = document.getElementById("vertexaiModel") ? document.getElementById("vertexaiModel").value.trim() : '';
         const vertexaiVoice = document.getElementById("vertexaiVoice") ? document.getElementById("vertexaiVoice").value.trim() : '';
         const vertexaiInstructions = document.getElementById("vertexaiInstructions") ? document.getElementById("vertexaiInstructions").value.trim() : '';
+        const vertexaiTranscribeAgent = document.getElementById("vertexaiTranscribeAgent") ? document.getElementById("vertexaiTranscribeAgent").checked : true;
+        const vertexaiTranscribeUser = document.getElementById("vertexaiTranscribeUser") ? document.getElementById("vertexaiTranscribeUser").checked : true;
         
         // Get input/output modalities
         const inputModalities = [
@@ -206,6 +214,12 @@ window.Utils = class Utils {
             mllmVendor: mllmVendor,
             mllmStyle: mllmStyle,
             mllmMaxHistory: mllmMaxHistory,
+            mllmOpenaiModel: mllmOpenaiModel,
+            mllmOpenaiVoice: mllmOpenaiVoice,
+            mllmOpenaiInstructions: mllmOpenaiInstructions,
+            mllmOpenaiTranscriptionLanguage: mllmOpenaiTranscriptionLanguage,
+            mllmOpenaiTranscriptionModel: mllmOpenaiTranscriptionModel,
+            mllmOpenaiTranscriptionPrompt: mllmOpenaiTranscriptionPrompt,
             
             // Vertex AI settings
             vertexaiAdcCredentials: vertexaiAdcCredentials,
@@ -214,6 +228,8 @@ window.Utils = class Utils {
             vertexaiModel: vertexaiModel,
             vertexaiVoice: vertexaiVoice,
             vertexaiInstructions: vertexaiInstructions,
+            vertexaiTranscribeAgent: vertexaiTranscribeAgent,
+            vertexaiTranscribeUser: vertexaiTranscribeUser,
             
             // Turn detection
             turnDetectionEnabled: turnDetectionEnabled,
@@ -302,11 +318,31 @@ window.Utils = class Utils {
             if (hasPipelineId) {
                 throw new Error('Disable MLLM when Pipeline ID is provided');
             }
-            if (!data.mllmUrl) {
-                throw new Error('MLLM URL is required when MLLM is enabled');
+            const mllmInputModalities = (data.inputModalities || []).filter(modality => modality === 'audio' || modality === 'text');
+            const mllmOutputModalities = (data.outputModalities || []).filter(modality => modality === 'audio' || modality === 'text');
+            if (!mllmInputModalities.includes('audio')) {
+                throw new Error('MLLM requires audio input modality');
             }
-            if (!data.mllmApiKey) {
-                throw new Error('MLLM API Key is required when MLLM is enabled');
+            if (!mllmOutputModalities.includes('audio')) {
+                throw new Error('MLLM requires audio output modality');
+            }
+            if (data.mllmVendor === 'vertexai') {
+                if (!data.vertexaiAdcCredentials) {
+                    throw new Error('Vertex AI ADC Credentials are required when MLLM vendor is Gemini Live');
+                }
+                if (!data.vertexaiProjectId) {
+                    throw new Error('Vertex AI Project ID is required when MLLM vendor is Gemini Live');
+                }
+                if (!data.vertexaiLocation) {
+                    throw new Error('Vertex AI Location is required when MLLM vendor is Gemini Live');
+                }
+            } else {
+                if (!data.mllmUrl) {
+                    throw new Error('MLLM URL is required when MLLM is enabled');
+                }
+                if (!data.mllmApiKey) {
+                    throw new Error('MLLM API Key is required when MLLM is enabled');
+                }
             }
             // AI Avatar is not compatible with MLLM
             if (data.enableAvatar) {
@@ -1181,15 +1217,24 @@ window.Utils = class Utils {
                     }
                 }),
                 ...(formData.enableMllm ? { // Include MLLM if enabled
-                    mllm: {
+                    mllm: (() => {
+                        const mllmInputModalities = (formData.inputModalities || []).filter(modality => modality === 'audio' || modality === 'text');
+                        const safeMllmInputModalities = mllmInputModalities.length > 0
+                            ? mllmInputModalities
+                            : ['audio'];
+                        const mllmOutputModalities = (formData.outputModalities || []).filter(modality => modality === 'audio' || modality === 'text');
+                        const safeMllmOutputModalities = mllmOutputModalities.length > 0
+                            ? mllmOutputModalities
+                            : (formData.mllmVendor === 'vertexai' ? ['audio'] : ['text', 'audio']);
+                        const mllmConfig = {
                         ...(formData.mllmVendor === 'vertexai' ? {} : { url: formData.mllmUrl }), // URL not needed for vertexai
                         ...(formData.mllmVendor === 'vertexai' ? {} : { api_key: formData.mllmApiKey }), // API key not needed for vertexai
                         ...(formData.mllmGreetingMessage ? { greeting_message: formData.mllmGreetingMessage } : {}),
                         ...(formData.mllmVendor ? { vendor: formData.mllmVendor } : {}),
                         ...(formData.mllmStyle ? { style: formData.mllmStyle } : {}),
                         ...(formData.mllmMaxHistory ? { max_history: parseInt(formData.mllmMaxHistory, 10) } : {}),
-                        input_modalities: ["audio"], // MLLM uses audio input
-                        output_modalities: ["audio"], // MLLM outputs audio
+                        input_modalities: safeMllmInputModalities,
+                        output_modalities: safeMllmOutputModalities,
                         ...(formData.mllmVendor === 'vertexai' ? {
                             params: {
                                 model: formData.vertexaiModel || 'gemini-live-2.5-flash-preview-native-audio-09-2025',
@@ -1198,12 +1243,28 @@ window.Utils = class Utils {
                                 location: formData.vertexaiLocation,
                                 ...(formData.vertexaiVoice ? { voice: formData.vertexaiVoice } : {}),
                                 ...(formData.vertexaiInstructions ? { instructions: formData.vertexaiInstructions } : {}),
-                                transcribe_agent: true,
-                                transcribe_user: true,
+                                transcribe_agent: formData.vertexaiTranscribeAgent,
+                                transcribe_user: formData.vertexaiTranscribeUser,
                                 ...customParams
                             }
-                        } : (Object.keys(customParams).length > 0 ? { params: customParams } : {})) // Only include params if customParams is not empty
-                    }
+                        } : {
+                            params: {
+                                ...(formData.mllmOpenaiModel ? { model: formData.mllmOpenaiModel } : {}),
+                                ...(formData.mllmOpenaiVoice ? { voice: formData.mllmOpenaiVoice } : {}),
+                                ...(formData.mllmOpenaiInstructions ? { instructions: formData.mllmOpenaiInstructions } : {}),
+                                ...((formData.mllmOpenaiTranscriptionLanguage || formData.mllmOpenaiTranscriptionModel || formData.mllmOpenaiTranscriptionPrompt) ? {
+                                    input_audio_transcription: {
+                                        ...(formData.mllmOpenaiTranscriptionLanguage ? { language: formData.mllmOpenaiTranscriptionLanguage } : {}),
+                                        ...(formData.mllmOpenaiTranscriptionModel ? { model: formData.mllmOpenaiTranscriptionModel } : {}),
+                                        ...(formData.mllmOpenaiTranscriptionPrompt ? { prompt: formData.mllmOpenaiTranscriptionPrompt } : {})
+                                    }
+                                } : {}),
+                                ...customParams
+                            }
+                        })
+                        };
+                        return mllmConfig;
+                    })()
                 } : {}),
                         //add chorus scenario for websdk fix for now, merge with dynamic parameters
                 parameters: {
