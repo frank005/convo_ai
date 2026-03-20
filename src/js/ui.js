@@ -2014,16 +2014,15 @@ window.UI = class UI {
                     }
                 };
             } else {
-                // Include token, llm.system_messages, and llm.params (customParams)
-                updatePayload = {
-                    properties: {
-                        token: config.properties.token,
-                        llm: {
-                            system_messages: config.properties.llm.system_messages,
-                            params: config.properties.llm.params
-                        }
-                    }
-                };
+                // Include token; llm only when present (e.g. pipeline mode without override omits llm)
+                const props = { token: config.properties.token };
+                if (config.properties.llm) {
+                    props.llm = {
+                        system_messages: config.properties.llm.system_messages,
+                        params: config.properties.llm.params
+                    };
+                }
+                updatePayload = { properties: props };
             }
             
             const data = await this.agoraAPI.updateAgent(customerId, customerSecret, agentId, updatePayload);

@@ -1569,25 +1569,14 @@ window.Utils = class Utils {
         // If no encryption mode is selected, rtc property is not added to config.properties
 
         // If a pipeline ID is provided, attach it to the top-level config and
-        // strip vendor-specific ASR/LLM/TTS/MLLM config while preserving
-        // input/output modalities exactly where they were before (under llm).
+        // strip vendor-specific ASR/LLM/TTS/MLLM config. When not overriding LLM,
+        // remove llm entirely (no empty object) — modalities are not sent.
         if (formData.pipelineId && formData.pipelineId.trim() !== '') {
             config.pipeline_id = formData.pipelineId.trim();
             if (config.properties) {
                 const overrideLlm = !!formData.overrideLlm;
                 const overrideTts = !!formData.overrideTts;
                 const overrideAsr = !!formData.overrideAsr;
-
-                // Preserve modalities from the existing LLM block
-                let inputModalities = undefined;
-                let outputModalities = undefined;
-                if (config.properties.llm) {
-                    inputModalities = config.properties.llm.input_modalities;
-                    outputModalities = config.properties.llm.output_modalities;
-                } else {
-                    inputModalities = formData.inputModalities;
-                    outputModalities = formData.outputModalities;
-                }
 
                 // Pipeline mode: remove MLLM completely
                 delete config.properties.mllm;
@@ -1596,15 +1585,10 @@ window.Utils = class Utils {
                 if (!overrideAsr) delete config.properties.asr;
                 if (!overrideTts) delete config.properties.tts;
 
-                // Conditionally strip LLM down to modalities only
+                // Conditionally remove LLM config (including input/output modalities).
+                // Only keep llm when override LLM is enabled.
                 if (!overrideLlm) {
-                    if (inputModalities || outputModalities) {
-                        config.properties.llm = {};
-                        if (inputModalities) config.properties.llm.input_modalities = inputModalities;
-                        if (outputModalities) config.properties.llm.output_modalities = outputModalities;
-                    } else {
-                        delete config.properties.llm;
-                    }
+                    delete config.properties.llm;
                 }
             }
         }
