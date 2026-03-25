@@ -157,7 +157,7 @@ window.Utils = class Utils {
         const heygenQuality = document.getElementById("heygenQuality").value;
         const heygenDisableIdleTimeout = document.getElementById("heygenDisableIdleTimeout").checked;
         const heygenActivityIdleTimeout = document.getElementById("heygenActivityIdleTimeout").value || null;
-        const anamBaseUrl = document.getElementById("anamBaseUrl") ? document.getElementById("anamBaseUrl").value.trim() || 'https://api.anam.ai/v1' : 'https://api.anam.ai/v1';
+        // Anam base URL removed from UI; optional override was anam_base_url in avatar.params (commented out in buildAgentConfig).
 
         return {
             uniqueName: document.getElementById("uniqueName").value.trim(),
@@ -293,7 +293,6 @@ window.Utils = class Utils {
             heygenQuality: heygenQuality,
             heygenDisableIdleTimeout: heygenDisableIdleTimeout,
             heygenActivityIdleTimeout: heygenActivityIdleTimeout,
-            anamBaseUrl: anamBaseUrl,
             // RTC Encryption settings
             rtcEncryptionMode: document.getElementById('rtcEncryptionMode') ? document.getElementById('rtcEncryptionMode').value : '',
             rtcEncryptionKey: document.getElementById('rtcEncryptionKey') ? document.getElementById('rtcEncryptionKey').value.trim() : '',
@@ -1294,9 +1293,9 @@ window.Utils = class Utils {
                     ? {
                         agora_token: formData.avatarRtcToken || '',
                         agora_uid: formData.avatarRtcUid,
-                        anam_api_key: formData.avatarApiKey,
-                        anam_avatar_id: formData.avatarId,
-                        anam_base_url: formData.anamBaseUrl || 'https://api.anam.ai/v1'
+                        api_key: formData.avatarApiKey,
+                        avatar_id: formData.avatarId
+                        // anam_base_url: removed from request; backend uses default Anam API base URL
                     }
                     : {
                         api_key: formData.avatarApiKey,

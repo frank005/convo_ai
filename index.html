@@ -2990,18 +2990,15 @@
     });
     }
 
-    // Handle avatar vendor change
-    const anamSettings = document.getElementById('anamSettings');
-    if (avatarVendor && heygenSettings && anamSettings) {
+    // Handle avatar vendor change (Anam has no extra UI fields; base URL removed)
+    if (avatarVendor && heygenSettings) {
     avatarVendor.addEventListener('change', function() {
       const v = this.value;
       heygenSettings.classList.toggle('hidden', v !== 'heygen');
-      anamSettings.classList.toggle('hidden', v !== 'anam');
     });
-    // Initial sync in case vendor is already anam/heygen (e.g. loaded config)
+    // Initial sync in case vendor is already heygen (e.g. loaded config)
     const v = avatarVendor.value;
     heygenSettings.classList.toggle('hidden', v !== 'heygen');
-    anamSettings.classList.toggle('hidden', v !== 'anam');
     }
 
     // Handle UID changes when AI Avatar is enabled
@@ -6246,18 +6243,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           <div class="tooltip">The RTC token for the avatar to join the channel. Optional if your app doesn't require tokens. Generated tokens are valid for 30 minutes.</div>
         </div>
 
-        <!-- Anam-specific settings -->
-        <div id="anamSettings" class="hidden">
-          <div class="has-tooltip relative">
-            <input
-              id="anamBaseUrl"
-              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-              placeholder="Anam API base URL"
-              value="https://api.anam.ai/v1"
-            />
-            <div class="tooltip">Base URL for the Anam API. Default: https://api.anam.ai/v1</div>
-          </div>
-        </div>
+        <!-- Anam: no vendor-specific fields (anam_base_url removed from config) -->
 
         <!-- HeyGen-specific settings -->
         <div id="heygenSettings" class="hidden">
