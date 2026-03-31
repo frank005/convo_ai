@@ -3491,7 +3491,6 @@
         }
       });
       const value = ttsPreset.value;
-      if (ttsVendor) ttsVendor.dispatchEvent(new Event('change'));
       const isOpenAiPreset = value === 'openai_tts_1';
       const openaiTtsKeyWrap = document.getElementById('openaiTtsKey')?.closest('.has-tooltip');
       const openaiBaseUrlWrap = document.getElementById('openaiBaseUrl')?.closest('.has-tooltip');
