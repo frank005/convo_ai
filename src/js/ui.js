@@ -1355,14 +1355,13 @@ window.UI = class UI {
             "rimeSpeakerBlock",
             "rimeModelIdBlock"
         ];
-        // COMMENTED OUT: Not in Agora 2.0 official docs
-        // const minimaxBlocks = [
-        //     "minimaxTtsKeyBlock",
-        //     "minimaxGroupIdBlock",
-        //     "minimaxModelBlock",
-        //     "minimaxVoiceIdBlock",
-        //     "minimaxUrlBlock"
-        // ];
+        const minimaxBlocks = [
+            "minimaxTtsKeyBlock",
+            "minimaxGroupIdBlock",
+            "minimaxModelBlock",
+            "minimaxVoiceIdBlock",
+            "minimaxUrlBlock"
+        ];
         const fishaudioBlocks = [
             "fishaudioTtsKeyBlock",
             "fishaudioReferenceIdBlock",
@@ -1402,6 +1401,16 @@ window.UI = class UI {
             "amazonPollyRegionBlock",
             "amazonPollyVoiceBlock",
             "amazonPollyEngineBlock"
+        ];
+        const murfBlocks = [
+            "murfApiKeyBlock",
+            "murfBaseUrlBlock",
+            "murfVoiceIdBlock",
+            "murfLocaleBlock",
+            "murfModelBlock",
+            "murfRateBlock",
+            "murfPitchBlock",
+            "murfSampleRateBlock"
         ];
 
         msBlocks.forEach(block => {
@@ -1446,13 +1455,12 @@ window.UI = class UI {
             }
         });
 
-        // COMMENTED OUT: Not in Agora 2.0 official docs
-        // minimaxBlocks.forEach(block => {
-        //     const element = document.getElementById(block);
-        //     if (element) {
-        //         element.classList.toggle("hidden", vendor !== "minimax");
-        //     }
-        // });
+        minimaxBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "minimax");
+            }
+        });
 
         fishaudioBlocks.forEach(block => {
             const element = document.getElementById(block);
@@ -1493,6 +1501,13 @@ window.UI = class UI {
             const element = document.getElementById(block);
             if (element) {
                 element.classList.toggle("hidden", vendor !== "amazon");
+            }
+        });
+
+        murfBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "murf");
             }
         });
 

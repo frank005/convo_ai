@@ -11,6 +11,10 @@ class ASRManager {
         if (asrVendor) {
             asrVendor.addEventListener('change', () => this.updateAsrConfigVisibility());
         }
+        const asrPreset = document.getElementById('asrPreset');
+        if (asrPreset) {
+            asrPreset.addEventListener('change', () => this.applyAsrPresetState());
+        }
 
         // Add event listener for language changes to show/hide phrase list
         const asrLanguage = document.getElementById('asrLanguage');
@@ -114,6 +118,39 @@ class ASRManager {
         if (selectedVendor !== 'speechmatics' && selectedVendor !== 'assemblyai' && selectedVendor !== 'amazon' && selectedVendor !== 'google' && selectedVendor !== 'sarvam' && selectedVendor !== 'custom') {
             this.updateAsrLanguageDropdown(selectedVendor);
         }
+        this.applyAsrPresetState();
+    }
+
+    applyAsrPresetState() {
+        const asrPreset = document.getElementById('asrPreset');
+        const asrPresetContainer = document.getElementById('asrPresetContainer');
+        const asrVendor = document.getElementById('asrVendor');
+        const deepgramAsrKey = document.getElementById('deepgramAsrKey');
+        const deepgramAsrUrl = document.getElementById('deepgramAsrUrl');
+        const deepgramAsrModel = document.getElementById('deepgramAsrModel');
+        const deepgramAsrKeyterm = document.getElementById('deepgramAsrKeyterm');
+        if (!asrPreset) return;
+
+        const providerAllowsPreset = asrVendor && asrVendor.value === 'deepgram';
+        if (asrPresetContainer) asrPresetContainer.style.opacity = providerAllowsPreset ? '1' : '0.6';
+        if (!providerAllowsPreset) asrPreset.value = '';
+        asrPreset.disabled = !providerAllowsPreset;
+
+        const enabled = !!asrPreset.value;
+        if (deepgramAsrKey) deepgramAsrKey.disabled = enabled;
+        if (deepgramAsrUrl) deepgramAsrUrl.disabled = enabled;
+        if (deepgramAsrModel) deepgramAsrModel.disabled = enabled;
+
+        // Keep Deepgram section visible so extra fields like keyterm can still be configured,
+        // but hide provider-managed credential/endpoint/model fields when preset is active.
+        const deepgramAsrKeyWrap = deepgramAsrKey ? deepgramAsrKey.closest('.has-tooltip') : null;
+        const deepgramAsrUrlWrap = deepgramAsrUrl ? deepgramAsrUrl.closest('.has-tooltip') : null;
+        const deepgramAsrModelWrap = deepgramAsrModel ? deepgramAsrModel.closest('.has-tooltip') : null;
+        const deepgramAsrKeytermWrap = deepgramAsrKeyterm ? deepgramAsrKeyterm.closest('.has-tooltip') : null;
+        if (deepgramAsrKeyWrap) deepgramAsrKeyWrap.classList.toggle('hidden', enabled);
+        if (deepgramAsrUrlWrap) deepgramAsrUrlWrap.classList.toggle('hidden', enabled);
+        if (deepgramAsrModelWrap) deepgramAsrModelWrap.classList.toggle('hidden', enabled);
+        if (deepgramAsrKeytermWrap) deepgramAsrKeytermWrap.classList.toggle('hidden', asrPreset.value !== 'deepgram_nova_3');
     }
 
     updateAsrLanguageDropdown(vendor) {
@@ -514,6 +551,7 @@ class ASRManager {
     initializeAsrConfig() {
         console.log('initializeAsrConfig called');
         this.updateAsrConfigVisibility();
+        this.applyAsrPresetState();
     }
 }
 

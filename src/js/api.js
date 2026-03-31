@@ -146,6 +146,21 @@ window.AgoraAPI = class AgoraAPI {
         }
     }
 
+    async getConversationTurns(customerId, customerSecret, agentId) {
+        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const url = `${this.baseUrl}/projects/${this.appId}/agents/${agentId}/turns`;
+
+        try {
+            const response = await fetch(url, {
+                method: "GET",
+                headers
+            });
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Failed to query conversation turns: ${error.message}`);
+        }
+    }
+
     async broadcastMessage(customerId, customerSecret, agentId, text, priority, interruptable) {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/agents/${encodeURIComponent(agentId)}/speak`;

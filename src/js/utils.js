@@ -38,8 +38,8 @@ window.Utils = class Utils {
             ttsKey = document.getElementById("openaiTtsKey").value.trim();
         } else if (ttsVendor === "rime") {
             ttsKey = document.getElementById("rimeTtsKey") ? document.getElementById("rimeTtsKey").value.trim() : '';
-        // } else if (ttsVendor === "minimax") { // COMMENTED OUT: Not in Agora 2.0 official docs
-        //     ttsKey = document.getElementById("minimaxTtsKey") ? document.getElementById("minimaxTtsKey").value.trim() : '';
+        } else if (ttsVendor === "minimax") {
+            ttsKey = document.getElementById("minimaxTtsKey") ? document.getElementById("minimaxTtsKey").value.trim() : '';
         } else if (ttsVendor === "fishaudio") {
             ttsKey = document.getElementById("fishaudioTtsKey") ? document.getElementById("fishaudioTtsKey").value.trim() : '';
         } else if (ttsVendor === "groq") {
@@ -54,6 +54,8 @@ window.Utils = class Utils {
             // Amazon Polly uses access key and secret key, not a single ttsKey
             // We'll handle this in buildAgentConfig
             ttsKey = '';
+        } else if (ttsVendor === "murf") {
+            ttsKey = document.getElementById("murfApiKey") ? document.getElementById("murfApiKey").value.trim() : '';
         }
 
         // Get new v1.6 fields
@@ -157,7 +159,13 @@ window.Utils = class Utils {
         const heygenQuality = document.getElementById("heygenQuality").value;
         const heygenDisableIdleTimeout = document.getElementById("heygenDisableIdleTimeout").checked;
         const heygenActivityIdleTimeout = document.getElementById("heygenActivityIdleTimeout").value || null;
-        // Anam base URL removed from UI; optional override was anam_base_url in avatar.params (commented out in buildAgentConfig).
+        const anamSampleRate = document.getElementById("anamSampleRate") ? document.getElementById("anamSampleRate").value : '24000';
+        const anamQuality = document.getElementById("anamQuality") ? document.getElementById("anamQuality").value : 'high';
+        const anamVideoEncoding = document.getElementById("anamVideoEncoding") ? document.getElementById("anamVideoEncoding").value : 'H264';
+        const asrPreset = document.getElementById("asrPreset") ? document.getElementById("asrPreset").value : '';
+        const llmPreset = document.getElementById("llmPreset") ? document.getElementById("llmPreset").value : '';
+        const ttsPreset = document.getElementById("ttsPreset") ? document.getElementById("ttsPreset").value : '';
+        const combinedPreset = [asrPreset, llmPreset, ttsPreset].filter(Boolean).join(',');
 
         return {
             uniqueName: document.getElementById("uniqueName").value.trim(),
@@ -168,6 +176,10 @@ window.Utils = class Utils {
             idleTimeout: idleTimeout,
             // Optional pipeline ID for backend-configured ASR/LLM/TTS
             pipelineId: document.getElementById("pipelineId") ? document.getElementById("pipelineId").value.trim() : '',
+            preset: combinedPreset,
+            asrPreset: asrPreset,
+            llmPreset: llmPreset,
+            ttsPreset: ttsPreset,
             overrideLlm: overrideLlm,
             overrideTts: overrideTts,
             overrideAsr: overrideAsr,
@@ -293,6 +305,9 @@ window.Utils = class Utils {
             heygenQuality: heygenQuality,
             heygenDisableIdleTimeout: heygenDisableIdleTimeout,
             heygenActivityIdleTimeout: heygenActivityIdleTimeout,
+            anamSampleRate: anamSampleRate,
+            anamQuality: anamQuality,
+            anamVideoEncoding: anamVideoEncoding,
             // RTC Encryption settings
             rtcEncryptionMode: document.getElementById('rtcEncryptionMode') ? document.getElementById('rtcEncryptionMode').value : '',
             rtcEncryptionKey: document.getElementById('rtcEncryptionKey') ? document.getElementById('rtcEncryptionKey').value.trim() : '',
@@ -311,6 +326,10 @@ window.Utils = class Utils {
         const overrideLlm = data.overrideLlm;
         const overrideTts = data.overrideTts;
         const overrideAsr = data.overrideAsr;
+        const presets = this.parsePresetList(data.preset);
+        const presetHasAsr = presets.some(p => p.startsWith('deepgram_'));
+        const presetHasLlm = presets.some(p => p.startsWith('openai_gpt_'));
+        const presetHasTts = presets.some(p => p.startsWith('openai_tts_') || p.startsWith('minimax_speech_'));
 
         // Validate MLLM configuration if enabled
         if (data.enableMllm) {
@@ -386,7 +405,7 @@ window.Utils = class Utils {
             const shouldValidateTts = !hasPipelineId || overrideTts;
             const shouldValidateAsr = !hasPipelineId || overrideAsr;
 
-            if (shouldValidateLlm) {
+            if (shouldValidateLlm && !presetHasLlm) {
                 if (!data.llmApiKey) {
                     throw new Error('LLM API Key is required');
                 }
@@ -395,7 +414,7 @@ window.Utils = class Utils {
                 }
             }
 
-            if (shouldValidateTts) {
+            if (shouldValidateTts && !presetHasTts) {
                 // Validate TTS configuration based on vendor
                 const ttsVendor = data.vendor;
                 if (ttsVendor === 'microsoft') {
@@ -445,6 +464,17 @@ window.Utils = class Utils {
                     if (!openaiVoice) {
                         throw new Error('OpenAI Voice is required');
                     }
+                } else if (ttsVendor === 'minimax') {
+                    const minimaxTtsKey = document.getElementById('minimaxTtsKey').value.trim();
+                    const minimaxGroupId = document.getElementById('minimaxGroupId').value.trim();
+                    const minimaxModel = document.getElementById('minimaxModel').value.trim();
+                    const minimaxVoiceId = document.getElementById('minimaxVoiceId').value.trim();
+                    const minimaxUrl = document.getElementById('minimaxUrl').value.trim();
+                    if (!minimaxTtsKey) throw new Error('MiniMax API Key is required');
+                    if (!minimaxGroupId) throw new Error('MiniMax Group ID is required');
+                    if (!minimaxModel) throw new Error('MiniMax Model is required');
+                    if (!minimaxVoiceId) throw new Error('MiniMax Voice ID is required');
+                    if (!minimaxUrl) throw new Error('MiniMax URL is required');
                 } else if (ttsVendor === 'playht') {
                     const playhtTtsKey = document.getElementById('playhtTtsKey').value.trim();
                     const playhtUserId = document.getElementById('playhtUserId').value.trim();
@@ -481,10 +511,15 @@ window.Utils = class Utils {
                     if (!sarvamLanguageCode) {
                         throw new Error('Sarvam Language Code is required');
                     }
+                } else if (ttsVendor === 'murf') {
+                    const murfApiKey = document.getElementById('murfApiKey') ? document.getElementById('murfApiKey').value.trim() : '';
+                    if (!murfApiKey) {
+                        throw new Error('Murf API Key is required');
+                    }
                 }
             }
 
-            if (shouldValidateAsr) {
+            if (shouldValidateAsr && !presetHasAsr) {
                 // Validate ASR configuration based on vendor
                 const asrVendor = data.asrVendor;
                 if (asrVendor === 'microsoft') {
@@ -632,6 +667,14 @@ window.Utils = class Utils {
         }
     }
 
+    static parsePresetList(presetValue) {
+        if (!presetValue || !presetValue.trim()) return [];
+        return presetValue
+            .split(',')
+            .map(v => v.trim())
+            .filter(Boolean);
+    }
+
     static buildAsrConfig(formData) {
         const vendor = formData.asrVendor;
         const asrLanguage = document.getElementById('asrLanguage').value;
@@ -711,6 +754,7 @@ window.Utils = class Utils {
             const deepgramAsrUrl = document.getElementById('deepgramAsrUrl').value;
             const deepgramAsrKey = document.getElementById('deepgramAsrKey').value;
             const deepgramAsrModel = document.getElementById('deepgramAsrModel').value.trim();
+            const deepgramAsrKeyterm = document.getElementById('deepgramAsrKeyterm') ? document.getElementById('deepgramAsrKeyterm').value.trim() : '';
             
             const params = {
                 url: deepgramAsrUrl,
@@ -721,6 +765,9 @@ window.Utils = class Utils {
             // Add model if provided
             if (deepgramAsrModel) {
                 params.model = deepgramAsrModel;
+            }
+            if (deepgramAsrKeyterm) {
+                params.keyterm = deepgramAsrKeyterm;
             }
             
             return {
@@ -830,6 +877,11 @@ window.Utils = class Utils {
     }
 
     static buildAgentConfig(formData, customParams) {
+        const presets = this.parsePresetList(formData.preset);
+        const presetHasAsr = presets.some(p => p.startsWith('deepgram_'));
+        const presetHasLlm = presets.some(p => p.startsWith('openai_gpt_'));
+        const presetHasTts = presets.some(p => p.startsWith('openai_tts_') || p.startsWith('minimax_speech_'));
+
         // Parse remote RTC UIDs
         let remoteRtcUids = ["*"];
         if (formData.remoteRtcUids && formData.remoteRtcUids.trim() !== "*") {
@@ -854,11 +906,6 @@ window.Utils = class Utils {
         if (formData.enableTools) {
             advancedFeatures.enable_tools = true;
         }
-        // AIVAD: only set advanced_features.enable_aivad when using deprecated config (v2.4 uses turn_detection.config.end_of_speech.mode=semantic)
-        if (formData.useDeprecatedFeatures && formData.enableAivad) {
-            advancedFeatures.enable_aivad = true;
-        }
-
         // Prepare SAL config (optional - only included when enableSal is true)
         let sal = null;
         if (formData.enableSal) {
@@ -1155,6 +1202,7 @@ window.Utils = class Utils {
 
         const config = {
             name: formData.uniqueName,
+            ...(presets.length > 0 ? { preset: presets.join(',') } : {}),
             properties: {
                 channel: formData.channel,
                 token: formData.token,
@@ -1294,8 +1342,10 @@ window.Utils = class Utils {
                         agora_token: formData.avatarRtcToken || '',
                         agora_uid: formData.avatarRtcUid,
                         api_key: formData.avatarApiKey,
-                        avatar_id: formData.avatarId
-                        // anam_base_url: removed from request; backend uses default Anam API base URL
+                        avatar_id: formData.avatarId,
+                        sample_rate: parseInt(formData.anamSampleRate, 10),
+                        quality: formData.anamQuality,
+                        video_encoding: formData.anamVideoEncoding
                     }
                     : {
                         api_key: formData.avatarApiKey,
@@ -1305,8 +1355,8 @@ window.Utils = class Utils {
                     }
             };
 
-            // Add HeyGen specific parameters
-            if (formData.avatarVendor === 'heygen') {
+            // Add LiveAvatar/HeyGen specific parameters
+            if (formData.avatarVendor === 'heygen' || formData.avatarVendor === 'liveavatar') {
                 config.properties.avatar.params.quality = formData.heygenQuality;
                 config.properties.avatar.params.disable_idle_timeout = formData.heygenDisableIdleTimeout;
                 if (formData.heygenActivityIdleTimeout) {
@@ -1407,20 +1457,20 @@ window.Utils = class Utils {
                         modelId: document.getElementById("rimeModelId").value
                     }
                 };
-            // } else if (formData.vendor === "minimax") { // COMMENTED OUT: Not in Agora 2.0 official docs
-            //     config.properties.tts = {
-            //         vendor: "minimax",
-            //         ...(skip_patterns ? { skip_patterns } : {}),
-            //         params: {
-            //             api_key: document.getElementById("minimaxTtsKey").value,
-            //             group_id: document.getElementById("minimaxGroupId").value,
-            //             model: document.getElementById("minimaxModel").value,
-            //             voice_setting: {
-            //                 voice_id: document.getElementById("minimaxVoiceId").value
-            //             },
-            //             url: document.getElementById("minimaxUrl").value
-            //         }
-            //     };
+            } else if (formData.vendor === "minimax") {
+                config.properties.tts = {
+                    vendor: "minimax",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: {
+                        api_key: document.getElementById("minimaxTtsKey").value,
+                        group_id: document.getElementById("minimaxGroupId").value,
+                        model: document.getElementById("minimaxModel").value,
+                        voice_setting: {
+                            voice_id: document.getElementById("minimaxVoiceId").value
+                        },
+                        url: document.getElementById("minimaxUrl").value
+                    }
+                };
             } else if (formData.vendor === "fishaudio") {
                 config.properties.tts = {
                     vendor: "fishaudio",
@@ -1515,6 +1565,21 @@ window.Utils = class Utils {
                         engine: document.getElementById("amazonPollyEngine").value
                     }
                 };
+            } else if (formData.vendor === "murf") {
+                config.properties.tts = {
+                    vendor: "murf",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: {
+                        api_key: document.getElementById("murfApiKey").value,
+                        base_url: document.getElementById("murfBaseUrl").value,
+                        voiceId: document.getElementById("murfVoiceId").value,
+                        locale: document.getElementById("murfLocale").value,
+                        rate: parseFloat(document.getElementById("murfRate").value || "0"),
+                        pitch: parseFloat(document.getElementById("murfPitch").value || "0"),
+                        model: document.getElementById("murfModel").value,
+                        sample_rate: parseInt(document.getElementById("murfSampleRate").value || "24000", 10)
+                    }
+                };
             }
         }
 
@@ -1590,6 +1655,39 @@ window.Utils = class Utils {
                     delete config.properties.llm;
                 }
             }
+        }
+
+        // Presets are Agora-managed; keep section-level features but remove
+        // provider credential/endpoint/model fields for the preset category.
+        if (!formData.enableMllm) {
+            if (presetHasLlm && config.properties.llm) {
+                config.properties.llm.vendor = 'openai';
+                delete config.properties.llm.api_key;
+                delete config.properties.llm.url;
+                if (config.properties.llm.params) {
+                    delete config.properties.llm.params.model;
+                }
+            }
+            if (presetHasTts && config.properties.tts) {
+                const ttsPreset = formData.ttsPreset || '';
+                if (ttsPreset.startsWith('minimax_speech_')) {
+                    config.properties.tts.vendor = 'minimax';
+                } else if (ttsPreset === 'openai_tts_1') {
+                    config.properties.tts.vendor = 'openai';
+                }
+                if (!config.properties.tts.params) config.properties.tts.params = {};
+                delete config.properties.tts.params.api_key;
+                delete config.properties.tts.params.key;
+                delete config.properties.tts.params.base_url;
+                delete config.properties.tts.params.url;
+                delete config.properties.tts.params.model;
+                delete config.properties.tts.params.model_id;
+            }
+        }
+        if (presetHasAsr && config.properties.asr && config.properties.asr.vendor === 'deepgram' && config.properties.asr.params) {
+            delete config.properties.asr.params.key;
+            delete config.properties.asr.params.url;
+            delete config.properties.asr.params.model;
         }
 
         return config;

@@ -315,6 +315,15 @@
                           </button>
                           <div class="tooltip">Retrieve the conversation history between the user and the Conversational AI agent while the agent is running. Shows messages with role (user/assistant) and content.</div>
                         </div>
+                        <div class="has-tooltip relative">
+                          <button
+                            id="getConversationTurnsBtn"
+                            class="modern-btn modern-btn-primary w-full text-sm"
+                          >
+                            Query Conversation Turns
+                          </button>
+                          <div class="tooltip">Get per-turn start/end events and latency metrics for a completed session. Only available for sessions in the last 7 days.</div>
+                        </div>
 
                         <div class="has-tooltip relative">
                           <button
@@ -1715,6 +1724,35 @@
     });
     }
 
+    // Conversation Turns button click handler
+    const getConversationTurnsBtn = document.getElementById('getConversationTurnsBtn');
+    if (getConversationTurnsBtn) {
+      getConversationTurnsBtn.addEventListener('click', async function() {
+        const agentId = document.getElementById('agentId');
+        const queryResponse = document.getElementById('queryResponse');
+
+        if (!agentId || !agentId.value) {
+          if (queryResponse) {
+            queryResponse.textContent = 'Please enter an Agent ID first';
+          }
+          return;
+        }
+
+        try {
+          const { customerId, customerSecret } = window.Utils.getStoredCredentials();
+          const activeAgoraAPI = (window.ui && window.ui.agoraAPI) ? window.ui.agoraAPI : agoraAPI;
+          const response = await activeAgoraAPI.getConversationTurns(customerId, customerSecret, agentId.value);
+          if (queryResponse) {
+            queryResponse.textContent = JSON.stringify(response, null, 2);
+          }
+        } catch (error) {
+          if (queryResponse) {
+            queryResponse.textContent = `Error: ${error.message}`;
+          }
+        }
+      });
+    }
+
     // TTS Settings collapsible logic and delayed population
     const ttsSettingsBtn = document.getElementById('ttsSettingsBtn');
 
@@ -2990,15 +3028,18 @@
     });
     }
 
-    // Handle avatar vendor change (Anam has no extra UI fields; base URL removed)
+    // Handle avatar vendor change for vendor-specific fields
+    const anamSettings = document.getElementById('anamSettings');
     if (avatarVendor && heygenSettings) {
     avatarVendor.addEventListener('change', function() {
       const v = this.value;
-      heygenSettings.classList.toggle('hidden', v !== 'heygen');
+      heygenSettings.classList.toggle('hidden', v !== 'heygen' && v !== 'liveavatar');
+      if (anamSettings) anamSettings.classList.toggle('hidden', v !== 'anam');
     });
-    // Initial sync in case vendor is already heygen (e.g. loaded config)
+    // Initial sync in case vendor already set (e.g. loaded config)
     const v = avatarVendor.value;
-    heygenSettings.classList.toggle('hidden', v !== 'heygen');
+    heygenSettings.classList.toggle('hidden', v !== 'heygen' && v !== 'liveavatar');
+    if (anamSettings) anamSettings.classList.toggle('hidden', v !== 'anam');
     }
 
     // Handle UID changes when AI Avatar is enabled
@@ -3402,6 +3443,86 @@
         overrideAsrCheckbox.addEventListener('change', updateLlmsForPipeline);
       }
     }
+
+    // Preset controls per section (ConvoAI 2.5)
+    const presetInput = document.getElementById('preset');
+    const asrPreset = document.getElementById('asrPreset');
+    const llmPreset = document.getElementById('llmPreset');
+    const ttsPreset = document.getElementById('ttsPreset');
+    const llmPresetContainer = document.getElementById('llmPresetContainer');
+    const ttsPresetContainer = document.getElementById('ttsPresetContainer');
+
+    const syncCombinedPresetValue = () => {
+      if (!presetInput) return;
+      const values = [asrPreset?.value, llmPreset?.value, ttsPreset?.value].filter(Boolean);
+      presetInput.value = values.join(',');
+    };
+
+    const applyLlmPresetState = () => {
+      if (llmPreset) llmPreset.disabled = false;
+      const enabled = !!(llmPreset && llmPreset.value);
+      const llmModelWrap = document.getElementById('llmModel')?.closest('.has-tooltip');
+      const llmApiKeyWrap = document.getElementById('llmApiKey')?.closest('.has-tooltip');
+      const llmUrlWrap = document.getElementById('llmUrl')?.closest('.has-tooltip');
+      if (llmModelWrap) llmModelWrap.classList.toggle('hidden', enabled);
+      if (llmApiKeyWrap) llmApiKeyWrap.classList.toggle('hidden', enabled);
+      if (llmUrlWrap) llmUrlWrap.classList.toggle('hidden', enabled);
+    };
+
+    const applyTtsPresetState = () => {
+      if (!ttsPreset) return;
+      const ttsVendor = document.getElementById('ttsVendor');
+      const ttsProviderAllowsPreset = ttsVendor && (ttsVendor.value === 'openai' || ttsVendor.value === 'minimax');
+      if (ttsPresetContainer) ttsPresetContainer.style.opacity = ttsProviderAllowsPreset ? '1' : '0.6';
+      if (!ttsProviderAllowsPreset) ttsPreset.value = '';
+      ttsPreset.disabled = !ttsProviderAllowsPreset;
+      // Show only relevant presets for current TTS vendor
+      Array.from(ttsPreset.options).forEach(opt => {
+        if (!opt.value) {
+          opt.hidden = false;
+          return;
+        }
+        if (ttsVendor && ttsVendor.value === 'openai') {
+          opt.hidden = opt.value !== 'openai_tts_1';
+        } else if (ttsVendor && ttsVendor.value === 'minimax') {
+          opt.hidden = !opt.value.startsWith('minimax_speech_');
+        } else {
+          opt.hidden = true;
+        }
+      });
+      const value = ttsPreset.value;
+      if (ttsVendor) ttsVendor.dispatchEvent(new Event('change'));
+      const isOpenAiPreset = value === 'openai_tts_1';
+      const openaiTtsKeyWrap = document.getElementById('openaiTtsKey')?.closest('.has-tooltip');
+      const openaiBaseUrlWrap = document.getElementById('openaiBaseUrl')?.closest('.has-tooltip');
+      const openaiModelWrap = document.getElementById('openaiModel')?.closest('.has-tooltip');
+      if (openaiTtsKeyWrap) openaiTtsKeyWrap.classList.toggle('hidden', isOpenAiPreset);
+      if (openaiBaseUrlWrap) openaiBaseUrlWrap.classList.toggle('hidden', isOpenAiPreset);
+      if (openaiModelWrap) openaiModelWrap.classList.toggle('hidden', isOpenAiPreset);
+
+      const isMiniMaxPreset = value.startsWith('minimax_speech_');
+      const minimaxTtsKeyWrap = document.getElementById('minimaxTtsKey')?.closest('.has-tooltip');
+      const minimaxGroupIdWrap = document.getElementById('minimaxGroupId')?.closest('.has-tooltip');
+      const minimaxModelWrap = document.getElementById('minimaxModel')?.closest('.has-tooltip');
+      const minimaxUrlWrap = document.getElementById('minimaxUrl')?.closest('.has-tooltip');
+      if (minimaxTtsKeyWrap) minimaxTtsKeyWrap.classList.toggle('hidden', isMiniMaxPreset);
+      if (minimaxGroupIdWrap) minimaxGroupIdWrap.classList.toggle('hidden', isMiniMaxPreset);
+      if (minimaxModelWrap) minimaxModelWrap.classList.toggle('hidden', isMiniMaxPreset);
+      if (minimaxUrlWrap) minimaxUrlWrap.classList.toggle('hidden', isMiniMaxPreset);
+    };
+
+    const applyAllPresetState = () => {
+      syncCombinedPresetValue();
+      applyLlmPresetState();
+      applyTtsPresetState();
+    };
+
+    if (asrPreset) asrPreset.addEventListener('change', applyAllPresetState);
+    if (llmPreset) llmPreset.addEventListener('change', applyAllPresetState);
+    if (ttsPreset) ttsPreset.addEventListener('change', applyAllPresetState);
+    const ttsVendorSelect = document.getElementById('ttsVendor');
+    if (ttsVendorSelect) ttsVendorSelect.addEventListener('change', applyAllPresetState);
+    applyAllPresetState();
 
     // Handle RTM enable/disable
     if (enableRtm) {
@@ -4766,6 +4887,7 @@
               </div>
             </div>
           </div>
+          <input id="preset" type="hidden" />
         </div>
 
         <!-- Settings Categories -->
@@ -4834,7 +4956,7 @@
         <!-- ASR Configuration -->
         <div id="asrConfigBox" class="modern-panel">
           <h3 class="text-lg font-semibold mb-3">ASR Configuration</h3>
-          <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="modern-input grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="has-tooltip relative">
               <select
                 id="asrVendor"
@@ -4859,6 +4981,14 @@
                 <!-- Language options will be populated dynamically based on selected vendor -->
               </select>
               <div class="tooltip">Select the language for the selected ASR provider.</div>
+            </div>
+            <div id="asrPresetContainer" class="has-tooltip relative">
+              <select id="asrPreset" class="w-full p-2 rounded bg-gray-600 text-white border border-gray-500 focus:border-blue-500">
+                <option value="">ASR Preset: None</option>
+                <option value="deepgram_nova_2">deepgram_nova_2</option>
+                <option value="deepgram_nova_3">deepgram_nova_3</option>
+              </select>
+              <div class="tooltip">ConvoAI 2.5 ASR presets. When selected, Deepgram endpoint/key/model fields are disabled and managed by Agora.</div>
             </div>
           </div>
 
@@ -4947,6 +5077,13 @@
                   value="nova-3"
                 />
                 <div class="tooltip">The speech recognition model to use (e.g., nova-2, nova, enhanced, base).</div>
+              </div>
+              <div class="has-tooltip relative md:col-span-2">
+                <input
+                  id="deepgramAsrKeyterm"
+                  placeholder="Deepgram keyterm (Optional, nova-3 only)"
+                />
+                <div class="tooltip">Boost specialized terms and brands. Only compatible with Deepgram nova-3.</div>
               </div>
 
             </div>
@@ -5229,6 +5366,16 @@
     <div id="llmDrawer" class="drawer hidden">
       <button class="drawer-close absolute top-2 right-2" data-drawer="llmDrawer">&times;</button>
       <div class="drawer-content modern-input space-y-4">
+        <div id="llmPresetContainer" class="has-tooltip relative">
+          <select id="llmPreset" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500">
+            <option value="">LLM Preset: None</option>
+            <option value="openai_gpt_4o_mini">openai_gpt_4o_mini</option>
+            <option value="openai_gpt_4_1_mini">openai_gpt_4_1_mini</option>
+            <option value="openai_gpt_5_nano">openai_gpt_5_nano</option>
+            <option value="openai_gpt_5_mini">openai_gpt_5_mini</option>
+          </select>
+          <div class="tooltip">ConvoAI 2.5 LLM presets. URL/API key/model are managed by Agora; prompts and other LLM settings remain editable.</div>
+        </div>
         <div class="has-tooltip relative">
           <input
             id="llmModel"
@@ -5356,7 +5503,6 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           ></textarea>
           <div class="tooltip">Headers for Claude Anthropic LLM (optional). Must be a JSON string, e.g., {"anthropic-version":"2023-06-01"}. Only used when LLM vendor is anthropic or claude.</div>
         </div>
-        
         <!-- Enable Tools Checkbox -->
         <div class="has-tooltip relative">
           <label class="flex items-center">
@@ -5390,6 +5536,15 @@ The user speaks to you directly — treat each input as part of a live, spoken d
     <div id="ttsDrawer" class="drawer hidden">
       <button class="drawer-close absolute top-2 right-2" data-drawer="ttsDrawer">&times;</button>
       <div class="drawer-content modern-input space-y-4">
+        <div id="ttsPresetContainer" class="has-tooltip relative">
+          <select id="ttsPreset" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500">
+            <option value="">TTS Preset: None</option>
+            <option value="minimax_speech_2_6_turbo">minimax_speech_2_6_turbo</option>
+            <option value="minimax_speech_2_8_turbo">minimax_speech_2_8_turbo</option>
+            <option value="openai_tts_1">openai_tts_1</option>
+          </select>
+          <div class="tooltip">ConvoAI 2.5 TTS presets. Vendor credentials/model are managed by Agora; non-provider-specific voice settings stay available.</div>
+        </div>
         <div class="has-tooltip relative">
           <select
             id="ttsVendor"
@@ -5400,13 +5555,14 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="openai">OpenAI (Beta)</option>
             <option value="humeai">Hume AI (Beta)</option>
             <option value="rime">Rime (Beta)</option>
-            <!-- <option value="minimax">MiniMax</option> --> <!-- Not in Agora 2.0 official docs -->
+            <option value="minimax">MiniMax</option>
             <option value="fishaudio">Fish Audio (Beta)</option>
             <option value="groq">Groq (Beta)</option>
             <option value="google">Google (Beta)</option>
             <option value="playht">PlayHT (Beta)</option>
             <option value="sarvam">Sarvam (Beta)</option>
             <option value="amazon">Amazon Polly (Beta)</option>
+            <option value="murf">Murf (Beta)</option>
           </select>
           <div class="tooltip">Select the Text-to-Speech vendor to use for voice output.</div>
         </div>
@@ -5812,8 +5968,8 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           <div class="tooltip">The Rime TTS model to use.</div>
         </div>
         
-        <!-- MiniMax TTS Settings - COMMENTED OUT: Not in Agora 2.0 official docs -->
-        <!-- <div id="minimaxTtsKeyBlock" class="has-tooltip relative hidden">
+        <!-- MiniMax TTS Settings -->
+        <div id="minimaxTtsKeyBlock" class="has-tooltip relative hidden">
           <input
             id="minimaxTtsKey"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
@@ -5854,7 +6010,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             value="wss://api.minimax.io/ws/v1/t2a_v2"
           />
           <div class="tooltip">The WebSocket endpoint for streaming TTS output.</div>
-        </div> -->
+        </div>
         
         <!-- Fish Audio TTS Settings -->
         <div id="fishaudioTtsKeyBlock" class="has-tooltip relative hidden">
@@ -6156,6 +6312,84 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           </select>
           <div class="tooltip">The engine type to use for speech synthesis. Supported values: standard, neural, long-form, generative.</div>
         </div>
+        
+        <!-- Murf TTS Settings -->
+        <div id="murfApiKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="murfApiKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Murf API Key (Required)"
+          />
+          <div class="tooltip">API key for Murf TTS service.</div>
+        </div>
+        <div id="murfBaseUrlBlock" class="has-tooltip relative hidden">
+          <input
+            id="murfBaseUrl"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="WebSocket Base URL"
+            value="wss://global.api.murf.ai/v1/speech/stream-input"
+          />
+          <div class="tooltip">WebSocket endpoint for Murf streaming TTS.</div>
+        </div>
+        <div id="murfVoiceIdBlock" class="has-tooltip relative hidden">
+          <input
+            id="murfVoiceId"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Voice ID (e.g., Matthew)"
+            value="Matthew"
+          />
+          <div class="tooltip">Murf voice ID.</div>
+        </div>
+        <div id="murfLocaleBlock" class="has-tooltip relative hidden">
+          <input
+            id="murfLocale"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Locale (e.g., en-US)"
+            value="en-US"
+          />
+          <div class="tooltip">Locale for Murf voice.</div>
+        </div>
+        <div id="murfModelBlock" class="has-tooltip relative hidden">
+          <input
+            id="murfModel"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Model (e.g., FALCON)"
+            value="FALCON"
+          />
+          <div class="tooltip">Murf model identifier.</div>
+        </div>
+        <div id="murfRateBlock" class="has-tooltip relative hidden">
+          <input
+            id="murfRate"
+            type="number"
+            step="0.1"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Rate (default 0)"
+            value="0"
+          />
+          <div class="tooltip">Speech rate adjustment.</div>
+        </div>
+        <div id="murfPitchBlock" class="has-tooltip relative hidden">
+          <input
+            id="murfPitch"
+            type="number"
+            step="0.1"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Pitch (default 0)"
+            value="0"
+          />
+          <div class="tooltip">Pitch adjustment.</div>
+        </div>
+        <div id="murfSampleRateBlock" class="has-tooltip relative hidden">
+          <input
+            id="murfSampleRate"
+            type="number"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Sample Rate (Hz)"
+            value="24000"
+          />
+          <div class="tooltip">Audio sample rate in Hz. Use 24000 for LiveAvatar compatibility.</div>
+        </div>
 
         <!-- Skip Patterns Section -->
         <div class="has-tooltip relative">
@@ -6196,8 +6430,9 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
           >
             <option value="akool">Akool (Beta)</option>
-            <option value="heygen">HeyGen (Beta)</option>
-            <option value="anam">Anam</option>
+            <option value="liveavatar">LiveAvatar by HeyGen (Beta)</option>
+            <option value="heygen">HeyGen (Deprecated)</option>
+            <option value="anam">Anam (Beta)</option>
           </select>
           <div class="tooltip">Select the AI Avatar vendor to use for video generation.</div>
         </div>
@@ -6243,9 +6478,43 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           <div class="tooltip">The RTC token for the avatar to join the channel. Optional if your app doesn't require tokens. Generated tokens are valid for 30 minutes.</div>
         </div>
 
-        <!-- Anam: no vendor-specific fields (anam_base_url removed from config) -->
+        <!-- Anam-specific settings -->
+        <div id="anamSettings" class="hidden">
+          <div class="has-tooltip relative">
+            <select
+              id="anamSampleRate"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            >
+              <option value="24000" selected>24000</option>
+              <option value="16000">16000</option>
+              <option value="48000">48000</option>
+            </select>
+            <div class="tooltip">Anam audio sample rate.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <select
+              id="anamQuality"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            >
+              <option value="high" selected>High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+            <div class="tooltip">Anam video quality.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <select
+              id="anamVideoEncoding"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            >
+              <option value="H264" selected>H264</option>
+              <option value="AV1">AV1</option>
+            </select>
+            <div class="tooltip">Anam video encoding format.</div>
+          </div>
+        </div>
 
-        <!-- HeyGen-specific settings -->
+        <!-- LiveAvatar/HeyGen-specific settings -->
         <div id="heygenSettings" class="hidden">
           <div class="has-tooltip relative">
             <select
@@ -6256,7 +6525,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               <option value="medium">Medium (480p)</option>
               <option value="high">High (720p)</option>
             </select>
-            <div class="tooltip">Select the video quality for HeyGen avatar generation.</div>
+            <div class="tooltip">Select the video quality for LiveAvatar/HeyGen avatar generation.</div>
           </div>
           <div class="has-tooltip relative">
             <label class="flex items-center">
@@ -6267,18 +6536,18 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               />
               <span class="text-sm">Disable Idle Timeout</span>
             </label>
-            <div class="tooltip">Whether to disable idle timeout for HeyGen avatar.</div>
+            <div class="tooltip">Whether to disable idle timeout for LiveAvatar/HeyGen avatar.</div>
           </div>
           <div class="has-tooltip relative">
             <input
               id="heygenActivityIdleTimeout"
               type="number"
               class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-              placeholder="Activity Idle Timeout (seconds, default: 60)"
-              value="60"
+              placeholder="Activity Idle Timeout (seconds, default: 120)"
+              value="120"
               min="1"
             />
-            <div class="tooltip">Activity idle timeout in seconds for HeyGen avatar.</div>
+            <div class="tooltip">Activity idle timeout in seconds for LiveAvatar/HeyGen avatar.</div>
           </div>
         </div>
       </div>
@@ -6484,7 +6753,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           <label class="flex items-center has-tooltip relative cursor-pointer">
             <input type="checkbox" id="deprecatedFeatures" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
             <span>Deprecated Turn Detection Features</span>
-            <div class="tooltip">Use pre-v2.4 turn detection and advanced_features.enable_aivad. When unchecked, use v2.4 turn_detection (mode + config) and configure AIVAD via Turn Detection → End of Speech → Semantic. When on: old turn_detection fields and AIVAD in Advanced Features. When off: v2.4 turn_detection.config (SoS/EoS) and AIVAD via End of Speech.</div>
+            <div class="tooltip">Use pre-v2.4 turn detection format. When unchecked, use v2.4 turn_detection (mode + config) and configure semantic end-of-speech under Turn Detection (v2.4).</div>
           </label>
         </div>
 
@@ -6502,7 +6771,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
                 <label class="flex items-center has-tooltip relative">
                   <input type="checkbox" id="enableAivad" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
                   <span>Enable AIVAD</span>
-                  <div class="tooltip">Enable intelligent interruption handling function (AIVAD). Deprecated in v2.4: use Turn Detection → End of Speech → Semantic when Deprecated Features is off.</div>
+                  <div class="tooltip">Legacy AIVAD toggle. For v2.4+, use Turn Detection → End of Speech → Semantic.</div>
                 </label>
               </div>
               <label class="flex items-center has-tooltip relative">
@@ -6644,7 +6913,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           <button id="turnDetectionV24Btn" class="flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500">
             <span class="flex items-center">
               <input type="checkbox" id="turnDetectionV24Enabled" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-              Turn Detection (v2.4)
+              Turn Detection
             </span>
             <span class="text-sm">mode + config (SoS / EoS)</span>
           </button>
