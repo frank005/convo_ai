@@ -362,43 +362,41 @@ window.Utils = class Utils {
                     throw new Error('MLLM API Key is required when MLLM is enabled');
                 }
             }
-            // AI Avatar is not compatible with MLLM
-            if (data.enableAvatar) {
-                throw new Error('AI Avatar is not compatible with MLLM. Please disable one of them.');
-            }
-        } else {
-            // Validate AI Avatar configuration if enabled
-            if (data.enableAvatar) {
-                if (!data.avatarApiKey) {
-                    throw new Error('Avatar API Key is required when AI Avatar is enabled');
-                }
-                if (!data.avatarId) {
-                    throw new Error('Avatar ID is required when AI Avatar is enabled');
-                }
-                if (!data.avatarRtcUid) {
-                    throw new Error('Avatar RTC UID is required when AI Avatar is enabled');
-                }
-                // Avatar RTC Token is optional - no validation needed since it's already trimmed
-                
-                // AI Avatar requires TTS to be enabled
-                const ttsVendor = data.vendor;
-                if (!(hasPipelineId && !overrideTts) && !ttsVendor) {
-                    throw new Error('TTS vendor is required when AI Avatar is enabled');
-                }
-                
-                // AI Avatar requires client UID to be set
-                const clientRtcUid = document.getElementById('clientRtcUid').value.trim();
-                if (!clientRtcUid) {
-                    throw new Error('Client RTC UID is required when AI Avatar is enabled');
-                }
-                
-                // AI Avatar requires remote RTC UIDs to not be "*"
-                const remoteRtcUids = data.remoteRtcUids;
-                if (remoteRtcUids === '*' || remoteRtcUids === '') {
-                    throw new Error('Remote RTC UIDs cannot be "*" when AI Avatar is enabled. Please set specific UIDs.');
-                }
-            }
+        }
 
+        // Validate AI Avatar configuration if enabled
+        if (data.enableAvatar) {
+            if (!data.avatarApiKey) {
+                throw new Error('Avatar API Key is required when AI Avatar is enabled');
+            }
+            if (!data.avatarId) {
+                throw new Error('Avatar ID is required when AI Avatar is enabled');
+            }
+            if (!data.avatarRtcUid) {
+                throw new Error('Avatar RTC UID is required when AI Avatar is enabled');
+            }
+            // Avatar RTC Token is optional - no validation needed since it's already trimmed
+            
+            // AI Avatar requires TTS to be enabled
+            const ttsVendor = data.vendor;
+            if (!(hasPipelineId && !overrideTts) && !ttsVendor) {
+                throw new Error('TTS vendor is required when AI Avatar is enabled');
+            }
+            
+            // AI Avatar requires client UID to be set
+            const clientRtcUid = document.getElementById('clientRtcUid').value.trim();
+            if (!clientRtcUid) {
+                throw new Error('Client RTC UID is required when AI Avatar is enabled');
+            }
+            
+            // AI Avatar requires remote RTC UIDs to not be "*"
+            const remoteRtcUids = data.remoteRtcUids;
+            if (remoteRtcUids === '*' || remoteRtcUids === '') {
+                throw new Error('Remote RTC UIDs cannot be "*" when AI Avatar is enabled. Please set specific UIDs.');
+            }
+        }
+
+        if (!data.enableMllm) {
             // Validate LLM/TTS/ASR only if not using pipeline mode,
             // or if the corresponding override checkbox is checked.
             const shouldValidateLlm = !hasPipelineId || overrideLlm;
@@ -874,6 +872,31 @@ window.Utils = class Utils {
             vendor: 'ares',
             language: asrLanguage
         };
+    }
+
+    /**
+     * LiveAvatar (vendor liveavatar) requires TTS audio at 24 kHz per Agora docs.
+     * Legacy vendor "heygen" may still accept other rates on the service side.
+     */
+    static enforceLiveAvatarTtsSampleRate(config, formData) {
+        if (!formData.enableAvatar || formData.avatarVendor !== 'liveavatar' || formData.enableMllm) return;
+        if (!config.properties?.tts?.params) return;
+        const tts = config.properties.tts;
+        const p = tts.params;
+        switch (tts.vendor) {
+            case 'microsoft':
+            case 'elevenlabs':
+            case 'sarvam':
+            case 'murf':
+                p.sample_rate = 24000;
+                break;
+            case 'google':
+                if (!p.AudioConfig) p.AudioConfig = {};
+                p.AudioConfig.sample_rate_hertz = 24000;
+                break;
+            default:
+                break;
+        }
     }
 
     static buildAgentConfig(formData, customParams) {
@@ -1581,6 +1604,8 @@ window.Utils = class Utils {
                     }
                 };
             }
+
+            this.enforceLiveAvatarTtsSampleRate(config, formData);
         }
 
         // Add RTC encryption configuration if enabled (only if mode is selected and not empty)

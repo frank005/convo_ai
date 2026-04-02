@@ -3107,12 +3107,6 @@
         `;
         console.log('AI Avatar enabled - SVG should be visible');
 
-        // Disable MLLM when AI Avatar is enabled
-        enableMllm.checked = false;
-        enableMllm.disabled = true;
-        mllmSettingsBtn.disabled = true;
-        mllmSettingsBtn.classList.add('opacity-50');
-
         // Set required UIDs for AI Avatar
         if (!clientRtcUid.value.trim()) {
           clientRtcUid.value = '1001'; // Default client UID
@@ -3135,11 +3129,6 @@
         const avatarPlaceholder = document.getElementById('avatarPlaceholder');
         avatarPlaceholder.style.display = 'none';
         avatarPlaceholder.innerHTML = '';
-
-        // Re-enable MLLM when AI Avatar is disabled
-        enableMllm.disabled = false;
-        mllmSettingsBtn.disabled = false;
-        mllmSettingsBtn.classList.remove('opacity-50');
 
         // Reset remote RTC UIDs to default
         remoteRtcUids.value = '*';
@@ -3237,7 +3226,6 @@
       const llmSettingsBtn = document.getElementById('llmSettingsBtn');
       const ttsSettingsBtn = document.getElementById('ttsSettingsBtn');
       const asrConfigBox = document.getElementById('asrConfigBox');
-      const avatarSettingsBtn = document.getElementById('avatarSettingsBtn');
       const inputText = document.getElementById('inputText');
       const inputAudio = document.getElementById('inputAudio');
       const inputImage = document.getElementById('inputImage');
@@ -3298,20 +3286,9 @@
         inputModalities.style.pointerEvents = 'auto';
         outputModalities.style.pointerEvents = 'auto';
 
-        // Disable AIVAD and AI Avatar when MLLM is enabled
+        // Disable AIVAD when MLLM is enabled
         document.getElementById('enableAivad').checked = false;
         document.getElementById('enableAivad').disabled = true;
-        enableAvatar.checked = false;
-        enableAvatar.disabled = true;
-        avatarSettingsBtn.disabled = true;
-        avatarSettingsBtn.classList.add('opacity-50');
-
-        // Update avatar display to show image
-        const avatarImage = document.getElementById('avatarImage');
-        const avatarVideo = document.getElementById('avatarVideo');
-        avatarImage.style.display = 'block';
-        avatarVideo.style.display = 'none';
-        avatarVideo.innerHTML = '';
       } else {
         // Re-enable LLM, TTS, ASR sections if no pipeline ID is set
         enableLlmsWhenAllowed();
@@ -3326,18 +3303,8 @@
         inputModalities.style.pointerEvents = 'auto';
         outputModalities.style.pointerEvents = 'auto';
 
-        // Re-enable AIVAD and AI Avatar
+        // Re-enable AIVAD
         document.getElementById('enableAivad').disabled = false;
-        enableAvatar.disabled = false;
-        avatarSettingsBtn.disabled = false;
-        avatarSettingsBtn.classList.remove('opacity-50');
-
-        // Update avatar display to show image (since AI Avatar is disabled by default)
-        const avatarImage = document.getElementById('avatarImage');
-        const avatarVideo = document.getElementById('avatarVideo');
-        avatarImage.style.display = 'block';
-        avatarVideo.style.display = 'none';
-        avatarVideo.innerHTML = '';
         // Restore previous output modalities (do this last)
         outputText.checked = prevOutputModalities.text;
         outputAudio.checked = prevOutputModalities.audio;
@@ -3490,24 +3457,36 @@
           opt.hidden = true;
         }
       });
+      // Drop preset selection if it no longer matches the vendor (e.g. openai_tts_1 after switching to MiniMax)
+      if (ttsVendor && ttsVendor.value === 'minimax' && ttsPreset.value && !ttsPreset.value.startsWith('minimax_speech_')) {
+        ttsPreset.value = '';
+      }
+      if (ttsVendor && ttsVendor.value === 'openai' && ttsPreset.value && ttsPreset.value !== 'openai_tts_1') {
+        ttsPreset.value = '';
+      }
       const value = ttsPreset.value;
       const isOpenAiPreset = value === 'openai_tts_1';
+      const isMiniMaxPreset = value.startsWith('minimax_speech_');
+      const v = ttsVendor ? ttsVendor.value : '';
+      // Hide credential fields when using Agora preset, but never un-hide them for the wrong vendor
+      // (toggle(hidden, false) was incorrectly revealing OpenAI fields after switching to MiniMax).
+      const hideOpenAiCredentialFields = v !== 'openai' || isOpenAiPreset;
+      const hideMiniMaxCredentialFields = v !== 'minimax' || isMiniMaxPreset;
       const openaiTtsKeyWrap = document.getElementById('openaiTtsKey')?.closest('.has-tooltip');
       const openaiBaseUrlWrap = document.getElementById('openaiBaseUrl')?.closest('.has-tooltip');
       const openaiModelWrap = document.getElementById('openaiModel')?.closest('.has-tooltip');
-      if (openaiTtsKeyWrap) openaiTtsKeyWrap.classList.toggle('hidden', isOpenAiPreset);
-      if (openaiBaseUrlWrap) openaiBaseUrlWrap.classList.toggle('hidden', isOpenAiPreset);
-      if (openaiModelWrap) openaiModelWrap.classList.toggle('hidden', isOpenAiPreset);
+      if (openaiTtsKeyWrap) openaiTtsKeyWrap.classList.toggle('hidden', hideOpenAiCredentialFields);
+      if (openaiBaseUrlWrap) openaiBaseUrlWrap.classList.toggle('hidden', hideOpenAiCredentialFields);
+      if (openaiModelWrap) openaiModelWrap.classList.toggle('hidden', hideOpenAiCredentialFields);
 
-      const isMiniMaxPreset = value.startsWith('minimax_speech_');
       const minimaxTtsKeyWrap = document.getElementById('minimaxTtsKey')?.closest('.has-tooltip');
       const minimaxGroupIdWrap = document.getElementById('minimaxGroupId')?.closest('.has-tooltip');
       const minimaxModelWrap = document.getElementById('minimaxModel')?.closest('.has-tooltip');
       const minimaxUrlWrap = document.getElementById('minimaxUrl')?.closest('.has-tooltip');
-      if (minimaxTtsKeyWrap) minimaxTtsKeyWrap.classList.toggle('hidden', isMiniMaxPreset);
-      if (minimaxGroupIdWrap) minimaxGroupIdWrap.classList.toggle('hidden', isMiniMaxPreset);
-      if (minimaxModelWrap) minimaxModelWrap.classList.toggle('hidden', isMiniMaxPreset);
-      if (minimaxUrlWrap) minimaxUrlWrap.classList.toggle('hidden', isMiniMaxPreset);
+      if (minimaxTtsKeyWrap) minimaxTtsKeyWrap.classList.toggle('hidden', hideMiniMaxCredentialFields);
+      if (minimaxGroupIdWrap) minimaxGroupIdWrap.classList.toggle('hidden', hideMiniMaxCredentialFields);
+      if (minimaxModelWrap) minimaxModelWrap.classList.toggle('hidden', hideMiniMaxCredentialFields);
+      if (minimaxUrlWrap) minimaxUrlWrap.classList.toggle('hidden', hideMiniMaxCredentialFields);
     };
 
     const applyAllPresetState = () => {
@@ -6433,7 +6412,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="heygen">HeyGen (Deprecated)</option>
             <option value="anam">Anam (Beta)</option>
           </select>
-          <div class="tooltip">Select the AI Avatar vendor to use for video generation.</div>
+          <div class="tooltip">Select the AI Avatar vendor. LiveAvatar uses the current HeyGen LiveAvatar API (API key and avatar ID from the LiveAvatar console); TTS must be 24 kHz—this playground forces 24 kHz for supported TTS vendors when LiveAvatar is selected. Deprecated HeyGen targets the legacy Interactive Avatar integration. Anam uses Agora’s <code>avatar_id</code> field (see Anam section below).</div>
         </div>
         <div class="has-tooltip relative">
           <input
@@ -6449,7 +6428,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Avatar ID (Required)"
           />
-          <div class="tooltip">The unique identifier for the avatar to use.</div>
+          <div class="tooltip">The avatar identifier required by your vendor. For Anam via Agora, use the avatar UUID (<code>avatar_id</code> in the REST API)—not <code>persona_id</code> from Anam Lab unless it is the same value your project uses as the avatar id.</div>
         </div>
         <div class="has-tooltip relative">
           <input
@@ -6511,6 +6490,9 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             </select>
             <div class="tooltip">Anam video encoding format.</div>
           </div>
+          <p class="text-xs text-gray-400 mt-2 leading-relaxed">
+            Agora sends this integration as <code>avatar_id</code> in <code>properties.avatar.params</code> (not <code>persona_id</code>). Use the Anam avatar UUID your account exposes for streaming integrations.
+          </p>
         </div>
 
         <!-- LiveAvatar/HeyGen-specific settings -->
