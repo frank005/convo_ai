@@ -743,7 +743,7 @@
                   <option value="true">Interrupt</option>
                   <option value="false">No Interrupt</option>
                   </select>
-                <div class="tooltip">Whether this message can interrupt the agent's current activity</div>
+                <div class="tooltip">Whether the user can interrupt the agent while the agent is speaking this broadcast.</div>
                 </div>
               </div>
             <button
@@ -6412,7 +6412,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="heygen">HeyGen (Deprecated)</option>
             <option value="anam">Anam (Beta)</option>
           </select>
-          <div class="tooltip">Select the AI Avatar vendor. LiveAvatar uses the current HeyGen LiveAvatar API (API key and avatar ID from the LiveAvatar console); TTS must be 24 kHz—this playground forces 24 kHz for supported TTS vendors when LiveAvatar is selected. Deprecated HeyGen targets the legacy Interactive Avatar integration. Anam uses Agora’s <code>avatar_id</code> field (see Anam section below).</div>
+          <div class="tooltip">Select the AI Avatar vendor. LiveAvatar uses the current HeyGen LiveAvatar API (API key and avatar ID from the LiveAvatar console); TTS must be 24 kHz—this playground forces 24 kHz for supported TTS vendors when LiveAvatar is selected. Deprecated HeyGen targets the legacy Interactive Avatar integration. Anam uses Agora’s <code>avatar_id</code> field (see the Avatar ID field tooltip).</div>
         </div>
         <div class="has-tooltip relative">
           <input
@@ -6428,7 +6428,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Avatar ID (Required)"
           />
-          <div class="tooltip">The avatar identifier required by your vendor. For Anam via Agora, use the avatar UUID (<code>avatar_id</code> in the REST API)—not <code>persona_id</code> from Anam Lab unless it is the same value your project uses as the avatar id.</div>
+          <div class="tooltip">The avatar identifier required by your vendor. For Anam via Agora, use the UUID your account exposes for streaming integrations. Agora sends it as <code>avatar_id</code> in <code>properties.avatar.params</code> (not <code>persona_id</code> from Anam Lab unless that is the same id your project uses).</div>
         </div>
         <div class="has-tooltip relative">
           <input
@@ -6490,9 +6490,6 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             </select>
             <div class="tooltip">Anam video encoding format.</div>
           </div>
-          <p class="text-xs text-gray-400 mt-2 leading-relaxed">
-            Agora sends this integration as <code>avatar_id</code> in <code>properties.avatar.params</code> (not <code>persona_id</code>). Use the Anam avatar UUID your account exposes for streaming integrations.
-          </p>
         </div>
 
         <!-- LiveAvatar/HeyGen-specific settings -->
