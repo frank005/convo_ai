@@ -894,6 +894,10 @@ window.Utils = class Utils {
                 if (!p.AudioConfig) p.AudioConfig = {};
                 p.AudioConfig.sample_rate_hertz = 24000;
                 break;
+            case 'minimax':
+                if (!p.audio_setting) p.audio_setting = {};
+                p.audio_setting.sample_rate = 24000;
+                break;
             default:
                 break;
         }
@@ -1481,6 +1485,13 @@ window.Utils = class Utils {
                     }
                 };
             } else if (formData.vendor === "minimax") {
+                const minimaxSrEl = document.getElementById("minimaxSampleRate");
+                const minimaxSrParsed = minimaxSrEl && minimaxSrEl.value
+                    ? parseInt(minimaxSrEl.value, 10)
+                    : 32000;
+                const minimaxSampleRate = Number.isFinite(minimaxSrParsed) && minimaxSrParsed > 0
+                    ? minimaxSrParsed
+                    : 32000;
                 config.properties.tts = {
                     vendor: "minimax",
                     ...(skip_patterns ? { skip_patterns } : {}),
@@ -1490,6 +1501,9 @@ window.Utils = class Utils {
                         model: document.getElementById("minimaxModel").value,
                         voice_setting: {
                             voice_id: document.getElementById("minimaxVoiceId").value
+                        },
+                        audio_setting: {
+                            sample_rate: minimaxSampleRate
                         },
                         url: document.getElementById("minimaxUrl").value
                     }

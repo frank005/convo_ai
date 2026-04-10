@@ -1360,6 +1360,7 @@ window.UI = class UI {
             "minimaxGroupIdBlock",
             "minimaxModelBlock",
             "minimaxVoiceIdBlock",
+            "minimaxSampleRateBlock",
             "minimaxUrlBlock"
         ];
         const fishaudioBlocks = [

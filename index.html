@@ -5980,6 +5980,20 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           />
           <div class="tooltip">The voice style identifier to use.</div>
         </div>
+        <div id="minimaxSampleRateBlock" class="has-tooltip relative hidden">
+          <select
+            id="minimaxSampleRate"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="8000">8000 Hz</option>
+            <option value="16000">16000 Hz</option>
+            <option value="22050">22050 Hz</option>
+            <option value="24000">24000 Hz (LiveAvatar-friendly)</option>
+            <option value="32000" selected>32000 Hz (MiniMax default)</option>
+            <option value="44100">44100 Hz</option>
+          </select>
+          <div class="tooltip">MiniMax <code class="text-xs">audio_setting.sample_rate</code>. Sent in the agent TTS params with managed MiniMax presets too.</div>
+        </div>
         <div id="minimaxUrlBlock" class="has-tooltip relative hidden">
           <input
             id="minimaxUrl"
