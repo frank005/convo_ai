@@ -1353,7 +1353,8 @@ window.UI = class UI {
         const rimeBlocks = [
             "rimeTtsKeyBlock",
             "rimeSpeakerBlock",
-            "rimeModelIdBlock"
+            "rimeModelIdBlock",
+            "rimeSamplingRateBlock"
         ];
         const minimaxBlocks = [
             "minimaxTtsKeyBlock",

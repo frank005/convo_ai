@@ -473,6 +473,16 @@ window.Utils = class Utils {
                     if (!minimaxModel) throw new Error('MiniMax Model is required');
                     if (!minimaxVoiceId) throw new Error('MiniMax Voice ID is required');
                     if (!minimaxUrl) throw new Error('MiniMax URL is required');
+                    const minimaxSrRaw = document.getElementById('minimaxSampleRate') ? document.getElementById('minimaxSampleRate').value.trim() : '';
+                    if (minimaxSrRaw) {
+                        if (!/^\d+$/.test(minimaxSrRaw)) {
+                            throw new Error('MiniMax sample rate must be an integer between 8000 and 44100');
+                        }
+                        const minimaxSr = parseInt(minimaxSrRaw, 10);
+                        if (!Number.isFinite(minimaxSr) || minimaxSr < 8000 || minimaxSr > 44100) {
+                            throw new Error('MiniMax sample rate must be an integer between 8000 and 44100');
+                        }
+                    }
                 } else if (ttsVendor === 'playht') {
                     const playhtTtsKey = document.getElementById('playhtTtsKey').value.trim();
                     const playhtUserId = document.getElementById('playhtUserId').value.trim();
@@ -513,6 +523,21 @@ window.Utils = class Utils {
                     const murfApiKey = document.getElementById('murfApiKey') ? document.getElementById('murfApiKey').value.trim() : '';
                     if (!murfApiKey) {
                         throw new Error('Murf API Key is required');
+                    }
+                } else if (ttsVendor === 'rime') {
+                    const rimeTtsKey = document.getElementById('rimeTtsKey') ? document.getElementById('rimeTtsKey').value.trim() : '';
+                    if (!rimeTtsKey) {
+                        throw new Error('Rime API Key is required');
+                    }
+                    const rimeSrRaw = document.getElementById('rimeSamplingRate') ? document.getElementById('rimeSamplingRate').value.trim() : '';
+                    if (rimeSrRaw) {
+                        if (!/^\d+$/.test(rimeSrRaw)) {
+                            throw new Error('Rime sampling rate must be an integer between 4000 and 44100');
+                        }
+                        const rimeSr = parseInt(rimeSrRaw, 10);
+                        if (!Number.isFinite(rimeSr) || rimeSr < 4000 || rimeSr > 44100) {
+                            throw new Error('Rime sampling rate must be an integer between 4000 and 44100');
+                        }
                     }
                 }
             }
@@ -897,6 +922,9 @@ window.Utils = class Utils {
             case 'minimax':
                 if (!p.audio_setting) p.audio_setting = {};
                 p.audio_setting.sample_rate = 24000;
+                break;
+            case 'rime':
+                p.samplingRate = 24000;
                 break;
             default:
                 break;
@@ -1475,23 +1503,36 @@ window.Utils = class Utils {
                     }
                 };
             } else if (formData.vendor === "rime") {
+                const rimeSrEl = document.getElementById("rimeSamplingRate");
+                const rimeSrRaw = rimeSrEl ? rimeSrEl.value.trim() : "";
+                let rimeSamplingRate = 24000;
+                if (rimeSrRaw) {
+                    const n = parseInt(rimeSrRaw, 10);
+                    if (Number.isFinite(n) && n >= 4000 && n <= 44100) {
+                        rimeSamplingRate = n;
+                    }
+                }
+                const rimeParams = {
+                    api_key: document.getElementById("rimeTtsKey").value,
+                    speaker: document.getElementById("rimeSpeaker").value,
+                    modelId: document.getElementById("rimeModelId").value,
+                    samplingRate: rimeSamplingRate
+                };
                 config.properties.tts = {
                     vendor: "rime",
                     ...(skip_patterns ? { skip_patterns } : {}),
-                    params: {
-                        api_key: document.getElementById("rimeTtsKey").value,
-                        speaker: document.getElementById("rimeSpeaker").value,
-                        modelId: document.getElementById("rimeModelId").value
-                    }
+                    params: rimeParams
                 };
             } else if (formData.vendor === "minimax") {
                 const minimaxSrEl = document.getElementById("minimaxSampleRate");
-                const minimaxSrParsed = minimaxSrEl && minimaxSrEl.value
-                    ? parseInt(minimaxSrEl.value, 10)
-                    : 32000;
-                const minimaxSampleRate = Number.isFinite(minimaxSrParsed) && minimaxSrParsed > 0
-                    ? minimaxSrParsed
-                    : 32000;
+                const minimaxSrRaw = minimaxSrEl ? minimaxSrEl.value.trim() : "";
+                let minimaxSampleRate = 24000;
+                if (minimaxSrRaw) {
+                    const n = parseInt(minimaxSrRaw, 10);
+                    if (Number.isFinite(n) && n >= 8000 && n <= 44100) {
+                        minimaxSampleRate = n;
+                    }
+                }
                 config.properties.tts = {
                     vendor: "minimax",
                     ...(skip_patterns ? { skip_patterns } : {}),
