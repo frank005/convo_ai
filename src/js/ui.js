@@ -1264,6 +1264,9 @@ window.UI = class UI {
             await this.mediaProcessor.leaveChannel();
             document.getElementById("joinChannel").disabled = false;
             document.getElementById("leaveChannel").disabled = true;
+            if (this.subtitleManager && typeof this.subtitleManager.clearAgentActivityStatus === 'function') {
+                this.subtitleManager.clearAgentActivityStatus();
+            }
             
             // Reset mic and camera button states
             this.resetMicAndCameraStates();
@@ -1806,15 +1809,13 @@ window.UI = class UI {
                 </div>
                 <div class="has-tooltip relative">
                     <input type="text" placeholder="Endpoint URL" class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600" id="${serverId}-endpoint">
-                    <div class="tooltip">Endpoint URL for the MCP server. Must be a valid URL (e.g., https://example.endpoint.com/sse). This is where the MCP server is hosted.</div>
+                    <div class="tooltip">Endpoint URL for the MCP server. Must be a valid URL (e.g., https://example.endpoint.com/mcp). This is where the MCP server is hosted.</div>
                 </div>
                 <div class="has-tooltip relative">
                     <select class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600" id="${serverId}-transport">
-                        <option value="http">http</option>
-                        <option value="sse" selected>sse</option>
-                        <option value="streamable_http">streamable_http</option>
+                        <option value="streamable_http" selected>streamable_http</option>
                     </select>
-                    <div class="tooltip">Transport protocol for the MCP server. Options: http (standard HTTP), sse (Server-Sent Events), or streamable_http (streamable HTTP).</div>
+                    <div class="tooltip">Transport protocol for the MCP server. Only streamable_http is supported.</div>
                 </div>
                 <div class="has-tooltip relative">
                     <select class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600" id="${serverId}-isToolCallAvailable">
@@ -1861,7 +1862,7 @@ window.UI = class UI {
         this.mcpServers[serverId] = {
             name: "",
             endpoint: "",
-            transport: "sse",
+            transport: "streamable_http",
             is_tool_call_available: true,
             allowed_tools: ["*"],
             timeout_ms: null,
@@ -2113,6 +2114,9 @@ window.UI = class UI {
             // Enable subtitle mode selection when agent is stopped
             if (this.subtitleManager) {
                 this.subtitleManager.enableSubtitleModeSelection();
+                if (typeof this.subtitleManager.clearAgentActivityStatus === 'function') {
+                    this.subtitleManager.clearAgentActivityStatus();
+                }
             }
         } catch (error) {
             const errorMsg = `Error: ${error.message}`;
@@ -2139,6 +2143,14 @@ window.UI = class UI {
 
             const data = await this.agoraAPI.queryAgent(customerId, customerSecret, agentId);
             output.textContent = JSON.stringify(data, null, 2);
+
+            // Clear activity display for terminal/ended agent states.
+            const rawState = (data && (data.state || data.status || data.agent_state || data.agentStatus || data.current_state)) || '';
+            const normalizedState = String(rawState).toLowerCase();
+            const terminalStates = ['stopped', 'failed', 'ended', 'end', 'terminated', 'terminating'];
+            if (this.subtitleManager && terminalStates.includes(normalizedState) && typeof this.subtitleManager.clearAgentActivityStatus === 'function') {
+                this.subtitleManager.clearAgentActivityStatus();
+            }
         } catch (error) {
             output.textContent = `Error: ${error.message}`;
         }

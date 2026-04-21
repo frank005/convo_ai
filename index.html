@@ -269,6 +269,10 @@
           <div id="chatHistory" class="h-64 bg-gray-800 rounded p-2 overflow-y-auto text-sm">
             <!-- Chat messages will appear here -->
           </div>
+          <div id="agentActivityWrap" class="mt-2 px-2 py-1 bg-gray-800 rounded text-sm flex items-center justify-between">
+            <span class="text-gray-300">Agent Activity</span>
+            <span id="agentActivityStatus" class="font-medium text-gray-300">Idle</span>
+          </div>
         </div>
       </div>
           </div>
@@ -5688,6 +5692,8 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         <div id="elevenLabsVoiceIdBlock" class="has-tooltip relative hidden">
           <input
             id="elevenLabsVoiceId"
+            name="ttsVoiceId"
+            autocomplete="on"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Custom Voice ID"
           />
@@ -5791,6 +5797,8 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         <div id="cartesiaVoiceBlock" class="has-tooltip relative hidden">
           <input
             id="cartesiaVoiceId"
+            name="ttsVoiceId"
+            autocomplete="on"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Cartesia Voice ID (Required)"
             value="coral"
@@ -5875,6 +5883,8 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         <div id="humeaiVoiceIdBlock" class="has-tooltip relative hidden">
           <input
             id="humeaiVoiceId"
+            name="ttsVoiceId"
+            autocomplete="on"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Hume AI Voice ID (Required)"
           />
@@ -5986,6 +5996,8 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         <div id="minimaxVoiceIdBlock" class="has-tooltip relative hidden">
           <input
             id="minimaxVoiceId"
+            name="ttsVoiceId"
+            autocomplete="on"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Voice ID (e.g., English_captivating_female1)"
           />
@@ -6140,6 +6152,8 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         <div id="playhtVoiceBlock" class="has-tooltip relative hidden">
           <input
             id="playhtVoice"
+            name="ttsVoiceId"
+            autocomplete="on"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Voice ID (e.g., alex)"
           />
@@ -6187,6 +6201,8 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         <div id="sarvamSpeakerIdBlock" class="has-tooltip relative hidden">
           <input
             id="sarvamSpeakerId"
+            name="ttsVoiceId"
+            autocomplete="on"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Custom Speaker ID (Required when Custom selected)"
           />
@@ -6294,6 +6310,8 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         <div id="amazonPollyVoiceBlock" class="has-tooltip relative hidden">
           <input
             id="amazonPollyVoice"
+            name="ttsVoiceId"
+            autocomplete="on"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Voice ID (Required, e.g., Joanna)"
             value="Joanna"
@@ -6334,6 +6352,8 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         <div id="murfVoiceIdBlock" class="has-tooltip relative hidden">
           <input
             id="murfVoiceId"
+            name="ttsVoiceId"
+            autocomplete="on"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Voice ID (e.g., Matthew)"
             value="Matthew"

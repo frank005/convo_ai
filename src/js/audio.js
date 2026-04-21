@@ -176,14 +176,21 @@ window.MediaProcessor = class MediaProcessor {
             // We'll capture our UID from the join promise result
         });
 
-        // Initialize Conversational AI for subtitles if enabled (RTM mode)
-        if (this.subtitleManager && this.subtitleManager.isEnabled && !this.subtitleManager.isDataStreamMode) {
+        // Initialize Conversational AI for RTM-driven agent activity/subtitles.
+        // Keep this active even when subtitles are toggled off so agent activity
+        // status can still be shown in the Live Subtitles panel.
+        const enableRtm = document.getElementById('enableRtm');
+        if (this.subtitleManager && enableRtm && enableRtm.checked) {
             await this.initializeConversationalAI(appId, channelName, token, uid, agentId);
         }
         
-        // Initialize data stream subtitle handling if enabled
-        if (this.subtitleManager && this.subtitleManager.isEnabled && this.subtitleManager.isDataStreamMode) {
-            await this.initializeDataStreamSubtitles(agentId);
+        // Data stream is always available while connected to an agent in channel.
+        // Always initialize stream handling; subtitle mode only controls whether
+        // we render transcript/chat content or run status-only.
+        if (this.subtitleManager) {
+            await this.initializeDataStreamSubtitles(agentId, {
+                statusOnly: !this.subtitleManager.isDataStreamMode
+            });
         }
         
         this.client.on("user-published", async (user, mediaType) => {
@@ -507,8 +514,8 @@ window.MediaProcessor = class MediaProcessor {
         }
     }
 
-    async initializeDataStreamSubtitles(agentId) {
-        if (!this.subtitleManager || !this.subtitleManager.isDataStreamMode) return;
+    async initializeDataStreamSubtitles(agentId, options = {}) {
+        if (!this.subtitleManager) return;
 
         try {
             // Get the agent RTC UID from the UI
@@ -521,7 +528,7 @@ window.MediaProcessor = class MediaProcessor {
             
             
             // Initialize the subtitle manager with the RTC client and agent UID
-            await this.subtitleManager.initializeDataStreamSubtitles(this.client, agentUid);
+            await this.subtitleManager.initializeDataStreamSubtitles(this.client, agentUid, options);
             
         } catch (error) {
             console.error('Failed to initialize data stream subtitle handling:', error);

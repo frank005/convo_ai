@@ -635,7 +635,7 @@ window.Utils = class Utils {
             if (nameInput && endpointInput && transportSelect && isToolCallSelect && allowedToolsInput) {
                 const name = nameInput.value.trim();
                 const endpoint = endpointInput.value.trim();
-                const transport = transportSelect.value;
+                const transport = "streamable_http";
                 const isToolCallAvailable = isToolCallSelect.value === "true";
                 const allowedToolsValue = allowedToolsInput.value.trim();
 
