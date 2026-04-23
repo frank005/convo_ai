@@ -36,6 +36,8 @@ window.Utils = class Utils {
             ttsKey = document.getElementById("cartesiaTtsKey").value.trim();
         } else if (ttsVendor === "openai") {
             ttsKey = document.getElementById("openaiTtsKey").value.trim();
+        } else if (ttsVendor === "deepgram") {
+            ttsKey = document.getElementById("deepgramTtsKey") ? document.getElementById("deepgramTtsKey").value.trim() : '';
         } else if (ttsVendor === "rime") {
             ttsKey = document.getElementById("rimeTtsKey") ? document.getElementById("rimeTtsKey").value.trim() : '';
         } else if (ttsVendor === "minimax") {
@@ -79,8 +81,6 @@ window.Utils = class Utils {
         const turnPrefixPadding = document.getElementById("turnPrefixPadding").value || null;
         const turnSilenceDuration = document.getElementById("turnSilenceDuration").value || null;
         const turnThreshold = document.getElementById("turnThreshold").value || null;
-        const turnCreateResponse = document.getElementById("turnCreateResponse").value === "true";
-        const turnInterruptResponse = document.getElementById("turnInterruptResponse").value === "true";
         const turnEagerness = document.getElementById("turnEagerness").value;
         
         // Get parameters settings
@@ -112,7 +112,6 @@ window.Utils = class Utils {
         const mllmApiKey = document.getElementById("mllmApiKey").value.trim();
         const mllmGreetingMessage = document.getElementById("mllmGreetingMessage").value.trim();
         const mllmVendor = document.getElementById("mllmVendor").value;
-        const mllmStyle = document.getElementById("mllmStyle").value;
         const mllmMaxHistory = document.getElementById("mllmMaxHistory").value || null;
         const mllmOpenaiModel = document.getElementById("mllmOpenaiModel") ? document.getElementById("mllmOpenaiModel").value.trim() : "";
         const mllmOpenaiVoice = document.getElementById("mllmOpenaiVoice") ? document.getElementById("mllmOpenaiVoice").value.trim() : "";
@@ -224,7 +223,6 @@ window.Utils = class Utils {
             mllmApiKey: mllmApiKey,
             mllmGreetingMessage: mllmGreetingMessage,
             mllmVendor: mllmVendor,
-            mllmStyle: mllmStyle,
             mllmMaxHistory: mllmMaxHistory,
             mllmOpenaiModel: mllmOpenaiModel,
             mllmOpenaiVoice: mllmOpenaiVoice,
@@ -252,8 +250,6 @@ window.Utils = class Utils {
             turnPrefixPadding: turnPrefixPadding,
             turnSilenceDuration: turnSilenceDuration,
             turnThreshold: turnThreshold,
-            turnCreateResponse: turnCreateResponse,
-            turnInterruptResponse: turnInterruptResponse,
             turnEagerness: turnEagerness,
             
             // v2.4 turn detection (when Deprecated Features is off)
@@ -461,6 +457,15 @@ window.Utils = class Utils {
                     }
                     if (!openaiVoice) {
                         throw new Error('OpenAI Voice is required');
+                    }
+                } else if (ttsVendor === 'deepgram') {
+                    const deepgramTtsKey = document.getElementById('deepgramTtsKey') ? document.getElementById('deepgramTtsKey').value.trim() : '';
+                    const deepgramModel = document.getElementById('deepgramModel') ? document.getElementById('deepgramModel').value.trim() : '';
+                    if (!deepgramTtsKey) {
+                        throw new Error('Deepgram API Key is required');
+                    }
+                    if (!deepgramModel) {
+                        throw new Error('Deepgram model is required');
                     }
                 } else if (ttsVendor === 'minimax') {
                     const minimaxTtsKey = document.getElementById('minimaxTtsKey').value.trim();
@@ -948,9 +953,6 @@ window.Utils = class Utils {
 
         // Prepare advanced features
         const advancedFeatures = {};
-        if (formData.enableMllm) {
-            advancedFeatures.enable_mllm = true;
-        }
         if (formData.enableRtm) {
             advancedFeatures.enable_rtm = true;
         }
@@ -1066,24 +1068,12 @@ window.Utils = class Utils {
 
         // Prepare turn detection config (deprecated vs v2.4)
         let turnDetection = null;
+        let interruption = null;
         if (formData.useDeprecatedFeatures && formData.turnDetectionEnabled) {
             // Deprecated structure (pre-v2.4)
             turnDetection = {
-                type: formData.turnDetectionType,
-                interrupt_mode: formData.turnInterruptMode
+                type: formData.turnDetectionType
             };
-            
-            // Add interrupt keywords if provided (only for keywords interrupt mode)
-            // Maximum 128 keywords allowed
-            if (formData.turnInterruptKeywords && formData.turnInterruptMode === 'keywords') {
-                const keywords = formData.turnInterruptKeywords.split(',').map(k => k.trim()).filter(k => k.length > 0);
-                if (keywords.length > 128) {
-                    throw new Error('Maximum 128 interrupt keywords allowed. Please reduce the number of keywords.');
-                }
-                if (keywords.length > 0) {
-                    turnDetection.interrupt_keywords = keywords;
-                }
-            }
             
             // Add VAD parameters if they have values
             if (formData.turnInterruptDuration) {
@@ -1099,13 +1089,35 @@ window.Utils = class Utils {
                 turnDetection.threshold = parseFloat(formData.turnThreshold);
             }
             
-            // Add MLLM-specific parameters
-            if (formData.turnDetectionType === 'server_vad' || formData.turnDetectionType === 'semantic_vad') {
-                turnDetection.create_response = formData.turnCreateResponse;
-                turnDetection.interrupt_response = formData.turnInterruptResponse;
-            }
             if (formData.turnDetectionType === 'semantic_vad') {
                 turnDetection.eagerness = formData.turnEagerness;
+            }
+            // v2.6 interruption object replaces interrupt_mode behavior.
+            if (formData.turnInterruptMode === 'keywords') {
+                const keywords = (formData.turnInterruptKeywords || '')
+                    .split(',')
+                    .map(k => k.trim())
+                    .filter(k => k.length > 0);
+                if (keywords.length > 128) {
+                    throw new Error('Maximum 128 interrupt keywords allowed. Please reduce the number of keywords.');
+                }
+                interruption = {
+                    enable: true,
+                    mode: 'keywords',
+                    keywords: keywords
+                };
+            } else if (formData.turnInterruptMode === 'append' || formData.turnInterruptMode === 'ignore') {
+                interruption = {
+                    enable: false,
+                    disabled_config: {
+                        strategy: formData.turnInterruptMode
+                    }
+                };
+            } else {
+                interruption = {
+                    enable: true,
+                    mode: 'start_of_speech'
+                };
             }
         } else if (!formData.useDeprecatedFeatures && formData.turnV24Enabled) {
             // v2.4 structure: mode + config (SoS / EoS)
@@ -1139,9 +1151,25 @@ window.Utils = class Utils {
                     const triggered_keywords = formData.turnV24SoSKeywords.split(',').map(k => k.trim()).filter(k => k.length > 0);
                     if (triggered_keywords.length > 0) keywordsConfig.triggered_keywords = triggered_keywords;
                 }
-                config.start_of_speech = Object.keys(keywordsConfig).length > 0 ? { mode: 'keywords', keywords_config: keywordsConfig } : { mode: 'keywords' };
+                const triggeredKeywords = Array.isArray(keywordsConfig.triggered_keywords) ? keywordsConfig.triggered_keywords : [];
+                interruption = {
+                    enable: true,
+                    mode: 'keywords',
+                    keywords: triggeredKeywords
+                };
             } else {
-                config.start_of_speech = { mode: 'disabled', disabled_config: { strategy: formData.turnV24SoSDisabledStrategy || 'append' } };
+                interruption = {
+                    enable: false,
+                    disabled_config: {
+                        strategy: formData.turnV24SoSDisabledStrategy || 'append'
+                    }
+                };
+            }
+            if (sosMode === 'vad') {
+                interruption = {
+                    enable: true,
+                    mode: 'start_of_speech'
+                };
             }
             // End of Speech
             const eosMode = formData.turnV24EndOfSpeechMode || 'vad';
@@ -1255,6 +1283,18 @@ window.Utils = class Utils {
             }
         }
 
+        let parsedLlmHeaders;
+        if (formData.llmHeaders) {
+            try {
+                parsedLlmHeaders = JSON.parse(formData.llmHeaders);
+            } catch (error) {
+                throw new Error('LLM Headers must be valid JSON.');
+            }
+            if (parsedLlmHeaders === null || typeof parsedLlmHeaders !== 'object' || Array.isArray(parsedLlmHeaders)) {
+                throw new Error('LLM Headers must be a JSON object.');
+            }
+        }
+
         const config = {
             name: formData.uniqueName,
             ...(presets.length > 0 ? { preset: presets.join(',') } : {}),
@@ -1271,6 +1311,7 @@ window.Utils = class Utils {
                 ...(sal ? { sal: sal } : {}),
                 ...(formData.enableMllm ? {} : { asr: this.buildAsrConfig(formData) }), // Only include ASR if MLLM is not enabled
                 ...(turnDetection ? { turn_detection: turnDetection } : {}),
+                ...(interruption ? { interruption: interruption } : {}),
                 ...(parameters ? { parameters: parameters } : {}),
                 ...(formData.enableMllm ? {} : { // Only include LLM/TTS if MLLM is not enabled
                     llm: {
@@ -1278,7 +1319,7 @@ window.Utils = class Utils {
                         api_key: formData.llmApiKey,
                         ...(formData.llmAccessKey ? { access_key: formData.llmAccessKey } : {}),
                         ...(formData.llmSecret ? { secret: formData.llmSecret } : {}),
-                        ...(formData.llmHeaders ? { headers: formData.llmHeaders } : {}),
+                        ...(parsedLlmHeaders ? { headers: parsedLlmHeaders } : {}),
                         ...(formData.llmVendor ? { vendor: formData.llmVendor } : {}),
                         ...(formData.llmStyle ? { style: formData.llmStyle } : {}),
                         system_messages: systemMessages,
@@ -1329,11 +1370,11 @@ window.Utils = class Utils {
                             ? mllmOutputModalities
                             : (formData.mllmVendor === 'vertexai' ? ['audio'] : ['text', 'audio']);
                         const mllmConfig = {
+                        enable: true,
                         ...(formData.mllmVendor === 'vertexai' ? {} : { url: formData.mllmUrl }), // URL not needed for vertexai
                         ...(formData.mllmVendor === 'vertexai' ? {} : { api_key: formData.mllmApiKey }), // API key not needed for vertexai
                         ...(formData.mllmGreetingMessage ? { greeting_message: formData.mllmGreetingMessage } : {}),
-                        ...(formData.mllmVendor ? { vendor: formData.mllmVendor } : {}),
-                        ...(formData.mllmStyle ? { style: formData.mllmStyle } : {}),
+                        ...(formData.mllmVendor ? { vendor: (formData.mllmVendor === 'vertexai' ? 'gemini' : formData.mllmVendor) } : {}),
                         ...(formData.mllmMaxHistory ? { max_history: parseInt(formData.mllmMaxHistory, 10) } : {}),
                         input_modalities: safeMllmInputModalities,
                         output_modalities: safeMllmOutputModalities,
@@ -1375,6 +1416,11 @@ window.Utils = class Utils {
                 }
             }
         };
+
+        if (formData.enableMllm && config.properties.mllm && config.properties.turn_detection) {
+            config.properties.mllm.turn_detection = config.properties.turn_detection;
+            delete config.properties.turn_detection;
+        }
 
         // Add AI Avatar configuration if enabled
         if (formData.enableAvatar) {
@@ -1489,6 +1535,22 @@ window.Utils = class Utils {
                         ...(document.getElementById("openaiInstructions")?.value ? { instructions: document.getElementById("openaiInstructions").value } : {}),
                         ...(document.getElementById("openaiSpeed")?.value ? { speed: parseFloat(document.getElementById("openaiSpeed").value) } : {})
                     }
+                };
+            } else if (formData.vendor === "deepgram") {
+                const deepgramParams = {
+                    api_key: document.getElementById("deepgramTtsKey").value,
+                    model: document.getElementById("deepgramModel").value
+                };
+                if (document.getElementById("deepgramBaseUrl")?.value) {
+                    deepgramParams.base_url = document.getElementById("deepgramBaseUrl").value.trim();
+                }
+                if (document.getElementById("deepgramSampleRate")?.value) {
+                    deepgramParams.sample_rate = parseInt(document.getElementById("deepgramSampleRate").value, 10);
+                }
+                config.properties.tts = {
+                    vendor: "deepgram",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: deepgramParams
                 };
             } else if (formData.vendor === "humeai") {
                 config.properties.tts = {

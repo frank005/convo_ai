@@ -161,6 +161,33 @@ window.AgoraAPI = class AgoraAPI {
         }
     }
 
+    async sendCustomInstruction(customerId, customerSecret, agentId, instruction, options = {}) {
+        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const url = `${this.baseUrl}/projects/${this.appId}/agents/${encodeURIComponent(agentId)}/think`;
+        const body = {
+            text: instruction,
+            ...(options.on_listening_action ? { on_listening_action: options.on_listening_action } : {}),
+            ...(options.on_thinking_action ? { on_thinking_action: options.on_thinking_action } : {}),
+            ...(options.on_speaking_action ? { on_speaking_action: options.on_speaking_action } : {}),
+            ...(typeof options.interruptable === 'boolean' ? { interruptable: options.interruptable } : {}),
+            ...(options.metadata && typeof options.metadata === 'object' ? { metadata: options.metadata } : {})
+        };
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers,
+                body: JSON.stringify(body)
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || response.statusText);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Failed to send custom instruction: ${error.message}`);
+        }
+    }
+
     async broadcastMessage(customerId, customerSecret, agentId, text, priority, interruptable) {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/agents/${encodeURIComponent(agentId)}/speak`;

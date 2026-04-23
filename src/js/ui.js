@@ -1346,6 +1346,12 @@ window.UI = class UI {
             "openaiInstructionsBlock",
             "openaiSpeedBlock"
         ];
+        const deepgramBlocks = [
+            "deepgramTtsKeyBlock",
+            "deepgramBaseUrlBlock",
+            "deepgramModelBlock",
+            "deepgramSampleRateBlock"
+        ];
         const humeaiBlocks = [
             "humeaiTtsKeyBlock",
             "humeaiVoiceIdBlock",
@@ -1443,6 +1449,13 @@ window.UI = class UI {
             const element = document.getElementById(block);
             if (element) {
                 element.classList.toggle("hidden", vendor !== "openai");
+            }
+        });
+
+        deepgramBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "deepgram");
             }
         });
 

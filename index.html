@@ -448,6 +448,18 @@
                     </div>
                   </div>
 
+                  <!-- SIP Calling and Phone Number Management Toggle Button -->
+                  <div class="mb-4 has-tooltip relative">
+                    <button
+                      id="toggleSipPhoneManagementBtn"
+                      class="modern-btn modern-btn-purple w-full text-sm flex items-center justify-between"
+                    >
+                      <span>SIP Calling and Phone Number Management</span>
+                      <span id="toggleSipPhoneManagementIcon" class="ml-2">▼</span>
+                    </button>
+                    <div class="tooltip">Click to expand/collapse SIP calling and phone number management options. When expanded, the regular Create/Stop Agent buttons are disabled. Collapse this section to re-enable them.</div>
+                  </div>
+
                   <!-- Phone Number Management (Combined) -->
                   <div class="w-full p-4 bg-gray-700 rounded-lg sip-phone-section" style="display: none;">
                     <h3 class="text-sm font-semibold mb-3 text-gray-300">Phone Number Management</h3>
@@ -765,17 +777,72 @@
             <div id="broadcastMsgStatus" class="mt-2 text-sm max-h-16 overflow-y-auto break-words"></div>
             </div>
 
-          <!-- SIP Calling and Phone Number Management Toggle Button -->
-          <div class="mb-4 has-tooltip relative">
-            <button
-              id="toggleSipPhoneManagementBtn"
-              class="modern-btn modern-btn-purple w-full text-sm flex items-center justify-between"
-            >
-              <span>SIP Calling and Phone Number Management</span>
-              <span id="toggleSipPhoneManagementIcon" class="ml-2">▼</span>
-            </button>
-            <div class="tooltip">Click to expand/collapse SIP calling and phone number management options. When expanded, the regular Create/Stop Agent buttons are disabled. Collapse this section to re-enable them.</div>
-          </div>
+            <!-- Send Custom Instruction (/think) -->
+            <div class="w-full p-4 bg-gray-700 rounded-lg mt-4">
+              <h3 class="text-sm font-semibold mb-3 text-gray-300">Send Custom Instruction</h3>
+              <div class="space-y-2">
+                <div class="has-tooltip relative">
+                  <input
+                    id="thinkTextInput"
+                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                    placeholder="Instruction text (required)"
+                  />
+                  <div class="tooltip">Text to inject into the agent conversation pipeline as user input.</div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="has-tooltip relative">
+                    <label class="text-xs text-gray-300 block mb-1">on_listening_action</label>
+                    <select id="thinkOnListeningAction" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500">
+                      <option value="inject" selected>inject</option>
+                      <option value="ignore">ignore</option>
+                    </select>
+                    <div class="tooltip">Behavior while agent is listening.</div>
+                  </div>
+                  <div class="has-tooltip relative">
+                    <label class="text-xs text-gray-300 block mb-1">on_thinking_action</label>
+                    <select id="thinkOnThinkingAction" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500">
+                      <option value="interrupt" selected>interrupt</option>
+                      <option value="ignore">ignore</option>
+                    </select>
+                    <div class="tooltip">Behavior while agent is thinking.</div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="has-tooltip relative">
+                    <label class="text-xs text-gray-300 block mb-1">on_speaking_action</label>
+                    <select id="thinkOnSpeakingAction" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500">
+                      <option value="ignore" selected>ignore</option>
+                      <option value="interrupt">interrupt</option>
+                    </select>
+                    <div class="tooltip">Behavior while agent is speaking.</div>
+                  </div>
+                  <div class="has-tooltip relative">
+                    <label class="text-xs text-gray-300 block mb-1">interruptable</label>
+                    <select id="thinkInterruptable" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500">
+                      <option value="true" selected>true</option>
+                      <option value="false">false</option>
+                    </select>
+                    <div class="tooltip">Whether user speech can interrupt the injected instruction.</div>
+                  </div>
+                </div>
+                <div class="has-tooltip relative">
+                  <textarea
+                    id="thinkMetadata"
+                    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500 font-mono text-xs"
+                    rows="3"
+                    placeholder='metadata JSON (optional), e.g. {"event":"button_click","model_ref":"abc-123"}'
+                  ></textarea>
+                  <div class="tooltip">Optional metadata object as JSON key/value pairs.</div>
+                </div>
+                <button
+                  id="sendCustomInstructionBtn"
+                  class="modern-btn modern-btn-primary w-full"
+                >
+                  Send Custom Instruction
+                </button>
+                <div id="thinkMsgStatus" class="text-sm max-h-24 overflow-y-auto break-words"></div>
+              </div>
+            </div>
 
           <!-- Initiate Outbound Call -->
           <div class="w-full p-4 bg-gray-700 rounded-lg sip-phone-section" style="display: none;">
@@ -1752,6 +1819,79 @@
         } catch (error) {
           if (queryResponse) {
             queryResponse.textContent = `Error: ${error.message}`;
+          }
+        }
+      });
+    }
+
+    // Send custom instruction (/think) button click handler
+    const sendCustomInstructionBtn = document.getElementById('sendCustomInstructionBtn');
+    if (sendCustomInstructionBtn) {
+      sendCustomInstructionBtn.addEventListener('click', async function() {
+        const agentId = document.getElementById('agentId');
+        const instructionInput = document.getElementById('thinkTextInput');
+        const onListeningActionInput = document.getElementById('thinkOnListeningAction');
+        const onThinkingActionInput = document.getElementById('thinkOnThinkingAction');
+        const onSpeakingActionInput = document.getElementById('thinkOnSpeakingAction');
+        const interruptableInput = document.getElementById('thinkInterruptable');
+        const metadataInput = document.getElementById('thinkMetadata');
+        const statusDiv = document.getElementById('thinkMsgStatus');
+
+        const instruction = instructionInput ? instructionInput.value.trim() : '';
+        if (statusDiv) {
+          statusDiv.textContent = '';
+        }
+        if (!agentId || !agentId.value) {
+          if (statusDiv) {
+            statusDiv.textContent = 'Please enter an Agent ID first.';
+            statusDiv.className = 'text-sm text-red-400 max-h-24 overflow-y-auto break-words';
+          }
+          return;
+        }
+        if (!instruction) {
+          if (statusDiv) {
+            statusDiv.textContent = 'Please enter instruction text first.';
+            statusDiv.className = 'text-sm text-red-400 max-h-24 overflow-y-auto break-words';
+          }
+          return;
+        }
+
+        let parsedMetadata;
+        if (metadataInput && metadataInput.value.trim()) {
+          try {
+            parsedMetadata = JSON.parse(metadataInput.value.trim());
+            if (parsedMetadata === null || typeof parsedMetadata !== 'object' || Array.isArray(parsedMetadata)) {
+              throw new Error('Metadata must be a JSON object.');
+            }
+          } catch (error) {
+            if (statusDiv) {
+              statusDiv.textContent = `Invalid metadata JSON: ${error.message}`;
+              statusDiv.className = 'text-sm text-red-400 max-h-24 overflow-y-auto break-words';
+            }
+            return;
+          }
+        }
+
+        try {
+          const { customerId, customerSecret } = window.Utils.getStoredCredentials();
+          const activeAgoraAPI = (window.ui && window.ui.agoraAPI) ? window.ui.agoraAPI : agoraAPI;
+          const response = await activeAgoraAPI.sendCustomInstruction(customerId, customerSecret, agentId.value, instruction, {
+            on_listening_action: onListeningActionInput ? onListeningActionInput.value : 'inject',
+            on_thinking_action: onThinkingActionInput ? onThinkingActionInput.value : 'interrupt',
+            on_speaking_action: onSpeakingActionInput ? onSpeakingActionInput.value : 'ignore',
+            interruptable: interruptableInput ? interruptableInput.value === 'true' : true,
+            ...(parsedMetadata ? { metadata: parsedMetadata } : {})
+          });
+          if (statusDiv) {
+            statusDiv.textContent = `Instruction sent successfully: ${JSON.stringify(response)}`;
+            statusDiv.className = 'text-sm text-green-400 max-h-24 overflow-y-auto break-words';
+          }
+          if (instructionInput) instructionInput.value = '';
+          if (metadataInput) metadataInput.value = '';
+        } catch (error) {
+          if (statusDiv) {
+            statusDiv.textContent = `Error: ${error.message}`;
+            statusDiv.className = 'text-sm text-red-400 max-h-24 overflow-y-auto break-words';
           }
         }
       });
@@ -5535,6 +5675,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="elevenlabs">ElevenLabs</option>
             <option value="cartesia">Cartesia (Beta)</option>
             <option value="openai">OpenAI (Beta)</option>
+            <option value="deepgram">Deepgram (Beta)</option>
             <option value="humeai">Hume AI (Beta)</option>
             <option value="rime">Rime (Beta)</option>
             <option value="minimax">MiniMax</option>
@@ -5869,6 +6010,44 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             value="1.0"
           />
           <div class="tooltip">Speed setting for OpenAI TTS (0.25-4.0).</div>
+        </div>
+
+        <!-- Deepgram TTS Settings -->
+        <div id="deepgramTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="deepgramTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Deepgram API Key (Required)"
+          />
+          <div class="tooltip">API key for Deepgram TTS service.</div>
+        </div>
+        <div id="deepgramBaseUrlBlock" class="has-tooltip relative hidden">
+          <input
+            id="deepgramBaseUrl"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Base URL (Optional, e.g., wss://api.deepgram.com/v1/speak)"
+            value="wss://api.deepgram.com/v1/speak"
+          />
+          <div class="tooltip">WebSocket URL for Deepgram TTS. Default: wss://api.deepgram.com/v1/speak</div>
+        </div>
+        <div id="deepgramModelBlock" class="has-tooltip relative hidden">
+          <input
+            id="deepgramModel"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Deepgram Model (Required)"
+            value="aura-2-thalia-en"
+          />
+          <div class="tooltip">Deepgram TTS model identifier (for example, aura-2-thalia-en).</div>
+        </div>
+        <div id="deepgramSampleRateBlock" class="has-tooltip relative hidden">
+          <input
+            id="deepgramSampleRate"
+            type="number"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Sample Rate (Optional)"
+            value="24000"
+          />
+          <div class="tooltip">Audio sample rate in Hz (optional).</div>
         </div>
 
         <!-- Hume AI TTS Settings -->
