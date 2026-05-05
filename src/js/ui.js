@@ -8,6 +8,8 @@ window.UI = class UI {
         this.agoraAPI = null;
         this.subtitleManager = null;
         this.params = {};
+        this.mllmParams = {};
+        this.asrParams = {};
         this.ttsParams = {};
         this.mcpServers = {};
         this.lastAgentListCursor = null;
@@ -95,6 +97,14 @@ window.UI = class UI {
         const addParamBtn = document.getElementById("addParamBtn");
         if (addParamBtn) {
             addParamBtn.addEventListener("click", () => this.addParamField());
+        }
+        const addMllmParamBtn = document.getElementById("addMllmParamBtn");
+        if (addMllmParamBtn) {
+            addMllmParamBtn.addEventListener("click", () => this.addMllmParamField());
+        }
+        const addAsrParamBtn = document.getElementById("addAsrParamBtn");
+        if (addAsrParamBtn) {
+            addAsrParamBtn.addEventListener("click", () => this.addAsrParamField());
         }
         const addTtsParamBtn = document.getElementById("addTtsParamBtn");
         if (addTtsParamBtn) {
@@ -1333,6 +1343,7 @@ window.UI = class UI {
             "elevenLabsTtsKeyBlock",
             "elevenLabsBaseUrlBlock",
             "elevenLabsSampleRateBlock",
+            "elevenLabsSpeedBlock",
             "elevenLabsStabilityBlock",
             "elevenLabsSimilarityBoostBlock",
             "elevenLabsStyleBlock",
@@ -1778,6 +1789,158 @@ window.UI = class UI {
         delete this.params[id];
     }
 
+    addMllmParamField() {
+        const container = document.getElementById("mllm-param-container");
+        const paramId = "mllm-param-" + Object.keys(this.mllmParams).length;
+
+        const div = document.createElement("div");
+        div.classList.add("flex", "gap-2", "items-center");
+        div.id = paramId;
+
+        div.innerHTML = `
+            <select class="border p-2 w-1/5 rounded bg-gray-800 text-white">
+                <option value="string">String</option>
+                <option value="number">Number</option>
+                <option value="array">Array</option>
+                <option value="object">Object</option>
+            </select>
+            <input type="text" placeholder="Key" class="border p-2 w-1/4 rounded bg-gray-800 text-white">
+            <input type="text" placeholder="Value" class="border p-2 w-2/5 rounded bg-gray-800 text-white" id="${paramId}-value">
+            <button class="text-red-500">❌</button>
+        `;
+
+        const select = div.querySelector('select');
+        const keyInput = div.querySelector('input[placeholder="Key"]');
+        const valueInput = div.querySelector('input[placeholder="Value"]');
+        const removeBtn = div.querySelector('button');
+
+        select.addEventListener('change', () => this.updateMllmParam(paramId, select, 'type'));
+        keyInput.addEventListener('input', () => this.updateMllmParam(paramId, keyInput, 'key'));
+        valueInput.addEventListener('input', () => this.updateMllmParam(paramId, valueInput, 'value'));
+        removeBtn.addEventListener('click', () => this.removeMllmParam(paramId));
+
+        container.appendChild(div);
+        this.mllmParams[paramId] = { key: "", type: "string", value: "" };
+    }
+
+    updateMllmParam(id, input, fieldType) {
+        if (fieldType === "key") this.mllmParams[id].key = input.value;
+
+        if (fieldType === "type") {
+            this.mllmParams[id].type = input.value;
+            let valueInput = document.getElementById(`${id}-value`);
+
+            if (input.value === "array") {
+                valueInput.placeholder = "Comma-separated values";
+            } else if (input.value === "object") {
+                valueInput.placeholder = "Enter JSON";
+                valueInput.value = "{}";
+            } else {
+                valueInput.placeholder = "Value";
+                valueInput.value = "";
+            }
+        }
+
+        if (fieldType === "value") {
+            let type = this.mllmParams[id].type;
+            if (type === "array") {
+                this.mllmParams[id].value = input.value.split(",").map(v => v.trim());
+            } else if (type === "number") {
+                this.mllmParams[id].value = Number(input.value);
+            } else if (type === "object") {
+                try {
+                    this.mllmParams[id].value = JSON.parse(input.value);
+                    input.style.borderColor = "green";
+                } catch (e) {
+                    input.style.borderColor = "red";
+                }
+            } else {
+                this.mllmParams[id].value = input.value;
+            }
+        }
+    }
+
+    removeMllmParam(id) {
+        document.getElementById(id).remove();
+        delete this.mllmParams[id];
+    }
+
+    addAsrParamField() {
+        const container = document.getElementById("asr-param-container");
+        const paramId = "asr-param-" + Object.keys(this.asrParams).length;
+
+        const div = document.createElement("div");
+        div.classList.add("flex", "gap-2", "items-center");
+        div.id = paramId;
+
+        div.innerHTML = `
+            <select class="border p-2 w-1/5 rounded bg-gray-800 text-white">
+                <option value="string">String</option>
+                <option value="number">Number</option>
+                <option value="array">Array</option>
+                <option value="object">Object</option>
+            </select>
+            <input type="text" placeholder="Key" class="border p-2 w-1/4 rounded bg-gray-800 text-white">
+            <input type="text" placeholder="Value" class="border p-2 w-2/5 rounded bg-gray-800 text-white" id="${paramId}-value">
+            <button class="text-red-500">❌</button>
+        `;
+
+        const select = div.querySelector('select');
+        const keyInput = div.querySelector('input[placeholder="Key"]');
+        const valueInput = div.querySelector('input[placeholder="Value"]');
+        const removeBtn = div.querySelector('button');
+
+        select.addEventListener('change', () => this.updateAsrParam(paramId, select, 'type'));
+        keyInput.addEventListener('input', () => this.updateAsrParam(paramId, keyInput, 'key'));
+        valueInput.addEventListener('input', () => this.updateAsrParam(paramId, valueInput, 'value'));
+        removeBtn.addEventListener('click', () => this.removeAsrParam(paramId));
+
+        container.appendChild(div);
+        this.asrParams[paramId] = { key: "", type: "string", value: "" };
+    }
+
+    updateAsrParam(id, input, fieldType) {
+        if (fieldType === "key") this.asrParams[id].key = input.value;
+
+        if (fieldType === "type") {
+            this.asrParams[id].type = input.value;
+            let valueInput = document.getElementById(`${id}-value`);
+
+            if (input.value === "array") {
+                valueInput.placeholder = "Comma-separated values";
+            } else if (input.value === "object") {
+                valueInput.placeholder = "Enter JSON";
+                valueInput.value = "{}";
+            } else {
+                valueInput.placeholder = "Value";
+                valueInput.value = "";
+            }
+        }
+
+        if (fieldType === "value") {
+            let type = this.asrParams[id].type;
+            if (type === "array") {
+                this.asrParams[id].value = input.value.split(",").map(v => v.trim());
+            } else if (type === "number") {
+                this.asrParams[id].value = Number(input.value);
+            } else if (type === "object") {
+                try {
+                    this.asrParams[id].value = JSON.parse(input.value);
+                    input.style.borderColor = "green";
+                } catch (e) {
+                    input.style.borderColor = "red";
+                }
+            } else {
+                this.asrParams[id].value = input.value;
+            }
+        }
+    }
+
+    removeAsrParam(id) {
+        document.getElementById(id).remove();
+        delete this.asrParams[id];
+    }
+
     addTtsParamField() {
         const container = document.getElementById("tts-param-container");
         const paramId = "tts-param-" + Object.keys(this.ttsParams).length;
@@ -2036,8 +2199,9 @@ window.UI = class UI {
             
             const formData = Utils.getFormData();
             Utils.validateFormData(formData);
-            const customParams = Utils.getCustomParams();
-            const agentConfig = Utils.buildAgentConfig(formData, customParams);
+            const llmCustomParams = Utils.getCustomParams();
+            const mllmCustomParams = Utils.getMllmCustomParams();
+            const agentConfig = Utils.buildAgentConfig(formData, llmCustomParams, mllmCustomParams);
 
             const { customerId, customerSecret } = Utils.getStoredCredentials();
             const data = await this.agoraAPI.createAgent(customerId, customerSecret, agentConfig);
@@ -2107,8 +2271,9 @@ window.UI = class UI {
             }
             const agentId = agentIdElement.value.trim();
             const formData = Utils.getFormData();
-            const customParams = Utils.getCustomParams();
-            const config = Utils.buildAgentConfig(formData, customParams);
+            const llmCustomParams = Utils.getCustomParams();
+            const mllmCustomParams = Utils.getMllmCustomParams();
+            const config = Utils.buildAgentConfig(formData, llmCustomParams, mllmCustomParams);
             
             // Check if MLLM is enabled
             const enableMllmElement = document.getElementById('enableMllm');
@@ -2121,7 +2286,7 @@ window.UI = class UI {
                     properties: {
                         token: config.properties.token,
                         mllm: {
-                            ...(Object.keys(customParams).length > 0 ? { params: customParams } : {}) // Only include params if customParams is not empty
+                            ...(Object.keys(mllmCustomParams).length > 0 ? { params: mllmCustomParams } : {}) // Only include params if mllmCustomParams is not empty
                         }
                     }
                 };
@@ -2504,7 +2669,7 @@ window.UI = class UI {
 
     openDrawer(drawerId) {
         // Close all drawers first
-        ['llmDrawer', 'advDrawer', 'ttsDrawer', 'mllmDrawer', 'avatarDrawer'].forEach(id => {
+        ['asrConfigBox', 'llmDrawer', 'advDrawer', 'ttsDrawer', 'mllmDrawer', 'avatarDrawer'].forEach(id => {
             const drawer = document.getElementById(id);
             const backdrop = document.getElementById(id + 'Backdrop');
             if (drawer) drawer.classList.add('hidden');
@@ -2528,8 +2693,10 @@ window.UI = class UI {
         if (drawerId === 'ttsDrawer') btnId = 'ttsSettingsBtn';
         if (drawerId === 'mllmDrawer') btnId = 'mllmSettingsBtn';
         if (drawerId === 'avatarDrawer') btnId = 'avatarSettingsBtn';
+        if (drawerId === 'asrConfigBox') btnId = 'asrSettingsBtn';
         const btn = document.getElementById(btnId);
         const drawer = document.getElementById(drawerId);
+        if (!btn || !drawer) return;
         // Use the same absolute positioning logic for all drawers
         const btnRect = btn.getBoundingClientRect();
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
@@ -2553,7 +2720,8 @@ window.UI = class UI {
             }
         }, 0);
         drawer.classList.remove('hidden');
-        document.getElementById(drawerId + 'Backdrop').classList.remove('hidden');
+        const backdrop = document.getElementById(drawerId + 'Backdrop');
+        if (backdrop) backdrop.classList.remove('hidden');
         
         // Attach tooltip listeners to this drawer
         if (window.attachTooltipListenersToDrawer) {
@@ -2567,6 +2735,10 @@ window.UI = class UI {
     }
 
     setupDrawerListeners() {
+        // ASR
+        document.getElementById('asrSettingsBtn').addEventListener('click', () => this.openDrawer('asrConfigBox'));
+        document.getElementById('asrConfigBoxBackdrop').addEventListener('click', () => this.closeDrawer('asrConfigBox'));
+        document.querySelector('#asrConfigBox .drawer-close').addEventListener('click', () => this.closeDrawer('asrConfigBox'));
         // LLM
         document.getElementById('llmSettingsBtn').addEventListener('click', () => this.openDrawer('llmDrawer'));
         document.getElementById('llmDrawerBackdrop').addEventListener('click', () => this.closeDrawer('llmDrawer'));

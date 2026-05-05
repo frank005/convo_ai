@@ -119,6 +119,17 @@ window.Utils = class Utils {
         const mllmOpenaiTranscriptionLanguage = document.getElementById("mllmOpenaiTranscriptionLanguage") ? document.getElementById("mllmOpenaiTranscriptionLanguage").value.trim() : "";
         const mllmOpenaiTranscriptionModel = document.getElementById("mllmOpenaiTranscriptionModel") ? document.getElementById("mllmOpenaiTranscriptionModel").value.trim() : "";
         const mllmOpenaiTranscriptionPrompt = document.getElementById("mllmOpenaiTranscriptionPrompt") ? document.getElementById("mllmOpenaiTranscriptionPrompt").value.trim() : "";
+        const geminiModel = document.getElementById("geminiModel") ? document.getElementById("geminiModel").value.trim() : "";
+        const geminiVoice = document.getElementById("geminiVoice") ? document.getElementById("geminiVoice").value.trim() : "";
+        const geminiInstructions = document.getElementById("geminiInstructions") ? document.getElementById("geminiInstructions").value.trim() : "";
+        const geminiApiVersion = document.getElementById("geminiApiVersion") ? document.getElementById("geminiApiVersion").value.trim() : "";
+        const geminiAffectiveDialog = document.getElementById("geminiAffectiveDialog") ? document.getElementById("geminiAffectiveDialog").checked : false;
+        const geminiProactiveAudio = document.getElementById("geminiProactiveAudio") ? document.getElementById("geminiProactiveAudio").checked : false;
+        const geminiTranscribeAgent = document.getElementById("geminiTranscribeAgent") ? document.getElementById("geminiTranscribeAgent").checked : true;
+        const geminiTranscribeUser = document.getElementById("geminiTranscribeUser") ? document.getElementById("geminiTranscribeUser").checked : true;
+        const customMllmModel = document.getElementById("customMllmModel") ? document.getElementById("customMllmModel").value.trim() : "";
+        const customMllmVoice = document.getElementById("customMllmVoice") ? document.getElementById("customMllmVoice").value.trim() : "";
+        const customMllmInstructions = document.getElementById("customMllmInstructions") ? document.getElementById("customMllmInstructions").value.trim() : "";
         
         // Get Vertex AI specific settings
         const vertexaiAdcCredentials = document.getElementById("vertexaiAdcCredentials") ? document.getElementById("vertexaiAdcCredentials").value.trim() : '';
@@ -230,6 +241,17 @@ window.Utils = class Utils {
             mllmOpenaiTranscriptionLanguage: mllmOpenaiTranscriptionLanguage,
             mllmOpenaiTranscriptionModel: mllmOpenaiTranscriptionModel,
             mllmOpenaiTranscriptionPrompt: mllmOpenaiTranscriptionPrompt,
+            geminiModel: geminiModel,
+            geminiVoice: geminiVoice,
+            geminiInstructions: geminiInstructions,
+            geminiApiVersion: geminiApiVersion,
+            geminiAffectiveDialog: geminiAffectiveDialog,
+            geminiProactiveAudio: geminiProactiveAudio,
+            geminiTranscribeAgent: geminiTranscribeAgent,
+            geminiTranscribeUser: geminiTranscribeUser,
+            customMllmModel: customMllmModel,
+            customMllmVoice: customMllmVoice,
+            customMllmInstructions: customMllmInstructions,
             
             // Vertex AI settings
             vertexaiAdcCredentials: vertexaiAdcCredentials,
@@ -349,6 +371,10 @@ window.Utils = class Utils {
                 }
                 if (!data.vertexaiLocation) {
                     throw new Error('Vertex AI Location is required when MLLM vendor is Gemini Live');
+                }
+            } else if (data.mllmVendor === 'gemini') {
+                if (!data.mllmApiKey) {
+                    throw new Error('Gemini API Key is required when MLLM vendor is Gemini Live');
                 }
             } else {
                 if (!data.mllmUrl) {
@@ -601,6 +627,47 @@ window.Utils = class Utils {
     static getCustomParams() {
         const params = {};
         const container = document.getElementById("param-container");
+        if (!container) return params;
+        const paramElements = container.children;
+
+        for (let element of paramElements) {
+            const inputs = element.querySelectorAll('input, select');
+            const key = inputs[1].value;
+            const type = inputs[0].value;
+            const value = inputs[2].value;
+
+            if (key && value) {
+                params[key] = this.parseParamValue(type, value);
+            }
+        }
+
+        return params;
+    }
+
+    static getMllmCustomParams() {
+        const params = {};
+        const container = document.getElementById("mllm-param-container");
+        if (!container) return params;
+        const paramElements = container.children;
+
+        for (let element of paramElements) {
+            const inputs = element.querySelectorAll('input, select');
+            const key = inputs[1].value;
+            const type = inputs[0].value;
+            const value = inputs[2].value;
+
+            if (key && value) {
+                params[key] = this.parseParamValue(type, value);
+            }
+        }
+
+        return params;
+    }
+
+    static getAsrCustomParams() {
+        const params = {};
+        const container = document.getElementById("asr-param-container");
+        if (!container) return params;
         const paramElements = container.children;
 
         for (let element of paramElements) {
@@ -956,7 +1023,7 @@ window.Utils = class Utils {
         }
     }
 
-    static buildAgentConfig(formData, customParams) {
+    static buildAgentConfig(formData, customParams = {}, mllmCustomParams = {}) {
         const presets = this.parsePresetList(formData.preset);
         const presetHasAsr = presets.some(p => p.startsWith('deepgram_'));
         const presetHasLlm = presets.some(p => p.startsWith('openai_gpt_'));
@@ -1272,6 +1339,8 @@ window.Utils = class Utils {
             });
         } */
 
+        const asrCustomParams = this.getAsrCustomParams();
+
         // Build geofence from dropdowns if provided
         let geofence = null;
         if (formData.geofenceArea && formData.geofenceArea !== "") {
@@ -1388,13 +1457,13 @@ window.Utils = class Utils {
                         const mllmOutputModalities = (formData.outputModalities || []).filter(modality => modality === 'audio' || modality === 'text');
                         const safeMllmOutputModalities = mllmOutputModalities.length > 0
                             ? mllmOutputModalities
-                            : (formData.mllmVendor === 'vertexai' ? ['audio'] : ['text', 'audio']);
+                            : ((formData.mllmVendor === 'vertexai' || formData.mllmVendor === 'gemini') ? ['audio'] : ['text', 'audio']);
                         const mllmConfig = {
                         enable: true,
-                        ...(formData.mllmVendor === 'vertexai' ? {} : { url: formData.mllmUrl }), // URL not needed for vertexai
-                        ...(formData.mllmVendor === 'vertexai' ? {} : { api_key: formData.mllmApiKey }), // API key not needed for vertexai
+                        ...((formData.mllmVendor === 'vertexai' || formData.mllmVendor === 'gemini') ? {} : { url: formData.mllmUrl }),
+                        ...(formData.mllmVendor === 'vertexai' ? {} : { api_key: formData.mllmApiKey }),
                         ...(formData.mllmGreetingMessage ? { greeting_message: formData.mllmGreetingMessage } : {}),
-                        ...(formData.mllmVendor ? { vendor: (formData.mllmVendor === 'vertexai' ? 'gemini' : formData.mllmVendor) } : {}),
+                        ...(formData.mllmVendor ? { vendor: formData.mllmVendor } : {}),
                         ...(formData.mllmMaxHistory ? { max_history: parseInt(formData.mllmMaxHistory, 10) } : {}),
                         input_modalities: safeMllmInputModalities,
                         output_modalities: safeMllmOutputModalities,
@@ -1408,7 +1477,26 @@ window.Utils = class Utils {
                                 ...(formData.vertexaiInstructions ? { instructions: formData.vertexaiInstructions } : {}),
                                 transcribe_agent: formData.vertexaiTranscribeAgent,
                                 transcribe_user: formData.vertexaiTranscribeUser,
-                                ...customParams
+                                ...mllmCustomParams
+                            }
+                        } : formData.mllmVendor === 'gemini' ? {
+                            params: {
+                                ...(formData.geminiModel ? { model: formData.geminiModel } : {}),
+                                ...(formData.geminiVoice ? { voice: formData.geminiVoice } : {}),
+                                ...(formData.geminiInstructions ? { instructions: formData.geminiInstructions } : {}),
+                                affective_dialog: formData.geminiAffectiveDialog,
+                                proactive_audio: formData.geminiProactiveAudio,
+                                transcribe_agent: formData.geminiTranscribeAgent,
+                                transcribe_user: formData.geminiTranscribeUser,
+                                ...(formData.geminiApiVersion ? { http_options: { api_version: formData.geminiApiVersion } } : {}),
+                                ...mllmCustomParams
+                            }
+                        } : formData.mllmVendor === 'custom' ? {
+                            params: {
+                                ...(formData.customMllmModel ? { model: formData.customMllmModel } : {}),
+                                ...(formData.customMllmVoice ? { voice: formData.customMllmVoice } : {}),
+                                ...(formData.customMllmInstructions ? { instructions: formData.customMllmInstructions } : {}),
+                                ...mllmCustomParams
                             }
                         } : {
                             params: {
@@ -1422,7 +1510,7 @@ window.Utils = class Utils {
                                         ...(formData.mllmOpenaiTranscriptionPrompt ? { prompt: formData.mllmOpenaiTranscriptionPrompt } : {})
                                     }
                                 } : {}),
-                                ...customParams
+                                ...mllmCustomParams
                             }
                         })
                         };
@@ -1440,6 +1528,13 @@ window.Utils = class Utils {
         if (formData.enableMllm && config.properties.mllm && config.properties.turn_detection) {
             config.properties.mllm.turn_detection = config.properties.turn_detection;
             delete config.properties.turn_detection;
+        }
+
+        if (!formData.enableMllm && config.properties.asr && Object.keys(asrCustomParams).length > 0) {
+            config.properties.asr.params = {
+                ...(config.properties.asr.params || {}),
+                ...asrCustomParams
+            };
         }
 
         // Add AI Avatar configuration if enabled
@@ -1524,10 +1619,11 @@ window.Utils = class Utils {
                         model_id: modelId,
                         voice_id: finalVoiceId,
                         ...(document.getElementById("elevenLabsSampleRate")?.value ? { sample_rate: parseInt(document.getElementById("elevenLabsSampleRate").value, 10) } : {}),
+                        ...(document.getElementById("elevenLabsSpeed")?.value ? { speed: parseFloat(document.getElementById("elevenLabsSpeed").value) } : {}),
                         ...(document.getElementById("elevenLabsStability")?.value ? { stability: parseFloat(document.getElementById("elevenLabsStability").value) } : {}),
                         ...(document.getElementById("elevenLabsSimilarityBoost")?.value ? { similarity_boost: parseFloat(document.getElementById("elevenLabsSimilarityBoost").value) } : {}),
                         ...(document.getElementById("elevenLabsStyle")?.value ? { style: parseFloat(document.getElementById("elevenLabsStyle").value) } : {}),
-                        ...(document.getElementById("elevenLabsUseSpeakerBoost")?.checked ? { use_speaker_boost: true } : {})
+                        ...(document.getElementById("elevenLabsUseSpeakerBoost") ? { use_speaker_boost: document.getElementById("elevenLabsUseSpeakerBoost").value === "true" } : {})
                     }
                 };
             } else if (formData.vendor === "cartesia") {

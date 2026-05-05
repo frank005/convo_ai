@@ -1692,8 +1692,9 @@
     if (copyCreateJsonBtn && window.Utils) {
       copyCreateJsonBtn.addEventListener('click', function() {
         const formData = window.Utils.getFormData();
-        const customParams = window.Utils.getCustomParams();
-        const config = window.Utils.buildAgentConfig(formData, customParams);
+        const llmCustomParams = window.Utils.getCustomParams();
+        const mllmCustomParams = window.Utils.getMllmCustomParams();
+        const config = window.Utils.buildAgentConfig(formData, llmCustomParams, mllmCustomParams);
         const jsonString = JSON.stringify(config, null, 2);
 
         // Copy to clipboard
@@ -1717,8 +1718,9 @@
     if (copyUpdateJsonBtn && window.Utils) {
       copyUpdateJsonBtn.addEventListener('click', function() {
         const formData = window.Utils.getFormData();
-        const customParams = window.Utils.getCustomParams();
-        const config = window.Utils.buildAgentConfig(formData, customParams);
+        const llmCustomParams = window.Utils.getCustomParams();
+        const mllmCustomParams = window.Utils.getMllmCustomParams();
+        const config = window.Utils.buildAgentConfig(formData, llmCustomParams, mllmCustomParams);
 
       // Check if MLLM is enabled
         const enableMllm = document.getElementById('enableMllm');
@@ -1731,7 +1733,7 @@
           properties: {
             token: config.properties.token,
             mllm: {
-              ...(Object.keys(customParams).length > 0 ? { params: customParams } : {}) // Only include params if customParams is not empty
+              ...(Object.keys(mllmCustomParams).length > 0 ? { params: mllmCustomParams } : {}) // Only include params if mllmCustomParams is not empty
             }
           }
         };
@@ -3292,20 +3294,36 @@
     const mllmUrl = document.getElementById('mllmUrl');
     const mllmApiKey = document.getElementById('mllmApiKey');
     const openaiMllmConfig = document.getElementById('openaiMllmConfig');
+    const geminiConfig = document.getElementById('geminiConfig');
     const vertexaiConfig = document.getElementById('vertexaiConfig');
+    const customMllmConfig = document.getElementById('customMllmConfig');
     
     // Show/hide MLLM vendor-specific sections and defaults
-    if (mllmVendor && vertexaiConfig && openaiMllmConfig) {
+    if (mllmVendor && vertexaiConfig && openaiMllmConfig && geminiConfig && customMllmConfig) {
         const updateMllmVendorUI = function() {
-            if (mllmVendor.value === 'vertexai') {
-                vertexaiConfig.classList.remove('hidden');
-                openaiMllmConfig.classList.add('hidden');
+            const selectedVendor = mllmVendor.value;
+
+            openaiMllmConfig.classList.toggle('hidden', selectedVendor !== 'openai');
+            geminiConfig.classList.toggle('hidden', selectedVendor !== 'gemini');
+            vertexaiConfig.classList.toggle('hidden', selectedVendor !== 'vertexai');
+            customMllmConfig.classList.toggle('hidden', selectedVendor !== 'custom');
+
+            if (selectedVendor === 'vertexai') {
                 if (mllmUrl) mllmUrl.value = '';
                 if (mllmApiKey) mllmApiKey.value = '';
+                if (mllmUrl) mllmUrl.placeholder = 'MLLM WebSocket URL (Not used for Vertex AI)';
+                if (mllmApiKey) mllmApiKey.placeholder = 'MLLM API Key (Not used for Vertex AI)';
+            } else if (selectedVendor === 'gemini') {
+                if (mllmUrl) mllmUrl.value = '';
+                if (mllmUrl) mllmUrl.placeholder = 'MLLM WebSocket URL (Optional for Gemini)';
+                if (mllmApiKey) mllmApiKey.placeholder = 'MLLM API Key (Required)';
+            } else if (selectedVendor === 'custom') {
+                if (mllmUrl) mllmUrl.placeholder = 'MLLM WebSocket URL (Required)';
+                if (mllmApiKey) mllmApiKey.placeholder = 'MLLM API Key (Required)';
             } else {
-                openaiMllmConfig.classList.remove('hidden');
-                vertexaiConfig.classList.add('hidden');
                 if (mllmUrl && !mllmUrl.value.trim()) mllmUrl.value = 'wss://api.openai.com/v1/realtime';
+                if (mllmUrl) mllmUrl.placeholder = 'MLLM WebSocket URL (Required)';
+                if (mllmApiKey) mllmApiKey.placeholder = 'MLLM API Key (Required)';
             }
         };
         mllmVendor.addEventListener('change', updateMllmVendorUI);
@@ -3369,7 +3387,7 @@
     enableMllm.addEventListener('change', function() {
       const llmSettingsBtn = document.getElementById('llmSettingsBtn');
       const ttsSettingsBtn = document.getElementById('ttsSettingsBtn');
-      const asrConfigBox = document.getElementById('asrConfigBox');
+      const asrSettingsBtn = document.getElementById('asrSettingsBtn');
       const inputText = document.getElementById('inputText');
       const inputAudio = document.getElementById('inputAudio');
       const inputImage = document.getElementById('inputImage');
@@ -3389,9 +3407,9 @@
           ttsSettingsBtn.disabled = true;
           ttsSettingsBtn.classList.add('opacity-50');
         }
-        if (asrConfigBox) {
-          asrConfigBox.classList.add('opacity-50');
-          asrConfigBox.style.pointerEvents = 'none';
+        if (asrSettingsBtn) {
+          asrSettingsBtn.disabled = true;
+          asrSettingsBtn.classList.add('opacity-50');
         }
       };
 
@@ -3408,9 +3426,9 @@
           ttsSettingsBtn.disabled = false;
           ttsSettingsBtn.classList.remove('opacity-50');
         }
-        if (asrConfigBox) {
-          asrConfigBox.classList.remove('opacity-50');
-          asrConfigBox.style.pointerEvents = 'auto';
+        if (asrSettingsBtn) {
+          asrSettingsBtn.disabled = false;
+          asrSettingsBtn.classList.remove('opacity-50');
         }
       };
 
@@ -3466,7 +3484,7 @@
         const hasPipelineId = pipelineIdInput.value.trim() !== '';
         const llmSettingsBtn = document.getElementById('llmSettingsBtn');
         const ttsSettingsBtn = document.getElementById('ttsSettingsBtn');
-        const asrConfigBox = document.getElementById('asrConfigBox');
+        const asrSettingsBtn = document.getElementById('asrSettingsBtn');
 
         const overrideLlm = document.getElementById('overrideLlm') ? document.getElementById('overrideLlm').checked : false;
         const overrideTts = document.getElementById('overrideTts') ? document.getElementById('overrideTts').checked : false;
@@ -3498,13 +3516,13 @@
             if (!overrideTts) ttsSettingsBtn.classList.add('opacity-50');
             else ttsSettingsBtn.classList.remove('opacity-50');
           }
-          if (asrConfigBox) {
+          if (asrSettingsBtn) {
             if (!overrideAsr) {
-              asrConfigBox.classList.add('opacity-50');
-              asrConfigBox.style.pointerEvents = 'none';
+              asrSettingsBtn.disabled = true;
+              asrSettingsBtn.classList.add('opacity-50');
             } else {
-              asrConfigBox.classList.remove('opacity-50');
-              asrConfigBox.style.pointerEvents = 'auto';
+              asrSettingsBtn.disabled = false;
+              asrSettingsBtn.classList.remove('opacity-50');
             }
           }
         } else if (!mllmActive) {
@@ -3525,9 +3543,9 @@
             ttsSettingsBtn.disabled = false;
             ttsSettingsBtn.classList.remove('opacity-50');
           }
-          if (asrConfigBox) {
-            asrConfigBox.classList.remove('opacity-50');
-            asrConfigBox.style.pointerEvents = 'auto';
+          if (asrSettingsBtn) {
+            asrSettingsBtn.disabled = false;
+            asrSettingsBtn.classList.remove('opacity-50');
           }
         }
       };
@@ -5014,32 +5032,38 @@
 
         <!-- Settings Categories -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- LLM Settings -->
+          <!-- ASR Config -->
+          <button id="asrSettingsBtn" class="modern-btn modern-btn-secondary flex items-center justify-between w-full">
+            <span>ASR Config</span>
+            <span class="text-sm">Speech Recognition</span>
+          </button>
+
+          <!-- LLM Config -->
           <button id="llmSettingsBtn" class="modern-btn modern-btn-secondary flex items-center justify-between w-full">
-            <span>LLM Settings</span>
+            <span>LLM Config</span>
             <span class="text-sm">Language Model & Prompts</span>
           </button>
 
-          <!-- TTS Settings -->
+          <!-- TTS Config -->
           <button id="ttsSettingsBtn" class="modern-btn modern-btn-secondary flex items-center justify-between w-full">
-            <span>TTS Settings</span>
+            <span>TTS Config</span>
             <span class="text-sm">Voice & API Configuration</span>
           </button>
 
-          <!-- AI Avatar Settings -->
+          <!-- AI Avatar Config -->
           <button id="avatarSettingsBtn" class="modern-btn modern-btn-secondary flex items-center justify-between w-full">
             <span class="flex items-center">
               <input type="checkbox" id="enableAvatar" class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
-              AI Avatar Settings
+              AI Avatar Config
             </span>
             <span class="text-sm">Avatar Configuration</span>
           </button>
 
-          <!-- MLLM Settings -->
+          <!-- MLLM Config -->
           <button id="mllmSettingsBtn" class="modern-btn modern-btn-secondary flex items-center justify-between w-full" style="min-width:200px">
             <span class="flex items-center">
               <input type="checkbox" id="enableMllm" class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
-              MLLM Settings
+              MLLM Config
             </span>
             <span class="text-sm">Multimodal Large Language Model</span>
           </button>
@@ -5075,10 +5099,13 @@
           </div> -->
         </div>
 
-        <!-- ASR Configuration -->
-        <div id="asrConfigBox" class="modern-panel">
+        <!-- ASR Drawer -->
+        <div id="asrConfigBoxBackdrop" class="drawer-backdrop hidden"></div>
+        <div id="asrConfigBox" class="drawer hidden">
+          <button class="drawer-close absolute top-2 right-2" data-drawer="asrConfigBox">&times;</button>
+          <div class="drawer-content modern-input space-y-4">
           <h3 class="text-lg font-semibold mb-3">ASR Configuration</h3>
-          <div class="modern-input grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="has-tooltip relative">
               <select
                 id="asrVendor"
@@ -5105,7 +5132,7 @@
               <div class="tooltip">Select the language for the selected ASR provider.</div>
             </div>
             <div id="asrPresetContainer" class="has-tooltip relative">
-              <select id="asrPreset" class="w-full p-2 rounded bg-gray-600 text-white border border-gray-500 focus:border-blue-500">
+              <select id="asrPreset" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500">
                 <option value="">ASR Preset: None</option>
                 <option value="deepgram_nova_2">deepgram_nova_2</option>
                 <option value="deepgram_nova_3">deepgram_nova_3</option>
@@ -5276,7 +5303,7 @@
               <div class="has-tooltip relative">
                 <input
                   id="amazonAsrRegion"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  class="w-full p-2 rounded bg-gray-800 text-white"
                   placeholder="AWS Region (Required, e.g., us-east-1)"
                   value="us-east-1"
                 />
@@ -5285,7 +5312,7 @@
               <div class="has-tooltip relative">
                 <input
                   id="amazonAsrAccessKeyId"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  class="w-full p-2 rounded bg-gray-800 text-white"
                   placeholder="AWS Access Key ID (Required)"
                 />
                 <div class="tooltip">The AWS access key ID used for authentication. Get your access key from the AWS IAM Console.</div>
@@ -5294,7 +5321,7 @@
                 <input
                   id="amazonAsrSecretAccessKey"
                   type="password"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  class="w-full p-2 rounded bg-gray-800 text-white"
                   placeholder="AWS Secret Access Key (Required)"
                 />
                 <div class="tooltip">The AWS secret access key used for authentication. Get your secret key from the AWS IAM Console.</div>
@@ -5302,7 +5329,7 @@
               <div class="has-tooltip relative">
                 <input
                   id="amazonAsrLanguageCode"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  class="w-full p-2 rounded bg-gray-800 text-white"
                   placeholder="Language Code (Required, e.g., en-US)"
                   value="en-US"
                 />
@@ -5312,7 +5339,7 @@
                 <input
                   id="amazonAsrMediaSampleRateHz"
                   type="number"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  class="w-full p-2 rounded bg-gray-800 text-white"
                   placeholder="Media Sample Rate Hz (Optional, e.g., 16000)"
                   value="16000"
                 />
@@ -5321,7 +5348,7 @@
               <div class="has-tooltip relative">
                 <select
                   id="amazonAsrMediaEncoding"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  class="w-full p-2 rounded bg-gray-800 text-white"
                 >
                   <option value="pcm" selected>pcm</option>
                   <option value="opus">opus</option>
@@ -5339,7 +5366,7 @@
               <div class="has-tooltip relative">
                 <input
                   id="googleAsrProjectId"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  class="w-full p-2 rounded bg-gray-800 text-white"
                   placeholder="Google Cloud Project ID (Required)"
                 />
                 <div class="tooltip">The Google Cloud project ID where the Speech-to-Text API is enabled. Get your project ID from the Google Cloud Console.</div>
@@ -5347,7 +5374,7 @@
               <div class="has-tooltip relative">
                 <input
                   id="googleAsrLocation"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  class="w-full p-2 rounded bg-gray-800 text-white"
                   placeholder="Location (Required, e.g., global)"
                   value="global"
                 />
@@ -5356,7 +5383,7 @@
               <div class="has-tooltip relative md:col-span-2">
                 <textarea
                   id="googleAsrAdcCredentials"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  class="w-full p-2 rounded bg-gray-800 text-white"
                   placeholder="ADC Credentials JSON String (Required)"
                   rows="4"
                 ></textarea>
@@ -5365,7 +5392,7 @@
               <div class="has-tooltip relative">
                 <input
                   id="googleAsrLanguage"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  class="w-full p-2 rounded bg-gray-800 text-white"
                   placeholder="Language (Required, e.g., en-US)"
                   value="en-US"
                 />
@@ -5374,7 +5401,7 @@
               <div class="has-tooltip relative">
                 <input
                   id="googleAsrModel"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  class="w-full p-2 rounded bg-gray-800 text-white"
                   placeholder="Model (Optional, e.g., long)"
                   value="long"
                 />
@@ -5390,7 +5417,7 @@
               <div class="has-tooltip relative">
                 <input
                   id="sarvamAsrKey"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  class="w-full p-2 rounded bg-gray-800 text-white"
                   placeholder="Sarvam API Key (Required)"
                 />
                 <div class="tooltip">Your Sarvam API key. Get your API key from the Sarvam dashboard.</div>
@@ -5398,7 +5425,7 @@
               <div class="has-tooltip relative">
                 <input
                   id="sarvamAsrLanguage"
-                  class="w-full p-2 rounded bg-gray-600 text-white"
+                  class="w-full p-2 rounded bg-gray-800 text-white"
                   placeholder="Language (Required, e.g., hi-IN)"
                   value="hi-IN"
                 />
@@ -5413,13 +5440,30 @@
             <div class="has-tooltip relative">
               <textarea
                 id="customAsrJson"
-                class="w-full p-2 rounded bg-gray-600 text-white border border-gray-500 focus:border-blue-500 font-mono text-sm"
+                  class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500 font-mono text-sm"
                 placeholder='Enter ASR configuration JSON (e.g., {"language": "auto", "params": {"api_key": "xxx", "language_hints": ["en", "es"], "model": "model-name-v2"}, "rtc_builtin": false, "vendor": "vendor-example"})'
                 rows="8"
               ></textarea>
               <div class="tooltip">Enter a valid JSON object for custom ASR configuration. This will populate the "asr" field in the agent config. The JSON should not include the outer "asr" wrapper - just the configuration object itself.</div>
             </div>
           </div>
+          <div class="bg-gray-700 p-4 rounded-lg mt-4">
+            <div class="flex justify-between items-center mb-3">
+              <div class="has-tooltip relative">
+                <h3 class="text-lg font-semibold">Custom Parameters</h3>
+                <div class="tooltip">Add custom key-value parameters for ASR only. These are merged into asr.params.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <button id="addAsrParamBtn" class="modern-btn modern-btn-primary text-sm">
+                  Add Parameter
+                </button>
+                <div class="tooltip">Add a new custom ASR parameter row.</div>
+              </div>
+            </div>
+            <div id="asr-param-container" class="space-y-2"></div>
+          </div>
+          </div>
+        </div>
         </div>
 
         <!-- Input/Output Modalities -->
@@ -5463,22 +5507,6 @@
           </div>
         </div>
 
-        <!-- Custom Parameters -->
-        <div class="bg-gray-700 p-4 rounded-lg">
-          <div class="flex justify-between items-center mb-3">
-            <div class="has-tooltip relative">
-              <h3 class="text-lg font-semibold">Custom Parameters</h3>
-              <div class="tooltip">Add custom key-value parameters for the LLM or MLLM. These are passed directly to the LLM/MLLM API and can control advanced model behavior. For LLM: parameters are included in llm.params. For MLLM: parameters are included in mllm.params.</div>
-            </div>
-            <div class="has-tooltip relative">
-              <button id="addParamBtn" class="modern-btn modern-btn-primary text-sm">
-                Add Parameter
-              </button>
-              <div class="tooltip">Add a new custom parameter row.</div>
-            </div>
-          </div>
-          <div id="param-container" class="space-y-2"></div>
-        </div>
       </div>
     </div>
 
@@ -5625,6 +5653,21 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           ></textarea>
           <div class="tooltip">Headers for Claude Anthropic LLM (optional). Must be a JSON string, e.g., {"anthropic-version":"2023-06-01"}. Only used when LLM vendor is anthropic or claude.</div>
         </div>
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <div class="flex justify-between items-center mb-3">
+            <div class="has-tooltip relative">
+              <h3 class="text-lg font-semibold">Custom Parameters</h3>
+              <div class="tooltip">Add custom key-value parameters for LLM only. These are merged into llm.params.</div>
+            </div>
+            <div class="has-tooltip relative">
+              <button id="addParamBtn" class="modern-btn modern-btn-primary text-sm">
+                Add Parameter
+              </button>
+              <div class="tooltip">Add a new custom parameter row.</div>
+            </div>
+          </div>
+          <div id="param-container" class="space-y-2"></div>
+        </div>
         <!-- Enable Tools Checkbox -->
         <div class="has-tooltip relative">
           <label class="flex items-center">
@@ -5671,21 +5714,19 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           <select
             id="ttsVendor"
           >
-            <option value="microsoft">Microsoft</option>
+            <option value="microsoft">Microsoft Azure</option>
             <option value="elevenlabs">ElevenLabs</option>
+            <option value="minimax">MiniMax</option>
+            <option value="deepgram">Deepgram (Beta)</option>
+            <option value="murf">Murf (Beta)</option>
             <option value="cartesia">Cartesia (Beta)</option>
             <option value="openai">OpenAI (Beta)</option>
-            <option value="deepgram">Deepgram (Beta)</option>
             <option value="humeai">Hume AI (Beta)</option>
             <option value="rime">Rime (Beta)</option>
-            <option value="minimax">MiniMax</option>
             <option value="fishaudio">Fish Audio (Beta)</option>
-            <option value="groq">Groq (Beta)</option>
             <option value="google">Google (Beta)</option>
-            <option value="playht">PlayHT (Beta)</option>
-            <option value="sarvam">Sarvam (Beta)</option>
             <option value="amazon">Amazon Polly (Beta)</option>
-            <option value="murf">Murf (Beta)</option>
+            <option value="sarvam">Sarvam (Beta)</option>
           </select>
           <div class="tooltip">Select the Text-to-Speech vendor to use for voice output.</div>
         </div>
@@ -5808,7 +5849,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             id="elevenLabsModelId"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="ElevenLabs Model ID (Required)"
-            value="eleven_multilingual_v2"
+            value="eleven_flash_v2_5"
           />
           <div class="tooltip">Enter the ElevenLabs model ID for voice synthesis.</div>
         </div>
@@ -5863,9 +5904,22 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             type="number"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Sample Rate (Optional)"
-            value="44100"
+            value="24000"
           />
           <div class="tooltip">Sample rate for ElevenLabs TTS audio output.</div>
+        </div>
+        <div id="elevenLabsSpeedBlock" class="has-tooltip relative hidden">
+          <input
+            id="elevenLabsSpeed"
+            type="number"
+            step="0.01"
+            min="0.7"
+            max="1.2"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Speed (Optional, 0.7-1.2)"
+            value="1.0"
+          />
+          <div class="tooltip">Speech speed for ElevenLabs voice. Range: 0.7 to 1.2.</div>
         </div>
         <div id="elevenLabsStabilityBlock" class="has-tooltip relative hidden">
           <input
@@ -6775,6 +6829,18 @@ The user speaks to you directly — treat each input as part of a live, spoken d
       <button class="drawer-close absolute top-2 right-2" data-drawer="mllmDrawer">&times;</button>
       <div class="drawer-content space-y-4">
         <div class="has-tooltip relative">
+          <select
+            id="mllmVendor"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          >
+            <option value="openai">OpenAI Realtime API</option>
+            <option value="gemini">Google Gemini Live</option>
+            <option value="vertexai">Google Gemini Live (Vertex AI)</option>
+            <option value="custom">Custom</option>
+          </select>
+          <div class="tooltip">MLLM provider. Supports OpenAI Realtime API, Google Gemini Live, Google Gemini Live (Vertex AI), and custom providers.</div>
+        </div>
+        <div class="has-tooltip relative">
           <input
             id="mllmUrl"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
@@ -6799,16 +6865,6 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             value="Hello, how can I help you?"
           />
           <div class="tooltip">Agent greeting message for MLLM. If provided, the first user in the channel is automatically greeted.</div>
-        </div>
-        <div class="has-tooltip relative">
-          <select
-            id="mllmVendor"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-          >
-            <option value="openai">OpenAI</option>
-            <option value="vertexai">Google Gemini Live (Vertex AI)</option>
-          </select>
-          <div class="tooltip">MLLM provider. Supports OpenAI Realtime API and Google Gemini Live.</div>
         </div>
         <div class="has-tooltip relative">
           <select
@@ -6875,6 +6931,70 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               placeholder='Transcription prompt (optional, e.g., "expect words related to real-time engagement")'
             />
             <div class="tooltip">Optional prompt to guide transcription style or expected vocabulary.</div>
+          </div>
+        </div>
+
+        <!-- Google Gemini Live Specific Settings -->
+        <div id="geminiConfig" class="hidden space-y-4">
+          <div class="has-tooltip relative">
+            <input
+              id="geminiModel"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Gemini Live Model (Required)"
+              value="gemini-3.1-flash-live-preview"
+            />
+            <div class="tooltip">Gemini Live model identifier.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="geminiVoice"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Voice (e.g., Charon)"
+              value="Charon"
+            />
+            <div class="tooltip">Voice identifier for Gemini Live audio output.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <textarea
+              id="geminiInstructions"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Instructions (optional)"
+              rows="3"
+            >You are a friendly assistant.</textarea>
+            <div class="tooltip">System instructions for Gemini Live behavior and tone.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="geminiApiVersion"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="HTTP API version (optional, e.g., v1beta)"
+              value="v1beta"
+            />
+            <div class="tooltip">Optional HTTP options api_version for Gemini Live.</div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <label class="flex items-center has-tooltip relative">
+              <input type="checkbox" id="geminiAffectiveDialog" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+              <span>Affective Dialog</span>
+              <div class="tooltip">Enable affective dialog to adapt tone to user emotional cues.</div>
+            </label>
+            <label class="flex items-center has-tooltip relative">
+              <input type="checkbox" id="geminiProactiveAudio" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+              <span>Proactive Audio</span>
+              <div class="tooltip">Allow model to skip responses for background or incomplete speech.</div>
+            </label>
+          </div>
+          <div class="flex items-center space-x-4">
+            <label class="flex items-center has-tooltip relative">
+              <input type="checkbox" id="geminiTranscribeAgent" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded" checked>
+              <span>Transcribe Agent</span>
+              <div class="tooltip">Whether to transcribe agent speech in real time.</div>
+            </label>
+            <label class="flex items-center has-tooltip relative">
+              <input type="checkbox" id="geminiTranscribeUser" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded" checked>
+              <span>Transcribe User</span>
+              <div class="tooltip">Whether to transcribe user speech in real time.</div>
+            </label>
           </div>
         </div>
         
@@ -6944,6 +7064,50 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               <div class="tooltip">Whether to transcribe the user's speech in real time.</div>
             </label>
           </div>
+        </div>
+
+        <!-- Custom MLLM Specific Settings -->
+        <div id="customMllmConfig" class="hidden space-y-4">
+          <div class="has-tooltip relative">
+            <input
+              id="customMllmModel"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Custom MLLM Model (Optional)"
+            />
+            <div class="tooltip">Optional model identifier for custom MLLM providers.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="customMllmVoice"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Custom MLLM Voice (Optional)"
+            />
+            <div class="tooltip">Optional voice identifier for custom MLLM providers.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <textarea
+              id="customMllmInstructions"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Custom MLLM instructions (optional)"
+              rows="3"
+            ></textarea>
+            <div class="tooltip">Optional instructions for custom MLLM providers.</div>
+          </div>
+        </div>
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <div class="flex justify-between items-center mb-3">
+            <div class="has-tooltip relative">
+              <h3 class="text-lg font-semibold">Custom Parameters</h3>
+              <div class="tooltip">Add custom key-value parameters for MLLM only. These are merged into mllm.params.</div>
+            </div>
+            <div class="has-tooltip relative">
+              <button id="addMllmParamBtn" class="modern-btn modern-btn-primary text-sm">
+                Add Parameter
+              </button>
+              <div class="tooltip">Add a new custom parameter row.</div>
+            </div>
+          </div>
+          <div id="mllm-param-container" class="space-y-2"></div>
         </div>
         <div class="has-tooltip relative">
           <input
