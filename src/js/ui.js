@@ -200,6 +200,11 @@ window.UI = class UI {
         this.setupMessageUIState();
 
         // Credentials modal
+        const clearSavedFormSettingsBtn = document.getElementById("clearSavedFormSettingsBtn");
+        if (clearSavedFormSettingsBtn) {
+            clearSavedFormSettingsBtn.addEventListener("click", () => this.clearSavedFormSettingsAndReload());
+        }
+
         const setCredsBtn = document.getElementById("setCredsBtn");
         if (setCredsBtn) {
             setCredsBtn.addEventListener("click", () => this.openCredsModal());
@@ -916,6 +921,23 @@ window.UI = class UI {
         }
     }
 
+    clearSavedFormSettingsAndReload() {
+        const msg =
+            "Clear all locally saved Agent Settings (fields, checkboxes, drawer values) and reload the page? " +
+            "API credentials from \"Set API Credentials\" are not removed; channel name and tokens were never saved.";
+        if (!confirm(msg)) return;
+        const key =
+            window.FormSettingsPersistence && window.FormSettingsPersistence.STORAGE_KEY
+                ? window.FormSettingsPersistence.STORAGE_KEY
+                : "convo_ai_form_state_v1";
+        try {
+            localStorage.removeItem(key);
+        } catch (e) {
+            console.warn("Could not clear saved form settings:", e);
+        }
+        window.location.reload();
+    }
+
     openCredsModal() {
         const { customerId, customerSecret, appId, appCertificate } = Utils.getStoredCredentials();
         document.getElementById("customerId").value = customerId || '';
@@ -1129,6 +1151,10 @@ window.UI = class UI {
         }
     }
 
+    /**
+     * @param {{ silent?: boolean }} options - When silent (auto-config / timers), missing cert/channel/UID is a no-op with no alerts.
+     *   When not silent (user clicked Generate), validation failures always alert so the user can fix setup.
+     */
     async generateAvatarRtcToken(options = {}) {
         const silent = options.silent === true;
         try {

@@ -4805,7 +4805,7 @@
   <script src="src/js/camera-preview.js?v=1.0"></script>
   <script src="src/js/conversational-ai-api.js?v=1.2"></script>
   <script src="src/js/subtitles.js?v=1.3"></script>
-  <script src="src/js/ui.js?v=1.3"></script>
+  <script src="src/js/ui.js?v=1.4"></script>
   <script src="src/js/asr.js?v=1.0"></script>
 
   <!-- Subtitle Overlay -->
@@ -4977,6 +4977,18 @@
                   <span>Backend Pipeline Configuration</span>
                   <div class="tooltip">Show pipeline ID and ASR/LLM/TTS override options.</div>
                 </label>
+              </div>
+              <div class="mt-3 pt-3 border-t border-gray-600">
+                <button
+                  type="button"
+                  id="clearSavedFormSettingsBtn"
+                  class="modern-btn modern-btn-secondary text-sm"
+                >
+                  Clear saved settings &amp; reset page
+                </button>
+                <p class="text-xs text-gray-500 mt-2 max-w-xl">
+                  Removes remembered form data and reloads so fields match page defaults. Does not clear API credentials or device choices.
+                </p>
               </div>
             </div>
           </div>
