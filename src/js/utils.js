@@ -617,6 +617,26 @@ window.Utils = class Utils {
         return params;
     }
 
+    static getTtsCustomParams() {
+        const params = {};
+        const container = document.getElementById("tts-param-container");
+        if (!container) return params;
+        const paramElements = container.children;
+
+        for (let element of paramElements) {
+            const inputs = element.querySelectorAll('input, select');
+            const key = inputs[1].value;
+            const type = inputs[0].value;
+            const value = inputs[2].value;
+
+            if (key && value) {
+                params[key] = this.parseParamValue(type, value);
+            }
+        }
+
+        return params;
+    }
+
     static getMcpServers() {
         const servers = [];
         const container = document.getElementById("mcp-servers-container");
@@ -1719,6 +1739,18 @@ window.Utils = class Utils {
                         model: document.getElementById("murfModel").value,
                         sample_rate: parseInt(document.getElementById("murfSampleRate").value || "24000", 10)
                     }
+                };
+            }
+
+            const ttsCustomParams = this.getTtsCustomParams();
+            if (
+                config.properties.tts &&
+                config.properties.tts.params &&
+                Object.keys(ttsCustomParams).length > 0
+            ) {
+                config.properties.tts.params = {
+                    ...config.properties.tts.params,
+                    ...ttsCustomParams
                 };
             }
 

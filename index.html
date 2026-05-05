@@ -6590,6 +6590,23 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           <div class="tooltip">Audio sample rate in Hz. Use 24000 for LiveAvatar compatibility.</div>
         </div>
 
+        <!-- TTS Custom Parameters -->
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <div class="flex justify-between items-center mb-3">
+            <div class="has-tooltip relative">
+              <h3 class="text-lg font-semibold">TTS Custom Parameters</h3>
+              <div class="tooltip">Add custom key-value parameters for TTS providers. These are merged into properties.tts.params and let you pass provider-supported fields that do not have dedicated UI controls.</div>
+            </div>
+            <div class="has-tooltip relative">
+              <button id="addTtsParamBtn" class="modern-btn modern-btn-primary text-sm">
+                Add Parameter
+              </button>
+              <div class="tooltip">Add a new TTS custom parameter row.</div>
+            </div>
+          </div>
+          <div id="tts-param-container" class="space-y-2"></div>
+        </div>
+
         <!-- Skip Patterns Section -->
         <div class="has-tooltip relative">
           <label class="text-sm font-medium mb-2 block">Skip Patterns (Optional)</label>
