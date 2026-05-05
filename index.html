@@ -1562,6 +1562,7 @@
   </div>
 
   <!-- JavaScript Modules -->
+  <script src="src/js/form-settings-persistence.js?v=1"></script>
   <script>
     // Initialize components after all scripts are loaded
     document.addEventListener('DOMContentLoaded', function() {
@@ -1574,18 +1575,18 @@
       // Make mediaProcessor available globally for RTM initialization
       window.mediaProcessor = mediaProcessor;
 
-    // Set random agent name
-      const uniqueNameElement = document.getElementById('uniqueName');
-      if (uniqueNameElement) {
-        uniqueNameElement.value = `agent-${Math.random().toString(36).substring(2, 8)}`;
-      }
-
-    // Initialize UI with dependencies
+    // Initialize UI with dependencies (may restore saved form fields)
     ui.initialize(mediaProcessor, agoraAPI, subtitleManager);
 
     // Make UI available globally for event handlers
     window.ui = ui;
     window.subtitleManager = subtitleManager;
+
+    // Random agent name only if nothing was restored
+      const uniqueNameElement = document.getElementById('uniqueName');
+      if (uniqueNameElement && !uniqueNameElement.value.trim()) {
+        uniqueNameElement.value = `agent-${Math.random().toString(36).substring(2, 8)}`;
+      }
 
     // Initialize canvas size
     const canvas = document.getElementById("audio-wave");
@@ -3264,6 +3265,10 @@
         // Show note about automatic UID setting
         document.getElementById('avatarUidNote').classList.remove('hidden');
 
+        if (window.ui && typeof window.ui.autoConfigureAvatarIfPossible === 'function') {
+          window.ui.autoConfigureAvatarIfPossible();
+        }
+
       } else {
         // Show image, hide placeholder when AI Avatar is disabled
         avatarImage.style.display = 'block';
@@ -4697,6 +4702,7 @@
         showPipeline.addEventListener('change', syncOptionalPanels);
       }
       syncOptionalPanels();
+      window.syncOptionalAgentSettingsPanels = syncOptionalPanels;
     })();
 
     // Close drawer buttons
@@ -4799,7 +4805,7 @@
   <script src="src/js/camera-preview.js?v=1.0"></script>
   <script src="src/js/conversational-ai-api.js?v=1.2"></script>
   <script src="src/js/subtitles.js?v=1.3"></script>
-  <script src="src/js/ui.js?v=1.2"></script>
+  <script src="src/js/ui.js?v=1.3"></script>
   <script src="src/js/asr.js?v=1.0"></script>
 
   <!-- Subtitle Overlay -->

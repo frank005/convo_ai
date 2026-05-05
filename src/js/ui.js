@@ -26,7 +26,11 @@ window.UI = class UI {
         this.mediaProcessor = mediaProcessor;
         this.agoraAPI = agoraAPI;
         this.subtitleManager = subtitleManager;
-        
+
+        if (window.FormSettingsPersistence) {
+            window.FormSettingsPersistence.applyFromStorage();
+        }
+
         this.setupEventListeners();
         this.setupMessageUIState();
         this.checkCredentials();
@@ -34,19 +38,83 @@ window.UI = class UI {
         this.setupDrawerListeners();
         // Initialize TTS vendor blocks visibility
         this.handleTtsVendorChange();
+        this.syncRestoredFormDependents();
         // Update base URL indicator
         this.updateBaseUrlIndicator();
 
         // Try to auto-generate agent + client tokens once channel + credentials exist
         this.autoGenerateAgentAndClientTokensIfPossible();
-        
+
+        if (window.FormSettingsPersistence) {
+            window.FormSettingsPersistence.attachSaveListeners();
+        }
+
         // Initialize message UI state after a short delay to ensure all elements are loaded
         setTimeout(() => {
             this.updateMessageUIState();
         }, 100);
-        
+
         // Initialize camera preview manager
         this.initializeCameraPreviewManager();
+    }
+
+    /** After restoring saved fields, refresh dependent UI (panels, vendors, tokens). */
+    syncRestoredFormDependents() {
+        if (typeof window.syncOptionalAgentSettingsPanels === "function") {
+            window.syncOptionalAgentSettingsPanels();
+        }
+        this.handleGeofenceAreaChange();
+        this.handleGeofenceExcludeChange();
+        document.getElementById("avatarVendor")?.dispatchEvent(new Event("change", { bubbles: true }));
+        document.getElementById("mllmVendor")?.dispatchEvent(new Event("change", { bubbles: true }));
+        document.getElementById("pipelineId")?.dispatchEvent(new Event("input", { bubbles: true }));
+        document.getElementById("rtcEncryptionMode")?.dispatchEvent(new Event("change", { bubbles: true }));
+        if (
+            window.subtitleManager &&
+            typeof window.subtitleManager.updateLiveSubtitleMainControlsVisibility === "function"
+        ) {
+            window.subtitleManager.updateLiveSubtitleMainControlsVisibility();
+        }
+        this.trySyncAvatarFieldsFromClient();
+        this.autoGenerateAgentAndClientTokensIfPossible();
+        this.autoConfigureAvatarIfPossible();
+    }
+
+    /** Match index.html AI Avatar enabled behavior without opening the token modal (e.g. after restore). */
+    trySyncAvatarFieldsFromClient() {
+        const enableAvatar = document.getElementById("enableAvatar");
+        if (!enableAvatar || !enableAvatar.checked) return;
+        const clientRtcUid = document.getElementById("clientRtcUid");
+        const remoteRtcUids = document.getElementById("remoteRtcUids");
+        if (clientRtcUid && !clientRtcUid.value.trim()) {
+            clientRtcUid.value = "1001";
+        }
+        if (remoteRtcUids && clientRtcUid) {
+            remoteRtcUids.value = clientRtcUid.value.trim() || "1001";
+        }
+        document.getElementById("clientUidNote")?.classList.remove("hidden");
+        document.getElementById("avatarUidNote")?.classList.remove("hidden");
+    }
+
+    /**
+     * When AI Avatar is on and app certificate + channel are set, pin avatar RTC UID to 1003 and mint token.
+     */
+    async autoConfigureAvatarIfPossible() {
+        try {
+            const { appId, appCertificate } = Utils.getStoredCredentials();
+            if (!appId || !appCertificate) return;
+            const enableAvatar = document.getElementById("enableAvatar");
+            if (!enableAvatar || !enableAvatar.checked) return;
+            const channelName = document.getElementById("agoraChannelName")?.value.trim();
+            if (!channelName) return;
+            const avatarUidInput = document.getElementById("avatarRtcUid");
+            if (avatarUidInput) {
+                avatarUidInput.value = "1003";
+            }
+            await this.generateAvatarRtcToken({ silent: true });
+        } catch (e) {
+            console.warn("Avatar auto-config skipped:", e);
+        }
     }
 
     setupEventListeners() {
@@ -985,6 +1053,8 @@ window.UI = class UI {
                 this.tokenGeneratedAt.client = Date.now();
                 this.scheduleTokenExpiryWarning("client");
             }
+
+            await this.autoConfigureAvatarIfPossible();
         } catch (e) {
             // Silent failure; log to console for debugging only
             console.error("Auto-generate agent/client tokens failed:", e);
@@ -1064,19 +1134,19 @@ window.UI = class UI {
         try {
             const { appId, appCertificate } = Utils.getStoredCredentials();
             if (!appId || !appCertificate) {
-                alert("Please set App ID and App Certificate in API Credentials first");
+                if (!silent) alert("Please set App ID and App Certificate in API Credentials first");
                 return;
             }
 
             const channelName = document.getElementById("agoraChannelName").value.trim();
             if (!channelName) {
-                alert("Please enter a channel name in Agent Settings");
+                if (!silent) alert("Please enter a channel name in Agent Settings");
                 return;
             }
 
             const avatarRtcUid = document.getElementById("avatarRtcUid").value.trim();
             if (!avatarRtcUid) {
-                alert("Please enter an Avatar RTC UID");
+                if (!silent) alert("Please enter an Avatar RTC UID");
                 return;
             }
 
