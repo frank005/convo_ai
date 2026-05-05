@@ -48,8 +48,7 @@ class SubtitleManager {
         
         this.initializeElements();
         this.setupEventListeners();
-        
-
+        this.updateLiveSubtitleMainControlsVisibility();
     }
 
     initializeElements() {
@@ -77,10 +76,18 @@ class SubtitleManager {
         };
     }
 
+    /** Reflect Agent Settings → main UI: show overlay/mode only when Live Subtitles is enabled */
+    updateLiveSubtitleMainControlsVisibility() {
+        const wrap = document.getElementById('liveSubtitleMainControls');
+        if (!wrap || !this.elements.enableSubtitles) return;
+        wrap.classList.toggle('hidden', !this.elements.enableSubtitles.checked);
+    }
+
     setupEventListeners() {
         // Main subtitle toggle
         if (this.elements.enableSubtitles) {
             this.elements.enableSubtitles.addEventListener('change', (e) => {
+                this.updateLiveSubtitleMainControlsVisibility();
                 if (e.target.checked) {
                     // Check which mode is selected
                     if (this.elements.subtitleModeRTM && this.elements.subtitleModeRTM.checked) {
@@ -1232,6 +1239,7 @@ class SubtitleManager {
         if (this.elements.enableSubtitles) {
             this.elements.enableSubtitles.checked = true;
         }
+        this.updateLiveSubtitleMainControlsVisibility();
         
         // Ensure RTM radio button is checked
         if (this.elements.subtitleModeRTM) {
@@ -1379,6 +1387,7 @@ class SubtitleManager {
         if (this.elements.enableSubtitles) {
             this.elements.enableSubtitles.checked = true;
         }
+        this.updateLiveSubtitleMainControlsVisibility();
         
         // Update message UI state to disable message buttons
         if (window.ui && typeof window.ui.updateMessageUIState === 'function') {
@@ -1873,6 +1882,7 @@ class SubtitleManager {
                 if (this.elements.enableSubtitles) {
                     this.elements.enableSubtitles.checked = false;
                 }
+                this.updateLiveSubtitleMainControlsVisibility();
             }
         }
     }
@@ -1894,6 +1904,7 @@ class SubtitleManager {
                 if (this.elements.enableSubtitles) {
                     this.elements.enableSubtitles.checked = false;
                 }
+                this.updateLiveSubtitleMainControlsVisibility();
             };
         }
 
@@ -1906,6 +1917,7 @@ class SubtitleManager {
                 if (this.elements.enableSubtitles) {
                     this.elements.enableSubtitles.checked = false;
                 }
+                this.updateLiveSubtitleMainControlsVisibility();
             };
         }
 
@@ -1945,6 +1957,7 @@ class SubtitleManager {
                     if (this.elements.enableSubtitles) {
                         this.elements.enableSubtitles.checked = false;
                     }
+                    this.updateLiveSubtitleMainControlsVisibility();
                 }
             };
         }

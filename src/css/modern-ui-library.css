@@ -605,7 +605,7 @@ label:not([class*="text-"]):not([class*="font-"]) {
    CODE/PRE STYLES
    ============================================ */
 
-pre, code {
+pre {
   background: rgba(15, 23, 42, 0.8) !important;
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 0.75rem;
@@ -615,11 +615,36 @@ pre, code {
   font-size: 0.8125rem;
   line-height: 1.6;
   overflow-x: auto;
-}
-
-pre {
   max-height: 400px;
   overflow-y: auto;
+}
+
+/* Inline <code> only — avoid block-sized “cards” inside tooltips and prose */
+code {
+  background: rgba(15, 23, 42, 0.65) !important;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 0.25rem;
+  padding: 0.1em 0.35em;
+  color: #e2e8f0;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85em;
+  line-height: inherit;
+  overflow-x: visible;
+  white-space: normal;
+  word-break: break-word;
+}
+
+pre code {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  font-size: inherit !important;
+  line-height: 1.6;
+  white-space: pre;
+  overflow-x: auto;
+  display: block;
+  word-break: normal;
 }
 
 /* ============================================
