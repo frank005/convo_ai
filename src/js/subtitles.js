@@ -809,6 +809,24 @@ class SubtitleManager {
         this.updateSubtitle(text, speaker, true);
     }
 
+    /**
+     * Tokens from buildTokenWithRtm include RTC + RTM privileges; after RTC renewToken, update RTM too.
+     */
+    async renewSharedSignalingToken(newToken) {
+        const trimmed = newToken && String(newToken).trim();
+        if (!trimmed) return;
+        let rtm = this.conversationalAIAPI && this.conversationalAIAPI.rtmEngine;
+        if (!rtm && typeof ConversationalAIAPI !== "undefined" && ConversationalAIAPI.instance) {
+            rtm = ConversationalAIAPI.instance.rtmEngine;
+        }
+        if (!rtm || typeof rtm.renewToken !== "function") return;
+        try {
+            await rtm.renewToken(trimmed);
+        } catch (e) {
+            console.error("RTM renewToken failed (shared RTC+RTM token):", e);
+        }
+    }
+
     // Conversational AI integration methods
     async initializeConversationalAI(appId, channelName, token, uid, agentId = null) {
         // Store the agent ID for use in speaker identification
@@ -874,6 +892,22 @@ class SubtitleManager {
                 console.log('Logging into RTM...');
                 await rtmEngine.login({token});
                 console.log('RTM login successful');
+
+                if (!this._onRtmTokenPrivilegeWillExpire) {
+                    this._onRtmTokenPrivilegeWillExpire = () => {
+                        if (
+                            window.mediaProcessor &&
+                            typeof window.mediaProcessor.requestClientTokenRenewal === "function"
+                        ) {
+                            window.mediaProcessor.requestClientTokenRenewal();
+                        }
+                    };
+                }
+                this._rtmEngineTokenListener = rtmEngine;
+                rtmEngine.addEventListener(
+                    "tokenPrivilegeWillExpire",
+                    this._onRtmTokenPrivilegeWillExpire
+                );
                 
                 ConversationalAIAPI.init({
                     rtcEngine: window.mediaProcessor?.client || window.AgoraRTC.createClient({mode: "rtc", codec: "vp8"}),
@@ -924,6 +958,17 @@ class SubtitleManager {
     }
 
     async cleanupConversationalAI() {
+        if (this._rtmEngineTokenListener && this._onRtmTokenPrivilegeWillExpire) {
+            try {
+                this._rtmEngineTokenListener.removeEventListener(
+                    "tokenPrivilegeWillExpire",
+                    this._onRtmTokenPrivilegeWillExpire
+                );
+            } catch (_) {
+                /* noop */
+            }
+            this._rtmEngineTokenListener = null;
+        }
         if (this.conversationalAIAPI) {
             try {
                 await this.conversationalAIAPI.destroy();

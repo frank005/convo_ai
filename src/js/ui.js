@@ -18,8 +18,8 @@ window.UI = class UI {
         this.agentListCumulativeCount = 0; // Total agents loaded across all pages
 
         // Track token generation times and expiry timers for convenience features
-        this.tokenGeneratedAt = { agent: null, client: null, sip: null };
-        this.tokenExpiryTimers = { agent: null, client: null, sip: null };
+        this.tokenGeneratedAt = { agent: null, client: null, sip: null, avatar: null };
+        this.tokenExpiryTimers = { agent: null, client: null, sip: null, avatar: null };
     }
 
     initialize(mediaProcessor, agoraAPI, subtitleManager = null) {
@@ -890,7 +890,8 @@ window.UI = class UI {
         }
     }
 
-    async generateAgoraRtcToken() {
+    async generateAgoraRtcToken(options = {}) {
+        const silent = options.silent === true;
         try {
             const { appId, appCertificate } = Utils.getStoredCredentials();
             if (!appId || !appCertificate) {
@@ -922,10 +923,11 @@ window.UI = class UI {
             // Record generation time and schedule expiry warning
             this.tokenGeneratedAt.agent = Date.now();
             this.scheduleTokenExpiryWarning("agent");
-            alert("Token generated successfully!");
+            if (!silent) alert("Token generated successfully!");
         } catch (error) {
-            alert("Error generating token: " + error.message);
+            if (!silent) alert("Error generating token: " + error.message);
             console.error("Token generation error:", error);
+            if (silent) throw error;
         }
     }
 
@@ -990,14 +992,13 @@ window.UI = class UI {
     }
 
     /**
-     * Schedule a warning dialog shortly before a locally generated token expires.
-     * Type is "agent" or "client". We only prompt when:
-     * - Not currently in a call (joinChannel button enabled / leaveChannel disabled)
-     * - No active agent (agentId field empty)
+     * Keep locally generated tokens fresh by auto-regenerating shortly before expiry.
+     * This runs in the background for generated tokens so manual actions (create/join)
+     * do not fail due to stale credentials.
      */
     scheduleTokenExpiryWarning(type) {
-        const TTL_SECONDS = 1800; // matches Utils.generateAgoraToken
-        const WARN_BEFORE_MS = 60 * 1000; // 1 minute before expiry
+        const TTL_SECONDS = 3600; // matches Utils.generateAgoraToken
+        const WARN_BEFORE_MS = 60 * 1000; // refresh 1 minute before expiry
 
         if (!this.tokenGeneratedAt || !this.tokenGeneratedAt[type]) return;
 
@@ -1018,43 +1019,48 @@ window.UI = class UI {
 
         this.tokenExpiryTimers[type] = setTimeout(async () => {
             try {
-                // Check "not in call": leaveChannel disabled or joinChannel enabled
-                const joinBtn = document.getElementById("joinChannel");
-                const leaveBtn = document.getElementById("leaveChannel");
-                const inCall = (leaveBtn && !leaveBtn.disabled) || (joinBtn && joinBtn.disabled);
-
-                // Check "no active agent": agentId field empty
-                const agentIdInput = document.getElementById("agentId");
-                const hasAgent = agentIdInput && agentIdInput.value && agentIdInput.value.trim() !== "";
-
-                if (inCall || hasAgent) {
-                    // Skip prompting if user is in a session; they can regenerate later
-                    return;
-                }
-
-                let label = "token";
-                if (type === "agent") label = "agent";
-                else if (type === "client") label = "client";
-                else if (type === "sip") label = "SIP";
-                const shouldRegen = window.confirm(
-                    `Your Agora ${label} token is about to expire. Regenerate it now so it stays valid?`
-                );
-                if (!shouldRegen) return;
-
                 if (type === "agent") {
-                    await this.generateAgoraRtcToken();
+                    await this.generateAgoraRtcToken({ silent: true });
                 } else if (type === "client") {
-                    await this.generateClientRtcToken();
+                    await this.generateClientRtcToken({ silent: true });
                 } else if (type === "sip") {
-                    await this.generateSipRtcToken();
+                    await this.generateSipRtcToken({ silent: true });
+                } else if (type === "avatar") {
+                    await this.generateAvatarRtcToken({ silent: true });
                 }
             } catch (e) {
-                console.error("Token expiry warning handler failed:", e);
+                console.error("Background token refresh failed:", e);
+                // Retry soon in case fields or credentials are filled shortly after failure.
+                if (this.tokenExpiryTimers[type]) {
+                    clearTimeout(this.tokenExpiryTimers[type]);
+                }
+                this.tokenExpiryTimers[type] = setTimeout(() => this.scheduleTokenExpiryWarning(type), 60 * 1000);
             }
         }, delayMs);
     }
 
-    async generateAvatarRtcToken() {
+    async ensureFreshManagedToken(type) {
+        const TTL_SECONDS = 3600;
+        const REFRESH_BEFORE_SECONDS = 60;
+        const generatedAt = this.tokenGeneratedAt ? this.tokenGeneratedAt[type] : null;
+        if (!generatedAt) return;
+
+        const refreshAt = generatedAt + (TTL_SECONDS - REFRESH_BEFORE_SECONDS) * 1000;
+        if (Date.now() < refreshAt) return;
+
+        if (type === "agent") {
+            await this.generateAgoraRtcToken({ silent: true });
+        } else if (type === "client") {
+            await this.generateClientRtcToken({ silent: true });
+        } else if (type === "sip") {
+            await this.generateSipRtcToken({ silent: true });
+        } else if (type === "avatar") {
+            await this.generateAvatarRtcToken({ silent: true });
+        }
+    }
+
+    async generateAvatarRtcToken(options = {}) {
+        const silent = options.silent === true;
         try {
             const { appId, appCertificate } = Utils.getStoredCredentials();
             if (!appId || !appCertificate) {
@@ -1083,25 +1089,29 @@ window.UI = class UI {
             );
 
             document.getElementById("avatarRtcToken").value = token;
-            alert("Token generated successfully!");
+            this.tokenGeneratedAt.avatar = Date.now();
+            this.scheduleTokenExpiryWarning("avatar");
+            if (!silent) alert("Token generated successfully!");
         } catch (error) {
-            alert("Error generating token: " + error.message);
+            if (!silent) alert("Error generating token: " + error.message);
             console.error("Token generation error:", error);
+            if (silent) throw error;
         }
     }
 
-    async generateClientRtcToken() {
+    async generateClientRtcToken(options = {}) {
+        const silent = options.silent === true;
         try {
             const { appId, appCertificate } = Utils.getStoredCredentials();
             if (!appId || !appCertificate) {
-                alert("Please set App ID and App Certificate in API Credentials first");
-                return;
+                if (!silent) alert("Please set App ID and App Certificate in API Credentials first");
+                return null;
             }
 
             const channelName = document.getElementById("agoraChannelName").value.trim();
             if (!channelName) {
-                alert("Please enter a channel name in Agent Settings");
-                return;
+                if (!silent) alert("Please enter a channel name in Agent Settings");
+                return null;
             }
 
             const clientRtcUidInput = document.getElementById("clientRtcUid");
@@ -1122,14 +1132,18 @@ window.UI = class UI {
             // Record generation time and schedule expiry warning
             this.tokenGeneratedAt.client = Date.now();
             this.scheduleTokenExpiryWarning("client");
-            alert("Token generated successfully!");
+            if (!silent) alert("Token generated successfully!");
+            return token;
         } catch (error) {
-            alert("Error generating token: " + error.message);
+            if (!silent) alert("Error generating token: " + error.message);
             console.error("Token generation error:", error);
+            if (silent) throw error;
+            return null;
         }
     }
 
-    async generateSipRtcToken() {
+    async generateSipRtcToken(options = {}) {
+        const silent = options.silent === true;
         try {
             const { appId, appCertificate } = Utils.getStoredCredentials();
             if (!appId || !appCertificate) {
@@ -1161,10 +1175,11 @@ window.UI = class UI {
             // Record generation time and schedule expiry warning
             this.tokenGeneratedAt.sip = Date.now();
             this.scheduleTokenExpiryWarning("sip");
-            alert("Token generated successfully!");
+            if (!silent) alert("Token generated successfully!");
         } catch (error) {
-            alert("Error generating token: " + error.message);
+            if (!silent) alert("Error generating token: " + error.message);
             console.error("Token generation error:", error);
+            if (silent) throw error;
         }
     }
 
@@ -1210,12 +1225,15 @@ window.UI = class UI {
         const { appId } = Utils.getStoredCredentials();
         const channelName = document.getElementById("agoraChannelName").value.trim();
         const clientRtcUid = document.getElementById("clientRtcUid").value.trim();
-        const clientRtcToken = document.getElementById("clientRtcToken").value.trim();
         const enableStringUid = document.getElementById("enableStringUid").checked;
         const agentId = document.getElementById("uniqueName").value.trim(); // Get agent ID from unique name field
 
         try {
-            // Convert empty string to null for token
+            await this.ensureFreshManagedToken("client");
+            const clientRtcToken = document
+                .getElementById("clientRtcToken")
+                .value.trim();
+            // Convert empty string to null for token (read after refresh so join uses updated value)
             const token = clientRtcToken || null;
             
             // Convert UID to integer unless string UID is enabled
@@ -1227,7 +1245,21 @@ window.UI = class UI {
                 }
             }
             
-            await this.mediaProcessor.joinChannel(appId, channelName, token, uid, this.subtitleManager, agentId);
+            const renewClientToken = async () => {
+                const fresh =
+                    (await this.generateClientRtcToken({ silent: true })) ||
+                    document.getElementById("clientRtcToken").value.trim();
+                return fresh || null;
+            };
+            await this.mediaProcessor.joinChannel(
+                appId,
+                channelName,
+                token,
+                uid,
+                this.subtitleManager,
+                agentId,
+                renewClientToken
+            );
             document.getElementById("joinChannel").disabled = true;
             document.getElementById("leaveChannel").disabled = false;
             
@@ -1285,6 +1317,14 @@ window.UI = class UI {
             
             // Reset mic and camera button states
             this.resetMicAndCameraStates();
+
+            // Treat in-session token as stale after disconnect; regenerate for next join
+            try {
+                this.tokenGeneratedAt.client = null;
+                await this.generateClientRtcToken({ silent: true });
+            } catch (e) {
+                console.warn("Post-leave client token refresh skipped:", e);
+            }
         } catch (error) {
             alert(error.message);
         }
@@ -2189,6 +2229,7 @@ window.UI = class UI {
         }
 
         try {
+            await this.ensureFreshManagedToken("agent");
             // Validate RTM configuration before agent creation if subtitles are enabled
             if (this.subtitleManager) {
                 const isRTMConfigValid = this.subtitleManager.validateRTMConfigurationForAgentCreation();
@@ -2256,6 +2297,7 @@ window.UI = class UI {
         }
 
         try {
+            await this.ensureFreshManagedToken("agent");
             // Validate RTM configuration before agent update if subtitles are enabled
             if (this.subtitleManager) {
                 const isRTMConfigValid = this.subtitleManager.validateRTMConfigurationForAgentCreation();

@@ -1,3 +1,6 @@
+/** Proactive client RTC token refresh while in channel (ms). */
+const CLIENT_RTC_TOKEN_PROACTIVE_RENEW_MS = 15 * 60 * 1000;
+
 // Media Processing Module
 window.MediaProcessor = class MediaProcessor {
     constructor() {
@@ -8,6 +11,55 @@ window.MediaProcessor = class MediaProcessor {
         this.client = null;
         this.animationFrameId = null;
         this.cameraPreviewManager = null;
+        this.clientTokenRenewIntervalId = null;
+        this._clientTokenRenewChain = Promise.resolve();
+        /** @type {(() => Promise<string|null|undefined>)|null} Cached fetcher after join for RTM-triggered renewal */
+        this._clientTokenRenewFetcher = null;
+    }
+
+    /**
+     * Run the stored renewal callback (RTC + RTM share one token from buildTokenWithRtm).
+     */
+    requestClientTokenRenewal() {
+        return this.renewClientRtcTokenWithCallback();
+    }
+
+    /**
+     * Serialize token renewals so interval + RTC/RTM privilege-will-expire callbacks never overlap.
+     * Pass fetchToken inline or rely on `_clientTokenRenewFetcher` after join.
+     */
+    renewClientRtcTokenWithCallback(fetchToken) {
+        const fn =
+            typeof fetchToken === "function" ? fetchToken : this._clientTokenRenewFetcher;
+        if (!this.client || typeof fn !== "function") return Promise.resolve();
+        this._clientTokenRenewChain = this._clientTokenRenewChain.then(async () => {
+            if (!this.client) return;
+            try {
+                const newToken = await fn();
+                if (newToken && typeof newToken === "string") {
+                    const trimmed = newToken.trim();
+                    await this.client.renewToken(trimmed);
+                    /* buildTokenWithRtm embeds RTC + RTM; refresh RTM session with same string */
+                    if (
+                        this.subtitleManager &&
+                        typeof this.subtitleManager.renewSharedSignalingToken === "function"
+                    ) {
+                        await this.subtitleManager.renewSharedSignalingToken(trimmed);
+                    }
+                }
+            } catch (e) {
+                console.error("Client RTC token renewal failed:", e);
+            }
+        });
+        return this._clientTokenRenewChain;
+    }
+
+    stopClientTokenRenewal() {
+        if (this.clientTokenRenewIntervalId != null) {
+            clearInterval(this.clientTokenRenewIntervalId);
+            this.clientTokenRenewIntervalId = null;
+        }
+        this._clientTokenRenewChain = Promise.resolve();
     }
 
     async setupAudioProcessing(remoteAudioTrack) {
@@ -152,7 +204,7 @@ window.MediaProcessor = class MediaProcessor {
         }
     }
 
-    async joinChannel(appId, channelName, token, uid, subtitleManager = null, agentId = null) {
+    async joinChannel(appId, channelName, token, uid, subtitleManager = null, agentId = null, renewClientToken = null) {
         this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
         this.appId = appId; // Store appId for later use
         this.subtitleManager = subtitleManager;
@@ -175,6 +227,10 @@ window.MediaProcessor = class MediaProcessor {
             // This event is for when other users join, not for our own join
             // We'll capture our UID from the join promise result
         });
+
+        if (typeof renewClientToken === "function") {
+            this.client.on("token-privilege-will-expire", () => this.requestClientTokenRenewal());
+        }
 
         // Initialize Conversational AI for RTM-driven agent activity/subtitles.
         // Keep this active even when subtitles are toggled off so agent activity
@@ -267,6 +323,15 @@ window.MediaProcessor = class MediaProcessor {
         // Capture the actual assigned UID from the join result
         if (joinResult && joinResult.uid) {
             this.uid = joinResult.uid;
+        }
+
+        if (typeof renewClientToken === "function") {
+            this._clientTokenRenewFetcher = renewClientToken;
+            this.stopClientTokenRenewal();
+            this.clientTokenRenewIntervalId = setInterval(
+                () => this.requestClientTokenRenewal(),
+                CLIENT_RTC_TOKEN_PROACTIVE_RENEW_MS
+            );
         }
         
         // Create and publish audio track
@@ -393,6 +458,9 @@ window.MediaProcessor = class MediaProcessor {
 
     async leaveChannel() {
         if (!this.client) return;
+
+        this.stopClientTokenRenewal();
+        this._clientTokenRenewFetcher = null;
 
         // Stop animations first
         if (this.animationFrameId) {

@@ -1985,8 +1985,8 @@ window.Utils = class Utils {
             ? 0
             : userAccount;
 
-        const TOKEN_EXPIRE = 1800; // 30 minutes in seconds
-        const PRIVILEGE_EXPIRE = 1800; // 30 minutes in seconds
+        const TOKEN_EXPIRE = 3600; // 60 minutes in seconds
+        const PRIVILEGE_EXPIRE = 3600; // 60 minutes in seconds
 
         try {
             const token = await RtcTokenBuilder.buildTokenWithRtm(
