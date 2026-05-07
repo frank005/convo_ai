@@ -4683,17 +4683,25 @@
     }
 
     (function setupOptionalAgentSettingsPanels() {
+      const showGeofence = document.getElementById('showGeofenceSettings');
       const showRtc = document.getElementById('showRtcEncryptionSettings');
       const showPipeline = document.getElementById('showBackendPipelineSettings');
+      const geofencePanel = document.getElementById('geofenceSettingsPanel');
       const rtcPanel = document.getElementById('rtcEncryptionSettingsPanel');
       const pipelinePanel = document.getElementById('backendPipelineSettingsPanel');
       function syncOptionalPanels() {
+        if (geofencePanel && showGeofence) {
+          geofencePanel.classList.toggle('hidden', !showGeofence.checked);
+        }
         if (rtcPanel && showRtc) {
           rtcPanel.classList.toggle('hidden', !showRtc.checked);
         }
         if (pipelinePanel && showPipeline) {
           pipelinePanel.classList.toggle('hidden', !showPipeline.checked);
         }
+      }
+      if (showGeofence) {
+        showGeofence.addEventListener('change', syncOptionalPanels);
       }
       if (showRtc) {
         showRtc.addEventListener('change', syncOptionalPanels);
@@ -4830,8 +4838,7 @@
 
       <div class="space-y-6">
         <!-- Basic Configuration -->
-        <div class="modern-panel">
-          <h3 class="text-lg font-semibold mb-3">Basic Configuration</h3>
+        <div>
           <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="has-tooltip relative">
               <input
@@ -4847,13 +4854,25 @@
               />
               <div class="tooltip">The Agora channel name where the agent will operate</div>
             </div>
-            <div class="has-tooltip relative">
-              <input
-                id="agoraRtcUid"
-                placeholder="Agora RTC UID (Required)"
-                value="8888"
-              />
-              <div class="tooltip">The unique identifier for this agent in the Agora channel</div>
+            <div class="flex gap-3 items-center">
+              <div class="flex-1 has-tooltip relative">
+                <input
+                  id="agoraRtcUid"
+                  placeholder="Agora RTC UID (Required)"
+                  value="8888"
+                  class="w-full"
+                />
+                <div class="tooltip">The unique identifier for this agent in the Agora channel</div>
+              </div>
+              <label class="has-tooltip relative flex items-center gap-2 text-sm text-gray-200 whitespace-nowrap shrink-0">
+                <input
+                  type="checkbox"
+                  id="enableStringUid"
+                  class="h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded"
+                />
+                <span>String UID</span>
+                <div class="tooltip">When enabled, the agent UID is treated as a string instead of a number. Use this when your RTC clients join with string UIDs (Agora's <code>userAccount</code> API). The agent's RTM UID becomes editable so it can be set to match the agent's string UID for signaling.</div>
+              </label>
             </div>
             <div class="has-tooltip relative">
               <div class="flex gap-2">
@@ -4889,8 +4908,59 @@
               />
               <div class="tooltip">Timeout after all users leave the channel. 0 means the agent doesn't exit until stopped manually. Default: 30</div>
             </div>
+            <div id="agentRtmUidBlock" class="has-tooltip relative" style="display: none;">
+              <input
+                id="agentRtmUid"
+                placeholder="Agent RTM UID (Required when RTM enabled)"
+              />
+              <div class="tooltip">The RTM UID for the agent when RTM is enabled.</div>
+            </div>
+
+            <div class="md:col-span-2 mt-3 pt-4 border-t border-gray-600">
+              <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Optional configuration</div>
+              <p class="text-xs text-gray-500 mb-3">Turn on a section below to show its full settings in this dialog.</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                <label class="flex items-start gap-2 text-sm text-gray-200 has-tooltip relative">
+                  <input type="checkbox" id="enableSubtitles" class="mt-0.5 rounded h-4 w-4 text-blue-600 bg-gray-600 border-gray-500">
+                  <span>Live Subtitles</span>
+                  <div class="tooltip">Show subtitle controls (overlay, RTM / data stream) and enable real-time transcription.</div>
+                </label>
+                <label class="flex items-start gap-2 text-sm text-gray-200 has-tooltip relative">
+                  <input type="checkbox" id="showGeofenceSettings" class="mt-0.5 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
+                  <span>Geofence</span>
+                  <div class="tooltip">Show region/area selection to restrict server access to specific geographies.</div>
+                </label>
+                <label class="flex items-start gap-2 text-sm text-gray-200 has-tooltip relative">
+                  <input type="checkbox" id="showRtcEncryptionSettings" class="mt-0.5 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
+                  <span>RTC Media Encryption</span>
+                  <div class="tooltip">Show encryption mode, key, and salt fields for RTC media.</div>
+                </label>
+                <label class="flex items-start gap-2 text-sm text-gray-200 has-tooltip relative">
+                  <input type="checkbox" id="showBackendPipelineSettings" class="mt-0.5 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
+                  <span>Backend Pipeline Configuration</span>
+                  <div class="tooltip">Show pipeline ID and ASR/LLM/TTS override options.</div>
+                </label>
+              </div>
+              <div class="mt-3 pt-3 border-t border-gray-600">
+                <button
+                  type="button"
+                  id="clearSavedFormSettingsBtn"
+                  class="modern-btn modern-btn-secondary text-sm"
+                >
+                  Clear saved settings &amp; reset page
+                </button>
+                <p class="text-xs text-gray-500 mt-2 max-w-xl">
+                  Removes remembered form data and reloads so fields match page defaults. Does not clear API credentials or device choices.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Geofence Configuration -->
+        <div id="geofenceSettingsPanel" class="hidden">
+          <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="has-tooltip relative">
-              <label class="text-sm font-medium mb-2 block">Geofence (Optional)</label>
               <div class="flex gap-2">
                 <select
                   id="geofenceArea"
@@ -4942,61 +5012,11 @@
               </div>
               <div class="tooltip">Select a region to exclude. Only available when Area is set to GLOBAL.</div>
             </div>
-            <div class="flex items-center">
-              <input
-                type="checkbox"
-                id="enableStringUid"
-                class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded"
-              />
-              <label for="enableStringUid" class="text-sm">Enable String UID</label>
-            </div>
-            <div id="agentRtmUidBlock" class="has-tooltip relative" style="display: none;">
-              <input
-                id="agentRtmUid"
-                placeholder="Agent RTM UID (Required when RTM enabled)"
-              />
-              <div class="tooltip">The RTM UID for the agent when RTM is enabled.</div>
-            </div>
-
-            <div class="md:col-span-2 mt-3 pt-4 border-t border-gray-600">
-              <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Optional configuration</div>
-              <p class="text-xs text-gray-500 mb-3">Turn on a section below to show its full settings in this dialog.</p>
-              <div class="flex flex-col gap-2">
-                <label class="flex items-start gap-2 text-sm text-gray-200 has-tooltip relative">
-                  <input type="checkbox" id="enableSubtitles" class="mt-0.5 rounded h-4 w-4 text-blue-600 bg-gray-600 border-gray-500">
-                  <span>Live Subtitles</span>
-                  <div class="tooltip">Show subtitle controls (overlay, RTM / data stream) and enable real-time transcription.</div>
-                </label>
-                <label class="flex items-start gap-2 text-sm text-gray-200 has-tooltip relative">
-                  <input type="checkbox" id="showRtcEncryptionSettings" class="mt-0.5 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
-                  <span>RTC Media Encryption</span>
-                  <div class="tooltip">Show encryption mode, key, and salt fields for RTC media.</div>
-                </label>
-                <label class="flex items-start gap-2 text-sm text-gray-200 has-tooltip relative">
-                  <input type="checkbox" id="showBackendPipelineSettings" class="mt-0.5 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
-                  <span>Backend Pipeline Configuration</span>
-                  <div class="tooltip">Show pipeline ID and ASR/LLM/TTS override options.</div>
-                </label>
-              </div>
-              <div class="mt-3 pt-3 border-t border-gray-600">
-                <button
-                  type="button"
-                  id="clearSavedFormSettingsBtn"
-                  class="modern-btn modern-btn-secondary text-sm"
-                >
-                  Clear saved settings &amp; reset page
-                </button>
-                <p class="text-xs text-gray-500 mt-2 max-w-xl">
-                  Removes remembered form data and reloads so fields match page defaults. Does not clear API credentials or device choices.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 
         <!-- RTC Encryption Configuration -->
-        <div id="rtcEncryptionSettingsPanel" class="modern-panel hidden">
-          <h3 class="text-lg font-semibold mb-3">RTC Media Encryption</h3>
+        <div id="rtcEncryptionSettingsPanel" class="hidden">
           <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="has-tooltip relative">
               <select
@@ -5053,8 +5073,7 @@
         </div>
 
         <!-- Pipeline ID / Backend Pipeline Configuration -->
-        <div id="backendPipelineSettingsPanel" class="modern-panel hidden">
-          <h3 class="text-lg font-semibold mb-3">Backend Pipeline Configuration</h3>
+        <div id="backendPipelineSettingsPanel" class="hidden">
           <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="has-tooltip relative">
               <input
