@@ -81,6 +81,7 @@ window.Utils = class Utils {
         const turnPrefixPadding = document.getElementById("turnPrefixPadding").value || null;
         const turnSilenceDuration = document.getElementById("turnSilenceDuration").value || null;
         const turnThreshold = document.getElementById("turnThreshold").value || null;
+        const turnServerVadIdleTimeoutMs = document.getElementById("turnServerVadIdleTimeoutMs") ? document.getElementById("turnServerVadIdleTimeoutMs").value || null : null;
         const turnEagerness = document.getElementById("turnEagerness").value;
         
         // Get parameters settings
@@ -272,6 +273,7 @@ window.Utils = class Utils {
             turnPrefixPadding: turnPrefixPadding,
             turnSilenceDuration: turnSilenceDuration,
             turnThreshold: turnThreshold,
+            turnServerVadIdleTimeoutMs: turnServerVadIdleTimeoutMs,
             turnEagerness: turnEagerness,
             
             // v2.4 turn detection (when Deprecated Features is off)
@@ -290,6 +292,7 @@ window.Utils = class Utils {
             turnV24EoSSilenceMs: document.getElementById("turnV24EoSSilenceMs") ? document.getElementById("turnV24EoSSilenceMs").value || null : null,
             turnV24EoSemanticSilenceMs: document.getElementById("turnV24EoSemanticSilenceMs") ? document.getElementById("turnV24EoSemanticSilenceMs").value || null : null,
             turnV24EoSemanticMaxWaitMs: document.getElementById("turnV24EoSemanticMaxWaitMs") ? document.getElementById("turnV24EoSemanticMaxWaitMs").value || null : null,
+            turnV24EoSemanticPauseStateEnabled: document.getElementById("turnV24EoSemanticPauseStateEnabled") ? document.getElementById("turnV24EoSemanticPauseStateEnabled").value || null : null,
             
             // Parameters
             parametersEnabled: parametersEnabled,
@@ -1023,6 +1026,64 @@ window.Utils = class Utils {
         }
     }
 
+    /**
+     * MLLM turn_detection uses mode agora_vad | server_vad | semantic_vad and nested *_config objects.
+     * When MLLM is enabled, top-level turn_detection is not used; values come from the Turn Detection
+     * controls when the Turn Detection checkbox is enabled (same fields as pipeline legacy UI).
+     */
+    static buildMllmTurnDetection(formData) {
+        if (!formData.enableMllm) return null;
+        if (!formData.turnDetectionEnabled) return null;
+
+        const mode = formData.turnDetectionType;
+        if (!mode) return null;
+
+        const hasVal = (v) => v != null && v !== '';
+        const result = { mode };
+
+        if (mode === 'agora_vad') {
+            const c = {};
+            if (hasVal(formData.turnInterruptDuration)) {
+                c.interrupt_duration_ms = parseFloat(formData.turnInterruptDuration);
+            }
+            if (hasVal(formData.turnPrefixPadding)) {
+                c.prefix_padding_ms = parseInt(formData.turnPrefixPadding, 10);
+            }
+            if (hasVal(formData.turnSilenceDuration)) {
+                c.silence_duration_ms = parseInt(formData.turnSilenceDuration, 10);
+            }
+            if (hasVal(formData.turnThreshold)) {
+                c.threshold = parseFloat(formData.turnThreshold);
+            }
+            if (Object.keys(c).length > 0) {
+                result.agora_vad_config = c;
+            }
+        } else if (mode === 'server_vad') {
+            const c = {};
+            if (hasVal(formData.turnPrefixPadding)) {
+                c.prefix_padding_ms = parseInt(formData.turnPrefixPadding, 10);
+            }
+            if (hasVal(formData.turnSilenceDuration)) {
+                c.silence_duration_ms = parseInt(formData.turnSilenceDuration, 10);
+            }
+            if (hasVal(formData.turnThreshold)) {
+                c.threshold = parseFloat(formData.turnThreshold);
+            }
+            if (hasVal(formData.turnServerVadIdleTimeoutMs)) {
+                c.idle_timeout_ms = parseInt(formData.turnServerVadIdleTimeoutMs, 10);
+            }
+            if (Object.keys(c).length > 0) {
+                result.server_vad_config = c;
+            }
+        } else if (mode === 'semantic_vad') {
+            result.semantic_vad_config = {
+                eagerness: formData.turnEagerness || 'auto'
+            };
+        }
+
+        return result;
+    }
+
     static buildAgentConfig(formData, customParams = {}, mllmCustomParams = {}) {
         const presets = this.parsePresetList(formData.preset);
         const presetHasAsr = presets.some(p => p.startsWith('deepgram_'));
@@ -1157,27 +1218,29 @@ window.Utils = class Utils {
         let turnDetection = null;
         let interruption = null;
         if (formData.useDeprecatedFeatures && formData.turnDetectionEnabled) {
-            // Deprecated structure (pre-v2.4)
-            turnDetection = {
-                type: formData.turnDetectionType
-            };
-            
-            // Add VAD parameters if they have values
-            if (formData.turnInterruptDuration) {
-                turnDetection.interrupt_duration_ms = parseFloat(formData.turnInterruptDuration);
-            }
-            if (formData.turnPrefixPadding) {
-                turnDetection.prefix_padding_ms = parseInt(formData.turnPrefixPadding, 10);
-            }
-            if (formData.turnSilenceDuration) {
-                turnDetection.silence_duration_ms = parseInt(formData.turnSilenceDuration, 10);
-            }
-            if (formData.turnThreshold) {
-                turnDetection.threshold = parseFloat(formData.turnThreshold);
-            }
-            
-            if (formData.turnDetectionType === 'semantic_vad') {
-                turnDetection.eagerness = formData.turnEagerness;
+            // Deprecated structure (pre-v2.4). When MLLM is on, turn_detection belongs under mllm only
+            // (see buildMllmTurnDetection); do not emit legacy top-level turn_detection.
+            if (!formData.enableMllm) {
+                turnDetection = {
+                    type: formData.turnDetectionType
+                };
+
+                if (formData.turnInterruptDuration) {
+                    turnDetection.interrupt_duration_ms = parseFloat(formData.turnInterruptDuration);
+                }
+                if (formData.turnPrefixPadding) {
+                    turnDetection.prefix_padding_ms = parseInt(formData.turnPrefixPadding, 10);
+                }
+                if (formData.turnSilenceDuration) {
+                    turnDetection.silence_duration_ms = parseInt(formData.turnSilenceDuration, 10);
+                }
+                if (formData.turnThreshold) {
+                    turnDetection.threshold = parseFloat(formData.turnThreshold);
+                }
+
+                if (formData.turnDetectionType === 'semantic_vad') {
+                    turnDetection.eagerness = formData.turnEagerness;
+                }
             }
             // v2.6 interruption object replaces interrupt_mode behavior.
             if (formData.turnInterruptMode === 'keywords') {
@@ -1272,6 +1335,9 @@ window.Utils = class Utils {
                 }
                 if (formData.turnV24EoSemanticMaxWaitMs != null && formData.turnV24EoSemanticMaxWaitMs !== '') {
                     semanticConfig.max_wait_ms = parseInt(formData.turnV24EoSemanticMaxWaitMs, 10);
+                }
+                if (formData.turnV24EoSemanticPauseStateEnabled === 'true' || formData.turnV24EoSemanticPauseStateEnabled === 'false') {
+                    semanticConfig.pause_state_enabled = formData.turnV24EoSemanticPauseStateEnabled === 'true';
                 }
                 config.end_of_speech = Object.keys(semanticConfig).length > 0 ? { mode: 'semantic', semantic_config: semanticConfig } : { mode: 'semantic' };
             }
@@ -1399,7 +1465,7 @@ window.Utils = class Utils {
                 ...(Object.keys(advancedFeatures).length > 0 ? { advanced_features: advancedFeatures } : {}),
                 ...(sal ? { sal: sal } : {}),
                 ...(formData.enableMllm ? {} : { asr: this.buildAsrConfig(formData) }), // Only include ASR if MLLM is not enabled
-                ...(turnDetection ? { turn_detection: turnDetection } : {}),
+                ...(turnDetection && !formData.enableMllm ? { turn_detection: turnDetection } : {}),
                 ...(interruption ? { interruption: interruption } : {}),
                 ...(parameters ? { parameters: parameters } : {}),
                 ...(formData.enableMllm ? {} : { // Only include LLM/TTS if MLLM is not enabled
@@ -1450,6 +1516,7 @@ window.Utils = class Utils {
                 }),
                 ...(formData.enableMllm ? { // Include MLLM if enabled
                     mllm: (() => {
+                        const mllmTurnDetection = this.buildMllmTurnDetection(formData);
                         const mllmInputModalities = (formData.inputModalities || []).filter(modality => modality === 'audio' || modality === 'text');
                         const safeMllmInputModalities = mllmInputModalities.length > 0
                             ? mllmInputModalities
@@ -1460,6 +1527,7 @@ window.Utils = class Utils {
                             : ((formData.mllmVendor === 'vertexai' || formData.mllmVendor === 'gemini') ? ['audio'] : ['text', 'audio']);
                         const mllmConfig = {
                         enable: true,
+                        ...(mllmTurnDetection ? { turn_detection: mllmTurnDetection } : {}),
                         ...((formData.mllmVendor === 'vertexai' || formData.mllmVendor === 'gemini') ? {} : { url: formData.mllmUrl }),
                         ...(formData.mllmVendor === 'vertexai' ? {} : { api_key: formData.mllmApiKey }),
                         ...(formData.mllmGreetingMessage ? { greeting_message: formData.mllmGreetingMessage } : {}),
@@ -1524,11 +1592,6 @@ window.Utils = class Utils {
                 }
             }
         };
-
-        if (formData.enableMllm && config.properties.mllm && config.properties.turn_detection) {
-            config.properties.mllm.turn_detection = config.properties.turn_detection;
-            delete config.properties.turn_detection;
-        }
 
         if (!formData.enableMllm && config.properties.asr && Object.keys(asrCustomParams).length > 0) {
             config.properties.asr.params = {

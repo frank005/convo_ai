@@ -3475,6 +3475,10 @@
       // At the end, always ensure agent name and channel name are editable
       document.getElementById('uniqueName').style.pointerEvents = 'auto';
       document.getElementById('agoraChannelName').style.pointerEvents = 'auto';
+
+      if (window.syncTurnDetectionUi) {
+        window.syncTurnDetectionUi();
+      }
     });
     }
 
@@ -3501,6 +3505,7 @@
           if (enableMllmCheckbox) {
             enableMllmCheckbox.checked = false;
             enableMllmCheckbox.disabled = true;
+            enableMllmCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
           }
           if (mllmSettingsBtn) {
             mllmSettingsBtn.disabled = true;
@@ -3760,25 +3765,8 @@
     
     if (turnDetectionType) {
     turnDetectionType.addEventListener('change', function() {
-      const isServerVad = this.value === 'server_vad';
-      const isSemanticVad = this.value === 'semantic_vad';
-
-      // Get the containers for MLLM-specific options
-      const mllmOptionsContainer = document.getElementById('mllmOptionsContainer');
-      const eagernessContainer = document.getElementById('eagernessContainer');
-
-      // Show/hide MLLM-specific options based on turn detection type
-      if (isServerVad || isSemanticVad) {
-        mllmOptionsContainer.classList.remove('hidden');
-      } else {
-        mllmOptionsContainer.classList.add('hidden');
-      }
-
-      // Eagerness is only available for semantic_vad
-      if (isSemanticVad) {
-        eagernessContainer.classList.remove('hidden');
-      } else {
-        eagernessContainer.classList.add('hidden');
+      if (window.applyMllmTurnDetectionUiLayout) {
+        window.applyMllmTurnDetectionUiLayout();
       }
     });
     }
@@ -4747,20 +4735,148 @@
       });
     }
 
+    window.openMllmDrawerToTurnDetection = function() {
+      openDrawer('mllmDrawer');
+      requestAnimationFrame(function() {
+        const el = document.getElementById('mllmTurnDetectionSlot') || document.getElementById('turnDetectionDeprecatedSection');
+        if (el && typeof el.scrollIntoView === 'function') {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    };
+
+    window.applyMllmTurnDetectionUiLayout = function() {
+      const section = document.getElementById('turnDetectionDeprecatedSection');
+      const mllmSlot = document.getElementById('mllmTurnDetectionSlot');
+      const typeEl = document.getElementById('turnDetectionType');
+      const type = typeEl ? typeEl.value : 'agora_vad';
+      const inMllm = !!(mllmSlot && section && mllmSlot.contains(section));
+
+      const interruptWrap = document.getElementById('turnDetectionInterruptUiWrap');
+      const mllmOpts = document.getElementById('mllmOptionsContainer');
+      const agoraIntr = document.getElementById('turnAgoraInterruptDurationRow');
+      const vadShared = document.getElementById('turnDetectionVadSharedParamsWrap');
+      const idleRow = document.getElementById('turnServerVadIdleRow');
+      const eager = document.getElementById('eagernessContainer');
+
+      if (inMllm) {
+        if (interruptWrap) interruptWrap.classList.add('hidden');
+        if (mllmOpts) mllmOpts.classList.add('hidden');
+        if (type === 'agora_vad') {
+          if (agoraIntr) agoraIntr.classList.remove('hidden');
+          if (vadShared) vadShared.classList.remove('hidden');
+          if (idleRow) idleRow.classList.add('hidden');
+          if (eager) eager.classList.add('hidden');
+        } else if (type === 'server_vad') {
+          if (agoraIntr) agoraIntr.classList.add('hidden');
+          if (vadShared) vadShared.classList.remove('hidden');
+          if (idleRow) idleRow.classList.remove('hidden');
+          if (eager) eager.classList.add('hidden');
+        } else {
+          if (agoraIntr) agoraIntr.classList.add('hidden');
+          if (vadShared) vadShared.classList.add('hidden');
+          if (idleRow) idleRow.classList.add('hidden');
+          if (eager) eager.classList.remove('hidden');
+        }
+      } else {
+        if (interruptWrap) interruptWrap.classList.remove('hidden');
+        if (type === 'semantic_vad') {
+          if (mllmOpts) mllmOpts.classList.remove('hidden');
+          if (eager) eager.classList.remove('hidden');
+        } else if (type === 'server_vad') {
+          if (mllmOpts) mllmOpts.classList.remove('hidden');
+          if (eager) eager.classList.add('hidden');
+        } else {
+          if (mllmOpts) mllmOpts.classList.add('hidden');
+          if (eager) eager.classList.add('hidden');
+        }
+        if (agoraIntr) agoraIntr.classList.remove('hidden');
+        if (vadShared) vadShared.classList.remove('hidden');
+        if (idleRow) idleRow.classList.add('hidden');
+      }
+    };
+
+    window.syncTurnDetectionUi = function() {
+      const enableMllm = document.getElementById('enableMllm') && document.getElementById('enableMllm').checked;
+      const section = document.getElementById('turnDetectionDeprecatedSection');
+      const advSlot = document.getElementById('advTurnDetectionSlot');
+      const mllmSlot = document.getElementById('mllmTurnDetectionSlot');
+      const notice = document.getElementById('advTurnDetectionMllmNotice');
+      const v24 = document.getElementById('turnDetectionV24Section');
+      const v24cb = document.getElementById('turnDetectionV24Enabled');
+      const mllmHint = document.getElementById('mllmBtnTurnHint');
+      const advHint = document.getElementById('advBtnTurnHint');
+      const sub = document.getElementById('turnDetectionBtnSubtitle');
+
+      if (enableMllm) {
+        if (section && mllmSlot && section.parentElement !== mllmSlot) {
+          mllmSlot.appendChild(section);
+        }
+        if (v24) v24.classList.add('hidden');
+        if (v24cb) {
+          v24cb.checked = false;
+          v24cb.disabled = true;
+        }
+        if (notice) notice.classList.remove('hidden');
+        if (mllmHint) mllmHint.classList.remove('hidden');
+        if (advHint) {
+          advHint.textContent = 'Realtime turn detection → MLLM Config drawer';
+          advHint.classList.remove('text-gray-400');
+          advHint.classList.add('text-emerald-400/90');
+        }
+        if (sub) sub.textContent = 'Realtime → mllm.turn_detection';
+        if (section) section.classList.remove('hidden');
+      } else {
+        if (section && advSlot && section.parentElement !== advSlot) {
+          advSlot.appendChild(section);
+        }
+        if (v24cb) v24cb.disabled = false;
+        if (notice) notice.classList.add('hidden');
+        if (mllmHint) mllmHint.classList.add('hidden');
+        if (advHint) {
+          advHint.textContent = 'Pipeline turn detection when MLLM is off';
+          advHint.classList.add('text-gray-400');
+          advHint.classList.remove('text-emerald-400/90');
+        }
+        if (sub) sub.textContent = 'Pipeline (legacy shape)';
+      }
+
+      const deprecatedFeatures = document.getElementById('deprecatedFeatures');
+      const useDeprecated = deprecatedFeatures && deprecatedFeatures.checked;
+      const inMllm = mllmSlot && section && mllmSlot.contains(section);
+      if (section) {
+        if (inMllm) {
+          section.classList.remove('hidden');
+        } else {
+          section.classList.toggle('hidden', !useDeprecated);
+        }
+      }
+      if (v24 && !enableMllm) {
+        v24.classList.toggle('hidden', useDeprecated);
+      }
+      if (window.applyMllmTurnDetectionUiLayout) {
+        window.applyMllmTurnDetectionUiLayout();
+      }
+    };
+
     // Deprecated Features: toggle deprecated vs v2.4 Turn Detection sections and AIVAD row
     const deprecatedFeatures = document.getElementById('deprecatedFeatures');
-    const turnDetectionDeprecatedSection = document.getElementById('turnDetectionDeprecatedSection');
-    const turnDetectionV24Section = document.getElementById('turnDetectionV24Section');
     const aivadDeprecatedRow = document.getElementById('aivadDeprecatedRow');
     function updateDeprecatedVisibility() {
+      window.syncTurnDetectionUi();
       const useDeprecated = deprecatedFeatures && deprecatedFeatures.checked;
-      if (turnDetectionDeprecatedSection) turnDetectionDeprecatedSection.classList.toggle('hidden', !useDeprecated);
-      if (turnDetectionV24Section) turnDetectionV24Section.classList.toggle('hidden', useDeprecated);
       if (aivadDeprecatedRow) aivadDeprecatedRow.classList.toggle('hidden', !useDeprecated);
     }
     if (deprecatedFeatures) {
       deprecatedFeatures.addEventListener('change', updateDeprecatedVisibility);
       updateDeprecatedVisibility();
+    }
+
+    const advOpenMllmTurnDetectionBtn = document.getElementById('advOpenMllmTurnDetectionBtn');
+    if (advOpenMllmTurnDetectionBtn) {
+      advOpenMllmTurnDetectionBtn.addEventListener('click', function() {
+        window.openMllmDrawerToTurnDetection();
+      });
     }
 
     // Turn Detection v2.4 toggle and SoS/EoS mode visibility
@@ -5142,13 +5258,13 @@
               <input type="checkbox" id="enableMllm" class="mr-2 h-4 w-4 text-blue-600 bg-gray-600 border-gray-500 rounded">
               MLLM Config
             </span>
-            <span class="text-sm">Multimodal Large Language Model</span>
+            <span class="text-sm text-right leading-tight">Multimodal LLM<br><span id="mllmBtnTurnHint" class="text-emerald-400/90 hidden text-xs font-normal">Turn detection is in this drawer</span></span>
           </button>
 
           <!-- Advanced Config -->
           <button id="advConfigBtn" class="modern-btn modern-btn-secondary flex items-center justify-between w-full">
             <span>Advanced Config</span>
-            <span class="text-sm">Advanced Features, Turn Detection & Parameters</span>
+            <span class="text-sm text-right leading-tight">Features &amp; parameters<br><span id="advBtnTurnHint" class="text-xs font-normal text-gray-400">Pipeline turn detection when MLLM is off</span></span>
           </button>
         </div>
 
@@ -7147,6 +7263,18 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <div class="tooltip">Optional instructions for custom MLLM providers.</div>
           </div>
         </div>
+        <div class="has-tooltip relative">
+          <input
+            id="mllmMaxHistory"
+            type="number"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Max history (optional, default: 32)"
+            value="32"
+            min="1"
+          />
+          <div class="tooltip">The number of conversation history messages cached in the MLLM. Minimum value is 1.</div>
+        </div>
+        <div id="mllmTurnDetectionSlot" class="mb-4 min-h-0"></div>
         <div class="bg-gray-700 p-4 rounded-lg">
           <div class="flex justify-between items-center mb-3">
             <div class="has-tooltip relative">
@@ -7162,17 +7290,6 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           </div>
           <div id="mllm-param-container" class="space-y-2"></div>
         </div>
-        <div class="has-tooltip relative">
-          <input
-            id="mllmMaxHistory"
-            type="number"
-            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-            placeholder="Max History (Optional, default: 32)"
-            value="32"
-            min="1"
-          />
-          <div class="tooltip">The number of conversation history messages cached in the MLLM. Minimum value is 1.</div>
-        </div>
       </div>
     </div>
 
@@ -7186,7 +7303,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           <label class="flex items-center has-tooltip relative cursor-pointer">
             <input type="checkbox" id="deprecatedFeatures" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
             <span>Deprecated Turn Detection Features</span>
-            <div class="tooltip">Use pre-v2.4 turn detection format. When unchecked, use v2.4 turn_detection (mode + config) and configure semantic end-of-speech under Turn Detection (v2.4).</div>
+            <div class="tooltip">Toggles the pipeline turn-detection UI shape: pre-v2.4 (legacy top-level <code>turn_detection</code>) vs v2.4 (<code>mode: default</code> + SoS/EoS). When MLLM is enabled, realtime <code>mllm.turn_detection</code> is edited in the MLLM drawer, not here.</div>
           </label>
         </div>
 
@@ -7242,25 +7359,27 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           </div>
         </div>
 
-        <!-- Turn Detection (deprecated structure) -->
+        <!-- Turn Detection: lives in Advanced Config when MLLM is off; moves to MLLM drawer when MLLM is on -->
+        <div id="advTurnDetectionSlot" class="mb-4">
         <div id="turnDetectionDeprecatedSection" class="mb-4">
           <button id="turnDetectionBtn" class="flex items-center justify-between w-full p-2 bg-gray-600 rounded hover:bg-gray-500">
             <span class="flex items-center">
               <input type="checkbox" id="turnDetectionEnabled" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
               Turn Detection
             </span>
-            <span class="text-sm">Default: agora_vad (deprecated)</span>
+            <span id="turnDetectionBtnSubtitle" class="text-sm">Pipeline (legacy shape)</span>
           </button>
           <div id="turnDetectionConfig" class="hidden mt-2 space-y-2">
             <div class="has-tooltip relative">
-              <label class="text-sm">Turn Detection Type</label>
+              <label class="text-sm">Mode</label>
               <select id="turnDetectionType" class="w-full p-2 rounded bg-gray-600 turn-field">
-                <option value="agora_vad">Agora VAD</option>
-                <option value="server_vad">Server VAD (MLLM)</option>
-                <option value="semantic_vad">Semantic VAD (MLLM)</option>
+                <option value="agora_vad">agora_vad</option>
+                <option value="server_vad">server_vad</option>
+                <option value="semantic_vad">semantic_vad</option>
               </select>
-              <div class="tooltip">Turn detection mechanism. Server VAD and Semantic VAD are only available when MLLM is enabled.</div>
+              <div class="tooltip">mllm.turn_detection.mode when MLLM is on. With MLLM off and deprecated turn detection on, this maps to legacy <code>turn_detection.type</code>.</div>
             </div>
+            <div id="turnDetectionInterruptUiWrap" class="space-y-2">
             <div class="has-tooltip relative">
               <label class="text-sm">Interrupt Mode</label>
               <select id="interruptMode" class="w-full p-2 rounded bg-gray-600 turn-field">
@@ -7270,7 +7389,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
                 <option value="keywords">Keywords (Stop on keyword detection)</option>
                 <option value="adaptive">Adaptive (Dynamic threshold adjustment)</option>
               </select>
-              <div class="tooltip">Sets the agent's behavior when human voice interrupts the agent while it is interacting. Only interrupt mode is supported when MLLM is enabled. Keyword mode and AIVAD are mutually exclusive.</div>
+              <div class="tooltip">Pipeline only: maps to top-level <code>interruption</code> (v2.6). Hidden for MLLM realtime turn detection.</div>
             </div>
             <div id="interruptKeywordsBlock" class="has-tooltip relative hidden">
               <label class="text-sm">Interrupt Keywords</label>
@@ -7283,30 +7402,37 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               />
               <div class="tooltip">Keywords that trigger interruption when keyword mode is enabled. Separate multiple keywords with commas. Maximum 128 keywords allowed.</div>
             </div>
+            </div>
 
-            <!-- Turn Detection Parameters -->
-            <div class="has-tooltip relative">
-              <label class="text-sm">Interrupt Duration (ms)</label>
+            <div id="turnAgoraInterruptDurationRow" class="has-tooltip relative">
+              <label class="text-sm">Interrupt duration (ms)</label>
               <input type="number" id="turnInterruptDuration" class="w-full p-2 rounded bg-gray-600 turn-field" placeholder="160" min="0">
-              <div class="tooltip">Time before interruption triggers (default: 160ms).</div>
+              <div class="tooltip">Pipeline legacy: interrupt timing. MLLM + <code>agora_vad</code>: <code>agora_vad_config.interrupt_duration_ms</code>.</div>
             </div>
+            <div id="turnDetectionVadSharedParamsWrap" class="space-y-2">
             <div class="has-tooltip relative">
-              <label class="text-sm">Prefix Padding (ms)</label>
+              <label class="text-sm">Prefix padding (ms)</label>
               <input type="number" id="turnPrefixPadding" class="w-full p-2 rounded bg-gray-600 turn-field" placeholder="800" min="0">
-              <div class="tooltip">Forward padding for speech capture (default: 800ms).</div>
+              <div class="tooltip"><code>prefix_padding_ms</code> in agora_vad_config or server_vad_config.</div>
             </div>
             <div class="has-tooltip relative">
-              <label class="text-sm">Silence Duration (ms)</label>
+              <label class="text-sm">Silence duration (ms)</label>
               <input type="number" id="turnSilenceDuration" class="w-full p-2 rounded bg-gray-600 turn-field" placeholder="640" min="0">
-              <div class="tooltip">Time before assuming speech end (default: 640ms).</div>
+              <div class="tooltip"><code>silence_duration_ms</code> in agora_vad_config or server_vad_config.</div>
             </div>
             <div class="has-tooltip relative">
               <label class="text-sm">Threshold</label>
               <input type="number" id="turnThreshold" class="w-full p-2 rounded bg-gray-600 turn-field" placeholder="0.5" min="0" max="1" step="0.1">
-              <div class="tooltip">Voice detection sensitivity (0.0-1.0, default: 0.5).</div>
+              <div class="tooltip"><code>threshold</code> in agora_vad_config or server_vad_config.</div>
+            </div>
+            </div>
+            <div id="turnServerVadIdleRow" class="has-tooltip relative hidden">
+              <label class="text-sm">Idle timeout (ms)</label>
+              <input type="number" id="turnServerVadIdleTimeoutMs" class="w-full p-2 rounded bg-gray-600 turn-field" placeholder="Optional" min="0">
+              <div class="tooltip"><code>server_vad_config.idle_timeout_ms</code> (e.g. OpenAI Realtime).</div>
             </div>
 
-            <!-- MLLM-specific options -->
+            <!-- Legacy UI: not part of mllm.turn_detection JSON -->
             <div id="mllmOptionsContainer" class="hidden">
               <div class="has-tooltip relative">
                 <label class="text-sm">Create Response</label>
@@ -7331,14 +7457,20 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               <div class="has-tooltip relative">
                 <label class="text-sm">Eagerness</label>
                 <select id="turnEagerness" class="w-full p-2 rounded bg-gray-600 turn-field">
-                  <option value="low">Low</option>
                   <option value="auto">Auto</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
                   <option value="high">High</option>
                 </select>
-                <div class="tooltip">Response timing control for semantic VAD. Low: conservative, High: aggressive, Auto: balanced.</div>
+                <div class="tooltip">semantic_vad_config.eagerness: auto, low, medium, or high (OpenAI Realtime semantic VAD).</div>
               </div>
             </div>
           </div>
+        </div>
+        </div>
+        <div id="advTurnDetectionMllmNotice" class="hidden mb-4 rounded border border-emerald-700/60 bg-emerald-950/30 p-3 text-sm text-gray-200 space-y-2">
+          <p class="text-xs text-gray-300">While <strong class="text-white">MLLM</strong> is on, realtime turn detection is configured in <strong class="text-white">MLLM Config</strong> (same controls, correct <code class="text-gray-200">mllm.turn_detection</code> payload). Pipeline v2.4 turn detection is turned off so you do not mix schemas.</p>
+          <button type="button" id="advOpenMllmTurnDetectionBtn" class="text-xs px-3 py-1.5 rounded bg-emerald-800 hover:bg-emerald-700 text-white">Open MLLM settings</button>
         </div>
 
         <!-- Turn Detection v2.4 (mode + config) -->
@@ -7348,7 +7480,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               <input type="checkbox" id="turnDetectionV24Enabled" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
               Turn Detection
             </span>
-            <span class="text-sm">mode + config (SoS / EoS)</span>
+            <span class="text-sm">Pipeline: SoS / EoS (v2.4)</span>
           </button>
           <div id="turnDetectionV24Config" class="hidden mt-2 space-y-2">
             <div class="has-tooltip relative">
@@ -7432,6 +7564,15 @@ The user speaks to you directly — treat each input as part of a live, spoken d
                 <label class="text-sm">Max Wait (ms)</label>
                 <input type="number" id="turnV24EoSemanticMaxWaitMs" class="w-full p-2 rounded bg-gray-600 turn-v24-field" placeholder="3000" min="0">
                 <div class="tooltip">semantic_config: maximum wait time for semantic end-of-speech.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <label class="text-sm">Pause state detection</label>
+                <select id="turnV24EoSemanticPauseStateEnabled" class="w-full p-2 rounded bg-gray-600 turn-v24-field">
+                  <option value="">Omit (API default: true)</option>
+                  <option value="true">true</option>
+                  <option value="false">false</option>
+                </select>
+                <div class="tooltip">semantic_config.pause_state_enabled (boolean, nullable, default true). When true, the agent infers pause intent (e.g. “hold on”, “just a moment”) and waits for more input instead of treating the utterance as complete. When false, that semantic pause detection is off. Omit the field to use the service default.</div>
               </div>
             </div>
           </div>
