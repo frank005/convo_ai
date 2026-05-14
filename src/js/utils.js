@@ -1452,7 +1452,7 @@ window.Utils = class Utils {
 
         const config = {
             name: formData.uniqueName,
-            ...(presets.length > 0 ? { preset: presets.join(',') } : {}),
+            ...(presets.length > 0 && !formData.enableMllm ? { preset: presets.join(',') } : {}),
             properties: {
                 channel: formData.channel,
                 token: formData.token,
