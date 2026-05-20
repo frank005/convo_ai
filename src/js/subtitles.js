@@ -89,6 +89,17 @@ class SubtitleManager {
             this.elements.enableSubtitles.addEventListener('change', (e) => {
                 this.updateLiveSubtitleMainControlsVisibility();
                 if (e.target.checked) {
+                    if (window.__formSettingRestoreSync) {
+                        if (this.elements.subtitleModeDataStream && this.elements.subtitleModeDataStream.checked) {
+                            this.enableDataStreamMode();
+                        } else {
+                            if (this.elements.subtitleModeRTM) {
+                                this.elements.subtitleModeRTM.checked = true;
+                            }
+                            this.enableRTMMode();
+                        }
+                        return;
+                    }
                     // Check which mode is selected
                     if (this.elements.subtitleModeRTM && this.elements.subtitleModeRTM.checked) {
                         this.enableRTMMode();

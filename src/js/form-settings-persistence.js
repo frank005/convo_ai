@@ -137,6 +137,151 @@
         apply(parsed);
     }
 
+    /** IDs whose `change` handlers show/hide panels or lock modalities (must run after listeners exist). */
+    const SYNC_CHANGE_IDS = [
+        "deprecatedFeatures",
+        "enableMllm",
+        "enableAvatar",
+        "avatarVendor",
+        "enableSubtitles",
+        "subtitleModeRTM",
+        "subtitleModeDataStream",
+        "enableRtm",
+        "enableSal",
+        "parametersEnabled",
+        "overrideLlm",
+        "overrideTts",
+        "overrideAsr",
+        "showGeofenceSettings",
+        "showRtcEncryptionSettings",
+        "showBackendPipelineSettings",
+        "ttsVendor",
+        "llmVendor",
+        "asrVendor",
+        "asrLanguage",
+        "mllmVendor",
+        "asrPreset",
+        "llmPreset",
+        "ttsPreset",
+        "rtcEncryptionMode",
+        "turnDetectionEnabled",
+        "interruptMode",
+        "turnDetectionType",
+        "turnV24StartOfSpeechMode",
+        "turnV24EndOfSpeechMode",
+        "farewellGracefulEnabled",
+        "enableTools",
+        "fillerWordsEnable",
+        "inputImage",
+        "outputAudio",
+        "turnsFetchAllPages",
+    ];
+
+    /** "Set" checkbox → linked field `disabled` state (no `change` handlers on these sets). */
+    const LINKED_SET_FIELD_PAIRS = [
+        ["transcriptEnableSet", "transcriptEnable"],
+        ["transcriptProtocolVersionSet", "transcriptProtocolVersion"],
+        ["transcriptEnableWordsSet", "transcriptEnableWords"],
+        ["transcriptRedundantSet", "transcriptRedundant"],
+        ["expSetBaseUrl", "expBaseUrl"],
+        ["expSetRtcCodec", "expRtcCodec"],
+        ["expSetRtcScenario", "expRtcScenario"],
+        ["expSetRtcSdkParams", "expRtcSdkParams"],
+        ["expSetAudioPassthrough", "expAudioPassthrough"],
+        ["expSetAudioAec", "expAudioAec"],
+        ["expSetAudioAgc", "expAudioAgc"],
+        ["expSetAudioAns", "expAudioAns"],
+        ["expSetAudioAnsModeType", "expAudioAnsModeType"],
+        ["expSetAudioAnsSuppressionMode", "expAudioAnsSuppressionMode"],
+        ["expSetAivadForceThreshold", "expAivadForceThreshold"],
+        ["expSetLlmInterruptFlag", "expLlmInterruptFlag"],
+        ["expSetLlmIgnoreEmpty", "expLlmIgnoreEmpty"],
+        ["expSetLlmNonFinalForEmpty", "expLlmNonFinalForEmpty"],
+        ["expSetLlmEmptyFlag", "expLlmEmptyFlag"],
+        ["expSetLlmAutoMerge", "expLlmAutoMerge"],
+        ["expSetLlmGreetingInterruptable", "expLlmGreetingInterruptable"],
+        ["expSetAsrHotwords", "expAsrHotwords"],
+        ["expSetTurnEosTimeout", "expTurnEosTimeout"],
+        ["expSetTurnStrategy", "expTurnStrategy"],
+        ["expSetTurnStrictTimestamp", "expTurnStrictTimestamp"],
+        ["expSetTranscriptEnable", "expTranscriptEnable"],
+        ["expSetTranscriptEnableWords", "expTranscriptEnableWords"],
+        ["expSetTranscriptRedundant", "expTranscriptRedundant"],
+        ["expSetTranscriptProtocolVersion", "expTranscriptProtocolVersion"],
+    ];
+
+    function syncLinkedSetFields() {
+        LINKED_SET_FIELD_PAIRS.forEach(([setId, fieldId]) => {
+            const setEl = document.getElementById(setId);
+            const fieldEl = document.getElementById(fieldId);
+            if (setEl && fieldEl) {
+                fieldEl.disabled = !setEl.checked;
+            }
+        });
+    }
+
+    function syncTurnDetectionV24Panel() {
+        const enableMllm = document.getElementById("enableMllm");
+        if (enableMllm && enableMllm.checked) return;
+
+        const v24Enabled = document.getElementById("turnDetectionV24Enabled");
+        const v24Config = document.getElementById("turnDetectionV24Config");
+        if (!v24Enabled || !v24Config) return;
+
+        if (v24Enabled.checked) {
+            v24Config.classList.remove("hidden");
+        } else {
+            v24Config.classList.add("hidden");
+        }
+    }
+
+    function dispatchInputOrChange(id, type) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.dispatchEvent(new Event(type, { bubbles: true }));
+    }
+
+    /**
+     * Re-run dependent UI after restoring checkbox/select values (panels, modalities, subtitles mode).
+     * Call once at the end of DOMContentLoaded, after all change listeners are registered.
+     */
+    function syncDependentUI() {
+        window.__formSettingRestoreSync = true;
+        try {
+            dispatchInputOrChange("pipelineId", "input");
+
+            SYNC_CHANGE_IDS.forEach((id) => dispatchInputOrChange(id, "change"));
+
+            syncLinkedSetFields();
+
+            if (typeof window.applyAllPresetState === "function") {
+                window.applyAllPresetState();
+            }
+            if (typeof window.updateTurnV24SubVisibility === "function") {
+                window.updateTurnV24SubVisibility();
+            }
+            if (typeof window.syncTurnsPaginationUi === "function") {
+                window.syncTurnsPaginationUi();
+            }
+            syncTurnDetectionV24Panel();
+
+            if (typeof window.syncOptionalAgentSettingsPanels === "function") {
+                window.syncOptionalAgentSettingsPanels();
+            }
+            if (typeof window.syncTurnDetectionUi === "function") {
+                window.syncTurnDetectionUi();
+            }
+            if (typeof window.applyMllmTurnDetectionUiLayout === "function") {
+                window.applyMllmTurnDetectionUiLayout();
+            }
+            if (window.ui && typeof window.ui.syncRestoredFormDependents === "function") {
+                window.ui.syncRestoredFormDependents();
+            }
+        } finally {
+            window.__formSettingRestoreSync = false;
+        }
+    }
+
     function attachSaveListeners() {
         document.addEventListener("input", scheduleSave, true);
         document.addEventListener("change", scheduleSave, true);
@@ -145,6 +290,7 @@
     window.FormSettingsPersistence = {
         STORAGE_KEY,
         applyFromStorage,
+        syncDependentUI,
         attachSaveListeners,
         save,
         collect,

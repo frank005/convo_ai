@@ -285,7 +285,7 @@
                         <div class="tooltip">Enter the ID of the agent you want to query</div>
                       </div>
 
-                      <div class="grid grid-cols-1 gap-2">
+                      <div class="grid grid-cols-2 gap-2">
                         <div class="has-tooltip relative">
         <button
                             id="queryAgentBtn"
@@ -315,21 +315,8 @@
                           </button>
                           <div class="tooltip">Retrieve the conversation history between the user and the Conversational AI agent while the agent is running. Shows messages with role (user/assistant) and content.</div>
                         </div>
-                        <div class="has-tooltip relative space-y-2">
-                          <div class="grid grid-cols-2 gap-2">
-                            <div>
-                              <label class="text-xs text-gray-400 block mb-1">page_index</label>
-                              <input id="turnsPageIndex" type="number" min="1" value="1" class="w-full p-1 rounded bg-gray-800 text-white text-sm border border-gray-600" />
-                            </div>
-                            <div>
-                              <label class="text-xs text-gray-400 block mb-1">page_size (max 50)</label>
-                              <input id="turnsPageSize" type="number" min="1" max="50" value="50" class="w-full p-1 rounded bg-gray-800 text-white text-sm border border-gray-600" />
-                            </div>
-                          </div>
-                          <label class="flex items-center gap-2 text-xs text-gray-300">
-                            <input type="checkbox" id="turnsFetchAllPages" class="rounded bg-gray-700 border-gray-600" />
-                            Fetch all pages (sessions &gt; 50 turns)
-                          </label>
+
+                        <div class="has-tooltip relative">
                           <button
                             id="getConversationTurnsBtn"
                             class="modern-btn modern-btn-primary w-full text-sm"
@@ -338,17 +325,47 @@
                           </button>
                           <div class="tooltip">Get per-turn start/end events and latency metrics (paginated, default page 1, up to 50 turns per page). Only available for sessions in the last 7 days.</div>
                         </div>
+                      </div>
 
+                      <div class="flex flex-wrap items-center gap-x-4 gap-y-1 px-2">
+                        <div class="has-tooltip relative">
+                          <button
+                            id="toggleConversationTurnsOptions"
+                            class="text-xs text-gray-400 hover:text-gray-300 underline focus:outline-none"
+                            type="button"
+                          >
+                            <span id="toggleConversationTurnsOptionsText">Show Conversation Turn Options</span>
+                          </button>
+                          <div class="tooltip">Pagination and fetch-all settings for Query Conversation Turns. Defaults: page 1, 50 turns per page.</div>
+                        </div>
                         <div class="has-tooltip relative">
                           <button
                             id="toggleAgentListFilters"
-                            class="w-full text-xs text-gray-400 hover:text-gray-300 underline focus:outline-none text-left p-2"
+                            class="text-xs text-gray-400 hover:text-gray-300 underline focus:outline-none"
                             type="button"
                           >
                             <span id="toggleAgentListFiltersText">Show Advanced Filters</span>
                           </button>
                           <div class="tooltip">Advanced filters only apply to "Retrieve Agent List". Fill only the fields you need - all fields are optional.</div>
                         </div>
+                      </div>
+
+                      <div id="conversationTurnsOptions" class="hidden mt-2 p-3 bg-gray-800 rounded border border-gray-600 space-y-3">
+                        <div class="text-xs text-gray-500 italic">Defaults: page 1, up to 50 turns per page</div>
+                        <div id="turnsPaginationFields" class="grid grid-cols-2 gap-2">
+                          <div>
+                            <label class="text-xs text-gray-400 block mb-1" for="turnsPageIndex">page_index</label>
+                            <input id="turnsPageIndex" type="number" min="1" value="1" class="w-full p-2 rounded bg-gray-700 text-white text-sm border border-gray-600" />
+                          </div>
+                          <div>
+                            <label class="text-xs text-gray-400 block mb-1" for="turnsPageSize">page_size (max 50)</label>
+                            <input id="turnsPageSize" type="number" min="1" max="50" value="50" class="w-full p-2 rounded bg-gray-700 text-white text-sm border border-gray-600" />
+                          </div>
+                        </div>
+                        <label class="flex items-start gap-2 text-xs text-gray-300 cursor-pointer">
+                          <input type="checkbox" id="turnsFetchAllPages" class="mt-0.5 rounded bg-gray-700 border-gray-600 shrink-0" />
+                          <span>Fetch all pages (sessions with more than 50 turns)</span>
+                        </label>
                       </div>
 
                       <!-- Advanced Filters Panel - Below Buttons -->
@@ -1577,7 +1594,7 @@
   </div>
 
   <!-- JavaScript Modules -->
-  <script src="src/js/form-settings-persistence.js?v=1"></script>
+  <script src="src/js/form-settings-persistence.js?v=3"></script>
   <script>
     // Initialize components after all scripts are loaded
     document.addEventListener('DOMContentLoaded', function() {
@@ -1808,6 +1825,26 @@
       }
     });
     }
+
+    function syncTurnsPaginationUi() {
+      const fetchAllEl = document.getElementById('turnsFetchAllPages');
+      const paginationWrap = document.getElementById('turnsPaginationFields');
+      const pageIndexEl = document.getElementById('turnsPageIndex');
+      const pageSizeEl = document.getElementById('turnsPageSize');
+      const fetchAll = !!(fetchAllEl && fetchAllEl.checked);
+      if (paginationWrap) {
+        paginationWrap.classList.toggle('opacity-50', fetchAll);
+        paginationWrap.classList.toggle('pointer-events-none', fetchAll);
+      }
+      if (pageIndexEl) pageIndexEl.disabled = fetchAll;
+      if (pageSizeEl) pageSizeEl.disabled = fetchAll;
+    }
+    const turnsFetchAllPagesEl = document.getElementById('turnsFetchAllPages');
+    if (turnsFetchAllPagesEl) {
+      turnsFetchAllPagesEl.addEventListener('change', syncTurnsPaginationUi);
+      syncTurnsPaginationUi();
+    }
+    window.syncTurnsPaginationUi = syncTurnsPaginationUi;
 
     // Conversation Turns button click handler
     const getConversationTurnsBtn = document.getElementById('getConversationTurnsBtn');
@@ -3249,53 +3286,14 @@
       const avatarRtcUid = document.getElementById('avatarRtcUid');
 
       if (this.checked) {
-        // Show Agora token requirement alert
-        const agoraTokenModal = document.getElementById('agoraTokenModal');
-        agoraTokenModal.classList.remove('hidden');
-
-        // Show placeholder, hide image when AI Avatar is enabled
-        avatarImage.style.display = 'none';
-        avatarVideo.style.display = 'none';
-        const avatarPlaceholder = document.getElementById('avatarPlaceholder');
-        avatarPlaceholder.style.display = 'flex';
-        avatarPlaceholder.innerHTML = `
-          <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-            <!-- Background circle -->
-            <circle cx="60" cy="60" r="50" fill="none" stroke="#00ffff" stroke-width="2" opacity="0.3"/>
-            <!-- AI Icon -->
-            <g transform="translate(60, 45)">
-              <!-- Brain/Neural network representation -->
-              <circle cx="0" cy="0" r="8" fill="none" stroke="#00ffff" stroke-width="1.5"/>
-              <circle cx="-12" cy="-8" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
-              <circle cx="12" cy="-8" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
-              <circle cx="-8" cy="12" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
-              <circle cx="8" cy="12" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
-              <!-- Connection lines -->
-              <line x1="-12" y1="-8" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
-              <line x1="12" y1="-8" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
-              <line x1="-8" y1="12" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
-              <line x1="8" y1="12" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
-            </g>
-            <!-- Text -->
-            <text x="60" y="85" text-anchor="middle" fill="#00ffff" font-family="Arial, sans-serif" font-size="12" font-weight="bold">AI AVATAR</text>
-          </svg>
-        `;
-        console.log('AI Avatar enabled - SVG should be visible');
-
-        // Set required UIDs for AI Avatar
-        if (!clientRtcUid.value.trim()) {
-          clientRtcUid.value = '1001'; // Default client UID
+        if (!window.__formSettingRestoreSync) {
+          const agoraTokenModal = document.getElementById('agoraTokenModal');
+          if (agoraTokenModal) agoraTokenModal.classList.remove('hidden');
         }
 
-        // Show note about client UID requirement
-        document.getElementById('clientUidNote').classList.remove('hidden');
-
-        // Set remote RTC UIDs to include only the client UID (for agent configuration)
-        const clientUid = clientRtcUid.value.trim() || '1001';
-        remoteRtcUids.value = clientUid;
-
-        // Show note about automatic UID setting
-        document.getElementById('avatarUidNote').classList.remove('hidden');
+        if (window.ui && typeof window.ui.applyEnableAvatarUiIfChecked === 'function') {
+          window.ui.applyEnableAvatarUiIfChecked();
+        }
 
         if (window.ui && typeof window.ui.autoConfigureAvatarIfPossible === 'function') {
           window.ui.autoConfigureAvatarIfPossible();
@@ -3705,6 +3703,7 @@
     const ttsVendorSelect = document.getElementById('ttsVendor');
     if (ttsVendorSelect) ttsVendorSelect.addEventListener('change', applyAllPresetState);
     applyAllPresetState();
+    window.applyAllPresetState = applyAllPresetState;
 
     // Handle RTM enable/disable
     if (enableRtm) {
@@ -3844,8 +3843,8 @@
         this.checked = true; // Prevent unchecking if it's the last selected option
       }
 
-      // Show modal when audio is checked
-      if (this.checked) {
+      // Show modal when audio is checked (skip on saved-settings restore)
+      if (this.checked && !window.__formSettingRestoreSync) {
           const audioConfigModal = document.getElementById('audioConfigModal');
           if (audioConfigModal) {
             audioConfigModal.classList.remove('hidden');
@@ -4943,6 +4942,7 @@
     if (turnV24StartOfSpeechMode) turnV24StartOfSpeechMode.addEventListener('change', updateTurnV24SubVisibility);
     if (turnV24EndOfSpeechMode) turnV24EndOfSpeechMode.addEventListener('change', updateTurnV24SubVisibility);
     updateTurnV24SubVisibility();
+    window.updateTurnV24SubVisibility = updateTurnV24SubVisibility;
 
     // Parameters toggle
     const parametersBtn = document.getElementById('parametersBtn');
@@ -4951,6 +4951,10 @@
         const config = document.getElementById('parametersConfig');
         if (config) config.classList.toggle('hidden');
       });
+    }
+
+    if (window.FormSettingsPersistence && typeof window.FormSettingsPersistence.syncDependentUI === 'function') {
+      window.FormSettingsPersistence.syncDependentUI();
     }
   });
   </script>
@@ -4966,7 +4970,7 @@
   <script src="src/js/camera-preview.js?v=1.0"></script>
   <script src="src/js/conversational-ai-api.js?v=1.2"></script>
   <script src="src/js/subtitles.js?v=1.3"></script>
-  <script src="src/js/ui.js?v=1.4"></script>
+  <script src="src/js/ui.js?v=1.5"></script>
   <script src="src/js/asr.js?v=1.0"></script>
 
   <!-- Subtitle Overlay -->

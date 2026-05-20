@@ -38,7 +38,7 @@ window.UI = class UI {
         this.setupDrawerListeners();
         // Initialize TTS vendor blocks visibility
         this.handleTtsVendorChange();
-        this.syncRestoredFormDependents();
+        // Dependent UI (checkbox panels) runs via FormSettingsPersistence.syncDependentUI() at end of DOMContentLoaded
         // Update base URL indicator
         this.updateBaseUrlIndicator();
 
@@ -58,26 +58,66 @@ window.UI = class UI {
         this.initializeCameraPreviewManager();
     }
 
-    /** After restoring saved fields, refresh dependent UI (panels, vendors, tokens). */
+    /** Non-event side effects after saved settings (tokens, avatar layout). Called from syncDependentUI(). */
     syncRestoredFormDependents() {
-        if (typeof window.syncOptionalAgentSettingsPanels === "function") {
-            window.syncOptionalAgentSettingsPanels();
-        }
         this.handleGeofenceAreaChange();
         this.handleGeofenceExcludeChange();
-        document.getElementById("avatarVendor")?.dispatchEvent(new Event("change", { bubbles: true }));
-        document.getElementById("mllmVendor")?.dispatchEvent(new Event("change", { bubbles: true }));
-        document.getElementById("pipelineId")?.dispatchEvent(new Event("input", { bubbles: true }));
-        document.getElementById("rtcEncryptionMode")?.dispatchEvent(new Event("change", { bubbles: true }));
+        this.handleTtsVendorChange();
         if (
             window.subtitleManager &&
             typeof window.subtitleManager.updateLiveSubtitleMainControlsVisibility === "function"
         ) {
             window.subtitleManager.updateLiveSubtitleMainControlsVisibility();
         }
+        this.applyEnableAvatarUiIfChecked();
         this.trySyncAvatarFieldsFromClient();
         this.autoGenerateAgentAndClientTokensIfPossible();
         this.autoConfigureAvatarIfPossible();
+        this.updateMessageUIState();
+    }
+
+    /** Avatar enable UI without the Agora token modal (used on restore and after change handler). */
+    applyEnableAvatarUiIfChecked() {
+        const enableAvatar = document.getElementById("enableAvatar");
+        if (!enableAvatar || !enableAvatar.checked) return;
+
+        const avatarImage = document.getElementById("avatarImage");
+        const avatarVideo = document.getElementById("avatarVideo");
+        const avatarPlaceholder = document.getElementById("avatarPlaceholder");
+        const clientRtcUid = document.getElementById("clientRtcUid");
+        const remoteRtcUids = document.getElementById("remoteRtcUids");
+
+        if (avatarImage) avatarImage.style.display = "none";
+        if (avatarVideo) avatarVideo.style.display = "none";
+        if (avatarPlaceholder) {
+            avatarPlaceholder.style.display = "flex";
+            avatarPlaceholder.innerHTML = `
+          <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="#00ffff" stroke-width="2" opacity="0.3"/>
+            <g transform="translate(60, 45)">
+              <circle cx="0" cy="0" r="8" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+              <circle cx="-12" cy="-8" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+              <circle cx="12" cy="-8" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+              <circle cx="-8" cy="12" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+              <circle cx="8" cy="12" r="4" fill="none" stroke="#00ffff" stroke-width="1.5"/>
+              <line x1="-12" y1="-8" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+              <line x1="12" y1="-8" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+              <line x1="-8" y1="12" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+              <line x1="8" y1="12" x2="0" y2="0" stroke="#00ffff" stroke-width="1" opacity="0.7"/>
+            </g>
+            <text x="60" y="85" text-anchor="middle" fill="#00ffff" font-family="Arial, sans-serif" font-size="12" font-weight="bold">AI AVATAR</text>
+          </svg>
+        `;
+        }
+
+        if (clientRtcUid && !clientRtcUid.value.trim()) {
+            clientRtcUid.value = "1001";
+        }
+        document.getElementById("clientUidNote")?.classList.remove("hidden");
+        if (remoteRtcUids && clientRtcUid) {
+            remoteRtcUids.value = clientRtcUid.value.trim() || "1001";
+        }
+        document.getElementById("avatarUidNote")?.classList.remove("hidden");
     }
 
     /** Match index.html AI Avatar enabled behavior without opening the token modal (e.g. after restore). */
@@ -272,6 +312,10 @@ window.UI = class UI {
         const toggleAgentListFilters = document.getElementById("toggleAgentListFilters");
         if (toggleAgentListFilters) {
             toggleAgentListFilters.addEventListener("click", () => this.toggleAgentListFilters());
+        }
+        const toggleConversationTurnsOptions = document.getElementById("toggleConversationTurnsOptions");
+        if (toggleConversationTurnsOptions) {
+            toggleConversationTurnsOptions.addEventListener("click", () => this.toggleConversationTurnsOptions());
         }
         const agentListNextPageBtn = document.getElementById("agentListNextPageBtn");
         if (agentListNextPageBtn) {
@@ -2580,6 +2624,21 @@ window.UI = class UI {
             } else {
                 filtersDiv.classList.add("hidden");
                 toggleText.textContent = "Show Advanced Filters";
+            }
+        }
+    }
+
+    toggleConversationTurnsOptions() {
+        const optionsDiv = document.getElementById("conversationTurnsOptions");
+        const toggleText = document.getElementById("toggleConversationTurnsOptionsText");
+        if (optionsDiv && toggleText) {
+            const isHidden = optionsDiv.classList.contains("hidden");
+            if (isHidden) {
+                optionsDiv.classList.remove("hidden");
+                toggleText.textContent = "Hide Conversation Turn Options";
+            } else {
+                optionsDiv.classList.add("hidden");
+                toggleText.textContent = "Show Conversation Turn Options";
             }
         }
     }
