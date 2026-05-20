@@ -36,6 +36,67 @@ window.AgoraAPI = class AgoraAPI {
         };
     }
 
+    /**
+     * Format API error payloads (JSON reason/status) for display. Uses Utils when loaded.
+     */
+    _formatConvoAiErrorBody(raw) {
+        const msg = raw == null ? '' : (typeof raw === 'string' ? raw : JSON.stringify(raw));
+        if (typeof window !== 'undefined' && window.Utils && typeof window.Utils.formatConvoAiApiError === 'function') {
+            return window.Utils.formatConvoAiApiError({ message: msg });
+        }
+        return msg;
+    }
+
+    async _readResponseBody(response) {
+        const text = await response.text();
+        if (!text) {
+            return { text: '', json: null };
+        }
+        try {
+            return { text, json: JSON.parse(text) };
+        } catch (_e) {
+            return { text, json: null };
+        }
+    }
+
+    _errorPayloadForFormat(response, json, text) {
+        if (json && typeof json === 'object') {
+            const payload = { ...json };
+            if (!payload.status && response.status) {
+                payload.status = response.status;
+            }
+            return JSON.stringify(payload);
+        }
+        return text || response.statusText || `HTTP ${response.status}`;
+    }
+
+    async _handleResponse(response, operation) {
+        const { text, json } = await this._readResponseBody(response);
+        if (!response.ok) {
+            const raw = this._errorPayloadForFormat(response, json, text);
+            throw new Error(`${operation}: ${this._formatConvoAiErrorBody(raw)}`);
+        }
+        if (json != null) {
+            return json;
+        }
+        if (!text) {
+            return {};
+        }
+        try {
+            return JSON.parse(text);
+        } catch (_e) {
+            throw new Error(`${operation}: Invalid JSON response`);
+        }
+    }
+
+    _wrapRequestError(operation, error) {
+        const message = error && error.message ? error.message : String(error);
+        if (message.startsWith(`${operation}:`)) {
+            return error instanceof Error ? error : new Error(message);
+        }
+        return new Error(`${operation}: ${this._formatConvoAiErrorBody(message)}`);
+    }
+
     async createAgent(customerId, customerSecret, agentConfig) {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/join`;
@@ -48,15 +109,16 @@ window.AgoraAPI = class AgoraAPI {
             body.agent_rtm_uid = agentConfig.properties.agent_rtm_uid;
         }
 
+        const operation = 'Failed to create agent';
         try {
             const response = await fetch(url, {
                 method: "POST",
                 headers,
                 body: JSON.stringify(body)
             });
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to create agent: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -64,15 +126,16 @@ window.AgoraAPI = class AgoraAPI {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/agents/${agentId}/update`;
 
+        const operation = 'Failed to update agent';
         try {
             const response = await fetch(url, {
                 method: "POST",
                 headers,
                 body: JSON.stringify(updatePayload)
             });
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to update agent: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -80,14 +143,15 @@ window.AgoraAPI = class AgoraAPI {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/agents/${agentId}/leave`;
 
+        const operation = 'Failed to stop agent';
         try {
             const response = await fetch(url, {
                 method: "POST",
                 headers
             });
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to stop agent: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -95,14 +159,15 @@ window.AgoraAPI = class AgoraAPI {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/agents/${agentId}`;
 
+        const operation = 'Failed to query agent';
         try {
             const response = await fetch(url, {
                 method: "GET",
                 headers
             });
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to query agent: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -120,14 +185,15 @@ window.AgoraAPI = class AgoraAPI {
         
         const url = `${this.baseUrl}/projects/${this.appId}/agents${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
 
+        const operation = 'Failed to list agents';
         try {
             const response = await fetch(url, {
                 method: "GET",
                 headers
             });
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to list agents: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -135,30 +201,75 @@ window.AgoraAPI = class AgoraAPI {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/agents/${agentId}/history`;
 
+        const operation = 'Failed to get agent history';
         try {
             const response = await fetch(url, {
                 method: "GET",
                 headers
             });
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to get agent history: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
-    async getConversationTurns(customerId, customerSecret, agentId) {
+    async getConversationTurns(customerId, customerSecret, agentId, params = {}) {
         const headers = this.getAuthHeaders(customerId, customerSecret);
-        const url = `${this.baseUrl}/projects/${this.appId}/agents/${agentId}/turns`;
+        const queryParams = new URLSearchParams();
+        if (params.page_index !== undefined && params.page_index !== null) {
+            queryParams.append('page_index', params.page_index);
+        }
+        if (params.page_size !== undefined && params.page_size !== null) {
+            queryParams.append('page_size', Math.min(50, Math.max(1, params.page_size)));
+        }
+        const qs = queryParams.toString();
+        const url = `${this.baseUrl}/projects/${this.appId}/agents/${agentId}/turns${qs ? `?${qs}` : ''}`;
 
+        const operation = 'Failed to query conversation turns';
         try {
             const response = await fetch(url, {
                 method: "GET",
                 headers
             });
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to query conversation turns: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
+    }
+
+    /**
+     * Fetch all conversation turn pages. Merges turns[] across pages.
+     */
+    async getAllConversationTurns(customerId, customerSecret, agentId, params = {}) {
+        const pageSize = Math.min(50, Math.max(1, params.page_size || 50));
+        let pageIndex = 1;
+        let mergedTurns = [];
+        let lastPage = null;
+
+        while (true) {
+            const page = await this.getConversationTurns(customerId, customerSecret, agentId, {
+                page_index: pageIndex,
+                page_size: pageSize
+            });
+            lastPage = page;
+            if (Array.isArray(page.turns)) {
+                mergedTurns = mergedTurns.concat(page.turns);
+            }
+            if (!page.pagination || page.pagination.is_last_page) {
+                break;
+            }
+            pageIndex += 1;
+            if (page.pagination.total_pages && pageIndex > page.pagination.total_pages) {
+                break;
+            }
+        }
+
+        return {
+            ...(lastPage || {}),
+            turns: mergedTurns,
+            _fetch_all_pages: true,
+            _pages_fetched: pageIndex
+        };
     }
 
     async sendCustomInstruction(customerId, customerSecret, agentId, instruction, options = {}) {
@@ -172,19 +283,16 @@ window.AgoraAPI = class AgoraAPI {
             ...(typeof options.interruptable === 'boolean' ? { interruptable: options.interruptable } : {}),
             ...(options.metadata && typeof options.metadata === 'object' ? { metadata: options.metadata } : {})
         };
+        const operation = 'Failed to send custom instruction';
         try {
             const response = await fetch(url, {
                 method: "POST",
                 headers,
                 body: JSON.stringify(body)
             });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || response.statusText);
-            }
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to send custom instruction: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -192,19 +300,16 @@ window.AgoraAPI = class AgoraAPI {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/agents/${encodeURIComponent(agentId)}/speak`;
         const body = { text, priority, interruptable };
+        const operation = 'Failed to broadcast message';
         try {
             const response = await fetch(url, {
                 method: "POST",
                 headers,
                 body: JSON.stringify(body)
             });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || response.statusText);
-            }
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to broadcast message: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -238,6 +343,7 @@ window.AgoraAPI = class AgoraAPI {
         // Fallback to REST API method
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/agents/${encodeURIComponent(agentId)}/interrupt`;
+        const operation = 'Failed to interrupt agent';
         try {
             console.log('Using REST API interrupt method');
             const response = await fetch(url, {
@@ -245,15 +351,11 @@ window.AgoraAPI = class AgoraAPI {
                 headers,
                 body: JSON.stringify({})
             });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || response.statusText);
-            }
-            const result = await response.json();
+            const result = await this._handleResponse(response, operation);
             result.method = 'rest-api';
             return result;
         } catch (error) {
-            throw new Error(`Failed to interrupt agent: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -262,19 +364,16 @@ window.AgoraAPI = class AgoraAPI {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/call`;
 
+        const operation = 'Failed to start outbound call';
         try {
             const response = await fetch(url, {
                 method: "POST",
                 headers,
                 body: JSON.stringify(callConfig)
             });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || response.statusText);
-            }
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to start outbound call: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -282,18 +381,15 @@ window.AgoraAPI = class AgoraAPI {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/calls/${agentId}`;
 
+        const operation = 'Failed to get outbound call status';
         try {
             const response = await fetch(url, {
                 method: "GET",
                 headers
             });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || response.statusText);
-            }
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to get outbound call status: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -301,18 +397,15 @@ window.AgoraAPI = class AgoraAPI {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/projects/${this.appId}/calls/${agentId}/hangup`;
 
+        const operation = 'Failed to hang up outbound call';
         try {
             const response = await fetch(url, {
                 method: "POST",
                 headers
             });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || response.statusText);
-            }
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to hang up outbound call: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -328,18 +421,15 @@ window.AgoraAPI = class AgoraAPI {
         
         const url = `${this.baseUrl}/projects/${this.appId}/call${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
 
+        const operation = 'Failed to get call records';
         try {
             const response = await fetch(url, {
                 method: "GET",
                 headers
             });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || response.statusText);
-            }
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to get call records: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -348,18 +438,15 @@ window.AgoraAPI = class AgoraAPI {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/phone-numbers`;
 
+        const operation = 'Failed to list phone numbers';
         try {
             const response = await fetch(url, {
                 method: "GET",
                 headers
             });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || response.statusText);
-            }
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to list phone numbers: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -367,19 +454,16 @@ window.AgoraAPI = class AgoraAPI {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/phone-numbers`;
 
+        const operation = 'Failed to import phone number';
         try {
             const response = await fetch(url, {
                 method: "POST",
                 headers,
                 body: JSON.stringify(importConfig)
             });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || response.statusText);
-            }
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to import phone number: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -387,18 +471,15 @@ window.AgoraAPI = class AgoraAPI {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/phone-numbers/${encodeURIComponent(phoneNumber)}`;
 
+        const operation = 'Failed to get phone number info';
         try {
             const response = await fetch(url, {
                 method: "GET",
                 headers
             });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || response.statusText);
-            }
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to get phone number info: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -406,19 +487,16 @@ window.AgoraAPI = class AgoraAPI {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/phone-numbers/${encodeURIComponent(phoneNumber)}`;
 
+        const operation = 'Failed to update phone number';
         try {
             const response = await fetch(url, {
                 method: "PATCH",
                 headers,
                 body: JSON.stringify(updateConfig)
             });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || response.statusText);
-            }
-            return await response.json();
+            return await this._handleResponse(response, operation);
         } catch (error) {
-            throw new Error(`Failed to update phone number: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 
@@ -426,25 +504,19 @@ window.AgoraAPI = class AgoraAPI {
         const headers = this.getAuthHeaders(customerId, customerSecret);
         const url = `${this.baseUrl}/phone-numbers/${encodeURIComponent(phoneNumber)}`;
 
+        const operation = 'Failed to delete phone number';
         try {
             const response = await fetch(url, {
                 method: "DELETE",
                 headers
             });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || response.statusText);
+            const result = await this._handleResponse(response, operation);
+            if (response.status === 204 || !result || Object.keys(result).length === 0) {
+                return { success: true, message: "Phone number deleted successfully" };
             }
-            // Handle empty response (204 No Content) or response with no body
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.includes("application/json")) {
-                const text = await response.text();
-                return text ? JSON.parse(text) : { success: true };
-            }
-            // Return success object for empty responses
-            return { success: true, message: "Phone number deleted successfully" };
+            return result;
         } catch (error) {
-            throw new Error(`Failed to delete phone number: ${error.message}`);
+            throw this._wrapRequestError(operation, error);
         }
     }
 } 

@@ -138,7 +138,46 @@ High-quality voice synthesis with customizable speed and silence control.
 - Customizable speed and silence control
 - Emotional tone control
 
+## MLLM Vendor Support
+
+### xAI Grok
+
+Real-time multimodal via xAI Realtime WebSocket.
+
+**Vendor name:** `xai`
+
+**Required fields:**
+
+- API Key
+- WebSocket URL (default: `wss://api.x.ai/v1/realtime`)
+
+**Optional parameters:**
+
+- `voice` (default: `eve`)
+- `language` (default: `en`)
+- `sample_rate` (default: `24000`)
+
+**Notes:** Turn detection supports `agora_vad` and `server_vad` only (no `semantic_vad`).
+
 ## AI Avatar Vendor Support
+
+### Generic Avatar (Beta)
+
+Provider-agnostic avatar integration.
+
+**Vendor name:** `generic`
+
+**Required in playground:**
+
+- API Key
+- API Base URL
+- Avatar ID
+- Avatar RTC UID (same as other avatar vendors)
+- App credentials and channel name (filled automatically from the main form)
+
+**Optional:**
+
+- Avatar RTC Token (generate like other vendors)
 
 ### Akool Avatar
 

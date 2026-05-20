@@ -180,7 +180,8 @@ For issues and questions:
 
 - **Dual AI Model Support**: Traditional LLM and Multimodal LLM (MLLM) with Vertex AI integration
 - **MCP Servers**: Model Context Protocol support for tool calling with multiple server configurations
-- **Comprehensive Vendor Support**: 10+ TTS vendors, 9+ ASR vendors, and 2 AI Avatar vendors
+- **Comprehensive Vendor Support**: 10+ TTS vendors, 9+ ASR vendors, and multiple AI Avatar vendors (including Generic and xAI Grok MLLM)
+- **Paginated conversation turns**, greeting `interruptable`, think API defaults, and expanded API error reasons
 - **Advanced Features**: AIVAD, RTM, SAL (Speaker Adaptation Library), custom parameters, and more
 - **SIP/Phone Management**: Complete phone number and call management with pipeline support
 - **Real-time Capabilities**: Live subtitles, chat history, audio visualization, and camera integration

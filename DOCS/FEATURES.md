@@ -16,6 +16,7 @@
 
   - Support for OpenAI, Anthropic, Gemini, Vertex AI, and custom LLM providers
   - Configurable system messages and greeting/failure messages
+  - **Greeting interruption:** `properties.llm.greeting_configs.interruptable`
   - Custom parameter injection for advanced model control
   - Flexible vendor-specific request formatting
   - MCP (Model Context Protocol) servers support for tool calling
@@ -24,6 +25,7 @@
 
 - **Multimodal LLM (MLLM) Mode**
   - Real-time multimodal conversations with OpenAI Realtime API
+  - **xAI Grok** via `wss://api.x.ai/v1/realtime`
   - Google Vertex AI MLLM support with native audio
     - ADC credentials configuration
     - Project ID and location settings
@@ -82,11 +84,11 @@
   - Visual AI avatar representation with neural network design
   - Professional SVG placeholder with brain/neural network icon
   - Seamless transition from placeholder to live video stream
-  - Support for Akool and HeyGen avatar vendors
+  - Support for Akool, LiveAvatar, Generic, Anam, and deprecated HeyGen avatar vendors
   - Real-time video subscription and playback
   - Automatic placeholder restoration when video stream ends
   - **AI Avatar Configuration**
-    - Vendor selection: Akool and HeyGen support
+    - Vendor selection: Akool, LiveAvatar, Generic, Anam, HeyGen (deprecated)
     - API key and avatar ID configuration
     - RTC UID and token management for avatar channel access
     - HeyGen-specific settings: quality, idle timeout, activity timeout

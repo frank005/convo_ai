@@ -315,14 +315,28 @@
                           </button>
                           <div class="tooltip">Retrieve the conversation history between the user and the Conversational AI agent while the agent is running. Shows messages with role (user/assistant) and content.</div>
                         </div>
-                        <div class="has-tooltip relative">
+                        <div class="has-tooltip relative space-y-2">
+                          <div class="grid grid-cols-2 gap-2">
+                            <div>
+                              <label class="text-xs text-gray-400 block mb-1">page_index</label>
+                              <input id="turnsPageIndex" type="number" min="1" value="1" class="w-full p-1 rounded bg-gray-800 text-white text-sm border border-gray-600" />
+                            </div>
+                            <div>
+                              <label class="text-xs text-gray-400 block mb-1">page_size (max 50)</label>
+                              <input id="turnsPageSize" type="number" min="1" max="50" value="50" class="w-full p-1 rounded bg-gray-800 text-white text-sm border border-gray-600" />
+                            </div>
+                          </div>
+                          <label class="flex items-center gap-2 text-xs text-gray-300">
+                            <input type="checkbox" id="turnsFetchAllPages" class="rounded bg-gray-700 border-gray-600" />
+                            Fetch all pages (sessions &gt; 50 turns)
+                          </label>
                           <button
                             id="getConversationTurnsBtn"
                             class="modern-btn modern-btn-primary w-full text-sm"
                           >
                             Query Conversation Turns
                           </button>
-                          <div class="tooltip">Get per-turn start/end events and latency metrics for a completed session. Only available for sessions in the last 7 days.</div>
+                          <div class="tooltip">Get per-turn start/end events and latency metrics (paginated, default page 1, up to 50 turns per page). Only available for sessions in the last 7 days.</div>
                         </div>
 
                         <div class="has-tooltip relative">
@@ -789,10 +803,11 @@
                   <div class="has-tooltip relative">
                     <label class="text-xs text-gray-300 block mb-1">on_listening_action</label>
                     <select id="thinkOnListeningAction" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500">
-                      <option value="inject" selected>inject</option>
+                      <option value="interrupt" selected>interrupt</option>
+                      <option value="inject">inject</option>
                       <option value="ignore">ignore</option>
                     </select>
-                    <div class="tooltip">Behavior while agent is listening.</div>
+                    <div class="tooltip">Behavior while agent is listening. Default is interrupt; use inject to queue without interrupting the current flow.</div>
                   </div>
                   <div class="has-tooltip relative">
                     <label class="text-xs text-gray-300 block mb-1">on_thinking_action</label>
@@ -1428,8 +1443,8 @@
             </select>
             <div class="flex items-center has-tooltip-drawer">
               <input type="checkbox" id="expSetLlmGreetingInterruptable" class="mr-1 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-              <label for="expLlmGreetingInterruptable" class="text-sm font-medium" style="margin-left:0;">greeting_interruptable</label>
-              <span class="tooltip-drawer hidden">Make greeting uninterruptable</span>
+              <label for="expLlmGreetingInterruptable" class="text-sm font-medium" style="margin-left:0;">greeting_configs.interruptable</label>
+              <span class="tooltip-drawer hidden">Nested under greeting_configs (not top-level greeting_interruptable)</span>
             </div>
             <select id="expLlmGreetingInterruptable" class="w-full p-1 rounded bg-gray-700 text-white" disabled>
               <option value="true">True</option>
@@ -1811,7 +1826,21 @@
         try {
           const { customerId, customerSecret } = window.Utils.getStoredCredentials();
           const activeAgoraAPI = (window.ui && window.ui.agoraAPI) ? window.ui.agoraAPI : agoraAPI;
-          const response = await activeAgoraAPI.getConversationTurns(customerId, customerSecret, agentId.value);
+          const pageIndexEl = document.getElementById('turnsPageIndex');
+          const pageSizeEl = document.getElementById('turnsPageSize');
+          const fetchAllEl = document.getElementById('turnsFetchAllPages');
+          const pageIndex = pageIndexEl ? parseInt(pageIndexEl.value, 10) || 1 : 1;
+          const pageSize = pageSizeEl ? Math.min(50, Math.max(1, parseInt(pageSizeEl.value, 10) || 50)) : 50;
+          const fetchAll = fetchAllEl ? fetchAllEl.checked : false;
+          let response;
+          if (fetchAll && typeof activeAgoraAPI.getAllConversationTurns === 'function') {
+            response = await activeAgoraAPI.getAllConversationTurns(customerId, customerSecret, agentId.value, { page_size: pageSize });
+          } else {
+            response = await activeAgoraAPI.getConversationTurns(customerId, customerSecret, agentId.value, {
+              page_index: pageIndex,
+              page_size: pageSize
+            });
+          }
           if (queryResponse) {
             queryResponse.textContent = JSON.stringify(response, null, 2);
           }
@@ -1875,7 +1904,7 @@
           const { customerId, customerSecret } = window.Utils.getStoredCredentials();
           const activeAgoraAPI = (window.ui && window.ui.agoraAPI) ? window.ui.agoraAPI : agoraAPI;
           const response = await activeAgoraAPI.sendCustomInstruction(customerId, customerSecret, agentId.value, instruction, {
-            on_listening_action: onListeningActionInput ? onListeningActionInput.value : 'inject',
+            on_listening_action: onListeningActionInput ? onListeningActionInput.value : 'interrupt',
             on_thinking_action: onThinkingActionInput ? onThinkingActionInput.value : 'interrupt',
             on_speaking_action: onSpeakingActionInput ? onSpeakingActionInput.value : 'ignore',
             interruptable: interruptableInput ? interruptableInput.value === 'true' : true,
@@ -3173,16 +3202,19 @@
 
     // Handle avatar vendor change for vendor-specific fields
     const anamSettings = document.getElementById('anamSettings');
+    const genericAvatarSettings = document.getElementById('genericAvatarSettings');
     if (avatarVendor && heygenSettings) {
     avatarVendor.addEventListener('change', function() {
       const v = this.value;
       heygenSettings.classList.toggle('hidden', v !== 'heygen' && v !== 'liveavatar');
       if (anamSettings) anamSettings.classList.toggle('hidden', v !== 'anam');
+      if (genericAvatarSettings) genericAvatarSettings.classList.toggle('hidden', v !== 'generic');
     });
     // Initial sync in case vendor already set (e.g. loaded config)
     const v = avatarVendor.value;
     heygenSettings.classList.toggle('hidden', v !== 'heygen' && v !== 'liveavatar');
     if (anamSettings) anamSettings.classList.toggle('hidden', v !== 'anam');
+    if (genericAvatarSettings) genericAvatarSettings.classList.toggle('hidden', v !== 'generic');
     }
 
     // Handle UID changes when AI Avatar is enabled
@@ -3304,7 +3336,7 @@
         const updateMllmVendorUI = function() {
             const selectedVendor = mllmVendor.value;
 
-            openaiMllmConfig.classList.toggle('hidden', selectedVendor !== 'openai');
+            openaiMllmConfig.classList.toggle('hidden', selectedVendor !== 'openai' && selectedVendor !== 'xai');
             geminiConfig.classList.toggle('hidden', selectedVendor !== 'gemini');
             vertexaiConfig.classList.toggle('hidden', selectedVendor !== 'vertexai');
             customMllmConfig.classList.toggle('hidden', selectedVendor !== 'custom');
@@ -3321,6 +3353,10 @@
             } else if (selectedVendor === 'custom') {
                 if (mllmUrl) mllmUrl.placeholder = 'MLLM WebSocket URL (Required)';
                 if (mllmApiKey) mllmApiKey.placeholder = 'MLLM API Key (Required)';
+            } else if (selectedVendor === 'xai') {
+                if (mllmUrl && !mllmUrl.value.trim()) mllmUrl.value = 'wss://api.x.ai/v1/realtime';
+                if (mllmUrl) mllmUrl.placeholder = 'MLLM WebSocket URL (Required, xAI)';
+                if (mllmApiKey) mllmApiKey.placeholder = 'xAI API Key (Required)';
             } else {
                 if (mllmUrl && !mllmUrl.value.trim()) mllmUrl.value = 'wss://api.openai.com/v1/realtime';
                 if (mllmUrl) mllmUrl.placeholder = 'MLLM WebSocket URL (Required)';
@@ -4198,7 +4234,8 @@
           exp.llm.auto_merge = document.getElementById('expLlmAutoMerge').value === 'true';
         }
         if (document.getElementById('expSetLlmGreetingInterruptable').checked) {
-          exp.llm.greeting_interruptable = document.getElementById('expLlmGreetingInterruptable').value === 'true';
+          exp.llm.greeting_configs = exp.llm.greeting_configs || {};
+          exp.llm.greeting_configs.interruptable = document.getElementById('expLlmGreetingInterruptable').value === 'true';
         }
       }
       // Turn Detector
@@ -5736,6 +5773,13 @@
           <div class="tooltip">Determines when the agent sends greeting messages to users joining the channel. single_every: Broadcasts a greeting every time a user joins the channel. single_first: Broadcasts a greeting only once to the first user who joins the channel.</div>
         </div>
         <div class="has-tooltip relative">
+          <select id="llmGreetingInterruptable">
+            <option value="true" selected>true — user can interrupt greeting</option>
+            <option value="false">false — greeting not interruptable</option>
+          </select>
+          <div class="tooltip">properties.llm.greeting_configs.interruptable. Controls whether user speech can interrupt greeting playback.</div>
+        </div>
+        <div class="has-tooltip relative">
           <input
             id="fMsg"
             placeholder="Failure Message(Required)"
@@ -6870,10 +6914,11 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           >
             <option value="akool">Akool (Beta)</option>
             <option value="liveavatar">LiveAvatar by HeyGen (Beta)</option>
+            <option value="generic">Generic (Beta)</option>
             <option value="heygen">HeyGen (Deprecated)</option>
             <option value="anam">Anam (Beta)</option>
           </select>
-          <div class="tooltip">Select the AI Avatar vendor. LiveAvatar uses the current HeyGen LiveAvatar API (API key and avatar ID from the LiveAvatar console); TTS must be 24 kHz—this playground forces 24 kHz for supported TTS vendors when LiveAvatar is selected. Deprecated HeyGen targets the legacy Interactive Avatar integration. Anam uses Agora’s <code>avatar_id</code> field (see the Avatar ID field tooltip).</div>
+          <div class="tooltip">Select the AI Avatar vendor. Generic adds an API base URL field; other avatar settings use the same API key, avatar ID, and RTC fields as other vendors. LiveAvatar uses the current HeyGen LiveAvatar API (API key and avatar ID from the LiveAvatar console); TTS must be 24 kHz—this playground forces 24 kHz for supported TTS vendors when LiveAvatar is selected. Deprecated HeyGen targets the legacy Interactive Avatar integration. Anam uses Agora’s <code>avatar_id</code> field (see the Avatar ID field tooltip).</div>
         </div>
         <div class="has-tooltip relative">
           <input
@@ -6953,6 +6998,18 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           </div>
         </div>
 
+        <!-- Generic avatar -->
+        <div id="genericAvatarSettings" class="hidden space-y-2">
+          <div class="has-tooltip relative">
+            <input
+              id="avatarApiBaseUrl"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="API Base URL (Required)"
+            />
+            <div class="tooltip">Base URL for your generic avatar provider.</div>
+          </div>
+        </div>
+
         <!-- LiveAvatar/HeyGen-specific settings -->
         <div id="heygenSettings" class="hidden">
           <div class="has-tooltip relative">
@@ -7003,11 +7060,12 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
           >
             <option value="openai">OpenAI Realtime API</option>
+            <option value="xai">xAI Grok</option>
             <option value="gemini">Google Gemini Live</option>
             <option value="vertexai">Google Gemini Live (Vertex AI)</option>
             <option value="custom">Custom</option>
           </select>
-          <div class="tooltip">MLLM provider. Supports OpenAI Realtime API, Google Gemini Live, Google Gemini Live (Vertex AI), and custom providers.</div>
+          <div class="tooltip">MLLM provider. Supports OpenAI Realtime, xAI Grok, Google Gemini Live, Vertex AI, and custom providers.</div>
         </div>
         <div class="has-tooltip relative">
           <input

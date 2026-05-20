@@ -167,6 +167,9 @@ window.Utils = class Utils {
         const avatarId = document.getElementById("avatarId").value.trim();
         const avatarRtcUid = document.getElementById("avatarRtcUid").value.trim();
         const avatarRtcToken = document.getElementById("avatarRtcToken").value.trim();
+        const avatarApiBaseUrl = document.getElementById("avatarApiBaseUrl")
+            ? document.getElementById("avatarApiBaseUrl").value.trim()
+            : '';
         const heygenQuality = document.getElementById("heygenQuality").value;
         const heygenDisableIdleTimeout = document.getElementById("heygenDisableIdleTimeout").checked;
         const heygenActivityIdleTimeout = document.getElementById("heygenActivityIdleTimeout").value || null;
@@ -204,6 +207,9 @@ window.Utils = class Utils {
             ttsKey: ttsKey,
             gMsg: document.getElementById("gMsg").value.trim(),
             greetingMode: document.getElementById("greetingMode") ? document.getElementById("greetingMode").value : "single_every",
+            llmGreetingInterruptable: document.getElementById("llmGreetingInterruptable")
+                ? document.getElementById("llmGreetingInterruptable").value === 'true'
+                : true,
             fMsg: document.getElementById("fMsg").value.trim(),
             fillerWordsEnable: document.getElementById("fillerWordsEnable") ? document.getElementById("fillerWordsEnable").checked : false,
             fillerWords: document.getElementById("fillerWords") ? document.getElementById("fillerWords").value.trim() : '',
@@ -323,6 +329,7 @@ window.Utils = class Utils {
             avatarId: avatarId,
             avatarRtcUid: avatarRtcUid,
             avatarRtcToken: avatarRtcToken,
+            avatarApiBaseUrl: avatarApiBaseUrl,
             heygenQuality: heygenQuality,
             heygenDisableIdleTimeout: heygenDisableIdleTimeout,
             heygenActivityIdleTimeout: heygenActivityIdleTimeout,
@@ -387,6 +394,9 @@ window.Utils = class Utils {
                     throw new Error('MLLM API Key is required when MLLM is enabled');
                 }
             }
+            if (data.mllmVendor === 'xai' && data.turnDetectionType === 'semantic_vad') {
+                throw new Error('xAI Grok MLLM supports agora_vad and server_vad only (not semantic_vad)');
+            }
         }
 
         // Validate AI Avatar configuration if enabled
@@ -399,6 +409,18 @@ window.Utils = class Utils {
             }
             if (!data.avatarRtcUid) {
                 throw new Error('Avatar RTC UID is required when AI Avatar is enabled');
+            }
+            if (data.avatarVendor === 'generic') {
+                if (!data.avatarApiBaseUrl) {
+                    throw new Error('API Base URL is required when Generic avatar vendor is selected');
+                }
+                if (!data.channel) {
+                    throw new Error('Channel name is required when Generic avatar vendor is selected');
+                }
+                const creds = this.getStoredCredentials();
+                if (!creds.appId) {
+                    throw new Error('App ID is required when Generic avatar vendor is selected');
+                }
             }
             // Avatar RTC Token is optional - no validation needed since it's already trimmed
             
@@ -1479,11 +1501,18 @@ window.Utils = class Utils {
                         ...(formData.llmStyle ? { style: formData.llmStyle } : {}),
                         system_messages: systemMessages,
                         greeting_message: formData.gMsg,
-                        ...(formData.greetingMode && formData.greetingMode !== "single_every" ? {
-                            greeting_configs: {
-                                mode: formData.greetingMode
+                        ...(() => {
+                            const greetingConfigs = {};
+                            if (formData.greetingMode && formData.greetingMode !== 'single_every') {
+                                greetingConfigs.mode = formData.greetingMode;
                             }
-                        } : {}),
+                            if (typeof formData.llmGreetingInterruptable === 'boolean') {
+                                greetingConfigs.interruptable = formData.llmGreetingInterruptable;
+                            }
+                            return Object.keys(greetingConfigs).length > 0
+                                ? { greeting_configs: greetingConfigs }
+                                : {};
+                        })(),
                         failure_message: formData.fMsg,
                         ...(formData.fillerWordsEnable && formData.fillerWords ? (() => {
                             const phrases = formData.fillerWords.split(',').map(s => s.trim()).filter(s => s.length > 0);
@@ -1566,6 +1595,14 @@ window.Utils = class Utils {
                                 ...(formData.customMllmInstructions ? { instructions: formData.customMllmInstructions } : {}),
                                 ...mllmCustomParams
                             }
+                        } : formData.mllmVendor === 'xai' ? {
+                            params: {
+                                voice: formData.mllmOpenaiVoice || 'eve',
+                                language: 'en',
+                                sample_rate: 24000,
+                                ...(formData.mllmOpenaiInstructions ? { instructions: formData.mllmOpenaiInstructions } : {}),
+                                ...mllmCustomParams
+                            }
                         } : {
                             params: {
                                 ...(formData.mllmOpenaiModel ? { model: formData.mllmOpenaiModel } : {}),
@@ -1613,6 +1650,7 @@ window.Utils = class Utils {
             }
             // Avatar RTC Token is optional - no validation needed
 
+            const credsForAvatar = this.getStoredCredentials();
             config.properties.avatar = {
                 vendor: formData.avatarVendor,
                 enable: true,
@@ -1625,6 +1663,16 @@ window.Utils = class Utils {
                         sample_rate: parseInt(formData.anamSampleRate, 10),
                         quality: formData.anamQuality,
                         video_encoding: formData.anamVideoEncoding
+                    }
+                    : formData.avatarVendor === 'generic'
+                    ? {
+                        api_key: formData.avatarApiKey,
+                        api_base_url: formData.avatarApiBaseUrl,
+                        avatar_id: formData.avatarId,
+                        agora_appid: credsForAvatar.appId,
+                        agora_channel: formData.channel,
+                        agora_uid: formData.avatarRtcUid,
+                        ...(formData.avatarRtcToken ? { agora_token: formData.avatarRtcToken } : {})
                     }
                     : {
                         api_key: formData.avatarApiKey,
@@ -2065,6 +2113,46 @@ window.Utils = class Utils {
         } catch (error) {
             console.error("Error generating token:", error);
             throw new Error("Failed to generate token: " + error.message);
+        }
+    }
+
+    /**
+     * Conversational AI API error reasons. InvalidRequest is deprecated.
+     */
+    static CONVO_AI_ERROR_REASONS_V27 = {
+        InvalidRequestBody: 'Request body is invalid.',
+        MissingRequiredField: 'A required field is missing.',
+        InvalidFieldValue: 'A field value is invalid.',
+        ServiceNotEnabled: 'Conversational AI service is not enabled for this project.',
+        AccountSuspended: 'Account is suspended.',
+        ResourceAllocationFailed: 'Failed to allocate agent resources.'
+    };
+
+    /** @deprecated — replaced by InvalidRequestBody, MissingRequiredField, InvalidFieldValue */
+    static isDeprecatedConvoAiReason(reason) {
+        return reason === 'InvalidRequest';
+    }
+
+    static describeConvoAiErrorReason(reason) {
+        if (this.isDeprecatedConvoAiReason(reason)) {
+            return 'Deprecated reason InvalidRequest. Map to InvalidRequestBody, MissingRequiredField, or InvalidFieldValue.';
+        }
+        return this.CONVO_AI_ERROR_REASONS_V27[reason] || null;
+    }
+
+    static formatConvoAiApiError(error) {
+        const message = error && error.message ? error.message : String(error);
+        try {
+            const parsed = JSON.parse(message);
+            const reason = parsed.reason || parsed.error?.reason;
+            const status = parsed.status || parsed.code;
+            const hint = reason ? this.describeConvoAiErrorReason(reason) : null;
+            const parts = [message];
+            if (status) parts.unshift(`HTTP ${status}`);
+            if (hint) parts.push(hint);
+            return parts.join(' — ');
+        } catch (_e) {
+            return message;
         }
     }
 } 
