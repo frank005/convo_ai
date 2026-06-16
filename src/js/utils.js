@@ -1297,7 +1297,7 @@ window.Utils = class Utils {
             if (formData.turnV24SpeechThreshold != null && formData.turnV24SpeechThreshold !== '') {
                 config.speech_threshold = parseFloat(formData.turnV24SpeechThreshold);
             }
-            // Start of Speech (vad_config / keywords_config / disabled_config)
+            // Start of Speech (vad_config / semantic / keywords_config / disabled_config)
             const sosMode = formData.turnV24StartOfSpeechMode || 'vad';
             if (sosMode === 'vad') {
                 const vadConfig = {};
@@ -1311,6 +1311,8 @@ window.Utils = class Utils {
                     vadConfig.prefix_padding_ms = parseInt(formData.turnV24SoSPrefixPaddingMs, 10);
                 }
                 config.start_of_speech = Object.keys(vadConfig).length > 0 ? { mode: 'vad', vad_config: vadConfig } : { mode: 'vad' };
+            } else if (sosMode === 'semantic') {
+                config.start_of_speech = { mode: 'semantic' };
             } else if (sosMode === 'keywords') {
                 const keywordsConfig = {};
                 if (formData.turnV24SoSKeywordsInterruptMs != null && formData.turnV24SoSKeywordsInterruptMs !== '') {
@@ -1329,7 +1331,7 @@ window.Utils = class Utils {
                     mode: 'keywords',
                     keywords: triggeredKeywords
                 };
-            } else {
+            } else if (sosMode === 'disabled') {
                 interruption = {
                     enable: false,
                     disabled_config: {
@@ -1337,7 +1339,7 @@ window.Utils = class Utils {
                     }
                 };
             }
-            if (sosMode === 'vad') {
+            if (sosMode === 'vad' || sosMode === 'semantic') {
                 interruption = {
                     enable: true,
                     mode: 'start_of_speech'

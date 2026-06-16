@@ -7555,10 +7555,11 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               <label class="text-sm">SoS Mode</label>
               <select id="turnV24StartOfSpeechMode" class="w-full p-2 rounded bg-gray-600 turn-v24-field">
                 <option value="vad">VAD (voice activity)</option>
+                <option value="semantic">Semantic (AIVAD)</option>
                 <option value="keywords">Keywords (Beta)</option>
                 <option value="disabled">Disabled</option>
               </select>
-              <div class="tooltip">When user begins speaking. VAD: interruption threshold/prefix. Keywords: trigger on keyword. Disabled: append or ignore.</div>
+              <div class="tooltip">When user begins speaking. VAD: interruption threshold/prefix. Semantic: semantic understanding (no extra config). Keywords: trigger on keyword. Disabled: append or ignore.</div>
             </div>
             <div id="turnV24SoSVadBlock" class="space-y-2">
               <div class="has-tooltip relative">
