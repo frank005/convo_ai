@@ -11,6 +11,7 @@ window.UI = class UI {
         this.mllmParams = {};
         this.asrParams = {};
         this.ttsParams = {};
+        this.avatarParams = {};
         this.mcpServers = {};
         this.lastAgentListCursor = null;
         this.agentListPageHistory = []; // History of accumulated results for back navigation
@@ -217,6 +218,10 @@ window.UI = class UI {
         const addTtsParamBtn = document.getElementById("addTtsParamBtn");
         if (addTtsParamBtn) {
             addTtsParamBtn.addEventListener("click", () => this.addTtsParamField());
+        }
+        const addAvatarParamBtn = document.getElementById("addAvatarParamBtn");
+        if (addAvatarParamBtn) {
+            addAvatarParamBtn.addEventListener("click", () => this.addAvatarParamField());
         }
 
         // Enable Tools checkbox handler - use event delegation on document
@@ -2195,6 +2200,82 @@ window.UI = class UI {
     removeTtsParam(id) {
         document.getElementById(id).remove();
         delete this.ttsParams[id];
+    }
+
+    addAvatarParamField() {
+        const container = document.getElementById("avatar-param-container");
+        const paramId = "avatar-param-" + Object.keys(this.avatarParams).length;
+
+        const div = document.createElement("div");
+        div.classList.add("flex", "gap-2", "items-center");
+        div.id = paramId;
+
+        div.innerHTML = `
+            <select class="border p-2 w-1/5 rounded bg-gray-800 text-white">
+                <option value="string">String</option>
+                <option value="number">Number</option>
+                <option value="array">Array</option>
+                <option value="object">Object</option>
+            </select>
+            <input type="text" placeholder="Key" class="border p-2 w-1/4 rounded bg-gray-800 text-white">
+            <input type="text" placeholder="Value" class="border p-2 w-2/5 rounded bg-gray-800 text-white" id="${paramId}-value">
+            <button class="text-red-500">❌</button>
+        `;
+
+        const select = div.querySelector('select');
+        const keyInput = div.querySelector('input[placeholder="Key"]');
+        const valueInput = div.querySelector('input[placeholder="Value"]');
+        const removeBtn = div.querySelector('button');
+
+        select.addEventListener('change', () => this.updateAvatarParam(paramId, select, 'type'));
+        keyInput.addEventListener('input', () => this.updateAvatarParam(paramId, keyInput, 'key'));
+        valueInput.addEventListener('input', () => this.updateAvatarParam(paramId, valueInput, 'value'));
+        removeBtn.addEventListener('click', () => this.removeAvatarParam(paramId));
+
+        container.appendChild(div);
+        this.avatarParams[paramId] = { key: "", type: "string", value: "" };
+    }
+
+    updateAvatarParam(id, input, fieldType) {
+        if (fieldType === "key") this.avatarParams[id].key = input.value;
+
+        if (fieldType === "type") {
+            this.avatarParams[id].type = input.value;
+            let valueInput = document.getElementById(`${id}-value`);
+
+            if (input.value === "array") {
+                valueInput.placeholder = "Comma-separated values";
+            } else if (input.value === "object") {
+                valueInput.placeholder = "Enter JSON";
+                valueInput.value = "{}";
+            } else {
+                valueInput.placeholder = "Value";
+                valueInput.value = "";
+            }
+        }
+
+        if (fieldType === "value") {
+            let type = this.avatarParams[id].type;
+            if (type === "array") {
+                this.avatarParams[id].value = input.value.split(",").map(v => v.trim());
+            } else if (type === "number") {
+                this.avatarParams[id].value = Number(input.value);
+            } else if (type === "object") {
+                try {
+                    this.avatarParams[id].value = JSON.parse(input.value);
+                    input.style.borderColor = "green";
+                } catch (e) {
+                    input.style.borderColor = "red";
+                }
+            } else {
+                this.avatarParams[id].value = input.value;
+            }
+        }
+    }
+
+    removeAvatarParam(id) {
+        document.getElementById(id).remove();
+        delete this.avatarParams[id];
     }
 
     handleEnableToolsChange() {

@@ -5323,12 +5323,12 @@
                 <option value="ares">ARES (Default)</option>
                 <option value="microsoft">Microsoft</option>
                 <option value="deepgram">Deepgram</option>
-                <option value="openai">OpenAI (Beta)</option>
+                <option value="openai">OpenAI</option>
                 <option value="speechmatics">Speechmatics</option>
-                <option value="assemblyai">AssemblyAI (Beta)</option>
-                <option value="amazon">Amazon Transcribe (Beta)</option>
-                <option value="google">Google (Beta)</option>
-                <option value="sarvam">Sarvam (Beta)</option>
+                <option value="assemblyai">AssemblyAI</option>
+                <option value="amazon">Amazon Transcribe</option>
+                <option value="google">Google</option>
+                <option value="sarvam">Sarvam</option>
                 <option value="custom">Custom</option>
               </select>
               <div class="tooltip">Select the Automatic Speech Recognition (ASR) vendor to use for speech recognition.</div>
@@ -5450,7 +5450,7 @@
           
           <!-- OpenAI ASR Configuration -->
           <div id="openaiAsrConfig" class="hidden mt-4">
-            <h4 class="text-sm font-semibold mb-2">OpenAI ASR Settings (Beta)</h4>
+            <h4 class="text-sm font-semibold mb-2">OpenAI ASR Settings</h4>
             <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="has-tooltip relative">
                 <input
@@ -5486,7 +5486,7 @@
           
           <!-- AssemblyAI ASR Configuration -->
           <div id="assemblyaiAsrConfig" class="hidden mt-4">
-            <h4 class="text-sm font-semibold mb-2">AssemblyAI ASR Settings (Beta)</h4>
+            <h4 class="text-sm font-semibold mb-2">AssemblyAI ASR Settings</h4>
             <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="has-tooltip relative">
                 <input
@@ -5508,7 +5508,7 @@
           
           <!-- Amazon Transcribe ASR Configuration -->
           <div id="amazonAsrConfig" class="hidden mt-4">
-            <h4 class="text-sm font-semibold mb-2">Amazon Transcribe ASR Settings (Beta)</h4>
+            <h4 class="text-sm font-semibold mb-2">Amazon Transcribe ASR Settings</h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="has-tooltip relative">
                 <input
@@ -5571,7 +5571,7 @@
           
           <!-- Google ASR Configuration -->
           <div id="googleAsrConfig" class="hidden mt-4">
-            <h4 class="text-sm font-semibold mb-2">Google ASR Settings (Beta)</h4>
+            <h4 class="text-sm font-semibold mb-2">Google ASR Settings</h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="has-tooltip relative">
                 <input
@@ -5934,16 +5934,16 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="microsoft">Microsoft Azure</option>
             <option value="elevenlabs">ElevenLabs</option>
             <option value="minimax">MiniMax</option>
-            <option value="deepgram">Deepgram (Beta)</option>
-            <option value="murf">Murf (Beta)</option>
-            <option value="cartesia">Cartesia (Beta)</option>
-            <option value="openai">OpenAI (Beta)</option>
-            <option value="humeai">Hume AI (Beta)</option>
-            <option value="rime">Rime (Beta)</option>
-            <option value="fishaudio">Fish Audio (Beta)</option>
-            <option value="google">Google (Beta)</option>
-            <option value="amazon">Amazon Polly (Beta)</option>
-            <option value="sarvam">Sarvam (Beta)</option>
+            <option value="deepgram">Deepgram</option>
+            <option value="murf">Murf</option>
+            <option value="cartesia">Cartesia</option>
+            <option value="openai">OpenAI</option>
+            <option value="humeai">Hume AI</option>
+            <option value="rime">Rime</option>
+            <option value="fishaudio">Fish Audio</option>
+            <option value="google">Google</option>
+            <option value="amazon">Amazon Polly</option>
+            <option value="sarvam">Sarvam</option>
           </select>
           <div class="tooltip">Select the Text-to-Speech vendor to use for voice output.</div>
         </div>
@@ -6916,11 +6916,11 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             id="avatarVendor"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
           >
-            <option value="akool">Akool (Beta)</option>
-            <option value="liveavatar">LiveAvatar by HeyGen (Beta)</option>
-            <option value="generic">Generic (Beta)</option>
+            <option value="akool">Akool</option>
+            <option value="liveavatar">LiveAvatar by HeyGen</option>
+            <option value="generic">Generic</option>
             <option value="heygen">HeyGen (Deprecated)</option>
-            <option value="anam">Anam (Beta)</option>
+            <option value="anam">Anam</option>
           </select>
           <div class="tooltip">Select the AI Avatar vendor. Generic adds an API base URL field; other avatar settings use the same API key, avatar ID, and RTC fields as other vendors. LiveAvatar uses the current HeyGen LiveAvatar API (API key and avatar ID from the LiveAvatar console); TTS must be 24 kHz—this playground forces 24 kHz for supported TTS vendors when LiveAvatar is selected. Deprecated HeyGen targets the legacy Interactive Avatar integration. Anam uses Agora’s <code>avatar_id</code> field (see the Avatar ID field tooltip).</div>
         </div>
@@ -7049,6 +7049,23 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             />
             <div class="tooltip">Activity idle timeout in seconds for LiveAvatar/HeyGen avatar.</div>
           </div>
+        </div>
+
+        <!-- Avatar Custom Parameters -->
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <div class="flex justify-between items-center mb-3">
+            <div class="has-tooltip relative">
+              <h3 class="text-lg font-semibold">Avatar Custom Parameters</h3>
+              <div class="tooltip">Add custom key-value parameters for AI Avatar providers. These are merged into properties.avatar.params and let you pass vendor-supported fields that do not have dedicated UI controls.</div>
+            </div>
+            <div class="has-tooltip relative">
+              <button id="addAvatarParamBtn" class="modern-btn modern-btn-primary text-sm">
+                Add Parameter
+              </button>
+              <div class="tooltip">Add a new avatar custom parameter row.</div>
+            </div>
+          </div>
+          <div id="avatar-param-container" class="space-y-2"></div>
         </div>
       </div>
     </div>

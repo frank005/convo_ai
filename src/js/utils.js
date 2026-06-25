@@ -729,6 +729,26 @@ window.Utils = class Utils {
         return params;
     }
 
+    static getAvatarCustomParams() {
+        const params = {};
+        const container = document.getElementById("avatar-param-container");
+        if (!container) return params;
+        const paramElements = container.children;
+
+        for (let element of paramElements) {
+            const inputs = element.querySelectorAll('input, select');
+            const key = inputs[1].value;
+            const type = inputs[0].value;
+            const value = inputs[2].value;
+
+            if (key && value) {
+                params[key] = this.parseParamValue(type, value);
+            }
+        }
+
+        return params;
+    }
+
     static getMcpServers() {
         const servers = [];
         const container = document.getElementById("mcp-servers-container");
@@ -1691,6 +1711,14 @@ window.Utils = class Utils {
                 if (formData.heygenActivityIdleTimeout) {
                     config.properties.avatar.params.activity_idle_timeout = parseInt(formData.heygenActivityIdleTimeout, 10);
                 }
+            }
+
+            const avatarCustomParams = this.getAvatarCustomParams();
+            if (Object.keys(avatarCustomParams).length > 0) {
+                config.properties.avatar.params = {
+                    ...config.properties.avatar.params,
+                    ...avatarCustomParams
+                };
             }
         }
 
