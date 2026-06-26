@@ -8,6 +8,7 @@
   <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/agora-rtm-sdk@2.2.2/agora-rtm.js"></script>
   <script src="src/lib/microsoftVoicesByLang.js"></script>
+  <script src="src/lib/minimaxVoicesByLang.js"></script>
   <link rel="stylesheet" href="src/css/styles.css?v=1.3">
   <link rel="stylesheet" href="src/css/modern-ui-library.css">
   <!-- Critical autofill fix - must be inline and load early to override browser autofill styles -->
@@ -3652,7 +3653,7 @@
           return;
         }
         if (ttsVendor && ttsVendor.value === 'openai') {
-          opt.hidden = opt.value !== 'openai_tts_1';
+          opt.hidden = !opt.value.startsWith('openai_tts_');
         } else if (ttsVendor && ttsVendor.value === 'minimax') {
           opt.hidden = !opt.value.startsWith('minimax_speech_');
         } else {
@@ -3663,11 +3664,11 @@
       if (ttsVendor && ttsVendor.value === 'minimax' && ttsPreset.value && !ttsPreset.value.startsWith('minimax_speech_')) {
         ttsPreset.value = '';
       }
-      if (ttsVendor && ttsVendor.value === 'openai' && ttsPreset.value && ttsPreset.value !== 'openai_tts_1') {
+      if (ttsVendor && ttsVendor.value === 'openai' && ttsPreset.value && !ttsPreset.value.startsWith('openai_tts_')) {
         ttsPreset.value = '';
       }
       const value = ttsPreset.value;
-      const isOpenAiPreset = value === 'openai_tts_1';
+      const isOpenAiPreset = value.startsWith('openai_tts_');
       const isMiniMaxPreset = value.startsWith('minimax_speech_');
       const v = ttsVendor ? ttsVendor.value : '';
       // Hide credential fields when using Agora preset, but never un-hide them for the wrong vendor
@@ -5924,6 +5925,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="minimax_speech_2_6_turbo">minimax_speech_2_6_turbo</option>
             <option value="minimax_speech_2_8_turbo">minimax_speech_2_8_turbo</option>
             <option value="openai_tts_1">openai_tts_1</option>
+            <option value="openai_tts_1_hd">openai_tts_1_hd</option>
           </select>
           <div class="tooltip">ConvoAI 2.5 TTS presets. Vendor credentials/model are managed by Agora; non-provider-specific voice settings stay available.</div>
         </div>
@@ -6443,15 +6445,22 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           />
           <div class="tooltip">The TTS model to use.</div>
         </div>
-        <div id="minimaxVoiceIdBlock" class="has-tooltip relative hidden">
+        <div id="minimaxVoiceBlock" class="has-tooltip relative hidden">
+          <select
+            id="minimaxVoiceSelect"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+          ></select>
+          <div class="tooltip">Common MiniMax voices grouped by language. MiniMax supports many more voice IDs — choose “Other (custom voice ID)” for languages or voices not listed here.</div>
+        </div>
+        <div id="minimaxVoiceCustomBlock" class="has-tooltip relative hidden">
           <input
             id="minimaxVoiceId"
             name="ttsVoiceId"
             autocomplete="on"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-            placeholder="Voice ID (e.g., English_captivating_female1)"
+            placeholder="Custom MiniMax voice ID"
           />
-          <div class="tooltip">The voice style identifier to use.</div>
+          <div class="tooltip">Enter any MiniMax <code class="text-xs">voice_setting.voice_id</code> supported by your account (e.g. voices for French, German, Arabic, and other languages).</div>
         </div>
         <div id="minimaxSampleRateBlock" class="has-tooltip relative hidden">
           <input

@@ -36,6 +36,7 @@ window.UI = class UI {
         this.setupMessageUIState();
         this.checkCredentials();
         this.populateMicrosoftLangList();
+        this.populateMinimaxVoiceSelect();
         this.setupDrawerListeners();
         // Initialize TTS vendor blocks visibility
         this.handleTtsVendorChange();
@@ -64,6 +65,7 @@ window.UI = class UI {
         this.handleGeofenceAreaChange();
         this.handleGeofenceExcludeChange();
         this.handleTtsVendorChange();
+        this.syncMinimaxVoiceSelect();
         if (
             window.subtitleManager &&
             typeof window.subtitleManager.updateLiveSubtitleMainControlsVisibility === "function"
@@ -175,6 +177,11 @@ window.UI = class UI {
         const elevenLabsVoiceSelect = document.getElementById("elevenLabsVoiceSelect");
         if (elevenLabsVoiceSelect) {
             elevenLabsVoiceSelect.addEventListener("change", () => this.handleElevenLabsVoiceChange());
+        }
+
+        const minimaxVoiceSelect = document.getElementById("minimaxVoiceSelect");
+        if (minimaxVoiceSelect) {
+            minimaxVoiceSelect.addEventListener("change", () => this.handleMinimaxVoiceChange());
         }
         
         // Sarvam speaker change handler
@@ -1570,7 +1577,7 @@ window.UI = class UI {
             "minimaxTtsKeyBlock",
             "minimaxGroupIdBlock",
             "minimaxModelBlock",
-            "minimaxVoiceIdBlock",
+            "minimaxVoiceBlock",
             "minimaxSampleRateBlock",
             "minimaxUrlBlock"
         ];
@@ -1759,6 +1766,90 @@ window.UI = class UI {
         
         const voiceSel = elevenLabsVoiceSelect.value;
         voiceIdBlk.classList.toggle("hidden", voiceSel !== "other");
+    }
+
+    populateMinimaxVoiceSelect() {
+        const voiceSelect = document.getElementById("minimaxVoiceSelect");
+        if (!voiceSelect) return;
+
+        if (!window.minimaxVoicesByLang) {
+            console.warn("MiniMax voices data not loaded");
+            return;
+        }
+
+        const currentVoice = voiceSelect.value;
+        voiceSelect.innerHTML = "";
+
+        Object.keys(window.minimaxVoicesByLang).forEach((language) => {
+            const group = document.createElement("optgroup");
+            group.label = language;
+            (window.minimaxVoicesByLang[language] || []).forEach((voice) => {
+                const opt = document.createElement("option");
+                opt.value = voice.voiceId;
+                opt.textContent = `${voice.label} (${voice.gender})`;
+                group.appendChild(opt);
+            });
+            voiceSelect.appendChild(group);
+        });
+
+        const otherOpt = document.createElement("option");
+        otherOpt.value = "other";
+        otherOpt.textContent = "Other (custom voice ID)";
+        voiceSelect.appendChild(otherOpt);
+
+        if (currentVoice) {
+            voiceSelect.value = currentVoice;
+        } else {
+            voiceSelect.value = "English_captivating_female1";
+        }
+
+        this.syncMinimaxVoiceSelect();
+    }
+
+    syncMinimaxVoiceSelect() {
+        const voiceSelect = document.getElementById("minimaxVoiceSelect");
+        const customInput = document.getElementById("minimaxVoiceId");
+        if (!voiceSelect) return;
+
+        const savedVoice = (customInput?.value || "").trim();
+        const selectVoice = voiceSelect.value;
+
+        if (selectVoice && selectVoice !== "other") {
+            this.handleMinimaxVoiceChange();
+            return;
+        }
+
+        if (!savedVoice) {
+            if (!selectVoice || selectVoice === "other") {
+                voiceSelect.value = "English_captivating_female1";
+            }
+            this.handleMinimaxVoiceChange();
+            return;
+        }
+
+        const catalogMatch = Array.from(voiceSelect.options).some(
+            (opt) => opt.value === savedVoice && opt.value !== "other"
+        );
+
+        if (catalogMatch) {
+            voiceSelect.value = savedVoice;
+        } else {
+            voiceSelect.value = "other";
+            if (customInput) customInput.value = savedVoice;
+        }
+
+        this.handleMinimaxVoiceChange();
+    }
+
+    handleMinimaxVoiceChange() {
+        const voiceSelect = document.getElementById("minimaxVoiceSelect");
+        const customBlock = document.getElementById("minimaxVoiceCustomBlock");
+
+        if (!voiceSelect || !customBlock) {
+            return;
+        }
+
+        customBlock.classList.toggle("hidden", voiceSelect.value !== "other");
     }
 
     handleSarvamSpeakerChange() {

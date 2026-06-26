@@ -522,7 +522,7 @@ window.Utils = class Utils {
                     const minimaxTtsKey = document.getElementById('minimaxTtsKey').value.trim();
                     const minimaxGroupId = document.getElementById('minimaxGroupId').value.trim();
                     const minimaxModel = document.getElementById('minimaxModel').value.trim();
-                    const minimaxVoiceId = document.getElementById('minimaxVoiceId').value.trim();
+                    const minimaxVoiceId = this.getMinimaxVoiceId();
                     const minimaxUrl = document.getElementById('minimaxUrl').value.trim();
                     if (!minimaxTtsKey) throw new Error('MiniMax API Key is required');
                     if (!minimaxGroupId) throw new Error('MiniMax Group ID is required');
@@ -647,6 +647,17 @@ window.Utils = class Utils {
                 throw new Error('RTM must be enabled to use RTM data channel');
             }
         }
+    }
+
+    static getMinimaxVoiceId() {
+        const voiceSelect = document.getElementById("minimaxVoiceSelect");
+        if (!voiceSelect) {
+            return document.getElementById("minimaxVoiceId")?.value.trim() || "";
+        }
+        if (voiceSelect.value === "other") {
+            return document.getElementById("minimaxVoiceId")?.value.trim() || "";
+        }
+        return voiceSelect.value;
     }
 
     static getCustomParams() {
@@ -1860,7 +1871,7 @@ window.Utils = class Utils {
                         group_id: document.getElementById("minimaxGroupId").value,
                         model: document.getElementById("minimaxModel").value,
                         voice_setting: {
-                            voice_id: document.getElementById("minimaxVoiceId").value
+                            voice_id: this.getMinimaxVoiceId()
                         },
                         audio_setting: {
                             sample_rate: minimaxSampleRate
@@ -2083,7 +2094,7 @@ window.Utils = class Utils {
                 const ttsPreset = formData.ttsPreset || '';
                 if (ttsPreset.startsWith('minimax_speech_')) {
                     config.properties.tts.vendor = 'minimax';
-                } else if (ttsPreset === 'openai_tts_1') {
+                } else if (ttsPreset.startsWith('openai_tts_')) {
                     config.properties.tts.vendor = 'openai';
                 }
                 if (!config.properties.tts.params) config.properties.tts.params = {};
