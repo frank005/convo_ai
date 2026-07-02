@@ -4950,14 +4950,17 @@
     const turnV24EndOfSpeechMode = document.getElementById('turnV24EndOfSpeechMode');
     const turnV24EoSVadBlock = document.getElementById('turnV24EoSVadBlock');
     const turnV24EoSemanticBlock = document.getElementById('turnV24EoSemanticBlock');
+    const turnV24SpeechThresholdBlock = document.getElementById('turnV24SpeechThresholdBlock');
     function updateTurnV24SubVisibility() {
       const sosMode = turnV24StartOfSpeechMode ? turnV24StartOfSpeechMode.value : 'vad';
       if (turnV24SoSVadBlock) turnV24SoSVadBlock.classList.toggle('hidden', sosMode !== 'vad');
       if (turnV24SoSKeywordsBlock) turnV24SoSKeywordsBlock.classList.toggle('hidden', sosMode !== 'keywords');
       if (turnV24SoSDisabledBlock) turnV24SoSDisabledBlock.classList.toggle('hidden', sosMode !== 'disabled');
       const eosMode = turnV24EndOfSpeechMode ? turnV24EndOfSpeechMode.value : 'vad';
-      if (turnV24EoSVadBlock) turnV24EoSVadBlock.classList.toggle('hidden', eosMode !== 'vad' && eosMode !== 'manual');
+      if (turnV24EoSVadBlock) turnV24EoSVadBlock.classList.toggle('hidden', eosMode !== 'vad');
       if (turnV24EoSemanticBlock) turnV24EoSemanticBlock.classList.toggle('hidden', eosMode !== 'semantic');
+      const usesVad = sosMode === 'vad' || eosMode === 'vad';
+      if (turnV24SpeechThresholdBlock) turnV24SpeechThresholdBlock.classList.toggle('hidden', !usesVad);
       if (typeof window.updateManualTurnControlVisibility === 'function') {
         window.updateManualTurnControlVisibility();
       }
@@ -5149,7 +5152,7 @@
   <script src="src/js/audio.js?v=1.2"></script>
   <script src="src/js/camera-preview.js?v=1.0"></script>
   <script src="src/js/conversational-ai-api.js?v=1.3"></script>
-  <script src="src/js/subtitles.js?v=1.4"></script>
+  <script src="src/js/subtitles.js?v=1.5"></script>
   <script src="src/js/ui.js?v=1.5"></script>
   <script src="src/js/asr.js?v=1.0"></script>
 
@@ -7750,10 +7753,10 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <span class="text-sm">Pipeline: SoS / EoS (v2.4)</span>
           </button>
           <div id="turnDetectionV24Config" class="hidden mt-2 space-y-2">
-            <div class="has-tooltip relative">
+            <div id="turnV24SpeechThresholdBlock" class="has-tooltip relative">
               <label class="text-sm">Speech Threshold</label>
               <input type="number" id="turnV24SpeechThreshold" class="w-full p-2 rounded bg-gray-600 turn-v24-field" placeholder="0.5" min="0" max="1" step="0.1">
-              <div class="tooltip">Voice activity detection sensitivity (config.speech_threshold).</div>
+              <div class="tooltip">VAD sensitivity (config.speech_threshold). Applies when SoS or EoS uses VAD mode — not used for manual, semantic, keywords, or disabled.</div>
             </div>
             <h4 class="text-sm font-semibold mt-2">Start of Speech (SoS)</h4>
             <div class="has-tooltip relative">

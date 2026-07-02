@@ -1394,11 +1394,13 @@ window.Utils = class Utils {
         } else if (!formData.useDeprecatedFeatures && formData.turnV24Enabled) {
             // v2.4 structure: mode + config (SoS / EoS)
             const config = {};
-            if (formData.turnV24SpeechThreshold != null && formData.turnV24SpeechThreshold !== '') {
+            const sosMode = formData.turnV24StartOfSpeechMode || 'vad';
+            const eosMode = formData.turnV24EndOfSpeechMode || 'vad';
+            const usesVad = sosMode === 'vad' || eosMode === 'vad';
+            if (usesVad && formData.turnV24SpeechThreshold != null && formData.turnV24SpeechThreshold !== '') {
                 config.speech_threshold = parseFloat(formData.turnV24SpeechThreshold);
             }
             // Start of Speech (vad_config / semantic / keywords_config / disabled_config)
-            const sosMode = formData.turnV24StartOfSpeechMode || 'vad';
             if (sosMode === 'vad') {
                 const vadConfig = {};
                 if (formData.turnV24SoSVadInterruptMs != null && formData.turnV24SoSVadInterruptMs !== '') {
@@ -1448,7 +1450,6 @@ window.Utils = class Utils {
                 };
             }
             // End of Speech
-            const eosMode = formData.turnV24EndOfSpeechMode || 'vad';
             if (eosMode === 'manual') {
                 config.end_of_speech = { mode: 'manual' };
             } else if (eosMode === 'vad') {

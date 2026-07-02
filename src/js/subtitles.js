@@ -16,7 +16,8 @@ class SubtitleManager {
         this.chatHistoryData = [];
         this.conversationalAIAPI = null;
         this.expectedAgentId = null;
-        this.agentActivityState = 'unknown';
+        this.agentActivityState = 'idle';
+        this.agentActivityTrackingEnabled = false;
         this.statusOnlyDataStream = false;
         this.streamMessageHandler = null;
         this.hasExplicitAgentStateSignal = false;
@@ -395,11 +396,13 @@ class SubtitleManager {
     }
 
     updateAgentActivityStatus(state, detail = '') {
+        if (!this.agentActivityTrackingEnabled) return;
+
         const el = this.elements.agentActivityStatus;
         if (!el) return;
 
         const normalized = (state || '').toString().toLowerCase();
-        let label = 'Waiting for state';
+        let label = 'Idle';
         let css = 'text-gray-300';
 
         if (normalized === 'speaking') {
@@ -417,6 +420,9 @@ class SubtitleManager {
         } else if (normalized === 'disconnected') {
             label = 'Disconnected';
             css = 'text-gray-500';
+        } else if (normalized === 'idle' || normalized === 'unknown') {
+            label = 'Idle';
+            css = 'text-gray-300';
         }
 
         if (detail) {
@@ -428,9 +434,21 @@ class SubtitleManager {
         this.agentActivityState = normalized || 'idle';
     }
 
-    clearAgentActivityStatus() {
+    enableAgentActivityTracking() {
+        this.agentActivityTrackingEnabled = true;
         this.hasExplicitAgentStateSignal = false;
-        this.updateAgentActivityStatus('unknown');
+        this.updateAgentActivityStatus('idle');
+    }
+
+    clearAgentActivityStatus() {
+        this.agentActivityTrackingEnabled = false;
+        this.hasExplicitAgentStateSignal = false;
+        this.agentActivityState = 'idle';
+        const el = this.elements.agentActivityStatus;
+        if (el) {
+            el.className = 'font-medium text-gray-300';
+            el.textContent = 'Idle';
+        }
     }
 
     // Reset the clear flag when starting a new session
@@ -968,6 +986,7 @@ class SubtitleManager {
                 await this.conversationalAIAPI.subscribeMessage(channelName);
 
                 console.log('Conversational AI API initialized successfully for subtitles');
+                this.enableAgentActivityTracking();
                 this.showNotification('Transcription service connected successfully', 'success');
             } else {
                 const errorMsg = 'ConversationalAIAPI not available. Please ensure the API is loaded.';
@@ -1002,6 +1021,7 @@ class SubtitleManager {
                 console.error('Error cleaning up Conversational AI:', error);
             }
         }
+        this.clearAgentActivityStatus();
     }
 
     handleTranscriptionUpdate(chatHistory) {
@@ -1569,6 +1589,7 @@ class SubtitleManager {
         
         // Reset chat clear state for new session
         this.resetChatClearState();
+        this.enableAgentActivityTracking();
 
         console.log('🔵 Data Stream Subtitles: Initializing for agent UID:', agentUid);
         console.log('🔵 Data Stream Subtitles: RTC Client available:', !!rtcClient);
@@ -1923,6 +1944,7 @@ class SubtitleManager {
         this.currentUserMessage = null;
         this.currentUserTurnId = null;
         this.statusOnlyDataStream = false;
+        this.clearAgentActivityStatus();
         
         console.log('🔵 Data Stream Subtitles: Cleanup complete');
     }
