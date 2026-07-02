@@ -359,6 +359,15 @@ window.Utils = class Utils {
         const presetHasLlm = presets.some(p => p.startsWith('openai_gpt_'));
         const presetHasTts = presets.some(p => p.startsWith('openai_tts_') || p.startsWith('minimax_speech_'));
 
+        if (this.usesManualTurnControl(data)) {
+            if (!data.enableRtm) {
+                throw new Error('Manual turn control requires RTM (enable RTM in Advanced Features)');
+            }
+            if (data.dataChannel !== 'rtm') {
+                throw new Error('Manual turn control requires parameters.data_channel to be "rtm"');
+            }
+        }
+
         // Validate MLLM configuration if enabled
         if (data.enableMllm) {
             if (hasPipelineId) {
@@ -844,6 +853,66 @@ window.Utils = class Utils {
             .split(',')
             .map(v => v.trim())
             .filter(Boolean);
+    }
+
+    static MANAGED_ASR_MODELS = {
+        deepgram_nova_2: 'nova-2',
+        deepgram_nova_3: 'nova-3'
+    };
+
+    static MANAGED_LLM_MODELS = {
+        openai_gpt_4o_mini: 'gpt-4o-mini',
+        openai_gpt_4_1_mini: 'gpt-4.1-mini',
+        openai_gpt_5_nano: 'gpt-5-nano',
+        openai_gpt_5_mini: 'gpt-5-mini'
+    };
+
+    static MANAGED_TTS_MODELS = {
+        openai_tts_1: 'tts-1',
+        openai_tts_1_hd: 'tts-1',
+        minimax_speech_2_6_turbo: 'speech-2.6-turbo',
+        minimax_speech_2_8_turbo: 'speech-2.8-turbo'
+    };
+
+    static usesManualTurnControl(formData) {
+        if (formData.useDeprecatedFeatures || !formData.turnV24Enabled) return false;
+        const sosMode = formData.turnV24StartOfSpeechMode || 'vad';
+        const eosMode = formData.turnV24EndOfSpeechMode || 'vad';
+        return sosMode === 'manual' || eosMode === 'manual';
+    }
+
+    static applyManagedProviderBlock(block, presetKey, category) {
+        if (!block || !presetKey) return;
+        block.credential_mode = 'managed';
+        if (!block.params) block.params = {};
+
+        if (category === 'asr') {
+            block.vendor = 'deepgram';
+            const model = this.MANAGED_ASR_MODELS[presetKey];
+            if (model) block.params.model = model;
+            if (!block.params.url) block.params.url = 'wss://api.deepgram.com/v1/listen';
+            delete block.params.key;
+        } else if (category === 'llm') {
+            block.vendor = block.vendor || 'openai';
+            block.style = block.style || 'openai';
+            if (!block.url) block.url = 'https://api.openai.com/v1/chat/completions';
+            const model = this.MANAGED_LLM_MODELS[presetKey];
+            if (model) block.params.model = model;
+            delete block.api_key;
+        } else if (category === 'tts') {
+            const model = this.MANAGED_TTS_MODELS[presetKey];
+            if (presetKey.startsWith('openai_tts_')) {
+                block.vendor = 'openai';
+                if (model) block.params.model = model;
+                delete block.params.api_key;
+            } else if (presetKey.startsWith('minimax_speech_')) {
+                block.vendor = 'minimax';
+                if (model) block.params.model = model;
+                if (!block.params.url) block.params.url = 'wss://api.minimax.io/ws/v1/t2a_v2';
+                delete block.params.key;
+                delete block.params.group_id;
+            }
+        }
     }
 
     static buildAsrConfig(formData) {
@@ -1369,6 +1438,8 @@ window.Utils = class Utils {
                         strategy: formData.turnV24SoSDisabledStrategy || 'append'
                     }
                 };
+            } else if (sosMode === 'manual') {
+                config.start_of_speech = { mode: 'manual' };
             }
             if (sosMode === 'vad' || sosMode === 'semantic') {
                 interruption = {
@@ -1378,7 +1449,9 @@ window.Utils = class Utils {
             }
             // End of Speech
             const eosMode = formData.turnV24EndOfSpeechMode || 'vad';
-            if (eosMode === 'vad') {
+            if (eosMode === 'manual') {
+                config.end_of_speech = { mode: 'manual' };
+            } else if (eosMode === 'vad') {
                 config.end_of_speech = { mode: 'vad' };
                 if (formData.turnV24EoSSilenceMs != null && formData.turnV24EoSSilenceMs !== '') {
                     config.end_of_speech.vad_config = { silence_duration_ms: parseInt(formData.turnV24EoSSilenceMs, 10) };
@@ -1507,7 +1580,6 @@ window.Utils = class Utils {
 
         const config = {
             name: formData.uniqueName,
-            ...(presets.length > 0 && !formData.enableMllm ? { preset: presets.join(',') } : {}),
             properties: {
                 channel: formData.channel,
                 token: formData.token,
@@ -2079,37 +2151,17 @@ window.Utils = class Utils {
             }
         }
 
-        // Presets are Agora-managed; keep section-level features but remove
-        // provider credential/endpoint/model fields for the preset category.
+        // v2.9 managed mode: credential_mode replaces deprecated top-level preset.
         if (!formData.enableMllm) {
-            if (presetHasLlm && config.properties.llm) {
-                config.properties.llm.vendor = 'openai';
-                delete config.properties.llm.api_key;
-                delete config.properties.llm.url;
-                if (config.properties.llm.params) {
-                    delete config.properties.llm.params.model;
-                }
+            if (presetHasAsr && formData.asrPreset && config.properties.asr) {
+                this.applyManagedProviderBlock(config.properties.asr, formData.asrPreset, 'asr');
             }
-            if (presetHasTts && config.properties.tts) {
-                const ttsPreset = formData.ttsPreset || '';
-                if (ttsPreset.startsWith('minimax_speech_')) {
-                    config.properties.tts.vendor = 'minimax';
-                } else if (ttsPreset.startsWith('openai_tts_')) {
-                    config.properties.tts.vendor = 'openai';
-                }
-                if (!config.properties.tts.params) config.properties.tts.params = {};
-                delete config.properties.tts.params.api_key;
-                delete config.properties.tts.params.key;
-                delete config.properties.tts.params.base_url;
-                delete config.properties.tts.params.url;
-                delete config.properties.tts.params.model;
-                delete config.properties.tts.params.model_id;
+            if (presetHasLlm && formData.llmPreset && config.properties.llm) {
+                this.applyManagedProviderBlock(config.properties.llm, formData.llmPreset, 'llm');
             }
-        }
-        if (presetHasAsr && config.properties.asr && config.properties.asr.vendor === 'deepgram' && config.properties.asr.params) {
-            delete config.properties.asr.params.key;
-            delete config.properties.asr.params.url;
-            delete config.properties.asr.params.model;
+            if (presetHasTts && formData.ttsPreset && config.properties.tts) {
+                this.applyManagedProviderBlock(config.properties.tts, formData.ttsPreset, 'tts');
+            }
         }
 
         return config;

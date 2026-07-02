@@ -13,7 +13,25 @@ const EConversationalAIAPIEvents = {
     AGENT_ERROR: 'agent-error',
     DEBUG_LOG: 'debug-log',
     MESSAGE_RECEIPT_UPDATED: 'message-receipt-updated',
-    MESSAGE_ERROR: 'message-error'
+    MESSAGE_ERROR: 'message-error',
+    MANUAL_TURN_RESULT: 'manual-turn-result'
+};
+
+const EManualTurnCustomType = {
+    SOS: 'user.manual_sos',
+    EOS: 'user.manual_eos'
+};
+
+const EManualTurnResultType = {
+    SOS: 'user.manual_sos.result',
+    EOS: 'user.manual_eos.result',
+    ASSISTANT_EOS: 'assistant.manual_eos.result'
+};
+
+const EAgentStateEventType = {
+    LISTENING: 'state.listening',
+    THINKING: 'state.thinking',
+    SPEAKING: 'state.speaking'
 };
 
 const ESubtitleHelperMode = {
@@ -877,6 +895,101 @@ class ConversationalAIAPI extends EventHelper {
         }
     }
 
+    createManualTurnRequestId(prefix) {
+        return `${prefix}-req-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+
+    async publishManualSos(agentUserId) {
+        const { rtmEngine } = this.getCfg();
+        const requestId = this.createManualTurnRequestId('sos');
+        const messageStr = JSON.stringify({ request_id: requestId });
+        const publishOptions = {
+            channelType: 'USER',
+            customType: EManualTurnCustomType.SOS
+        };
+
+        try {
+            await rtmEngine.publish(agentUserId.toString(), messageStr, publishOptions);
+            return { requestId };
+        } catch (error) {
+            console.error('Failed to send manual SoS message:', error);
+            throw new Error('Failed to send manual start-of-speech request');
+        }
+    }
+
+    async publishManualEos(agentUserId) {
+        const { rtmEngine } = this.getCfg();
+        const requestId = this.createManualTurnRequestId('eos');
+        const messageStr = JSON.stringify({ request_id: requestId });
+        const publishOptions = {
+            channelType: 'USER',
+            customType: EManualTurnCustomType.EOS
+        };
+
+        try {
+            await rtmEngine.publish(agentUserId.toString(), messageStr, publishOptions);
+            return { requestId };
+        } catch (error) {
+            console.error('Failed to send manual EoS message:', error);
+            throw new Error('Failed to send manual end-of-speech request');
+        }
+    }
+
+    mapStateEventToAgentState(eventType, value) {
+        const base = typeof eventType === 'string' ? eventType.replace('state.', '') : '';
+        if (!value) {
+            if (base === 'speaking' || base === 'thinking') return 'listening';
+            return 'idle';
+        }
+        if (base === 'listening' || base === 'thinking' || base === 'speaking') {
+            return base;
+        }
+        return null;
+    }
+
+    handleRtmEventMessage(parsedMessage, publisher) {
+        const eventType = parsedMessage.event_type || parsedMessage.object;
+        if (!eventType || typeof eventType !== 'string') return false;
+
+        if (eventType.startsWith('state.')) {
+            const payload = parsedMessage.payload || {};
+            const value = typeof payload.value === 'boolean' ? payload.value : true;
+            const mappedState = this.mapStateEventToAgentState(eventType, value);
+            if (mappedState) {
+                const event = {
+                    state: mappedState,
+                    turnId: payload.turn_id || null,
+                    timestamp: payload.timestamp || parsedMessage.event_ms || Date.now(),
+                    reason: eventType,
+                    active: value
+                };
+                this.onAgentStateChanged(publisher, event);
+            }
+            return true;
+        }
+
+        if (
+            eventType === EManualTurnResultType.SOS ||
+            eventType === EManualTurnResultType.EOS ||
+            eventType === EManualTurnResultType.ASSISTANT_EOS
+        ) {
+            const payload = parsedMessage.payload || {};
+            this.emit(EConversationalAIAPIEvents.MANUAL_TURN_RESULT, publisher, {
+                eventType,
+                requestId: payload.request_id || null,
+                success: typeof payload.success === 'boolean' ? payload.success : null,
+                turnId: payload.turn_id || null,
+                reason: payload.reason || null,
+                maxDurationMs: payload.max_duration_ms || null,
+                errorMessage: payload.error_message || null,
+                timestamp: parsedMessage.event_ms || Date.now()
+            });
+            return true;
+        }
+
+        return false;
+    }
+
     // Event binding methods
     bindRtcEvents() {
         if (this.rtcEngine) {
@@ -975,6 +1088,10 @@ class ConversationalAIAPI extends EventHelper {
                 }
             } else {
                 // console.warn('TRANSCRIPTION DEBUG - Unsupported message type received:', typeof messageData);
+                return;
+            }
+
+            if (this.handleRtmEventMessage(parsedMessage, publisher)) {
                 return;
             }
 
@@ -1144,6 +1261,9 @@ if (typeof window !== 'undefined') {
     window.EConversationalAIAPIEvents = EConversationalAIAPIEvents;
     window.ESubtitleHelperMode = ESubtitleHelperMode;
     window.EMessageType = EMessageType;
+    window.EManualTurnCustomType = EManualTurnCustomType;
+    window.EManualTurnResultType = EManualTurnResultType;
+    window.EAgentStateEventType = EAgentStateEventType;
 }
 
 // Also support CommonJS/Module export patterns

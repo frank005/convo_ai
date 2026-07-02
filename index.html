@@ -273,6 +273,25 @@
           </div>
         </div>
       </div>
+
+          <div id="manualTurnControlPanel" class="w-full p-4 bg-gray-700 rounded-lg border border-emerald-700/50 space-y-3">
+            <div class="has-tooltip relative">
+              <h3 class="text-sm font-semibold text-gray-300">Manual Turn Control</h3>
+              <div class="tooltip">Send manual Start of Speech (SoS) and End of Speech (EoS) RTM messages while the agent is running.</div>
+            </div>
+            <p id="manualTurnHint" class="text-xs text-gray-400"></p>
+            <div class="grid grid-cols-2 gap-2">
+              <div id="manualTurnSosWrap" class="has-tooltip relative">
+                <button id="manualTurnSosBtn" type="button" class="modern-btn modern-btn-primary w-full">Start (SoS)</button>
+                <div id="manualTurnSosTooltip" class="tooltip">Enable Turn Detection v2.4 and set SoS mode to Manual in Agent Settings.</div>
+              </div>
+              <div id="manualTurnEosWrap" class="has-tooltip relative">
+                <button id="manualTurnEosBtn" type="button" class="modern-btn modern-btn-secondary w-full">End (EoS)</button>
+                <div id="manualTurnEosTooltip" class="tooltip">Enable Turn Detection v2.4 and set EoS mode to Manual in Agent Settings.</div>
+              </div>
+            </div>
+            <div id="manualTurnStatus" class="hidden text-xs text-gray-300 break-words"></div>
+          </div>
                   <!-- Query Agents Section -->
                   <div class="w-full p-4 bg-gray-700 rounded-lg">
                     <h3 class="text-sm font-semibold mb-3 text-gray-300">Query Agents</h3>
@@ -4937,13 +4956,173 @@
       if (turnV24SoSKeywordsBlock) turnV24SoSKeywordsBlock.classList.toggle('hidden', sosMode !== 'keywords');
       if (turnV24SoSDisabledBlock) turnV24SoSDisabledBlock.classList.toggle('hidden', sosMode !== 'disabled');
       const eosMode = turnV24EndOfSpeechMode ? turnV24EndOfSpeechMode.value : 'vad';
-      if (turnV24EoSVadBlock) turnV24EoSVadBlock.classList.toggle('hidden', eosMode !== 'vad');
+      if (turnV24EoSVadBlock) turnV24EoSVadBlock.classList.toggle('hidden', eosMode !== 'vad' && eosMode !== 'manual');
       if (turnV24EoSemanticBlock) turnV24EoSemanticBlock.classList.toggle('hidden', eosMode !== 'semantic');
+      if (typeof window.updateManualTurnControlVisibility === 'function') {
+        window.updateManualTurnControlVisibility();
+      }
     }
-    if (turnV24StartOfSpeechMode) turnV24StartOfSpeechMode.addEventListener('change', updateTurnV24SubVisibility);
-    if (turnV24EndOfSpeechMode) turnV24EndOfSpeechMode.addEventListener('change', updateTurnV24SubVisibility);
     updateTurnV24SubVisibility();
     window.updateTurnV24SubVisibility = updateTurnV24SubVisibility;
+
+    const manualTurnControlPanel = document.getElementById('manualTurnControlPanel');
+    const manualTurnHint = document.getElementById('manualTurnHint');
+    const manualTurnSosBtn = document.getElementById('manualTurnSosBtn');
+    const manualTurnEosBtn = document.getElementById('manualTurnEosBtn');
+    const manualTurnSosTooltip = document.getElementById('manualTurnSosTooltip');
+    const manualTurnEosTooltip = document.getElementById('manualTurnEosTooltip');
+    const manualTurnStatus = document.getElementById('manualTurnStatus');
+    const turnDetectionV24Enabled = document.getElementById('turnDetectionV24Enabled');
+
+    const getManualTurnContext = () => {
+      const deprecatedFeaturesEl = document.getElementById('deprecatedFeatures');
+      const enableRtmEl = document.getElementById('enableRtm');
+      const dataChannelEl = document.getElementById('dataChannel');
+      return {
+        deprecated: !!(deprecatedFeaturesEl && deprecatedFeaturesEl.checked),
+        turnV24On: !!(turnDetectionV24Enabled && turnDetectionV24Enabled.checked),
+        sosManual: !!(turnV24StartOfSpeechMode && turnV24StartOfSpeechMode.value === 'manual'),
+        eosManual: !!(turnV24EndOfSpeechMode && turnV24EndOfSpeechMode.value === 'manual'),
+        rtmOn: !!(enableRtmEl && enableRtmEl.checked),
+        rtmChannel: !!(dataChannelEl && dataChannelEl.value === 'rtm'),
+      };
+    };
+
+    const getManualButtonDisabledReason = (action) => {
+      const ctx = getManualTurnContext();
+      if (ctx.deprecated) {
+        return 'Turn off Deprecated Features in Agent Settings to use Turn Detection v2.4.';
+      }
+      if (!ctx.turnV24On) {
+        return 'Enable Turn Detection in Agent Settings → Advanced → Turn Detection (v2.4).';
+      }
+      if (action === 'sos' && !ctx.sosManual) {
+        return 'Set Start of Speech (SoS) mode to Manual in Turn Detection settings.';
+      }
+      if (action === 'eos' && !ctx.eosManual) {
+        return 'Set End of Speech (EoS) mode to Manual in Turn Detection settings.';
+      }
+      if (!ctx.rtmOn || !ctx.rtmChannel) {
+        return 'Enable RTM and set Data Channel to rtm in Parameters (required for manual turn control).';
+      }
+      return null;
+    };
+
+    const ensureManualTurnPrerequisites = () => {
+      const sosManual = turnV24StartOfSpeechMode && turnV24StartOfSpeechMode.value === 'manual';
+      const eosManual = turnV24EndOfSpeechMode && turnV24EndOfSpeechMode.value === 'manual';
+      if (!sosManual && !eosManual) return;
+
+      if (turnDetectionV24Enabled && !turnDetectionV24Enabled.checked) {
+        turnDetectionV24Enabled.checked = true;
+      }
+      const turnDetectionV24Config = document.getElementById('turnDetectionV24Config');
+      if (turnDetectionV24Config) turnDetectionV24Config.classList.remove('hidden');
+
+      const enableRtmEl = document.getElementById('enableRtm');
+      if (enableRtmEl && !enableRtmEl.checked) {
+        enableRtmEl.checked = true;
+        enableRtmEl.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      const dataChannelEl = document.getElementById('dataChannel');
+      if (dataChannelEl && dataChannelEl.value !== 'rtm') {
+        dataChannelEl.value = 'rtm';
+        dataChannelEl.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      const parametersEnabledEl = document.getElementById('parametersEnabled');
+      if (parametersEnabledEl && !parametersEnabledEl.checked) {
+        parametersEnabledEl.checked = true;
+        const parametersConfig = document.getElementById('parametersConfig');
+        if (parametersConfig) parametersConfig.classList.remove('hidden');
+      }
+    };
+
+    const onManualTurnModeChanged = () => {
+      ensureManualTurnPrerequisites();
+      updateTurnV24SubVisibility();
+    };
+
+    if (turnV24StartOfSpeechMode) turnV24StartOfSpeechMode.addEventListener('change', onManualTurnModeChanged);
+    if (turnV24EndOfSpeechMode) turnV24EndOfSpeechMode.addEventListener('change', onManualTurnModeChanged);
+
+    const setManualTurnButtonState = (btn, tooltipEl, action) => {
+      const reason = getManualButtonDisabledReason(action);
+      const enabled = !reason;
+      if (btn) btn.disabled = !enabled;
+      if (tooltipEl) {
+        tooltipEl.textContent = reason || (
+          action === 'sos'
+            ? 'Send user.manual_sos over RTM when you begin speaking.'
+            : 'Send user.manual_eos over RTM when you finish speaking.'
+        );
+      }
+    };
+
+    const updateManualTurnButtonStates = () => {
+      const ctx = getManualTurnContext();
+      setManualTurnButtonState(manualTurnSosBtn, manualTurnSosTooltip, 'sos');
+      setManualTurnButtonState(manualTurnEosBtn, manualTurnEosTooltip, 'eos');
+      if (manualTurnHint) {
+        if (ctx.sosManual && ctx.eosManual) {
+          manualTurnHint.textContent = 'Both SoS and EoS are manual — press Start when you begin speaking, End when you finish.';
+        } else if (ctx.sosManual) {
+          manualTurnHint.textContent = 'Only SoS is manual — use Start when you begin speaking. End of speech is detected automatically.';
+        } else if (ctx.eosManual) {
+          manualTurnHint.textContent = 'Only EoS is manual — start of speech is detected automatically. Use End when you finish speaking.';
+        } else {
+          manualTurnHint.textContent = 'Configure manual SoS and/or EoS in Agent Settings → Advanced → Turn Detection (v2.4). Hover disabled buttons for setup steps.';
+        }
+      }
+    };
+
+    window.updateManualTurnControlVisibility = () => {
+      updateManualTurnButtonStates();
+    };
+
+    const setManualTurnStatus = (message, isError = false) => {
+      if (!manualTurnStatus) return;
+      manualTurnStatus.textContent = message;
+      manualTurnStatus.classList.remove('hidden');
+      manualTurnStatus.classList.toggle('text-red-300', isError);
+      manualTurnStatus.classList.toggle('text-gray-300', !isError);
+    };
+
+    const sendManualTurnRequest = async (action) => {
+      const disabledReason = getManualButtonDisabledReason(action);
+      if (disabledReason) {
+        setManualTurnStatus(disabledReason, true);
+        return;
+      }
+      if (!window.subtitleManager) {
+        setManualTurnStatus('Subtitle manager is not available.', true);
+        return;
+      }
+      try {
+        const result = action === 'sos'
+          ? await window.subtitleManager.sendManualSos()
+          : await window.subtitleManager.sendManualEos();
+        setManualTurnStatus(`${action.toUpperCase()} sent (${result.requestId})`);
+      } catch (error) {
+        setManualTurnStatus(error.message || `Failed to send manual ${action.toUpperCase()}`, true);
+      }
+    };
+
+    if (manualTurnSosBtn) {
+      manualTurnSosBtn.addEventListener('click', () => sendManualTurnRequest('sos'));
+    }
+    if (manualTurnEosBtn) {
+      manualTurnEosBtn.addEventListener('click', () => sendManualTurnRequest('eos'));
+    }
+    if (turnDetectionV24Enabled) {
+      turnDetectionV24Enabled.addEventListener('change', window.updateManualTurnControlVisibility);
+    }
+    ['enableRtm', 'dataChannel', 'deprecatedFeatures'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', window.updateManualTurnControlVisibility);
+    });
+    window.updateManualTurnControlVisibility();
 
     // Parameters toggle
     const parametersBtn = document.getElementById('parametersBtn');
@@ -4965,12 +5144,12 @@
   <script src="src/js/AccessToken2.js"></script>
   <script src="src/js/RtcTokenBuilder2.js"></script>
   <script src="src/js/RtmTokenBuilder2.js"></script>
-  <script src="src/js/utils.js?v=1.2"></script>
+  <script src="src/js/utils.js?v=1.3"></script>
   <script src="src/js/api.js?v=1.3"></script>
   <script src="src/js/audio.js?v=1.2"></script>
   <script src="src/js/camera-preview.js?v=1.0"></script>
-  <script src="src/js/conversational-ai-api.js?v=1.2"></script>
-  <script src="src/js/subtitles.js?v=1.3"></script>
+  <script src="src/js/conversational-ai-api.js?v=1.3"></script>
+  <script src="src/js/subtitles.js?v=1.4"></script>
   <script src="src/js/ui.js?v=1.5"></script>
   <script src="src/js/asr.js?v=1.0"></script>
 
@@ -5348,7 +5527,7 @@
                 <option value="deepgram_nova_2">deepgram_nova_2</option>
                 <option value="deepgram_nova_3">deepgram_nova_3</option>
               </select>
-              <div class="tooltip">ConvoAI 2.5 ASR presets. When selected, Deepgram endpoint/key/model fields are disabled and managed by Agora.</div>
+              <div class="tooltip">ConvoAI v2.9 managed mode for Deepgram ASR. Sets credential_mode: managed; Agora supplies credentials.</div>
             </div>
           </div>
 
@@ -5735,7 +5914,7 @@
             <option value="openai_gpt_5_nano">openai_gpt_5_nano</option>
             <option value="openai_gpt_5_mini">openai_gpt_5_mini</option>
           </select>
-          <div class="tooltip">ConvoAI 2.5 LLM presets. URL/API key/model are managed by Agora; prompts and other LLM settings remain editable.</div>
+          <div class="tooltip">ConvoAI v2.9 managed mode for OpenAI LLM. Sets credential_mode: managed; prompts and other LLM settings remain editable.</div>
         </div>
         <div class="has-tooltip relative">
           <input
@@ -5927,7 +6106,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="openai_tts_1">openai_tts_1</option>
             <option value="openai_tts_1_hd">openai_tts_1_hd</option>
           </select>
-          <div class="tooltip">ConvoAI 2.5 TTS presets. Vendor credentials/model are managed by Agora; non-provider-specific voice settings stay available.</div>
+          <div class="tooltip">ConvoAI v2.9 managed mode for OpenAI/MiniMax TTS. Sets credential_mode: managed; voice settings remain editable.</div>
         </div>
         <div class="has-tooltip relative">
           <select
@@ -7583,9 +7762,10 @@ The user speaks to you directly — treat each input as part of a live, spoken d
                 <option value="vad">VAD (voice activity)</option>
                 <option value="semantic">Semantic (AIVAD)</option>
                 <option value="keywords">Keywords (Beta)</option>
+                <option value="manual">Manual (RTM SoS)</option>
                 <option value="disabled">Disabled</option>
               </select>
-              <div class="tooltip">When user begins speaking. VAD: interruption threshold/prefix. Semantic: semantic understanding (no extra config). Keywords: trigger on keyword. Disabled: append or ignore.</div>
+              <div class="tooltip">When user begins speaking. Manual sends user.manual_sos over RTM (v2.9). Requires RTM + data_channel: rtm.</div>
             </div>
             <div id="turnV24SoSVadBlock" class="space-y-2">
               <div class="has-tooltip relative">
@@ -7634,9 +7814,10 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               <label class="text-sm">EoS Mode</label>
               <select id="turnV24EndOfSpeechMode" class="w-full p-2 rounded bg-gray-600 turn-v24-field">
                 <option value="vad">VAD (silence duration)</option>
+                <option value="manual">Manual (RTM EoS)</option>
                 <option value="semantic">Semantic (AIVAD)</option>
               </select>
-              <div class="tooltip">When user finishes speaking. VAD: silence duration. Semantic (AIVAD): semantic understanding.</div>
+              <div class="tooltip">When user finishes speaking. Manual sends user.manual_eos over RTM (v2.9). Requires RTM + data_channel: rtm.</div>
             </div>
             <div id="turnV24EoSVadBlock" class="has-tooltip relative">
               <label class="text-sm">Silence Duration (ms)</label>
