@@ -96,7 +96,7 @@
     - Vendor selection: Akool, LiveAvatar, Generic, LemonSlice, Anam, HeyGen (deprecated)
     - API key and avatar ID configuration
     - RTC UID and token management for avatar channel access
-    - LemonSlice-specific settings: identity (agent ID / image URL / base64), aspect ratio, video encoding, model, idle/response timeouts, speaking/idle prompts; sample rate (default 24000) sent as avatar `sample_rate` and forced on TTS
+    - LemonSlice-specific settings: identity (agent ID / image URL / base64), aspect ratio, video encoding, model, idle/response timeouts, speaking/idle prompts; TTS sample rate forced (default 24000)
     - Anam-specific settings: sample rate, quality, video encoding
     - LiveAvatar / HeyGen settings: quality, idle timeout, activity timeout
     - LiveAvatar and LemonSlice force TTS sample rate for supported TTS vendors

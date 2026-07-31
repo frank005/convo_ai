@@ -1219,15 +1219,6 @@ window.Utils = class Utils {
     }
 
     /**
-     * LemonSlice lip-sync breaks when its avatar sample_rate and the TTS output rate disagree,
-     * so both sides read this single value.
-     */
-    static getLemonsliceSampleRate(formData) {
-        const parsed = parseInt(formData.lemonsliceSampleRate || '24000', 10);
-        return Number.isFinite(parsed) ? parsed : 24000;
-    }
-
-    /**
      * LiveAvatar and LemonSlice need TTS at a specific sample rate (default 24 kHz).
      * Legacy vendor "heygen" may still accept other rates on the service side.
      */
@@ -1239,7 +1230,8 @@ window.Utils = class Utils {
         if (formData.avatarVendor === 'liveavatar') {
             rate = 24000;
         } else if (formData.avatarVendor === 'lemonslice') {
-            rate = this.getLemonsliceSampleRate(formData);
+            const parsed = parseInt(formData.lemonsliceSampleRate || '24000', 10);
+            rate = Number.isFinite(parsed) ? parsed : 24000;
         } else {
             return;
         }
@@ -1922,7 +1914,6 @@ window.Utils = class Utils {
                     agora_uid: formData.avatarRtcUid,
                     ...(formData.avatarRtcToken ? { agora_token: formData.avatarRtcToken } : {}),
                     [imageSource]: formData.lemonsliceImageValue,
-                    sample_rate: this.getLemonsliceSampleRate(formData),
                     ...(formData.lemonsliceAspectRatio ? { aspect_ratio: formData.lemonsliceAspectRatio } : {}),
                     ...(formData.lemonsliceVideoEncoding ? { video_encoding: formData.lemonsliceVideoEncoding } : {}),
                     ...(formData.lemonsliceModel ? { model: formData.lemonsliceModel } : {}),

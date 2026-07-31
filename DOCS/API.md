@@ -118,7 +118,7 @@ See [release notes](https://docs.agora.io/en/ai/release-notes) for platform chan
 ### Avatar payload notes
 
 - **LemonSlice** playground option still sends REST `avatar.vendor: "generic"` with LemonSlice `api_base_url` / `avatar_id: lemonslice`, plus optional LemonSlice params (`video_encoding`, `model`, `activity_idle_timeout`, `response_done_timeout`, `agent_prompt`, `agent_idle_prompt`, `aspect_ratio`).
-- **LiveAvatar** requires 24 kHz TTS for supported vendors; **LemonSlice** sends the LemonSlice Sample Rate control (default 24000) as avatar `sample_rate` and forces the same value on the TTS vendor via `Utils.enforceAvatarTtsSampleRate()`.
+- **LiveAvatar** requires 24 kHz TTS for supported vendors; **LemonSlice** forces TTS sample rate from the LemonSlice Sample Rate control (default 24000) via `Utils.enforceAvatarTtsSampleRate()`.
 
 ## Authentication
 
