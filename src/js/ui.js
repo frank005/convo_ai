@@ -341,6 +341,9 @@ window.UI = class UI {
         // Auto-populate to_time with current time when filters are shown
         const agentListFilterToTime = document.getElementById("agentListFilterToTime");
         if (agentListFilterToTime) {
+            agentListFilterToTime.addEventListener("input", () => {
+                agentListFilterToTime.dataset.userEdited = "true";
+            });
             // Set current time when the input is first shown
             this.setCurrentTimeForToTime();
         }
@@ -2771,16 +2774,19 @@ window.UI = class UI {
 
     setCurrentTimeForToTime() {
         const toTimeInput = document.getElementById("agentListFilterToTime");
-        if (toTimeInput && !toTimeInput.value) {
-            // Format current time as datetime-local (YYYY-MM-DDTHH:mm)
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            toTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
-        }
+        // Values the browser restores across reloads are stale, so only keep a value the user typed
+        if (!toTimeInput || toTimeInput.dataset.userEdited === "true") return;
+
+        // Round up to the next minute so the window still covers agents started seconds ago
+        const now = new Date();
+        now.setSeconds(0, 0);
+        now.setMinutes(now.getMinutes() + 1);
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        toTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
     }
 
     toggleAgentListFilters() {

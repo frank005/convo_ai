@@ -398,6 +398,7 @@
                               <input
                                 id="agentListFilterFromTime"
                                 type="datetime-local"
+                                autocomplete="off"
                                 class="w-full p-2 rounded bg-gray-700 text-white text-sm"
                               />
                             </div>
@@ -406,6 +407,7 @@
                               <input
                                 id="agentListFilterToTime"
                                 type="datetime-local"
+                                autocomplete="off"
                                 class="w-full p-2 rounded bg-gray-700 text-white text-sm"
                               />
                               <span class="text-xs text-gray-500 mt-1 block">(auto-filled with current time)</span>
@@ -425,12 +427,11 @@
                                 id="agentListFilterState"
                                 class="w-full p-2 rounded bg-gray-700 text-white text-sm"
                               >
-                                <option value="">All States</option>
                                 <option value="0">IDLE</option>
                                 <option value="1">STARTING</option>
-                                <option value="2" selected>RUNNING</option>
+                                <option value="2">RUNNING</option>
                                 <option value="3">STOPPING</option>
-                                <option value="4">STOPPED</option>
+                                <option value="4" selected>STOPPED</option>
                                 <option value="5">RECOVERING</option>
                                 <option value="6">FAILED</option>
                               </select>
@@ -490,7 +491,7 @@
                       <span id="copyQueryResponseMsg" class="absolute top-2 right-10 text-green-400 text-xs hidden" style="z-index:10;">Copied!</span>
                       <pre
                         id="queryResponse"
-                        class="p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto"
+                        class="p-2 bg-gray-800 rounded text-sm min-h-[100px] max-h-[200px] overflow-auto break-words whitespace-pre-wrap break-all"
                       >                      </pre>
                     </div>
                   </div>
