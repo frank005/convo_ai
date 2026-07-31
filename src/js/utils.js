@@ -181,13 +181,34 @@ window.Utils = class Utils {
             : '';
         const lemonsliceImageSource = document.getElementById("lemonsliceImageSource")
             ? document.getElementById("lemonsliceImageSource").value
-            : 'agent_image_url';
+            : 'agent_id';
         const lemonsliceImageValue = document.getElementById("lemonsliceImageValue")
             ? document.getElementById("lemonsliceImageValue").value.trim()
             : '';
         const lemonsliceAspectRatio = document.getElementById("lemonsliceAspectRatio")
             ? document.getElementById("lemonsliceAspectRatio").value
             : '2x3';
+        const lemonsliceSampleRate = document.getElementById("lemonsliceSampleRate")
+            ? document.getElementById("lemonsliceSampleRate").value
+            : '24000';
+        const lemonsliceVideoEncoding = document.getElementById("lemonsliceVideoEncoding")
+            ? document.getElementById("lemonsliceVideoEncoding").value
+            : '';
+        const lemonsliceModel = document.getElementById("lemonsliceModel")
+            ? document.getElementById("lemonsliceModel").value
+            : '';
+        const lemonsliceActivityIdleTimeout = document.getElementById("lemonsliceActivityIdleTimeout")
+            ? document.getElementById("lemonsliceActivityIdleTimeout").value.trim()
+            : '';
+        const lemonsliceResponseDoneTimeout = document.getElementById("lemonsliceResponseDoneTimeout")
+            ? document.getElementById("lemonsliceResponseDoneTimeout").value.trim()
+            : '';
+        const lemonsliceAgentPrompt = document.getElementById("lemonsliceAgentPrompt")
+            ? document.getElementById("lemonsliceAgentPrompt").value.trim()
+            : '';
+        const lemonsliceAgentIdlePrompt = document.getElementById("lemonsliceAgentIdlePrompt")
+            ? document.getElementById("lemonsliceAgentIdlePrompt").value.trim()
+            : '';
         const heygenQuality = document.getElementById("heygenQuality").value;
         const heygenDisableIdleTimeout = document.getElementById("heygenDisableIdleTimeout").checked;
         const heygenActivityIdleTimeout = document.getElementById("heygenActivityIdleTimeout").value || null;
@@ -352,6 +373,13 @@ window.Utils = class Utils {
             lemonsliceImageSource: lemonsliceImageSource,
             lemonsliceImageValue: lemonsliceImageValue,
             lemonsliceAspectRatio: lemonsliceAspectRatio,
+            lemonsliceSampleRate: lemonsliceSampleRate,
+            lemonsliceVideoEncoding: lemonsliceVideoEncoding,
+            lemonsliceModel: lemonsliceModel,
+            lemonsliceActivityIdleTimeout: lemonsliceActivityIdleTimeout,
+            lemonsliceResponseDoneTimeout: lemonsliceResponseDoneTimeout,
+            lemonsliceAgentPrompt: lemonsliceAgentPrompt,
+            lemonsliceAgentIdlePrompt: lemonsliceAgentIdlePrompt,
             heygenQuality: heygenQuality,
             heygenDisableIdleTimeout: heygenDisableIdleTimeout,
             heygenActivityIdleTimeout: heygenActivityIdleTimeout,
@@ -1191,12 +1219,23 @@ window.Utils = class Utils {
     }
 
     /**
-     * LiveAvatar (vendor liveavatar) requires TTS audio at 24 kHz per Agora docs.
+     * LiveAvatar and LemonSlice need TTS at a specific sample rate (default 24 kHz).
      * Legacy vendor "heygen" may still accept other rates on the service side.
      */
-    static enforceLiveAvatarTtsSampleRate(config, formData) {
-        if (!formData.enableAvatar || formData.avatarVendor !== 'liveavatar' || formData.enableMllm) return;
+    static enforceAvatarTtsSampleRate(config, formData) {
+        if (!formData.enableAvatar || formData.enableMllm) return;
         if (!config.properties?.tts?.params) return;
+
+        let rate = null;
+        if (formData.avatarVendor === 'liveavatar') {
+            rate = 24000;
+        } else if (formData.avatarVendor === 'lemonslice') {
+            const parsed = parseInt(formData.lemonsliceSampleRate || '24000', 10);
+            rate = Number.isFinite(parsed) ? parsed : 24000;
+        } else {
+            return;
+        }
+
         const tts = config.properties.tts;
         const p = tts.params;
         switch (tts.vendor) {
@@ -1204,26 +1243,30 @@ window.Utils = class Utils {
             case 'elevenlabs':
             case 'sarvam':
             case 'murf':
-                p.sample_rate = 24000;
-                break;
+            case 'deepgram':
             case 'gradium':
             case 'generic_http':
-                p.sample_rate = 24000;
+                p.sample_rate = rate;
                 break;
             case 'google':
                 if (!p.AudioConfig) p.AudioConfig = {};
-                p.AudioConfig.sample_rate_hertz = 24000;
+                p.AudioConfig.sample_rate_hertz = rate;
                 break;
             case 'minimax':
                 if (!p.audio_setting) p.audio_setting = {};
-                p.audio_setting.sample_rate = 24000;
+                p.audio_setting.sample_rate = rate;
                 break;
             case 'rime':
-                p.samplingRate = 24000;
+                p.samplingRate = rate;
                 break;
             default:
                 break;
         }
+    }
+
+    /** @deprecated Use enforceAvatarTtsSampleRate */
+    static enforceLiveAvatarTtsSampleRate(config, formData) {
+        this.enforceAvatarTtsSampleRate(config, formData);
     }
 
     /**
@@ -1861,7 +1904,7 @@ window.Utils = class Utils {
                     ...(formData.avatarRtcToken ? { agora_token: formData.avatarRtcToken } : {})
                 };
             } else if (isLemonslice) {
-                const imageSource = formData.lemonsliceImageSource || 'agent_image_url';
+                const imageSource = formData.lemonsliceImageSource || 'agent_id';
                 avatarParams = {
                     api_key: formData.avatarApiKey,
                     api_base_url: formData.lemonsliceApiBaseUrl || 'https://lemonslice.com/api/liveai/agora',
@@ -1871,7 +1914,17 @@ window.Utils = class Utils {
                     agora_uid: formData.avatarRtcUid,
                     ...(formData.avatarRtcToken ? { agora_token: formData.avatarRtcToken } : {}),
                     [imageSource]: formData.lemonsliceImageValue,
-                    ...(formData.lemonsliceAspectRatio ? { aspect_ratio: formData.lemonsliceAspectRatio } : {})
+                    ...(formData.lemonsliceAspectRatio ? { aspect_ratio: formData.lemonsliceAspectRatio } : {}),
+                    ...(formData.lemonsliceVideoEncoding ? { video_encoding: formData.lemonsliceVideoEncoding } : {}),
+                    ...(formData.lemonsliceModel ? { model: formData.lemonsliceModel } : {}),
+                    ...(formData.lemonsliceActivityIdleTimeout !== '' && formData.lemonsliceActivityIdleTimeout != null
+                        ? { activity_idle_timeout: parseInt(formData.lemonsliceActivityIdleTimeout, 10) }
+                        : {}),
+                    ...(formData.lemonsliceResponseDoneTimeout !== '' && formData.lemonsliceResponseDoneTimeout != null
+                        ? { response_done_timeout: parseFloat(formData.lemonsliceResponseDoneTimeout) }
+                        : {}),
+                    ...(formData.lemonsliceAgentPrompt ? { agent_prompt: formData.lemonsliceAgentPrompt } : {}),
+                    ...(formData.lemonsliceAgentIdlePrompt ? { agent_idle_prompt: formData.lemonsliceAgentIdlePrompt } : {})
                 };
             } else {
                 avatarParams = {
@@ -2236,7 +2289,7 @@ window.Utils = class Utils {
                 };
             }
 
-            this.enforceLiveAvatarTtsSampleRate(config, formData);
+            this.enforceAvatarTtsSampleRate(config, formData);
         }
 
         // Add RTC encryption configuration if enabled (only if mode is selected and not empty)

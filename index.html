@@ -7285,7 +7285,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="heygen">HeyGen (Deprecated)</option>
             <option value="anam">Anam</option>
           </select>
-          <div class="tooltip">Select the AI Avatar vendor. LemonSlice is a first-class option that still sends <code>vendor: generic</code> with LemonSlice defaults (ConvoAI v2.10). Generic is for any other custom avatar provider. LiveAvatar uses the current HeyGen LiveAvatar API; TTS must be 24 kHz when LiveAvatar is selected. Deprecated HeyGen targets the legacy Interactive Avatar integration.</div>
+          <div class="tooltip">Select the AI Avatar vendor. LemonSlice is a first-class option that still sends <code>vendor: generic</code> with LemonSlice defaults (ConvoAI v2.10); TTS sample rate is forced to the LemonSlice setting (default 24000). Generic is for any other custom avatar provider. LiveAvatar uses the current HeyGen LiveAvatar API; TTS must be 24 kHz when LiveAvatar is selected. Deprecated HeyGen targets the legacy Interactive Avatar integration.</div>
         </div>
         <div class="has-tooltip relative">
           <input
@@ -7380,7 +7380,9 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         <!-- LemonSlice avatar (UI option; REST vendor remains generic) -->
         <div id="lemonsliceAvatarSettings" class="hidden space-y-2">
           <div class="text-xs text-gray-400 italic">
-            LemonSlice uses the <code>generic</code> avatar vendor. API base URL and avatar ID are prefilled.
+            LemonSlice uses the <code>generic</code> avatar vendor. See
+            <a href="https://lemonslice.com/docs/agora" target="_blank" rel="noopener noreferrer" class="text-blue-400 underline">LemonSlice Agora docs</a>
+            for full parameter details. TTS sample rate should typically be 24000 (e.g. MiniMax).
           </div>
           <div class="has-tooltip relative">
             <input
@@ -7392,23 +7394,43 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <div class="tooltip">LemonSlice Agora integration base URL.</div>
           </div>
           <div class="has-tooltip relative">
+            <input
+              id="lemonsliceVendorAvatarId"
+              class="w-full p-2 rounded bg-gray-800 text-gray-400 border border-gray-500"
+              value="lemonslice"
+              readonly
+            />
+            <div class="tooltip">Fixed <code>avatar_id</code> for LemonSlice. Always sent as <code>lemonslice</code>.</div>
+          </div>
+          <div class="has-tooltip relative">
             <select
               id="lemonsliceImageSource"
               class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             >
-              <option value="agent_image_url" selected>Image URL (agent_image_url)</option>
-              <option value="agent_id">Agent ID (agent_id)</option>
+              <option value="agent_id" selected>Agent ID (agent_id)</option>
+              <option value="agent_image_url">Image URL (agent_image_url)</option>
               <option value="agent_image_base64">Image Base64 (agent_image_base64)</option>
             </select>
-            <div class="tooltip">Provide exactly one image source: a public image URL, a LemonSlice agent ID, or a base64-encoded image.</div>
+            <div class="tooltip">Provide exactly one identity: LemonSlice agent ID, public image URL, or base64 image. Agent ID also defaults agent_prompt / agent_idle_prompt from that agent.</div>
           </div>
           <div class="has-tooltip relative">
             <input
               id="lemonsliceImageValue"
               class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
-              placeholder="Image URL, agent ID, or base64 (Required)"
+              placeholder="Agent ID, image URL, or base64 (Required)"
             />
-            <div class="tooltip">Value for the selected image source field.</div>
+            <div class="tooltip">Value for the selected identity field.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <select
+              id="lemonsliceSampleRate"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            >
+              <option value="24000" selected>24000 (recommended)</option>
+              <option value="16000">16000</option>
+              <option value="48000">48000</option>
+            </select>
+            <div class="tooltip">Forces TTS output sample rate when LemonSlice is enabled (MiniMax and several other vendors need 24000). Options kept for experimentation.</div>
           </div>
           <div class="has-tooltip relative">
             <select
@@ -7420,6 +7442,69 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               <option value="1x1">1x1</option>
             </select>
             <div class="tooltip">Output aspect ratio for the LemonSlice avatar video.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <select
+              id="lemonsliceVideoEncoding"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            >
+              <option value="" selected>Video encoding (provider default)</option>
+              <option value="H264">H264</option>
+              <option value="VP8">VP8</option>
+              <option value="AV1">AV1</option>
+            </select>
+            <div class="tooltip">Video codec for the avatar stream. Leave empty for provider default.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <select
+              id="lemonsliceModel"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            >
+              <option value="" selected>Model (provider default / flagship)</option>
+              <option value="lite">lite</option>
+              <option value="flash">flash</option>
+              <option value="pro">pro</option>
+            </select>
+            <div class="tooltip">LemonSlice model variant. Leave empty for the normal flagship model.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="lemonsliceActivityIdleTimeout"
+              type="number"
+              min="0"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Activity idle timeout sec (default 120)"
+            />
+            <div class="tooltip">Idle timeout in seconds. LemonSlice defaults to 120. Use 0 for no idle timeout (not recommended).</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="lemonsliceResponseDoneTimeout"
+              type="number"
+              min="0"
+              step="0.1"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Response done timeout sec (optional)"
+            />
+            <div class="tooltip">Seconds to wait without new audio bytes before marking the response complete. Useful when TTS does not send an end event promptly.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <textarea
+              id="lemonsliceAgentPrompt"
+              rows="2"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Agent prompt / speaking (optional, e.g. a person talking)"
+            ></textarea>
+            <div class="tooltip">High-level prompt that influences avatar movement/expression while speaking. Defaults to "a person talking" if omitted (or agent defaults when using agent_id).</div>
+          </div>
+          <div class="has-tooltip relative">
+            <textarea
+              id="lemonsliceAgentIdlePrompt"
+              rows="2"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Agent idle prompt (optional, e.g. a serious person)"
+            ></textarea>
+            <div class="tooltip">High-level prompt for idle-state demeanor. Defaults to "a serious person" if omitted (or agent defaults when using agent_id).</div>
           </div>
         </div>
 

@@ -81,7 +81,7 @@ Enable visual AI avatar representation:
    - **HeyGen (Deprecated)** (legacy Interactive Avatar)
 3. Configure API key and avatar ID (LemonSlice hardcodes `avatar_id: lemonslice` and asks for an image source instead)
 4. Set Avatar RTC UID and optional token
-5. Configure vendor-specific settings (LiveAvatar quality/timeouts, Anam sample rate/quality/encoding, LemonSlice aspect ratio)
+5. Configure vendor-specific settings (LiveAvatar quality/timeouts, Anam sample rate/quality/encoding, LemonSlice identity + encoding/model/timeouts/prompts + TTS sample rate default 24000)
 6. Visual placeholder appears until the avatar video stream is active
 
 For detailed vendor configuration, see [VENDORS.md](./VENDORS.md).

@@ -310,12 +310,19 @@ First-class playground option for LemonSlice. The REST payload still uses `vendo
 - Avatar RTC UID
 - Exactly one of `agent_image_url`, `agent_id`, or `agent_image_base64`
 
-**Optional:**
+**Optional (LemonSlice Agora docs):**
 
 - Avatar RTC Token
 - `aspect_ratio`: `2x3` (default), `9x16`, or `1x1`
+- `video_encoding`: `H264`, `VP8`, or `AV1`
+- `model`: `lite`, `flash`, or `pro` (omit for flagship)
+- `activity_idle_timeout`: seconds (LemonSlice default 120; `0` disables)
+- `response_done_timeout`: seconds without new audio before marking response complete
+- `agent_prompt` / `agent_idle_prompt`: speaking / idle demeanor prompts
 
-**Docs:** [LemonSlice](https://docs.agora.io/en/ai/models/avatar/lemonslice)
+**TTS sample rate:** When LemonSlice is selected, the playground forces TTS sample rate to the LemonSlice Sample Rate control (**default 24000**, options 16000 / 24000 / 48000). MiniMax and several other vendors need 24000 for reliable lip-sync.
+
+**Docs:** [LemonSlice Agora](https://lemonslice.com/docs/agora) · [Agora LemonSlice page](https://docs.agora.io/en/ai/models/avatar/lemonslice)
 
 ### Akool Avatar
 
