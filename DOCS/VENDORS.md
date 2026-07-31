@@ -320,7 +320,7 @@ First-class playground option for LemonSlice. The REST payload still uses `vendo
 - `response_done_timeout`: seconds without new audio before marking response complete
 - `agent_prompt` / `agent_idle_prompt`: speaking / idle demeanor prompts
 
-**TTS sample rate:** When LemonSlice is selected, the playground forces TTS sample rate to the LemonSlice Sample Rate control (**default 24000**, options 16000 / 24000 / 48000). MiniMax and several other vendors need 24000 for reliable lip-sync.
+**Sample rate:** The LemonSlice Sample Rate control (**default 24000**, options 16000 / 24000 / 48000) is sent as avatar `sample_rate` *and* forced on the TTS vendor, so the two always match. MiniMax and several other vendors need 24000 for reliable lip-sync.
 
 **Docs:** [LemonSlice Agora](https://lemonslice.com/docs/agora) · [Agora LemonSlice page](https://docs.agora.io/en/ai/models/avatar/lemonslice)
 
