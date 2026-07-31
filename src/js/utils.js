@@ -58,6 +58,12 @@ window.Utils = class Utils {
             ttsKey = '';
         } else if (ttsVendor === "murf") {
             ttsKey = document.getElementById("murfApiKey") ? document.getElementById("murfApiKey").value.trim() : '';
+        } else if (ttsVendor === "gradium") {
+            ttsKey = document.getElementById("gradiumTtsKey") ? document.getElementById("gradiumTtsKey").value.trim() : '';
+        } else if (ttsVendor === "mistral") {
+            ttsKey = document.getElementById("mistralTtsKey") ? document.getElementById("mistralTtsKey").value.trim() : '';
+        } else if (ttsVendor === "generic_http") {
+            ttsKey = document.getElementById("genericHttpTtsKey") ? document.getElementById("genericHttpTtsKey").value.trim() : '';
         }
 
         // Get new v1.6 fields
@@ -170,6 +176,18 @@ window.Utils = class Utils {
         const avatarApiBaseUrl = document.getElementById("avatarApiBaseUrl")
             ? document.getElementById("avatarApiBaseUrl").value.trim()
             : '';
+        const lemonsliceApiBaseUrl = document.getElementById("lemonsliceApiBaseUrl")
+            ? document.getElementById("lemonsliceApiBaseUrl").value.trim()
+            : '';
+        const lemonsliceImageSource = document.getElementById("lemonsliceImageSource")
+            ? document.getElementById("lemonsliceImageSource").value
+            : 'agent_image_url';
+        const lemonsliceImageValue = document.getElementById("lemonsliceImageValue")
+            ? document.getElementById("lemonsliceImageValue").value.trim()
+            : '';
+        const lemonsliceAspectRatio = document.getElementById("lemonsliceAspectRatio")
+            ? document.getElementById("lemonsliceAspectRatio").value
+            : '2x3';
         const heygenQuality = document.getElementById("heygenQuality").value;
         const heygenDisableIdleTimeout = document.getElementById("heygenDisableIdleTimeout").checked;
         const heygenActivityIdleTimeout = document.getElementById("heygenActivityIdleTimeout").value || null;
@@ -330,6 +348,10 @@ window.Utils = class Utils {
             avatarRtcUid: avatarRtcUid,
             avatarRtcToken: avatarRtcToken,
             avatarApiBaseUrl: avatarApiBaseUrl,
+            lemonsliceApiBaseUrl: lemonsliceApiBaseUrl,
+            lemonsliceImageSource: lemonsliceImageSource,
+            lemonsliceImageValue: lemonsliceImageValue,
+            lemonsliceAspectRatio: lemonsliceAspectRatio,
             heygenQuality: heygenQuality,
             heygenDisableIdleTimeout: heygenDisableIdleTimeout,
             heygenActivityIdleTimeout: heygenActivityIdleTimeout,
@@ -413,7 +435,7 @@ window.Utils = class Utils {
             if (!data.avatarApiKey) {
                 throw new Error('Avatar API Key is required when AI Avatar is enabled');
             }
-            if (!data.avatarId) {
+            if (data.avatarVendor !== 'lemonslice' && !data.avatarId) {
                 throw new Error('Avatar ID is required when AI Avatar is enabled');
             }
             if (!data.avatarRtcUid) {
@@ -429,6 +451,21 @@ window.Utils = class Utils {
                 const creds = this.getStoredCredentials();
                 if (!creds.appId) {
                     throw new Error('App ID is required when Generic avatar vendor is selected');
+                }
+            }
+            if (data.avatarVendor === 'lemonslice') {
+                if (!data.lemonsliceApiBaseUrl) {
+                    throw new Error('API Base URL is required when LemonSlice avatar is selected');
+                }
+                if (!data.lemonsliceImageValue) {
+                    throw new Error('LemonSlice requires an image URL, agent ID, or base64 image');
+                }
+                if (!data.channel) {
+                    throw new Error('Channel name is required when LemonSlice avatar is selected');
+                }
+                const creds = this.getStoredCredentials();
+                if (!creds.appId) {
+                    throw new Error('App ID is required when LemonSlice avatar is selected');
                 }
             }
             // Avatar RTC Token is optional - no validation needed since it's already trimmed
@@ -603,6 +640,43 @@ window.Utils = class Utils {
                         if (!Number.isFinite(rimeSr) || rimeSr < 4000 || rimeSr > 44100) {
                             throw new Error('Rime sampling rate must be an integer between 4000 and 44100');
                         }
+                    }
+                } else if (ttsVendor === 'gradium') {
+                    const gradiumTtsKey = document.getElementById('gradiumTtsKey') ? document.getElementById('gradiumTtsKey').value.trim() : '';
+                    const gradiumUrl = document.getElementById('gradiumUrl') ? document.getElementById('gradiumUrl').value.trim() : '';
+                    const gradiumVoiceId = document.getElementById('gradiumVoiceId') ? document.getElementById('gradiumVoiceId').value.trim() : '';
+                    if (!gradiumTtsKey) throw new Error('Gradium API Key is required');
+                    if (!gradiumUrl) throw new Error('Gradium URL is required');
+                    if (!gradiumVoiceId) throw new Error('Gradium Voice ID is required');
+                } else if (ttsVendor === 'mistral') {
+                    const mistralTtsKey = document.getElementById('mistralTtsKey') ? document.getElementById('mistralTtsKey').value.trim() : '';
+                    const mistralModel = document.getElementById('mistralModel') ? document.getElementById('mistralModel').value.trim() : '';
+                    const mistralVoice = document.getElementById('mistralVoice') ? document.getElementById('mistralVoice').value.trim() : '';
+                    if (!mistralTtsKey) throw new Error('Mistral API Key is required');
+                    if (!mistralModel) throw new Error('Mistral Model is required');
+                    if (!mistralVoice) throw new Error('Mistral Voice is required');
+                } else if (ttsVendor === 'generic_http') {
+                    const genericHttpUrl = document.getElementById('genericHttpUrl') ? document.getElementById('genericHttpUrl').value.trim() : '';
+                    const genericHttpTtsKey = document.getElementById('genericHttpTtsKey') ? document.getElementById('genericHttpTtsKey').value.trim() : '';
+                    const genericHttpHeadersRaw = document.getElementById('genericHttpHeaders') ? document.getElementById('genericHttpHeaders').value.trim() : '';
+                    if (!genericHttpUrl) {
+                        throw new Error('Generic HTTP TTS URL is required');
+                    }
+                    let hasAuthHeader = false;
+                    if (genericHttpHeadersRaw) {
+                        try {
+                            const headers = JSON.parse(genericHttpHeadersRaw);
+                            if (!headers || typeof headers !== 'object' || Array.isArray(headers)) {
+                                throw new Error('Generic HTTP TTS headers must be a JSON object');
+                            }
+                            hasAuthHeader = Boolean(headers.Authorization);
+                        } catch (e) {
+                            if (e.message && e.message.includes('Generic HTTP')) throw e;
+                            throw new Error('Generic HTTP TTS headers must be valid JSON');
+                        }
+                    }
+                    if (!genericHttpTtsKey && !hasAuthHeader) {
+                        throw new Error('Generic HTTP TTS requires params.api_key and/or headers.Authorization');
                     }
                 }
             }
@@ -1130,6 +1204,10 @@ window.Utils = class Utils {
             case 'elevenlabs':
             case 'sarvam':
             case 'murf':
+                p.sample_rate = 24000;
+                break;
+            case 'gradium':
+            case 'generic_http':
                 p.sample_rate = 24000;
                 break;
             case 'google':
@@ -1748,7 +1826,7 @@ window.Utils = class Utils {
             if (!formData.avatarApiKey) {
                 throw new Error('Avatar API Key is required when AI Avatar is enabled');
             }
-            if (!formData.avatarId) {
+            if (formData.avatarVendor !== 'lemonslice' && !formData.avatarId) {
                 throw new Error('Avatar ID is required when AI Avatar is enabled');
             }
             if (!formData.avatarRtcUid) {
@@ -1757,35 +1835,57 @@ window.Utils = class Utils {
             // Avatar RTC Token is optional - no validation needed
 
             const credsForAvatar = this.getStoredCredentials();
+            const isLemonslice = formData.avatarVendor === 'lemonslice';
+            // LemonSlice is a first-class UI option but REST still uses vendor "generic"
+            const avatarVendorPayload = isLemonslice ? 'generic' : formData.avatarVendor;
+
+            let avatarParams;
+            if (formData.avatarVendor === 'anam') {
+                avatarParams = {
+                    agora_token: formData.avatarRtcToken || '',
+                    agora_uid: formData.avatarRtcUid,
+                    api_key: formData.avatarApiKey,
+                    avatar_id: formData.avatarId,
+                    sample_rate: parseInt(formData.anamSampleRate, 10),
+                    quality: formData.anamQuality,
+                    video_encoding: formData.anamVideoEncoding
+                };
+            } else if (formData.avatarVendor === 'generic') {
+                avatarParams = {
+                    api_key: formData.avatarApiKey,
+                    api_base_url: formData.avatarApiBaseUrl,
+                    avatar_id: formData.avatarId,
+                    agora_appid: credsForAvatar.appId,
+                    agora_channel: formData.channel,
+                    agora_uid: formData.avatarRtcUid,
+                    ...(formData.avatarRtcToken ? { agora_token: formData.avatarRtcToken } : {})
+                };
+            } else if (isLemonslice) {
+                const imageSource = formData.lemonsliceImageSource || 'agent_image_url';
+                avatarParams = {
+                    api_key: formData.avatarApiKey,
+                    api_base_url: formData.lemonsliceApiBaseUrl || 'https://lemonslice.com/api/liveai/agora',
+                    avatar_id: 'lemonslice',
+                    agora_appid: credsForAvatar.appId,
+                    agora_channel: formData.channel,
+                    agora_uid: formData.avatarRtcUid,
+                    ...(formData.avatarRtcToken ? { agora_token: formData.avatarRtcToken } : {}),
+                    [imageSource]: formData.lemonsliceImageValue,
+                    ...(formData.lemonsliceAspectRatio ? { aspect_ratio: formData.lemonsliceAspectRatio } : {})
+                };
+            } else {
+                avatarParams = {
+                    api_key: formData.avatarApiKey,
+                    agora_uid: formData.avatarRtcUid,
+                    avatar_id: formData.avatarId,
+                    ...(formData.avatarRtcToken && formData.avatarRtcToken !== '' ? { agora_token: formData.avatarRtcToken } : {})
+                };
+            }
+
             config.properties.avatar = {
-                vendor: formData.avatarVendor,
+                vendor: avatarVendorPayload,
                 enable: true,
-                params: formData.avatarVendor === 'anam'
-                    ? {
-                        agora_token: formData.avatarRtcToken || '',
-                        agora_uid: formData.avatarRtcUid,
-                        api_key: formData.avatarApiKey,
-                        avatar_id: formData.avatarId,
-                        sample_rate: parseInt(formData.anamSampleRate, 10),
-                        quality: formData.anamQuality,
-                        video_encoding: formData.anamVideoEncoding
-                    }
-                    : formData.avatarVendor === 'generic'
-                    ? {
-                        api_key: formData.avatarApiKey,
-                        api_base_url: formData.avatarApiBaseUrl,
-                        avatar_id: formData.avatarId,
-                        agora_appid: credsForAvatar.appId,
-                        agora_channel: formData.channel,
-                        agora_uid: formData.avatarRtcUid,
-                        ...(formData.avatarRtcToken ? { agora_token: formData.avatarRtcToken } : {})
-                    }
-                    : {
-                        api_key: formData.avatarApiKey,
-                        agora_uid: formData.avatarRtcUid,
-                        avatar_id: formData.avatarId,
-                        ...(formData.avatarRtcToken && formData.avatarRtcToken !== '' ? { agora_token: formData.avatarRtcToken } : {})
-                    }
+                params: avatarParams
             };
 
             // Add LiveAvatar/HeyGen specific parameters
@@ -2061,6 +2161,67 @@ window.Utils = class Utils {
                         sample_rate: parseInt(document.getElementById("murfSampleRate").value || "24000", 10)
                     }
                 };
+            } else if (formData.vendor === "gradium") {
+                const gradiumParams = {
+                    api_key: document.getElementById("gradiumTtsKey").value,
+                    url: document.getElementById("gradiumUrl").value.trim(),
+                    model_name: document.getElementById("gradiumModelName").value.trim() || "default",
+                    voice_id: document.getElementById("gradiumVoiceId").value.trim()
+                };
+                if (document.getElementById("gradiumSampleRate")?.value) {
+                    gradiumParams.sample_rate = parseInt(document.getElementById("gradiumSampleRate").value, 10);
+                }
+                config.properties.tts = {
+                    vendor: "gradium",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: gradiumParams
+                };
+            } else if (formData.vendor === "mistral") {
+                config.properties.tts = {
+                    vendor: "mistral",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: {
+                        api_key: document.getElementById("mistralTtsKey").value,
+                        model: document.getElementById("mistralModel").value.trim(),
+                        voice: document.getElementById("mistralVoice").value.trim()
+                    }
+                };
+            } else if (formData.vendor === "generic_http") {
+                const genericHttpParams = {};
+                const genericHttpKey = document.getElementById("genericHttpTtsKey")?.value.trim();
+                if (genericHttpKey) genericHttpParams.api_key = genericHttpKey;
+                if (document.getElementById("genericHttpModel")?.value.trim()) {
+                    genericHttpParams.model = document.getElementById("genericHttpModel").value.trim();
+                }
+                if (document.getElementById("genericHttpVoice")?.value.trim()) {
+                    genericHttpParams.voice = document.getElementById("genericHttpVoice").value.trim();
+                }
+                if (document.getElementById("genericHttpSpeed")?.value) {
+                    genericHttpParams.speed = parseFloat(document.getElementById("genericHttpSpeed").value);
+                }
+                if (document.getElementById("genericHttpSampleRate")?.value) {
+                    genericHttpParams.sample_rate = parseInt(document.getElementById("genericHttpSampleRate").value, 10);
+                }
+                if (document.getElementById("genericHttpResponseFormat")?.value.trim()) {
+                    genericHttpParams.response_format = document.getElementById("genericHttpResponseFormat").value.trim();
+                }
+                if (document.getElementById("genericHttpInstruction")?.value.trim()) {
+                    genericHttpParams.instruction = document.getElementById("genericHttpInstruction").value.trim();
+                }
+
+                const genericHttpTts = {
+                    vendor: "generic_http",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    url: document.getElementById("genericHttpUrl").value.trim(),
+                    params: genericHttpParams
+                };
+
+                const headersRaw = document.getElementById("genericHttpHeaders")?.value.trim();
+                if (headersRaw) {
+                    genericHttpTts.headers = JSON.parse(headersRaw);
+                }
+
+                config.properties.tts = genericHttpTts;
             }
 
             const ttsCustomParams = this.getTtsCustomParams();

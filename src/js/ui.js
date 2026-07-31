@@ -1634,6 +1634,29 @@ window.UI = class UI {
             "murfPitchBlock",
             "murfSampleRateBlock"
         ];
+        const gradiumBlocks = [
+            "gradiumTtsKeyBlock",
+            "gradiumUrlBlock",
+            "gradiumModelNameBlock",
+            "gradiumVoiceIdBlock",
+            "gradiumSampleRateBlock"
+        ];
+        const mistralBlocks = [
+            "mistralTtsKeyBlock",
+            "mistralModelBlock",
+            "mistralVoiceBlock"
+        ];
+        const genericHttpBlocks = [
+            "genericHttpUrlBlock",
+            "genericHttpTtsKeyBlock",
+            "genericHttpHeadersBlock",
+            "genericHttpModelBlock",
+            "genericHttpVoiceBlock",
+            "genericHttpSpeedBlock",
+            "genericHttpSampleRateBlock",
+            "genericHttpResponseFormatBlock",
+            "genericHttpInstructionBlock"
+        ];
 
         msBlocks.forEach(block => {
             const element = document.getElementById(block);
@@ -1737,6 +1760,27 @@ window.UI = class UI {
             const element = document.getElementById(block);
             if (element) {
                 element.classList.toggle("hidden", vendor !== "murf");
+            }
+        });
+
+        gradiumBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "gradium");
+            }
+        });
+
+        mistralBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "mistral");
+            }
+        });
+
+        genericHttpBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "generic_http");
             }
         });
 

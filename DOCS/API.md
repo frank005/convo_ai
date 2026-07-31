@@ -65,6 +65,19 @@ Manually interrupt an agent's current response.
 - **Description:** Immediately terminates the agent's current response
 - **Features:** Status confirmation and error handling
 
+### Manual Turn Control (SoS / EoS) — client RTM (v2.9)
+
+The playground sends manual turn boundaries over **Agora Signaling (RTM)** (not REST), matching ConvoAI turn detection when SoS/EoS mode is `manual`:
+
+| Action | RTM message type (playground) |
+|--------|-------------------------------|
+| Start of Speech | `user.manual_sos` |
+| End of Speech | `user.manual_eos` |
+
+**Requirements:** Turn Detection enabled with Manual mode, RTM enabled, `data_channel: rtm`. Platform client toolkits (Android / iOS / Web) also expose `manualSOS` / `manualEOS` helpers in v2.10; this playground uses the RTM message path directly.
+
+See [Manually control start and end of speech](https://docs.agora.io/en/ai/develop/manual-turn-control) (or the current Agora docs path for manual SoS/EoS).
+
 ### Send Custom Instruction (Think)
 
 Inject custom text into the agent pipeline.
@@ -100,7 +113,12 @@ All REST calls in `src/js/api.js` format error bodies through `Utils.formatConvo
 
 - **112 turns finished:** post-session batched turn data (alternative to paginated REST query).
 
-See [release notes](https://docs.agora.io/en/conversational-ai/overview/release-notes) for platform changelog details.
+See [release notes](https://docs.agora.io/en/ai/release-notes) for platform changelog details (v2.9 manual turn toolkit APIs, v2.10 Gradium / Mistral / `generic_http` TTS, LemonSlice avatar docs).
+
+### Avatar payload notes
+
+- **LemonSlice** playground option still sends REST `avatar.vendor: "generic"` with LemonSlice `api_base_url` / `avatar_id: lemonslice`.
+- **LiveAvatar** requires 24 kHz TTS for supported vendors; the playground enforces this in `Utils.enforceLiveAvatarTtsSampleRate()`.
 
 ## Authentication
 

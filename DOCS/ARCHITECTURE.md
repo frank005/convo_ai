@@ -4,14 +4,18 @@ The application follows a modular architecture with clear separation of concerns
 
 ## Architecture Overview
 
-The application is organized into six main modules:
+The application is organized into these main modules:
 
-1. **Core API Layer** - Handles all Agora API communication
-2. **Conversational AI API** - Manages real-time messaging and MLLM connections
-3. **Subtitles & Chat** - Handles live subtitle display and chat history
-4. **Audio Processing** - Manages real-time audio visualization
-5. **UI Components** - Controls all user interface interactions
-6. **Utilities** - Provides helper functions and common operations
+1. **Core API Layer** (`api.js`) — Agora REST agent / SIP / phone operations
+2. **Conversational AI API** (`conversational-ai-api.js`) — RTM signaling, transcripts, manual SoS/EoS
+3. **Subtitles & Chat** (`subtitles.js`) — Live subtitle display and chat history
+4. **Audio Processing** (`audio.js`) — Real-time audio visualization
+5. **UI Components** (`ui.js`) — Forms, drawers, vendor visibility, agent controls
+6. **Utilities** (`utils.js`) — Config builders, validation, local token generation
+7. **ASR helpers** (`asr.js`) — ASR vendor UI/config helpers
+8. **Camera preview** (`camera-preview.js`) — Local camera overlay
+9. **Form persistence** (`form-settings-persistence.js`) — Persist selected settings across reloads
+10. **Token builders** (`RtcTokenBuilder2.js`, `RtmTokenBuilder2.js`, `AccessToken2.js`)
 
 ## Module Details
 
@@ -21,124 +25,47 @@ Handles all communication with Agora's API and manages authentication.
 
 **Responsibilities:**
 
-- All communication with Agora's API
-- Authentication and request formatting
-- Clean interfaces for agent operations
-- Broadcast, interrupt, and history functionality
-
-**Key Features:**
-
-- Request/response handling
-- Error management
-- Credential management
+- Agent join / update / leave / query / list / history / turns
+- Broadcast, interrupt, and think endpoints
+- SIP / phone number management REST calls
+- Error formatting via `Utils.formatConvoAiApiError()`
 
 ### 2. Conversational AI API (`conversational-ai-api.js`)
 
-Manages real-time messaging, transcription handling, and MLLM WebSocket connections.
+Manages real-time messaging, transcription handling, and client signaling.
 
 **Responsibilities:**
 
-- Real-time messaging and transcription handling
 - RTM (Real-Time Messaging) communication
-- Transcription updates and chat history
+- Transcription updates and chat history hooks
+- Manual turn control publish (`user.manual_sos` / `user.manual_eos`) and result handling
 - Message types and conversation flow
-- MLLM WebSocket connections and data processing
-
-**Key Features:**
-
-- RTM message processing
-- Transcription data handling
-- WebSocket connection management
-- MLLM-specific data processing
 
 ### 3. Subtitles & Chat (`subtitles.js`)
 
-Manages live subtitle display, chat history rendering, and user interaction.
-
-**Responsibilities:**
-
-- Live subtitle display and overlay
-- Chat history rendering and updates
-- Transcription data processing for display
-- Copy/clear functionality for chat history
-- Temporary and final message states
-
-**Key Features:**
-
-- Real-time subtitle updates
-- Chat history management
-- Message state handling
-- User interaction controls
+Manages live subtitle display, chat history rendering, and wrappers around manual turn helpers.
 
 ### 4. Audio Processing (`audio.js`)
 
-Manages real-time audio visualization and audio context setup.
-
-**Responsibilities:**
-
-- Real-time audio visualization
-- Audio context and analyzer setup
-- Smooth animations and visual feedback
-- Multiple audio vendor support
-- Volume indicators and waveform display
-
-**Key Features:**
-
-- Web Audio API integration
-- Real-time waveform rendering
-- Volume level visualization
-- Multi-vendor audio support
+Real-time audio visualization (Web Audio API waveform / volume).
 
 ### 5. UI Components (`ui.js`)
 
-Manages all user interface interactions and component state.
-
-**Responsibilities:**
-
-- All user interface interactions
-- Form validation and submission
-- Widget visibility and state
-- Collapsible configuration sections
-- Vendor-specific field visibility
-- MLLM mode switching and configuration
-- AI Avatar integration and video streams
-- **Device Selection Management** ⭐ **NEW**
-  - Device enumeration and permission requests
-  - Device selection modal and user interactions
-  - Error recovery and fallback mechanisms
-  - Real-time track restart with new devices
-
-**Key Features:**
-
-- Dynamic form rendering
-- State management
-- User interaction handling
-- Device management
-- Video stream integration
+Form validation and submission, vendor-specific field visibility (TTS / ASR / Avatar / MLLM), Manual Turn Control buttons, device settings, avatar video integration.
 
 ### 6. Utilities (`utils.js`)
 
-Provides helper functions for common operations and data management.
+- `getFormData` / `validateFormData` / `buildAgentConfig`
+- TTS / ASR / Avatar / MLLM / turn-detection payload builders
+- LiveAvatar 24 kHz TTS enforcement
+- Credential storage and local RTC+RTM token generation (60-minute TTL)
 
-**Responsibilities:**
+### 7–10. Supporting modules
 
-- Helper functions for common operations
-- Parameter handling and validation
-- Data formatting and transformation
-- JSON configuration management
-- Credential storage and retrieval
-- Camera integration and image processing
-- **Device Management** ⭐ **NEW**
-  - Device ID storage and retrieval
-  - Device validation and fallback logic
-  - Device selection persistence across sessions
-
-**Key Features:**
-
-- Data validation
-- Configuration management
-- Local storage operations
-- Device persistence
+- `asr.js` — ASR drawer behavior
+- `camera-preview.js` — draggable local preview
+- `form-settings-persistence.js` — sync form values across sessions
+- Token builder libs — local Agora token minting when App Certificate is set
 
 ## Data Flow
 
@@ -160,14 +87,19 @@ Provides helper functions for common operations and data management.
 5. Subtitles displayed (Subtitles & Chat)
 6. Chat history updated (Subtitles & Chat)
 
+### Manual Turn Control Flow
+
+1. User sets SoS/EoS mode to Manual and enables RTM
+2. Agent starts with `turn_detection.config.*.mode: manual`
+3. UI Start/End buttons publish RTM SoS/EoS messages
+4. Engine treats client signals as turn boundaries
+
 ### MLLM Flow
 
 1. MLLM mode selected (UI Components)
-2. WebSocket connection established (Conversational AI API)
-3. Audio/Image data streamed (Conversational AI API)
-4. Responses received and processed (Conversational AI API)
-5. Audio output synthesized (TTS vendors)
-6. Visual feedback provided (UI Components, Audio Processing)
+2. Agent joins with MLLM vendor configuration (Core API Layer)
+3. Realtime audio/image path handled by the engine / client
+4. Turn detection follows MLLM-specific modes when enabled
 
 ## Integration Points
 
@@ -175,19 +107,11 @@ Provides helper functions for common operations and data management.
 - **Conversational AI API ↔ Subtitles**: Transcription data flow
 - **Audio Processing ↔ UI Components**: Visualization updates
 - **Utilities ↔ All Modules**: Common functions and data management
-- **Device Management ↔ UI Components**: Device selection and configuration
-
-## Browser APIs Used
-
-- **Web Audio API**: Audio processing and visualization
-- **WebRTC**: Real-time communication
-- **MediaDevices API**: Camera and microphone access
-- **WebSocket API**: MLLM real-time communication
-- **localStorage API**: Credential and configuration persistence
+- **Device / Camera modules ↔ UI Components**: Preview and device selection
 
 ## Related Documentation
 
-- [SETUP.md](./SETUP.md) - Setup and configuration
-- [API.md](./API.md) - API endpoint documentation
-- [FEATURES.md](./FEATURES.md) - Complete feature list
-- [BROWSER_COMPATIBILITY.md](./BROWSER_COMPATIBILITY.md) - Browser requirements
+- [FEATURES.md](./FEATURES.md)
+- [API.md](./API.md)
+- [VENDORS.md](./VENDORS.md)
+- [SETUP.md](./SETUP.md)

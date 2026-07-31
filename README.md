@@ -1,37 +1,44 @@
 # Conversational AI Agent Playground
 
-A web dashboard for managing and interacting with Agora's Conversational AI Agents. This application provides a user-friendly interface for creating, updating, and monitoring AI agents that can engage in real-time conversations with support for both traditional LLM and cutting-edge Multimodal Large Language Model (MLLM) configurations.
+A web dashboard for managing and interacting with Agora's Conversational AI Agents. This application provides a user-friendly interface for creating, updating, and monitoring AI agents that can engage in real-time conversations with support for both traditional LLM and Multimodal Large Language Model (MLLM) configurations.
+
+Targets **Agora Conversational AI Engine v2.9 / v2.10** features (managed presets, manual turn control, Gradium/Mistral/Generic HTTP TTS, LemonSlice avatar, and more). See the [platform release notes](https://docs.agora.io/en/ai/release-notes).
 
 ## Project Structure
 
 ```
-convo_ai_studio/
+convo_ai/
 ├── src/
 │   ├── js/
-│   │   ├── api.js                    # Core API integration with Agora
-│   │   ├── audio.js                  # Audio processing and visualization
-│   │   ├── conversational-ai-api.js  # Conversational AI API handling
-│   │   ├── subtitles.js              # Live subtitles and chat history
-│   │   ├── ui.js                     # UI components and event handlers
-│   │   └── utils.js                  # Utility functions and helpers
+│   │   ├── api.js                       # Core API integration with Agora
+│   │   ├── asr.js                       # ASR vendor helpers
+│   │   ├── audio.js                     # Audio processing and visualization
+│   │   ├── camera-preview.js            # Local camera preview overlay
+│   │   ├── conversational-ai-api.js     # RTM signaling, subtitles, manual SoS/EoS
+│   │   ├── form-settings-persistence.js # Persist form settings across reloads
+│   │   ├── subtitles.js                 # Live subtitles and chat history
+│   │   ├── ui.js                        # UI components and event handlers
+│   │   ├── utils.js                     # Config builders, validation, tokens
+│   │   ├── AccessToken2.js              # Agora AccessToken2
+│   │   ├── RtcTokenBuilder2.js           # Local RTC token builder
+│   │   └── RtmTokenBuilder2.js           # Local RTM token builder
 │   ├── css/
-│   │   ├── styles.css                # Application styles
-│   │   └── modern-ui-library.css     # Modern UI component library
+│   │   ├── styles.css
+│   │   └── modern-ui-library.css
 │   ├── lib/
-│   │   └── microsoftVoicesByLang.js # Microsoft TTS voice definitions
+│   │   ├── microsoftVoicesByLang.js
+│   │   └── minimaxVoicesByLang.js
 │   └── media/
-│       ├── comvoai_demo.mp4         # Demo video
-│       └── *.png                     # Screenshots
 ├── DOCS/
-│   ├── FEATURES.md                   # Complete feature list
-│   ├── SETUP.md                      # Detailed setup instructions
-│   ├── API.md                        # API endpoint documentation
-│   ├── VENDORS.md                    # Vendor configuration guide
-│   ├── ARCHITECTURE.md               # Technical architecture
-│   └── BROWSER_COMPATIBILITY.md      # Browser requirements
-├── index.html                        # Main application interface
-├── README.md                         # This file
-└── GUIDE.md                          # Detailed usage guide
+│   ├── FEATURES.md
+│   ├── SETUP.md
+│   ├── API.md
+│   ├── VENDORS.md
+│   ├── ARCHITECTURE.md
+│   └── BROWSER_COMPATIBILITY.md
+├── index.html
+├── README.md
+└── GUIDE.md
 ```
 
 ## Quick Start
@@ -75,54 +82,26 @@ For detailed setup instructions, see [SETUP.md](DOCS/SETUP.md).
 ## Key Features
 
 - **Dual AI Model Support**: Traditional LLM and Multimodal LLM (MLLM) configurations
-  - **LLM Mode**: Support for OpenAI, Anthropic, Gemini, Vertex AI, and custom LLM providers
-  - **MLLM Mode**: Real-time multimodal conversations with OpenAI Realtime API and Google Vertex AI
-  - Vertex AI MLLM support with native audio, ADC credentials, and project configuration
-- **Comprehensive TTS Support**: Microsoft, ElevenLabs, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Groq, Google, PlayHT, Sarvam, and Amazon Polly TTS
-- **Advanced ASR Integration**: Agora (ARES), Microsoft, Deepgram, OpenAI, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, and Custom ASR with extensive language support
-- **AI Avatar Support**: Akool and HeyGen avatar vendors with real-time video streaming
-  - HeyGen-specific settings: quality control, idle timeout, and activity timeout
-  - Automatic client UID configuration for avatar-agent communication
-- **MCP Servers (Model Context Protocol)**: Tool calling support with multiple server configurations
-  - Configure multiple MCP servers with custom endpoints
-  - Support for http, sse, and streamable_http transport protocols
-  - Tool availability and allowed tools configuration
-  - Automatic enable_tools flag in advanced_features when enabled
-- **SIP/Phone Management**: Complete phone number and call management
-  - Import, update, and manage phone numbers
-  - Initiate outbound calls via SIP with pipeline ID support
-  - Override checkbox to use complete configuration even with pipeline ID
-  - Retrieve call records and status
-  - Inbound and outbound configuration with allowed addresses
-- **Real-time Audio & Visual**: Comprehensive multimedia experience
-  - Live audio visualization with waveform display
-  - Camera integration with preview overlay and device selection
-  - Multi-camera device selection and configuration
-  - Microphone and camera device management with persistent storage
-  - Permission management with automatic fallback
-- **Live Subtitles & Chat**: Real-time conversation tracking
-  - Real-time subtitle display with overlay functionality
-  - Live chat history with message timestamps
-  - RTM and Data Stream subtitle modes
-  - Copy and clear functionality for chat history
-- **Advanced Configuration**: Extensive customization options
-  - **VAD & Turn Detection**: Agora VAD, Server VAD, and Semantic VAD
-  - **SAL (Speaker Adaptation Library)**: Voice print locking and recognition
-    - Locking mode: Seamless voice locking in 10 seconds
-    - Recognition mode: Voice recognition with speaker identification
-    - Sample URL management for voiceprints
-  - Silence management with configurable timeouts and actions
-  - Farewell configuration with graceful timeout
-  - Custom parameters with type validation (string, number, array, object)
-- **Smart Validation**: Context-aware validation for agent creation and SIP calls
-- **Local Token Generation**: Built-in Agora RTC + RTM token generator
-  - One-click token generation for agent, avatar, and client UIDs
-  - 30-minute token expiration with PUBLISHER role
-- **Modern UI Design**: Professional interface with enhanced user experience
-  - Beautiful gradient buttons and modern form inputs
-  - Enhanced visual styling with smooth animations
-  - Responsive design with proper overflow handling
-  - Comprehensive tooltips and help text
+  - **LLM Mode**: OpenAI, Anthropic, Gemini, Vertex AI, Amazon Bedrock, and custom LLM providers
+  - **MLLM Mode**: OpenAI Realtime, xAI Grok, Gemini Live, Google Vertex AI, and custom WebSocket endpoints
+- **Comprehensive TTS Support**: Microsoft, ElevenLabs, MiniMax, Deepgram, Murf, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Google, Amazon Polly, Sarvam, Gradium, Mistral, and Generic HTTP (OpenAI protocol)
+- **Advanced ASR Integration**: Agora (ARES), Microsoft, Deepgram, OpenAI, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, and Custom ASR
+- **AI Avatar Support**: Akool, LiveAvatar, Generic, LemonSlice, Anam, and deprecated HeyGen
+  - LemonSlice is a first-class UI option that still sends `vendor: generic` with LemonSlice defaults
+  - LiveAvatar forces 24 kHz TTS sample rate for supported vendors
+- **Manual Turn Control (v2.9)**: Client-side Start of Speech (SoS) / End of Speech (EoS) via RTM when turn detection modes are set to Manual
+- **Managed Credentials (v2.9)**: Optional ASR / LLM / TTS presets that set `credential_mode: managed`
+- **Backend Pipeline ID**: Use a preconfigured pipeline, with optional override of LLM / TTS / ASR from the UI
+- **MCP Servers (Model Context Protocol)**: Tool calling with http, sse, and streamable_http transports
+- **SIP/Phone Management**: Import numbers, outbound SIP calls, call history, inbound/outbound config
+- **Real-time Audio & Visual**: Waveform visualization, camera preview, device selection with persistence
+- **Live Subtitles & Chat**: RTM and data-stream subtitle modes, chat history, copy/clear
+- **Advanced Configuration**:
+  - Turn Detection v2.4 SoS/EoS modes (vad, semantic, keywords, manual, disabled) and v2.6 interruption object
+  - SAL (Speaker Adaptation Library), silence management, farewell graceful timeout
+  - Geofence, RTC encryption, custom TTS/Avatar/LLM parameters
+- **Local Token Generation**: Built-in Agora RTC + RTM token generator (60-minute TTL, PUBLISHER role)
+- **Modern UI**: Drawers, tooltips, responsive layout, form settings persistence
 
 For a complete feature list, see [FEATURES.md](DOCS/FEATURES.md).
 
@@ -144,8 +123,8 @@ The application includes a built-in Agora token generator that creates RTC + RTM
 
 3. **Token Configuration**:
    - All tokens use the channel name from Agent Settings
-   - Token expiration: 30 minutes (1800 seconds)
-   - Privilege expiration: 30 minutes (1800 seconds)
+   - Token expiration: **60 minutes (3600 seconds)**
+   - Privilege expiration: **60 minutes (3600 seconds)**
    - Role: PUBLISHER (allows publishing audio, video, and data streams)
 
 ### Requirements
@@ -176,16 +155,4 @@ For issues and questions:
 
 ---
 
-**Agora ConversationalAI Backend v2.0** - A comprehensive web dashboard for managing and interacting with Agora's Conversational AI Agents. Features include:
-
-- **Dual AI Model Support**: Traditional LLM and Multimodal LLM (MLLM) with Vertex AI integration
-- **MCP Servers**: Model Context Protocol support for tool calling with multiple server configurations
-- **Comprehensive Vendor Support**: 10+ TTS vendors, 9+ ASR vendors, and multiple AI Avatar vendors (including Generic and xAI Grok MLLM)
-- **Paginated conversation turns**, greeting `interruptable`, think API defaults, and expanded API error reasons
-- **Advanced Features**: AIVAD, RTM, SAL (Speaker Adaptation Library), custom parameters, and more
-- **SIP/Phone Management**: Complete phone number and call management with pipeline support
-- **Real-time Capabilities**: Live subtitles, chat history, audio visualization, and camera integration
-- **Device Management**: Advanced microphone and camera selection with permission handling
-- **Modern UI**: Professional design with gradient buttons, tooltips, and responsive layout
-- **Local Token Generation**: Built-in RTC + RTM token generator for secure authentication
-- **Smart Validation**: Context-aware validation and error handling throughout the application
+**Agora Conversational AI Engine v2.9 / v2.10** — a comprehensive web dashboard for managing and interacting with Agora's Conversational AI Agents. Features include dual LLM/MLLM modes, 15+ TTS vendors, 10 ASR vendors, multiple AI Avatar vendors (including LemonSlice via generic), manual SoS/EoS turn control, managed credential presets, MCP servers, SIP/phone management, live subtitles, device management, and local RTC+RTM token generation.

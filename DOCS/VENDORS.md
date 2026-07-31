@@ -115,6 +115,98 @@ High-quality neural voice synthesis with multiple voice options.
 - Multiple voice options: coral, alloy, echo, fable, onyx, nova, shimmer
 - Speed control and voice instruction support
 
+### Gradium TTS (v2.10)
+
+Enterprise Gradium voice generation over WebSocket.
+
+**Required Fields:**
+
+- API Key
+- URL (default `wss://api.gradium.ai/api/speech/tts`)
+- Voice ID
+
+**Optional Parameters:**
+
+- `model_name`: TTS model (default `default`)
+- `sample_rate`: Output sample rate in Hz (default `16000`)
+
+### Mistral TTS (v2.10)
+
+Mistral text-to-speech models.
+
+**Required Fields:**
+
+- API Key
+- Model (default `voxtral-mini-tts-2603`)
+- Voice
+
+### Generic HTTP TTS (v2.10)
+
+Connect a custom or third-party TTS service that implements the OpenAI TTS protocol (`vendor: generic_http`).
+
+**Required:**
+
+- `tts.url`: OpenAI-compatible speech endpoint
+- Authentication via `tts.headers.Authorization` and/or `tts.params.api_key` (headers win if both are set)
+- `tts.params` object (required by the API)
+
+**Common params:**
+
+- `model`, `voice`, `speed`, `sample_rate`, `response_format` (`pcm`), `instruction`
+
+**Docs:** [Generic TTS](https://docs.agora.io/en/ai/models/tts/generic-http)
+
+### MiniMax TTS
+
+WebSocket streaming TTS with voice and audio settings.
+
+**Required Fields:**
+
+- API Key
+- Group ID
+- Model
+- Voice ID
+- URL (default `wss://api.minimax.io/ws/v1/t2a_v2`)
+
+**Optional:**
+
+- Sample rate (default 24000; LiveAvatar forces 24000)
+
+Supports language-grouped voice picker and v2.9 managed presets (`minimax_speech_2_6_turbo`, `minimax_speech_2_8_turbo`).
+
+### Deepgram TTS
+
+**Required:** API Key, Model  
+**Optional:** `base_url`, `sample_rate`
+
+### Murf TTS
+
+**Required:** API Key  
+**Optional / defaults:** WebSocket `base_url`, `voiceId`, `locale`, `model`, `rate`, `pitch`, `sample_rate`
+
+### Rime TTS
+
+**Required:** API Key  
+**Also used:** `speaker`, `modelId`, `samplingRate` (4000–44100)
+
+### Fish Audio TTS
+
+**Required:** API Key, `reference_id`, `backend`
+
+### Google TTS
+
+**Required:** Service account credentials JSON, voice name  
+**Optional:** `AudioConfig.speaking_rate`, `AudioConfig.sample_rate_hertz`
+
+### Amazon Polly TTS
+
+**Required:** AWS access key, secret key, region, voice, engine (`neural`, `standard`, `long-form`, `generative`)
+
+### Sarvam TTS
+
+**Required:** API subscription key, speaker (or custom speaker ID), `target_language_code`  
+**Optional:** pitch, pace, loudness, sample rate
+
 ### Hume AI TTS
 
 High-quality voice synthesis with customizable speed and silence control.
@@ -140,6 +232,13 @@ High-quality voice synthesis with customizable speed and silence control.
 
 ## MLLM Vendor Support
 
+Playground MLLM vendors: `openai`, `xai`, `gemini`, `vertexai`, `custom`.
+
+### OpenAI Realtime
+
+**Vendor name:** `openai`  
+WebSocket realtime multimodal conversations. Supports richer turn-detection modes including `semantic_vad`.
+
 ### xAI Grok
 
 Real-time multimodal via xAI Realtime WebSocket.
@@ -154,14 +253,27 @@ Real-time multimodal via xAI Realtime WebSocket.
 **Optional parameters:**
 
 - `voice` (default: `eve`)
-- `language` (default: `en`)
-- `sample_rate` (default: `24000`)
 
 **Notes:** Turn detection supports `agora_vad` and `server_vad` only (no `semantic_vad`).
 
+### Gemini Live
+
+**Vendor name:** `gemini`  
+Realtime Gemini Live WebSocket configuration from the MLLM drawer.
+
+### Vertex AI
+
+**Vendor name:** `vertexai`  
+ADC credentials, project ID, location, voice, and instructions for native-audio MLLM.
+
+### Custom MLLM
+
+**Vendor name:** `custom`  
+Bring your own realtime WebSocket endpoint and API key compatible with the playground's MLLM path.
+
 ## AI Avatar Vendor Support
 
-### Generic Avatar (Beta)
+### Generic Avatar
 
 Provider-agnostic avatar integration.
 
@@ -179,6 +291,32 @@ Provider-agnostic avatar integration.
 
 - Avatar RTC Token (generate like other vendors)
 
+**Docs:** [Generic avatar](https://docs.agora.io/en/ai/models/avatar/generic)
+
+### LemonSlice Avatar (v2.10)
+
+First-class playground option for LemonSlice. The REST payload still uses `vendor: "generic"` with LemonSlice defaults.
+
+**UI vendor:** `lemonslice` → **API vendor:** `generic`
+
+**Prefills / fixed params:**
+
+- `api_base_url`: `https://lemonslice.com/api/liveai/agora`
+- `avatar_id`: `lemonslice`
+
+**Required:**
+
+- API Key
+- Avatar RTC UID
+- Exactly one of `agent_image_url`, `agent_id`, or `agent_image_base64`
+
+**Optional:**
+
+- Avatar RTC Token
+- `aspect_ratio`: `2x3` (default), `9x16`, or `1x1`
+
+**Docs:** [LemonSlice](https://docs.agora.io/en/ai/models/avatar/lemonslice)
+
 ### Akool Avatar
 
 High-quality AI avatar generation with real-time video streaming.
@@ -193,15 +331,18 @@ High-quality AI avatar generation with real-time video streaming.
 
 - Avatar RTC Token
 
-**Features:**
+### LiveAvatar by HeyGen
 
-- High-quality AI avatar generation
-- Real-time video streaming
-- Professional visual placeholder
+Current HeyGen LiveAvatar integration (`vendor: liveavatar`).
 
-### HeyGen Avatar
+**Required:** API Key, Avatar ID, Avatar RTC UID  
+**Optional:** Avatar RTC Token, quality, disable idle timeout, activity idle timeout (UI default **120** seconds)
 
-Advanced avatar generation with quality control and timeout management.
+**Note:** This playground forces **24 kHz** TTS sample rate for supported TTS vendors when LiveAvatar is selected.
+
+### HeyGen Avatar (Deprecated)
+
+Legacy Interactive Avatar path (`vendor: heygen`). Prefer **LiveAvatar** for new integrations.
 
 **Required Fields:**
 
@@ -212,162 +353,46 @@ Advanced avatar generation with quality control and timeout management.
 **Optional Fields:**
 
 - Avatar RTC Token
+- Quality, disable idle timeout, activity idle timeout (UI default **120** seconds)
 
-**Optional Parameters:**
+### Anam Avatar
 
-- `quality`: Video quality (low: 360p, medium: 480p, high: 720p)
-- `disable_idle_timeout`: Whether to disable idle timeout (boolean)
-- `activity_idle_timeout`: Activity idle timeout in seconds (default: 60)
+**Vendor name:** `anam`
 
-**Features:**
-
-- Advanced avatar generation
-- Quality control options
-- Timeout management
-- Professional visual placeholder
+**Required:** API Key, Avatar ID (Agora `avatar_id`), Avatar RTC UID  
+**Also sent:** `sample_rate`, `quality`, `video_encoding`, `agora_token`, `agora_uid`
 
 ## ASR Vendor Support
 
-### Agora ASR
+Playground ASR vendors: `ares`, `microsoft`, `deepgram`, `openai`, `speechmatics`, `assemblyai`, `amazon`, `google`, `sarvam`, `custom`.
 
-Built-in speech recognition with multiple language support.
+### Agora ASR (ARES)
 
-**Vendor Name:** `ares`
+Built-in speech recognition.
 
-**Required Fields:**
+**Vendor name:** `ares`
 
-- None (uses default Agora configuration)
-
-**Language Support:**
-
-Agora ASR (ARES) supports 36 languages including:
-- ar-AE (Arabic - UAE), ar-EG (Arabic - Egypt), ar-JO (Arabic - Jordan), ar-SA (Arabic - Saudi Arabia)
-- bn-IN (Bengali - India)
-- zh-CN (Chinese - Simplified), zh-HK (Chinese - Hong Kong), zh-TW (Chinese - Traditional)
-- nl-NL (Dutch - Netherlands)
-- en-IN (English - India), en-US (English - US)
-- fil-PH (Filipino - Philippines)
-- fr-FR (French - France)
-- de-DE (German - Germany)
-- gu-IN (Gujarati - India)
-- he-IL (Hebrew - Israel)
-- hi-IN (Hindi - India)
-- id-ID (Indonesian - Indonesia)
-- it-IT (Italian - Italy)
-- ja-JP (Japanese - Japan)
-- kn-IN (Kannada - India)
-- ko-KR (Korean - Korea)
-- ms-MY (Malay - Malaysia)
-- fa-IR (Persian - Iran)
-- pt-PT (Portuguese - Portugal)
-- ru-RU (Russian - Russia)
-- es-ES (Spanish - Spain)
-- ta-IN (Tamil - India), te-IN (Telugu - India)
-- th-TH (Thai - Thailand)
-- uk-UA (Ukrainian - Ukraine)
-- vi-VN (Vietnamese - Vietnam)
-
-**Features:**
-
-- Built-in speech recognition
-- No additional API keys required
-- Good for testing and prototyping
-- Default language: en-US
+Supports dozens of locales (ar-*, zh-*, en-US/en-IN, es-ES, fr-FR, de-DE, hi-IN, ja-JP, ko-KR, and more — see the ASR language dropdown). No third-party ASR key required.
 
 ### Microsoft ASR
 
-High-accuracy speech recognition with comprehensive language coverage.
-
-**Vendor Name:** `microsoft`
-
-**Required Fields:**
-
-- API Key
-- Region
-- Language
-
-**Language Support:**
-
-Microsoft ASR supports 100+ languages and variants including:
-- Multiple Arabic dialects (AE, BH, DZ, EG, IQ, JO, KW, LY, MA, OM, QA, SA, SY, TN, YE)
-- All major European languages (English, Spanish, French, German, Italian, Portuguese, etc.)
-- Asian languages (Chinese, Japanese, Korean, Hindi, Bengali, Tamil, Telugu, etc.)
-- African languages (Afrikaans, Amharic, Swahili, Yoruba, Zulu, etc.)
-- Many regional variants (e.g., en-US, en-GB, en-AU, en-CA, en-IN, etc.)
-
-**Phrase List Support:**
-
-Certain languages support phrase lists to improve recognition accuracy:
-- ar-SA, de-CH, de-DE, en-AU, en-CA, en-GB, en-IE, en-IN, en-US, en-ZA
-
-**Features:**
-
-- High-accuracy recognition (90%+ accuracy in optimal conditions)
-- Extensive language and regional support
-- Custom phrase lists for improved accuracy
-- Robust noise handling
-- Accent-adaptive recognition
-- Region-specific configuration for optimal latency
+High-accuracy speech recognition with region and language configuration; phrase list support for selected locales in the UI.
 
 ### Deepgram ASR
 
-Real-time streaming speech recognition with advanced models and lowest latency.
+Real-time streaming speech recognition with models such as nova-3 / nova-2 and optional custom URL. Strong multi-language coverage via ISO language codes.
 
-**Vendor Name:** `deepgram`
+### OpenAI ASR
 
-**Required Fields:**
+OpenAI speech-to-text configuration from the ASR drawer.
 
-- API Key
-- URL (default: "wss://api.deepgram.com/v1/listen")
-- Model
-- Language
+### Speechmatics / AssemblyAI / Amazon Transcribe / Google / Sarvam / Custom
 
-**Default Values:**
-
-- URL: "wss://api.deepgram.com/v1/listen"
-- Model: "nova-3"
-- Language: "en"
-
-**Available Models:**
-
-- nova-3 (recommended - most accurate)
-- nova (faster, good accuracy)
-- enhanced (balanced)
-- base (fastest, lower accuracy)
-
-**Language Support:**
-
-Deepgram supports 50+ languages with 2-letter ISO codes:
-- af (Afrikaans), am (Amharic), ar (Arabic), az (Azerbaijani)
-- bg (Bulgarian), bn (Bengali), ca (Catalan), cs (Czech), cy (Welsh)
-- da (Danish), de (German), el (Greek), en (English), es (Spanish), et (Estonian), eu (Basque)
-- fa (Persian), fi (Finnish), fil (Filipino), fr (French)
-- ga (Irish), gl (Galician), gu (Gujarati)
-- he (Hebrew), hi (Hindi), hr (Croatian), hu (Hungarian), hy (Armenian)
-- id (Indonesian), is (Icelandic), it (Italian)
-- ja (Japanese), jv (Javanese)
-- ka (Georgian), kk (Kazakh), km (Khmer), kn (Kannada), ko (Korean)
-- lo (Lao), lt (Lithuanian), lv (Latvian)
-- mk (Macedonian), ml (Malayalam), mn (Mongolian), mr (Marathi), ms (Malay), my (Burmese)
-- ne (Nepali), nl (Dutch), no (Norwegian)
-- pa (Punjabi), pl (Polish), ps (Pashto), pt (Portuguese)
-- ro (Romanian), ru (Russian)
-- si (Sinhala), sk (Slovak), sl (Slovenian), sq (Albanian), sr (Serbian), su (Sundanese), sv (Swedish), sw (Swahili)
-- ta (Tamil), te (Telugu), th (Thai), tr (Turkish)
-- uk (Ukrainian), ur (Urdu), uz (Uzbek)
-- vi (Vietnamese)
-- zh (Chinese)
-
-**Features:**
-
-- Lowest latency (50-150ms transcription)
-- Real-time streaming with WebSocket
-- Advanced models for optimal accuracy
-- Extensive multi-language support
-- Custom URLs for specialized endpoints
-- Excellent accuracy even in noisy environments
+Additional ASR vendors exposed in the playground dropdown. Configure vendor-specific keys, languages, and endpoints in the ASR settings panel. Custom ASR accepts a provider URL and parameters suitable for your integration.
 
 ## Related Documentation
 
-- [SETUP.md](./SETUP.md) - Configuration setup instructions
-- [FEATURES.md](./FEATURES.md) - Complete feature list including vendor capabilities
+- [FEATURES.md](./FEATURES.md) - Feature list including turn control and SIP
+- [SETUP.md](./SETUP.md) - Setup steps
+- [API.md](./API.md) - REST and RTM control surfaces
+- [Platform release notes](https://docs.agora.io/en/ai/release-notes)

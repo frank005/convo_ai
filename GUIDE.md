@@ -383,18 +383,24 @@ Note: Adjust parameters based on your LLM provider's API requirements.
 
 **TTS Configuration:**
 
-Agora supports multiple TTS vendors, each with different characteristics:
+Agora supports multiple TTS vendors (playground dropdown):
 
 - [Microsoft Azure TTS](https://docs.agora.io/en/conversational-ai/models/tts/microsoft)
 - [ElevenLabs TTS](https://docs.agora.io/en/conversational-ai/models/tts/elevenlabs)
+- [MiniMax TTS](https://docs.agora.io/en/conversational-ai/models/tts/minimax)
+- [Deepgram TTS](https://docs.agora.io/en/conversational-ai/models/tts/deepgram)
+- [Murf TTS](https://docs.agora.io/en/conversational-ai/models/tts/murf)
 - [Cartesia TTS](https://docs.agora.io/en/conversational-ai/models/tts/cartesia)
 - [OpenAI TTS](https://docs.agora.io/en/conversational-ai/models/tts/openai)
 - [Hume AI TTS](https://docs.agora.io/en/conversational-ai/models/tts/hume)
-- [Rime TTS (Beta)](https://docs.agora.io/en/conversational-ai/models/tts/rime)
-- [Fish Audio TTS (Beta)](https://docs.agora.io/en/conversational-ai/models/tts/fish-audio)
-- [Groq TTS (Beta)](https://docs.agora.io/en/conversational-ai/models/tts/groq)
-- [Google TTS (Beta)](https://docs.agora.io/en/conversational-ai/models/tts/google)
-- [Amazon Polly TTS (Beta)](https://docs.agora.io/en/conversational-ai/models/tts/amazon)
+- [Rime TTS](https://docs.agora.io/en/conversational-ai/models/tts/rime)
+- [Fish Audio TTS](https://docs.agora.io/en/conversational-ai/models/tts/fish-audio)
+- [Google TTS](https://docs.agora.io/en/conversational-ai/models/tts/google)
+- [Amazon Polly TTS](https://docs.agora.io/en/conversational-ai/models/tts/amazon)
+- [Sarvam TTS](https://docs.agora.io/en/conversational-ai/models/tts/sarvam)
+- [Gradium TTS](https://docs.agora.io/en/ai/models/tts/gradium) (v2.10)
+- [Mistral TTS](https://docs.agora.io/en/ai/models/tts/mistral) (v2.10)
+- [Generic HTTP TTS](https://docs.agora.io/en/ai/models/tts/generic-http) (v2.10 OpenAI protocol)
 
 For this example, we'll use Microsoft Azure TTS for its reliability and quality.
 
@@ -405,11 +411,13 @@ Agora supports multiple ASR vendors:
 - [Agora ASR (ares)](https://docs.agora.io/en/conversational-ai/models/asr/ares)
 - [Microsoft ASR](https://docs.agora.io/en/conversational-ai/models/asr/microsoft)
 - [Deepgram ASR](https://docs.agora.io/en/conversational-ai/models/asr/deepgram)
-- [OpenAI ASR (Beta)](https://docs.agora.io/en/conversational-ai/models/asr/openai)
+- [OpenAI ASR](https://docs.agora.io/en/conversational-ai/models/asr/openai)
 - [Speechmatics ASR](https://docs.agora.io/en/conversational-ai/models/asr/speechmatics)
-- [AssemblyAI ASR (Beta)](https://docs.agora.io/en/conversational-ai/models/asr/assembly-ai)
-- [Amazon Transcribe (Beta)](https://docs.agora.io/en/conversational-ai/models/asr/amazon)
-- [Google ASR (Beta)](https://docs.agora.io/en/conversational-ai/models/asr/google)
+- [AssemblyAI ASR](https://docs.agora.io/en/conversational-ai/models/asr/assembly-ai)
+- [Amazon Transcribe](https://docs.agora.io/en/conversational-ai/models/asr/amazon)
+- [Google ASR](https://docs.agora.io/en/conversational-ai/models/asr/google)
+- [Sarvam ASR](https://docs.agora.io/en/conversational-ai/models/asr/sarvam)
+- Custom ASR (configure URL / params in the playground)
 
 Agora ASR is the recommended choice for most production deployments due to its seamless integration, zero configuration overhead, and reliable performance. Microsoft ASR and Deepgram are alternatives if you need specific features like extensive language support or ultra-low latency.
 
@@ -944,15 +952,19 @@ The code is modular. Swap LLM providers without touching the audio pipeline. Cha
 
 ### What's Supported
 
-**LLM Providers**: OpenAI, Azure OpenAI, Google Gemini, Google Vertex AI, Anthropic Claude, Dify, custom endpoints
+Aligned with the current playground dropdowns (ConvoAI Engine **v2.9 / v2.10**):
 
-**TTS Vendors**: Microsoft Azure, ElevenLabs, Cartesia, OpenAI, Hume AI, Rime (Beta), Fish Audio (Beta), Groq (Beta), Google (Beta), Amazon Polly (Beta)
+**LLM Providers**: OpenAI, Azure OpenAI, Google Gemini, Google Vertex AI, Anthropic Claude, Amazon Bedrock, Dify, custom endpoints
 
-**ASR Vendors**: Agora (ARES with 36 languages), Microsoft Azure (100+ languages with phrase list support), Deepgram (50+ languages), OpenAI (Beta), Speechmatics, AssemblyAI (Beta), Amazon Transcribe (Beta), Google (Beta), Custom
+**MLLM Providers**: OpenAI Realtime, xAI Grok, Gemini Live, Vertex AI, Custom WebSocket
 
-**AI Avatars**: Akool (Beta), HeyGen (Alpha)
+**TTS Vendors**: Microsoft Azure, ElevenLabs, MiniMax, Deepgram, Murf, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Google, Amazon Polly, Sarvam, Gradium, Mistral, Generic HTTP (OpenAI protocol)
 
-**Features**: AIVAD for smart interruptions, RTM signaling, three VAD types (Agora, Server, Semantic), configurable turn detection, silence management, live subtitles, real-time audio viz, camera integration for multimodal input.
+**ASR Vendors**: Agora (ARES), Microsoft Azure, Deepgram, OpenAI, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, Custom
+
+**AI Avatars**: Akool, LiveAvatar (HeyGen), Generic, LemonSlice (UI option → REST `generic`), Anam, HeyGen (Deprecated)
+
+**Features**: Turn Detection v2.4 SoS/EoS (including Manual), v2.6 interruption object, Manual Turn Control via RTM (v2.9), managed credential presets (v2.9), MCP servers, SAL, silence/farewell config, SIP/phone management, live subtitles, camera preview, device management, local RTC+RTM tokens (60 min TTL)
 
 ### Production Notes
 

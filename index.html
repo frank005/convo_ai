@@ -3261,18 +3261,26 @@
     // Handle avatar vendor change for vendor-specific fields
     const anamSettings = document.getElementById('anamSettings');
     const genericAvatarSettings = document.getElementById('genericAvatarSettings');
-    if (avatarVendor && heygenSettings) {
-    avatarVendor.addEventListener('change', function() {
-      const v = this.value;
+    const lemonsliceAvatarSettings = document.getElementById('lemonsliceAvatarSettings');
+    const avatarIdField = document.getElementById('avatarId');
+    const avatarIdBlock = avatarIdField ? avatarIdField.closest('.has-tooltip') : null;
+    function syncAvatarVendorFields(v) {
       heygenSettings.classList.toggle('hidden', v !== 'heygen' && v !== 'liveavatar');
       if (anamSettings) anamSettings.classList.toggle('hidden', v !== 'anam');
       if (genericAvatarSettings) genericAvatarSettings.classList.toggle('hidden', v !== 'generic');
+      if (lemonsliceAvatarSettings) lemonsliceAvatarSettings.classList.toggle('hidden', v !== 'lemonslice');
+      // LemonSlice hardcodes avatar_id to "lemonslice" in the request payload
+      if (avatarIdBlock) avatarIdBlock.classList.toggle('hidden', v === 'lemonslice');
+      if (v === 'lemonslice' && avatarIdField && !avatarIdField.value.trim()) {
+        avatarIdField.value = 'lemonslice';
+      }
+    }
+    if (avatarVendor && heygenSettings) {
+    avatarVendor.addEventListener('change', function() {
+      syncAvatarVendorFields(this.value);
     });
     // Initial sync in case vendor already set (e.g. loaded config)
-    const v = avatarVendor.value;
-    heygenSettings.classList.toggle('hidden', v !== 'heygen' && v !== 'liveavatar');
-    if (anamSettings) anamSettings.classList.toggle('hidden', v !== 'anam');
-    if (genericAvatarSettings) genericAvatarSettings.classList.toggle('hidden', v !== 'generic');
+    syncAvatarVendorFields(avatarVendor.value);
     }
 
     // Handle UID changes when AI Avatar is enabled
@@ -6129,8 +6137,11 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="google">Google</option>
             <option value="amazon">Amazon Polly</option>
             <option value="sarvam">Sarvam</option>
+            <option value="gradium">Gradium</option>
+            <option value="mistral">Mistral</option>
+            <option value="generic_http">Generic HTTP (OpenAI protocol)</option>
           </select>
-          <div class="tooltip">Select the Text-to-Speech vendor to use for voice output.</div>
+          <div class="tooltip">Select the Text-to-Speech vendor to use for voice output. Generic HTTP connects a custom OpenAI-protocol TTS endpoint (ConvoAI v2.10).</div>
         </div>
 
         <!-- Microsoft TTS Settings -->
@@ -7053,6 +7064,165 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           <div class="tooltip">Audio sample rate in Hz. Use 24000 for LiveAvatar compatibility.</div>
         </div>
 
+        <!-- Gradium TTS Settings (v2.10) -->
+        <div id="gradiumTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="gradiumTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Gradium API Key (Required)"
+          />
+          <div class="tooltip">API key for Gradium TTS.</div>
+        </div>
+        <div id="gradiumUrlBlock" class="has-tooltip relative hidden">
+          <input
+            id="gradiumUrl"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="WebSocket URL"
+            value="wss://api.gradium.ai/api/speech/tts"
+          />
+          <div class="tooltip">Gradium WebSocket TTS endpoint.</div>
+        </div>
+        <div id="gradiumModelNameBlock" class="has-tooltip relative hidden">
+          <input
+            id="gradiumModelName"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Model name"
+            value="default"
+          />
+          <div class="tooltip">Gradium TTS model name (e.g. default).</div>
+        </div>
+        <div id="gradiumVoiceIdBlock" class="has-tooltip relative hidden">
+          <input
+            id="gradiumVoiceId"
+            name="ttsVoiceId"
+            autocomplete="on"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Voice ID (Required)"
+          />
+          <div class="tooltip">Gradium voice identifier.</div>
+        </div>
+        <div id="gradiumSampleRateBlock" class="has-tooltip relative hidden">
+          <input
+            id="gradiumSampleRate"
+            type="number"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Sample Rate (Hz)"
+            value="16000"
+          />
+          <div class="tooltip">Audio sample rate in Hz (e.g. 16000).</div>
+        </div>
+
+        <!-- Mistral TTS Settings (v2.10) -->
+        <div id="mistralTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="mistralTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Mistral API Key (Required)"
+          />
+          <div class="tooltip">API key for Mistral TTS.</div>
+        </div>
+        <div id="mistralModelBlock" class="has-tooltip relative hidden">
+          <input
+            id="mistralModel"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Model"
+            value="voxtral-mini-tts-2603"
+          />
+          <div class="tooltip">Mistral TTS model (e.g. voxtral-mini-tts-2603).</div>
+        </div>
+        <div id="mistralVoiceBlock" class="has-tooltip relative hidden">
+          <input
+            id="mistralVoice"
+            name="ttsVoiceId"
+            autocomplete="on"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Voice (Required)"
+          />
+          <div class="tooltip">Mistral TTS voice identifier.</div>
+        </div>
+
+        <!-- Generic HTTP TTS Settings (v2.10 OpenAI protocol) -->
+        <div id="genericHttpUrlBlock" class="has-tooltip relative hidden">
+          <input
+            id="genericHttpUrl"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="TTS URL (Required) — e.g. https://host/v1/audio/speech"
+          />
+          <div class="tooltip">OpenAI TTS protocol endpoint. Required for generic_http. Sent as top-level tts.url.</div>
+        </div>
+        <div id="genericHttpTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="genericHttpTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="API Key (params.api_key — optional if headers set)"
+          />
+          <div class="tooltip">Optional API key in params. Provide this and/or Authorization in Headers. If both are set, Agora uses headers.Authorization.</div>
+        </div>
+        <div id="genericHttpHeadersBlock" class="has-tooltip relative hidden">
+          <textarea
+            id="genericHttpHeaders"
+            rows="3"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500 font-mono text-sm"
+            placeholder='Headers JSON (optional), e.g. {"Authorization":"Bearer YOUR_KEY"}'
+          ></textarea>
+          <div class="tooltip">Custom HTTP headers as a JSON object. Sent as top-level tts.headers. Provide Authorization here and/or params.api_key.</div>
+        </div>
+        <div id="genericHttpModelBlock" class="has-tooltip relative hidden">
+          <input
+            id="genericHttpModel"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Model (e.g. gpt-4o-mini-tts)"
+          />
+          <div class="tooltip">TTS model name passed in params.</div>
+        </div>
+        <div id="genericHttpVoiceBlock" class="has-tooltip relative hidden">
+          <input
+            id="genericHttpVoice"
+            name="ttsVoiceId"
+            autocomplete="on"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Voice (optional)"
+          />
+          <div class="tooltip">Voice name. Omit if your TTS service does not support multiple voices.</div>
+        </div>
+        <div id="genericHttpSpeedBlock" class="has-tooltip relative hidden">
+          <input
+            id="genericHttpSpeed"
+            type="number"
+            step="0.1"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Speed (optional, e.g. 1.0)"
+          />
+          <div class="tooltip">Speech rate passed in params.</div>
+        </div>
+        <div id="genericHttpSampleRateBlock" class="has-tooltip relative hidden">
+          <input
+            id="genericHttpSampleRate"
+            type="number"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Sample Rate (Hz, optional)"
+            value="16000"
+          />
+          <div class="tooltip">Output sample rate in Hz. Must match the audio your TTS service returns.</div>
+        </div>
+        <div id="genericHttpResponseFormatBlock" class="has-tooltip relative hidden">
+          <input
+            id="genericHttpResponseFormat"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Response format"
+            value="pcm"
+          />
+          <div class="tooltip">Output audio format. Currently only pcm is supported.</div>
+        </div>
+        <div id="genericHttpInstructionBlock" class="has-tooltip relative hidden">
+          <input
+            id="genericHttpInstruction"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Instruction (optional, e.g. calm)"
+          />
+          <div class="tooltip">Voice style / emotion instructions for the TTS service.</div>
+        </div>
+
         <!-- TTS Custom Parameters -->
         <div class="bg-gray-700 p-4 rounded-lg">
           <div class="flex justify-between items-center mb-3">
@@ -7111,10 +7281,11 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="akool">Akool</option>
             <option value="liveavatar">LiveAvatar by HeyGen</option>
             <option value="generic">Generic</option>
+            <option value="lemonslice">LemonSlice</option>
             <option value="heygen">HeyGen (Deprecated)</option>
             <option value="anam">Anam</option>
           </select>
-          <div class="tooltip">Select the AI Avatar vendor. Generic adds an API base URL field; other avatar settings use the same API key, avatar ID, and RTC fields as other vendors. LiveAvatar uses the current HeyGen LiveAvatar API (API key and avatar ID from the LiveAvatar console); TTS must be 24 kHz—this playground forces 24 kHz for supported TTS vendors when LiveAvatar is selected. Deprecated HeyGen targets the legacy Interactive Avatar integration. Anam uses Agora’s <code>avatar_id</code> field (see the Avatar ID field tooltip).</div>
+          <div class="tooltip">Select the AI Avatar vendor. LemonSlice is a first-class option that still sends <code>vendor: generic</code> with LemonSlice defaults (ConvoAI v2.10). Generic is for any other custom avatar provider. LiveAvatar uses the current HeyGen LiveAvatar API; TTS must be 24 kHz when LiveAvatar is selected. Deprecated HeyGen targets the legacy Interactive Avatar integration.</div>
         </div>
         <div class="has-tooltip relative">
           <input
@@ -7203,6 +7374,52 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               placeholder="API Base URL (Required)"
             />
             <div class="tooltip">Base URL for your generic avatar provider.</div>
+          </div>
+        </div>
+
+        <!-- LemonSlice avatar (UI option; REST vendor remains generic) -->
+        <div id="lemonsliceAvatarSettings" class="hidden space-y-2">
+          <div class="text-xs text-gray-400 italic">
+            LemonSlice uses the <code>generic</code> avatar vendor. API base URL and avatar ID are prefilled.
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="lemonsliceApiBaseUrl"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="API Base URL"
+              value="https://lemonslice.com/api/liveai/agora"
+            />
+            <div class="tooltip">LemonSlice Agora integration base URL.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <select
+              id="lemonsliceImageSource"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            >
+              <option value="agent_image_url" selected>Image URL (agent_image_url)</option>
+              <option value="agent_id">Agent ID (agent_id)</option>
+              <option value="agent_image_base64">Image Base64 (agent_image_base64)</option>
+            </select>
+            <div class="tooltip">Provide exactly one image source: a public image URL, a LemonSlice agent ID, or a base64-encoded image.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="lemonsliceImageValue"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Image URL, agent ID, or base64 (Required)"
+            />
+            <div class="tooltip">Value for the selected image source field.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <select
+              id="lemonsliceAspectRatio"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            >
+              <option value="2x3" selected>2x3 (default)</option>
+              <option value="9x16">9x16</option>
+              <option value="1x1">1x1</option>
+            </select>
+            <div class="tooltip">Output aspect ratio for the LemonSlice avatar video.</div>
           </div>
         </div>
 

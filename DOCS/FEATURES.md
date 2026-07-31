@@ -26,22 +26,27 @@
 - **Multimodal LLM (MLLM) Mode**
   - Real-time multimodal conversations with OpenAI Realtime API
   - **xAI Grok** via `wss://api.x.ai/v1/realtime`
+  - **Gemini Live** realtime WebSocket support
+  - **Custom** MLLM WebSocket endpoints
   - Google Vertex AI MLLM support with native audio
     - ADC credentials configuration
     - Project ID and location settings
     - Voice selection and custom instructions
     - Automatic transcription for agent and user
-  - Direct WebSocket connection to OpenAI Realtime API
   - Support for text, audio, and image inputs simultaneously
   - Streaming audio and text processing
   - Image analysis and response generation
-  - Advanced turn detection with semantic VAD
+  - Advanced turn detection with semantic VAD (OpenAI Realtime)
   - Automatic response generation and interruption handling
   - Configurable conversation history management
   - Configurable history length (default: 32 messages)
   - Automatic greeting for first user in channel
-  - Real-time response generation and interruption
   - MLLM-specific options: create response, interrupt response, eagerness
+
+### Backend Pipeline & Managed Credentials
+
+- **Backend Pipeline ID**: Point the agent at a preconfigured pipeline; optionally override LLM / TTS / ASR from the playground UI
+- **Managed presets (v2.9)**: ASR / LLM / TTS presets that set `credential_mode: managed` (OpenAI / MiniMax TTS presets and related managed options)
 
 ### Real-time Audio & Visual Experience
 
@@ -84,17 +89,21 @@
   - Visual AI avatar representation with neural network design
   - Professional SVG placeholder with brain/neural network icon
   - Seamless transition from placeholder to live video stream
-  - Support for Akool, LiveAvatar, Generic, Anam, and deprecated HeyGen avatar vendors
+  - Support for Akool, LiveAvatar, Generic, LemonSlice, Anam, and deprecated HeyGen avatar vendors
   - Real-time video subscription and playback
   - Automatic placeholder restoration when video stream ends
   - **AI Avatar Configuration**
-    - Vendor selection: Akool, LiveAvatar, Generic, Anam, HeyGen (deprecated)
+    - Vendor selection: Akool, LiveAvatar, Generic, LemonSlice, Anam, HeyGen (deprecated)
     - API key and avatar ID configuration
     - RTC UID and token management for avatar channel access
-    - HeyGen-specific settings: quality, idle timeout, activity timeout
+    - LemonSlice-specific settings: image source (URL / agent ID / base64) and aspect ratio (REST still uses `vendor: generic`)
+    - Anam-specific settings: sample rate, quality, video encoding
+    - LiveAvatar / HeyGen settings: quality, idle timeout, activity timeout
+    - LiveAvatar forces 24 kHz TTS sample rate for supported TTS vendors
     - Automatic client UID configuration for avatar-agent communication
     - Token requirement validation and setup guidance
     - Agora token requirement modal for AI Avatar setup
+    - Avatar custom parameters (JSON merge into `avatar.params`)
   - Professional SVG placeholder design with neural network icon and connection lines
   - Smooth transitions between placeholder and live video
   - Responsive design with proper element sizing
@@ -113,75 +122,42 @@
 
 ### Comprehensive TTS Support
 
-- **Microsoft TTS**
+Dropdown vendors (see [VENDORS.md](./VENDORS.md) for field details):
 
-  - Global region selection (30+ regions)
-  - Extensive voice library with language-specific options
-  - Advanced parameters: rate, speed, volume, sample rate
-  - Skip pattern support for natural speech
-
-- **ElevenLabs TTS**
-
-  - High-quality voice cloning and customization
-  - Model and voice selection with custom voice IDs
-  - Advanced parameters: stability, similarity boost, style, speaker boost
-  - Configurable sample rates
-
-- **Cartesia TTS**
-
-  - Ultra-fast, low-latency text-to-speech
-  - Real-time streaming capabilities
-  - Sonic-2 model with custom voice configuration
-
-- **OpenAI TTS**
-  - High-quality neural voice synthesis
-  - Multiple voice options (coral, alloy, echo, fable, onyx, nova, shimmer)
-  - Speed control and voice instruction support
+- **Microsoft**, **ElevenLabs**, **MiniMax**, **Deepgram**, **Murf**, **Cartesia**, **OpenAI**
+- **Hume AI**, **Rime**, **Fish Audio**, **Google**, **Amazon Polly**, **Sarvam**
+- **Gradium (v2.10)**, **Mistral (v2.10)**, **Generic HTTP / OpenAI protocol (v2.10)**
+- Shared: skip patterns, TTS custom parameters, LiveAvatar 24 kHz enforcement when applicable
 
 ### Advanced ASR Integration
 
-- **Agora ASR**
+Dropdown vendors:
 
-  - Built-in speech recognition with multiple language support
-  - Languages: en-US, es-ES, ja-JP, ko-KR, ar-AE, hi-IN
-
-- **Microsoft ASR**
-
-  - High-accuracy speech recognition
-  - Comprehensive language coverage
-  - Region-specific configuration
-
-- **Deepgram ASR**
-  - Real-time streaming speech recognition
-  - Advanced models (nova-3, nova-2, nova, enhanced, base)
-  - Multi-language support with custom URLs
+- **Agora (ARES)**, **Microsoft**, **Deepgram**, **OpenAI**, **Speechmatics**
+- **AssemblyAI**, **Amazon Transcribe**, **Google**, **Sarvam**, **Custom**
 
 ### Voice Activity Detection (VAD) & Turn Detection
 
-- **Multiple VAD Types**
+- **Turn Detection v2.4 (primary path)**
+  - Start of Speech modes: `vad`, `semantic`, `keywords`, `manual`, `disabled`
+  - End of Speech modes: `vad`, `manual`, `semantic`
+  - Keyword lists and disabled-strategy options where applicable
+  - Configurable VAD timing: interrupt duration, prefix padding, silence duration, threshold
 
-  - Agora VAD: Built-in voice activity detection
-  - Server VAD: Server-side voice activity detection (MLLM + OpenAI only)
-  - Semantic VAD: Context-aware conversation flow (MLLM + OpenAI only)
+- **Interruption object (v2.6)**
+  - Pipeline interruption configuration (preferred over legacy interrupt modes when not using Deprecated Features)
 
-- **Configurable Parameters**
+- **Deprecated Features toggle**
+  - Pre-v2.4 interrupt modes and AIVAD-style controls for compatibility testing
 
-  - Interrupt duration: Time before interruption triggers (default: 160ms)
-  - Prefix padding: Forward padding for speech capture (default: 800ms)
-  - Silence duration: Time before assuming speech end (default: 640ms)
-  - Threshold: Voice detection sensitivity (0.0-1.0, default: 0.5)
+- **Manual Turn Control (v2.9)**
+  - Client Start (SoS) / End (EoS) buttons
+  - Publishes RTM messages `user.manual_sos` / `user.manual_eos`
+  - Requires SoS/EoS mode Manual + RTM / `data_channel: rtm`
 
-- **Interrupt Modes**
-
-  - Interrupt: Stop current response and process input immediately
-  - Append: Complete current response before processing new input
-  - Ignore: Discard interrupting input
-
-- **MLLM-Specific Turn Detection Options**
-  - Create Response: Auto-generate response on VAD stop
-  - Interrupt Response: Auto-interrupt ongoing responses
-  - Eagerness: Response timing control (low, auto, high)
-  - Configurable eagerness levels for response timing
+- **MLLM turn detection**
+  - Modes: `agora_vad`, `server_vad`, `semantic_vad` (vendor-dependent; e.g. xAI does not support `semantic_vad`)
+  - Create Response / Interrupt Response / Eagerness options
 
 ### Silence Management
 
@@ -191,13 +167,16 @@
   - Custom silence reminder messages
   - Automatic agent prompting for continued interaction
 
+### SIP / Phone Management
+
+- Import, update, and manage phone numbers
+- Start outbound SIP calls (optional pipeline ID + override full config)
+- Hang up / query call history
+- Inbound and outbound configuration with allowed addresses
+
 ### Advanced Features
 
-- **AIVAD (AI Voice Activity Detection)**
-
-  - Intelligent interruption handling
-  - Currently available for English
-  - Enhanced conversation flow management
+- **AIVAD (AI Voice Activity Detection)** — available via Deprecated Features path / English scenarios
 
 - **RTM (Real-Time Messaging)**
 
@@ -205,8 +184,7 @@
   - Custom information delivery
   - Metrics collection and error handling
   - Data channel configuration (RTC datastream or RTM)
-  - Performance metrics collection (with RTM enabled)
-  - Signaling requirements validation
+  - Required for Manual Turn Control and RTM subtitle mode
 
 - **MCP Servers (Model Context Protocol)**
 
@@ -217,7 +195,6 @@
   - Allowed tools configuration (comma-separated list or "*" for all)
   - Automatic enable_tools flag in advanced_features when enabled
   - mcp_servers array added to LLM configuration in JSON output
-  - Comprehensive tooltips for all configuration fields
 
 - **SAL (Speaker Adaptation Library)**
 
@@ -234,11 +211,19 @@
 
 - **Custom Parameters**
 
-  - Flexible configuration for LLM/MLLM
+  - Flexible configuration for LLM/MLLM, TTS, and Avatar
   - Add custom key-value pairs for advanced model control
   - Support for string, number, boolean, array, and object types
   - JSON validation and formatting
   - Parameter injection into API requests
+
+- **Farewell / Geofence / RTC Encryption**
+  - Graceful farewell timeout
+  - Geofence region constraints
+  - RTC encryption mode, key, and salt
+
+- **Form settings persistence**
+  - Selected form values persist across reloads via `form-settings-persistence.js`
 
 - **Experimental Features**
   - Experimental features modal with advanced RTC parameters
@@ -257,6 +242,14 @@
   - Manual agent interruption capability
   - Immediate response termination
   - Status confirmation and error handling
+
+- **Think (Custom Instruction)**
+  - Inject instruction text into the agent pipeline
+  - Configurable `on_listening_action` / `on_speaking_action` and metadata
+
+- **Query Conversation Turns**
+  - Paginated turn metrics (last 7 days)
+  - Optional fetch-all-pages merge in the playground
 
 ### Input/Output Modalities
 
@@ -284,6 +277,7 @@
 
   - Agent status tracking
   - Conversation history retrieval
+  - Query agents / agent list with filters and pagination
   - Performance metrics (with RTM enabled)
   - Error message collection
   - Signaling requirements validation
