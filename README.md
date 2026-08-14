@@ -2,7 +2,7 @@
 
 A web dashboard for managing and interacting with Agora's Conversational AI Agents. This application provides a user-friendly interface for creating, updating, and monitoring AI agents that can engage in real-time conversations with support for both traditional LLM and Multimodal Large Language Model (MLLM) configurations.
 
-Targets **Agora Conversational AI Engine v2.9 / v2.10** features (managed presets, manual turn control, Gradium/Mistral/Generic HTTP TTS, LemonSlice avatar, and more). See the [platform release notes](https://docs.agora.io/en/ai/release-notes).
+Targets **Agora Conversational AI Engine v2.11** features (ARES ASR keywords, Typecast TTS, Azure OpenAI Realtime MLLM, plus v2.9/v2.10 managed presets, manual turn control, Gradium/Mistral/Generic HTTP TTS, LemonSlice avatar, and more). See the [platform release notes](https://docs.agora.io/en/ai/release-notes).
 
 ## Project Structure
 
@@ -83,9 +83,9 @@ For detailed setup instructions, see [SETUP.md](DOCS/SETUP.md).
 
 - **Dual AI Model Support**: Traditional LLM and Multimodal LLM (MLLM) configurations
   - **LLM Mode**: OpenAI, Anthropic, Gemini, Vertex AI, Amazon Bedrock, and custom LLM providers
-  - **MLLM Mode**: OpenAI Realtime, xAI Grok, Gemini Live, Google Vertex AI, and custom WebSocket endpoints
-- **Comprehensive TTS Support**: Microsoft, ElevenLabs, MiniMax, Deepgram, Murf, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Google, Amazon Polly, Sarvam, Gradium, Mistral, and Generic HTTP (OpenAI protocol)
-- **Advanced ASR Integration**: Agora (ARES), Microsoft, Deepgram, OpenAI, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, and Custom ASR
+  - **MLLM Mode**: OpenAI Realtime, Azure OpenAI Realtime, xAI Grok, Gemini Live, Google Vertex AI, and custom WebSocket endpoints
+- **Comprehensive TTS Support**: Microsoft, ElevenLabs, MiniMax, Deepgram, Murf, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Google, Amazon Polly, Sarvam, Gradium, Mistral, Typecast, and Generic HTTP (OpenAI protocol)
+- **Advanced ASR Integration**: Agora (ARES, including v2.11 keywords), Microsoft, Deepgram, OpenAI, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, and Custom ASR
 - **AI Avatar Support**: Akool, LiveAvatar, Generic, LemonSlice, Anam, and deprecated HeyGen
   - LemonSlice is a first-class UI option that still sends `vendor: generic` with LemonSlice defaults
   - LiveAvatar forces 24 kHz TTS sample rate for supported vendors
@@ -155,4 +155,4 @@ For issues and questions:
 
 ---
 
-**Agora Conversational AI Engine v2.9 / v2.10** — a comprehensive web dashboard for managing and interacting with Agora's Conversational AI Agents. Features include dual LLM/MLLM modes, 15+ TTS vendors, 10 ASR vendors, multiple AI Avatar vendors (including LemonSlice via generic), manual SoS/EoS turn control, managed credential presets, MCP servers, SIP/phone management, live subtitles, device management, and local RTC+RTM token generation.
+**Agora Conversational AI Engine v2.11** — a comprehensive web dashboard for managing and interacting with Agora's Conversational AI Agents. Features include dual LLM/MLLM modes, 16+ TTS vendors (including Typecast), 10 ASR vendors with ARES keywords, Azure OpenAI Realtime MLLM, multiple AI Avatar vendors (including LemonSlice via generic), manual SoS/EoS turn control, managed credential presets, MCP servers, SIP/phone management, live subtitles, device management, and local RTC+RTM token generation.

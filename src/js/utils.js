@@ -62,6 +62,8 @@ window.Utils = class Utils {
             ttsKey = document.getElementById("gradiumTtsKey") ? document.getElementById("gradiumTtsKey").value.trim() : '';
         } else if (ttsVendor === "mistral") {
             ttsKey = document.getElementById("mistralTtsKey") ? document.getElementById("mistralTtsKey").value.trim() : '';
+        } else if (ttsVendor === "typecast") {
+            ttsKey = document.getElementById("typecastTtsKey") ? document.getElementById("typecastTtsKey").value.trim() : '';
         } else if (ttsVendor === "generic_http") {
             ttsKey = document.getElementById("genericHttpTtsKey") ? document.getElementById("genericHttpTtsKey").value.trim() : '';
         }
@@ -683,6 +685,13 @@ window.Utils = class Utils {
                     if (!mistralTtsKey) throw new Error('Mistral API Key is required');
                     if (!mistralModel) throw new Error('Mistral Model is required');
                     if (!mistralVoice) throw new Error('Mistral Voice is required');
+                } else if (ttsVendor === 'typecast') {
+                    const typecastTtsKey = document.getElementById('typecastTtsKey') ? document.getElementById('typecastTtsKey').value.trim() : '';
+                    const typecastVoiceId = document.getElementById('typecastVoiceId') ? document.getElementById('typecastVoiceId').value.trim() : '';
+                    const typecastModel = document.getElementById('typecastModel') ? document.getElementById('typecastModel').value.trim() : '';
+                    if (!typecastTtsKey) throw new Error('Typecast API Key is required');
+                    if (!typecastVoiceId) throw new Error('Typecast Voice ID is required');
+                    if (!typecastModel) throw new Error('Typecast Model is required');
                 } else if (ttsVendor === 'generic_http') {
                     const genericHttpUrl = document.getElementById('genericHttpUrl') ? document.getElementById('genericHttpUrl').value.trim() : '';
                     const genericHttpTtsKey = document.getElementById('genericHttpTtsKey') ? document.getElementById('genericHttpTtsKey').value.trim() : '';
@@ -1017,6 +1026,18 @@ window.Utils = class Utils {
         }
     }
 
+    static parseAsrKeywords(raw, max = 128) {
+        if (!raw) return [];
+        const keywords = raw
+            .split(/[,;\n]+/)
+            .map(keyword => keyword.trim())
+            .filter(keyword => keyword.length > 0);
+        if (keywords.length > max) {
+            throw new Error(`ARES keywords supports at most ${max} terms`);
+        }
+        return keywords;
+    }
+
     static buildAsrConfig(formData) {
         const vendor = formData.asrVendor;
         const asrLanguage = document.getElementById('asrLanguage').value;
@@ -1061,10 +1082,18 @@ window.Utils = class Utils {
                 throw new Error(`Invalid JSON in custom ASR configuration: ${e.message}`);
             }
         } else if (vendor === 'ares') {
-            return {
+            const aresConfig = {
                 vendor: 'ares',
                 language: asrLanguage
             };
+            const aresKeywordsRaw = document.getElementById('aresAsrKeywords')
+                ? document.getElementById('aresAsrKeywords').value.trim()
+                : '';
+            const aresKeywords = this.parseAsrKeywords(aresKeywordsRaw);
+            if (aresKeywords.length > 0) {
+                aresConfig.keywords = aresKeywords;
+            }
+            return aresConfig;
         } else if (vendor === 'microsoft') {
             const microsoftAsrKey = document.getElementById('microsoftAsrKey').value;
             const microsoftAsrRegion = document.getElementById('microsoftAsrRegion').value;
@@ -1212,10 +1241,18 @@ window.Utils = class Utils {
         }
         
         // Default to ARES if vendor is not recognized
-        return {
+        const fallback = {
             vendor: 'ares',
             language: asrLanguage
         };
+        const fallbackKeywordsRaw = document.getElementById('aresAsrKeywords')
+            ? document.getElementById('aresAsrKeywords').value.trim()
+            : '';
+        const fallbackKeywords = this.parseAsrKeywords(fallbackKeywordsRaw);
+        if (fallbackKeywords.length > 0) {
+            fallback.keywords = fallbackKeywords;
+        }
+        return fallback;
     }
 
     /**
@@ -1276,10 +1313,15 @@ window.Utils = class Utils {
      */
     static buildMllmTurnDetection(formData) {
         if (!formData.enableMllm) return null;
-        if (!formData.turnDetectionEnabled) return null;
+        // Azure OpenAI Realtime requires mllm.turn_detection; default to server_vad when the UI toggle is off.
+        if (!formData.turnDetectionEnabled) {
+            return formData.mllmVendor === 'azure' ? { mode: 'server_vad' } : null;
+        }
 
         const mode = formData.turnDetectionType;
-        if (!mode) return null;
+        if (!mode) {
+            return formData.mllmVendor === 'azure' ? { mode: 'server_vad' } : null;
+        }
 
         const hasVal = (v) => v != null && v !== '';
         const result = { mode };
@@ -2237,6 +2279,16 @@ window.Utils = class Utils {
                         api_key: document.getElementById("mistralTtsKey").value,
                         model: document.getElementById("mistralModel").value.trim(),
                         voice: document.getElementById("mistralVoice").value.trim()
+                    }
+                };
+            } else if (formData.vendor === "typecast") {
+                config.properties.tts = {
+                    vendor: "typecast",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: {
+                        api_key: document.getElementById("typecastTtsKey").value,
+                        voice_id: document.getElementById("typecastVoiceId").value.trim(),
+                        model: document.getElementById("typecastModel").value.trim()
                     }
                 };
             } else if (formData.vendor === "generic_http") {

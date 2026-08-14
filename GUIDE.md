@@ -400,6 +400,7 @@ Agora supports multiple TTS vendors (playground dropdown):
 - [Sarvam TTS](https://docs.agora.io/en/conversational-ai/models/tts/sarvam)
 - [Gradium TTS](https://docs.agora.io/en/ai/models/tts/gradium) (v2.10)
 - [Mistral TTS](https://docs.agora.io/en/ai/models/tts/mistral) (v2.10)
+- [Typecast TTS](https://docs.agora.io/en/ai/models/tts/typecast) (v2.11)
 - [Generic HTTP TTS](https://docs.agora.io/en/ai/models/tts/generic-http) (v2.10 OpenAI protocol)
 
 For this example, we'll use Microsoft Azure TTS for its reliability and quality.
@@ -408,7 +409,7 @@ For this example, we'll use Microsoft Azure TTS for its reliability and quality.
 
 Agora supports multiple ASR vendors:
 
-- [Agora ASR (ares)](https://docs.agora.io/en/conversational-ai/models/asr/ares)
+- [Agora ASR (ares)](https://docs.agora.io/en/conversational-ai/models/asr/ares) — optional [ARES keywords](https://docs.agora.io/en/ai/build/shape-the-conversation/asr-keywords) (v2.11)
 - [Microsoft ASR](https://docs.agora.io/en/conversational-ai/models/asr/microsoft)
 - [Deepgram ASR](https://docs.agora.io/en/conversational-ai/models/asr/deepgram)
 - [OpenAI ASR](https://docs.agora.io/en/conversational-ai/models/asr/openai)
@@ -952,15 +953,15 @@ The code is modular. Swap LLM providers without touching the audio pipeline. Cha
 
 ### What's Supported
 
-Aligned with the current playground dropdowns (ConvoAI Engine **v2.9 / v2.10**):
+Aligned with the current playground dropdowns (ConvoAI Engine **v2.11**):
 
 **LLM Providers**: OpenAI, Azure OpenAI, Google Gemini, Google Vertex AI, Anthropic Claude, Amazon Bedrock, Dify, custom endpoints
 
-**MLLM Providers**: OpenAI Realtime, xAI Grok, Gemini Live, Vertex AI, Custom WebSocket
+**MLLM Providers**: OpenAI Realtime, Azure OpenAI Realtime, xAI Grok, Gemini Live, Vertex AI, Custom WebSocket
 
-**TTS Vendors**: Microsoft Azure, ElevenLabs, MiniMax, Deepgram, Murf, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Google, Amazon Polly, Sarvam, Gradium, Mistral, Generic HTTP (OpenAI protocol)
+**TTS Vendors**: Microsoft Azure, ElevenLabs, MiniMax, Deepgram, Murf, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Google, Amazon Polly, Sarvam, Gradium, Mistral, Typecast, Generic HTTP (OpenAI protocol)
 
-**ASR Vendors**: Agora (ARES), Microsoft Azure, Deepgram, OpenAI, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, Custom
+**ASR Vendors**: Agora (ARES, with optional keywords), Microsoft Azure, Deepgram, OpenAI, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, Custom
 
 **AI Avatars**: Akool, LiveAvatar (HeyGen), Generic, LemonSlice (UI option → REST `generic`), Anam, HeyGen (Deprecated)
 

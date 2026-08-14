@@ -3363,10 +3363,18 @@
         const updateMllmVendorUI = function() {
             const selectedVendor = mllmVendor.value;
 
-            openaiMllmConfig.classList.toggle('hidden', selectedVendor !== 'openai' && selectedVendor !== 'xai');
+            openaiMllmConfig.classList.toggle('hidden', selectedVendor !== 'openai' && selectedVendor !== 'xai' && selectedVendor !== 'azure');
             geminiConfig.classList.toggle('hidden', selectedVendor !== 'gemini');
             vertexaiConfig.classList.toggle('hidden', selectedVendor !== 'vertexai');
             customMllmConfig.classList.toggle('hidden', selectedVendor !== 'custom');
+
+            const openaiUrlDefault = 'wss://api.openai.com/v1/realtime';
+            const xaiUrlDefault = 'wss://api.x.ai/v1/realtime';
+            const azureUrlDefault = 'wss://your-resource-name.openai.azure.com/openai/v1/realtime?model=gpt-realtime-2';
+            const knownUrlDefaults = [openaiUrlDefault, xaiUrlDefault, azureUrlDefault];
+            const currentUrl = mllmUrl ? mllmUrl.value.trim() : '';
+            const mllmOpenaiModel = document.getElementById('mllmOpenaiModel');
+            const mllmOpenaiVoice = document.getElementById('mllmOpenaiVoice');
 
             if (selectedVendor === 'vertexai') {
                 if (mllmUrl) mllmUrl.value = '';
@@ -3381,13 +3389,31 @@
                 if (mllmUrl) mllmUrl.placeholder = 'MLLM WebSocket URL (Required)';
                 if (mllmApiKey) mllmApiKey.placeholder = 'MLLM API Key (Required)';
             } else if (selectedVendor === 'xai') {
-                if (mllmUrl && !mllmUrl.value.trim()) mllmUrl.value = 'wss://api.x.ai/v1/realtime';
+                if (mllmUrl && (!currentUrl || knownUrlDefaults.includes(currentUrl))) mllmUrl.value = xaiUrlDefault;
                 if (mllmUrl) mllmUrl.placeholder = 'MLLM WebSocket URL (Required, xAI)';
                 if (mllmApiKey) mllmApiKey.placeholder = 'xAI API Key (Required)';
+            } else if (selectedVendor === 'azure') {
+                if (mllmUrl && (!currentUrl || knownUrlDefaults.includes(currentUrl))) mllmUrl.value = azureUrlDefault;
+                if (mllmUrl) mllmUrl.placeholder = 'Azure OpenAI Realtime WebSocket URL (Required)';
+                if (mllmApiKey) mllmApiKey.placeholder = 'Azure OpenAI API Key (Required)';
+                if (mllmOpenaiModel) {
+                    mllmOpenaiModel.placeholder = 'Azure Realtime Model (e.g., gpt-realtime-2)';
+                    if (!mllmOpenaiModel.value.trim() || mllmOpenaiModel.value.trim() === 'gpt-realtime') {
+                        mllmOpenaiModel.value = 'gpt-realtime-2';
+                    }
+                }
+                if (mllmOpenaiVoice) {
+                    mllmOpenaiVoice.placeholder = 'Voice (e.g., alloy)';
+                    if (!mllmOpenaiVoice.value.trim() || mllmOpenaiVoice.value.trim() === 'coral' || mllmOpenaiVoice.value.trim() === 'eve') {
+                        mllmOpenaiVoice.value = 'alloy';
+                    }
+                }
             } else {
-                if (mllmUrl && !mllmUrl.value.trim()) mllmUrl.value = 'wss://api.openai.com/v1/realtime';
+                if (mllmUrl && (!currentUrl || knownUrlDefaults.includes(currentUrl))) mllmUrl.value = openaiUrlDefault;
                 if (mllmUrl) mllmUrl.placeholder = 'MLLM WebSocket URL (Required)';
                 if (mllmApiKey) mllmApiKey.placeholder = 'MLLM API Key (Required)';
+                if (mllmOpenaiModel) mllmOpenaiModel.placeholder = 'OpenAI Realtime Model (e.g., gpt-realtime)';
+                if (mllmOpenaiVoice) mllmOpenaiVoice.placeholder = 'Voice (e.g., coral)';
             }
         };
         mllmVendor.addEventListener('change', updateMllmVendorUI);
@@ -5523,7 +5549,7 @@
                 <option value="sarvam">Sarvam</option>
                 <option value="custom">Custom</option>
               </select>
-              <div class="tooltip">Select the Automatic Speech Recognition (ASR) vendor to use for speech recognition.</div>
+              <div class="tooltip">Select the Automatic Speech Recognition (ASR) vendor. ARES keywords (v2.11) improve recognition of brand names and jargon and are only sent when vendor is ARES.</div>
             </div>
             <div class="has-tooltip relative">
               <select
@@ -5540,6 +5566,20 @@
                 <option value="deepgram_nova_3">deepgram_nova_3</option>
               </select>
               <div class="tooltip">ConvoAI v2.9 managed mode for Deepgram ASR. Sets credential_mode: managed; Agora supplies credentials.</div>
+            </div>
+          </div>
+
+          <!-- ARES Keywords (v2.11) -->
+          <div id="aresAsrConfig" class="mt-4">
+            <h4 class="text-sm font-semibold mb-2">ARES Settings</h4>
+            <div class="has-tooltip relative">
+              <textarea
+                id="aresAsrKeywords"
+                class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                placeholder="Keywords (optional) — comma-separated terms, max 128"
+                rows="3"
+              ></textarea>
+              <div class="tooltip">Sent as <code>asr.keywords</code> to improve ARES recognition of specific terms (ConvoAI v2.11). Only valid when ASR vendor is ARES (or unset). Max 128 keywords. This is not the same as keyword interruption.</div>
             </div>
           </div>
 
@@ -6139,9 +6179,10 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="sarvam">Sarvam</option>
             <option value="gradium">Gradium</option>
             <option value="mistral">Mistral</option>
+            <option value="typecast">Typecast</option>
             <option value="generic_http">Generic HTTP (OpenAI protocol)</option>
           </select>
-          <div class="tooltip">Select the Text-to-Speech vendor to use for voice output. Generic HTTP connects a custom OpenAI-protocol TTS endpoint (ConvoAI v2.10).</div>
+          <div class="tooltip">Select the Text-to-Speech vendor to use for voice output. Typecast is a ConvoAI v2.11 provider. Generic HTTP connects a custom OpenAI-protocol TTS endpoint (v2.10).</div>
         </div>
 
         <!-- Microsoft TTS Settings -->
@@ -7141,6 +7182,36 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           <div class="tooltip">Mistral TTS voice identifier.</div>
         </div>
 
+        <!-- Typecast TTS Settings (v2.11) -->
+        <div id="typecastTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="typecastTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Typecast API Key (Required)"
+          />
+          <div class="tooltip">API key for Typecast TTS. Sent as params.api_key.</div>
+        </div>
+        <div id="typecastVoiceIdBlock" class="has-tooltip relative hidden">
+          <input
+            id="typecastVoiceId"
+            name="ttsVoiceId"
+            autocomplete="on"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Voice ID (Required, e.g. tc_60e5426de8b95f1d3000d7b5)"
+            value="tc_60e5426de8b95f1d3000d7b5"
+          />
+          <div class="tooltip">Typecast voice identifier. Sent as params.voice_id. See the Typecast voice catalog for available IDs.</div>
+        </div>
+        <div id="typecastModelBlock" class="has-tooltip relative hidden">
+          <input
+            id="typecastModel"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Model (Required, e.g. ssfm-v30)"
+            value="ssfm-v30"
+          />
+          <div class="tooltip">Typecast TTS model. Sent as params.model. Example: ssfm-v30.</div>
+        </div>
+
         <!-- Generic HTTP TTS Settings (v2.10 OpenAI protocol) -->
         <div id="genericHttpUrlBlock" class="has-tooltip relative hidden">
           <input
@@ -7575,12 +7646,13 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
           >
             <option value="openai">OpenAI Realtime API</option>
+            <option value="azure">Azure OpenAI Realtime</option>
             <option value="xai">xAI Grok</option>
             <option value="gemini">Google Gemini Live</option>
             <option value="vertexai">Google Gemini Live (Vertex AI)</option>
             <option value="custom">Custom</option>
           </select>
-          <div class="tooltip">MLLM provider. Supports OpenAI Realtime, xAI Grok, Google Gemini Live, Vertex AI, and custom providers.</div>
+          <div class="tooltip">MLLM provider. Supports OpenAI Realtime, Azure OpenAI Realtime (v2.11), xAI Grok, Google Gemini Live, Vertex AI, and custom providers. Azure requires mllm.turn_detection.</div>
         </div>
         <div class="has-tooltip relative">
           <input

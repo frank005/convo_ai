@@ -113,7 +113,7 @@ All REST calls in `src/js/api.js` format error bodies through `Utils.formatConvo
 
 - **112 turns finished:** post-session batched turn data (alternative to paginated REST query).
 
-See [release notes](https://docs.agora.io/en/ai/release-notes) for platform changelog details (v2.9 manual turn toolkit APIs, v2.10 Gradium / Mistral / `generic_http` TTS, LemonSlice avatar docs).
+See [release notes](https://docs.agora.io/en/ai/release-notes) for platform changelog details (v2.11 Typecast TTS, Azure OpenAI Realtime MLLM, ARES `asr.keywords`; v2.10 Gradium / Mistral / `generic_http` TTS, LemonSlice avatar docs; v2.9 manual turn toolkit APIs).
 
 ### Avatar payload notes
 

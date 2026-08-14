@@ -1646,6 +1646,11 @@ window.UI = class UI {
             "mistralModelBlock",
             "mistralVoiceBlock"
         ];
+        const typecastBlocks = [
+            "typecastTtsKeyBlock",
+            "typecastVoiceIdBlock",
+            "typecastModelBlock"
+        ];
         const genericHttpBlocks = [
             "genericHttpUrlBlock",
             "genericHttpTtsKeyBlock",
@@ -1774,6 +1779,13 @@ window.UI = class UI {
             const element = document.getElementById(block);
             if (element) {
                 element.classList.toggle("hidden", vendor !== "mistral");
+            }
+        });
+
+        typecastBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "typecast");
             }
         });
 

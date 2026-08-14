@@ -24,7 +24,7 @@ This guide will walk you through setting up and configuring the Conversational A
 The application supports two AI modes:
 
 - **LLM Mode**: Traditional text-based conversations (LLM + TTS + ASR)
-- **MLLM Mode**: Multimodal realtime conversations (OpenAI Realtime, xAI Grok, Gemini Live, Vertex AI, or custom WebSocket)
+- **MLLM Mode**: Multimodal realtime conversations (OpenAI Realtime, Azure OpenAI Realtime, xAI Grok, Gemini Live, Vertex AI, or custom WebSocket)
 
 ### 3. Configure Your Agent
 
@@ -49,9 +49,9 @@ Basic agent configuration:
 
 **For MLLM Mode:**
 
-- Select MLLM vendor (OpenAI, xAI, Gemini Live, Vertex AI, or Custom)
+- Select MLLM vendor (OpenAI, Azure OpenAI Realtime, xAI, Gemini Live, Vertex AI, or Custom)
 - Configure WebSocket URL / API key (or Vertex ADC credentials)
-- Configure turn detection under the MLLM / Turn Detection controls
+- Configure turn detection under the MLLM / Turn Detection controls (required for Azure OpenAI Realtime)
 
 ### 5. Advanced Configuration (Optional)
 
@@ -137,4 +137,4 @@ Enable real-time subtitle display:
 - Check [VENDORS.md](./VENDORS.md) for vendor-specific configuration details
 - See [API.md](./API.md) for API integration information
 - Review [ARCHITECTURE.md](./ARCHITECTURE.md) for technical architecture details
-- See platform [release notes](https://docs.agora.io/en/ai/release-notes) for ConvoAI v2.9 / v2.10 changes
+- See platform [release notes](https://docs.agora.io/en/ai/release-notes) for ConvoAI v2.11 / v2.10 / v2.9 changes

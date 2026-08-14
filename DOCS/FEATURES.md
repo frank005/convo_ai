@@ -25,6 +25,7 @@
 
 - **Multimodal LLM (MLLM) Mode**
   - Real-time multimodal conversations with OpenAI Realtime API
+  - **Azure OpenAI Realtime (v2.11)** via `vendor: azure` (`mllm.turn_detection` required)
   - **xAI Grok** via `wss://api.x.ai/v1/realtime`
   - **Gemini Live** realtime WebSocket support
   - **Custom** MLLM WebSocket endpoints
@@ -126,7 +127,7 @@ Dropdown vendors (see [VENDORS.md](./VENDORS.md) for field details):
 
 - **Microsoft**, **ElevenLabs**, **MiniMax**, **Deepgram**, **Murf**, **Cartesia**, **OpenAI**
 - **Hume AI**, **Rime**, **Fish Audio**, **Google**, **Amazon Polly**, **Sarvam**
-- **Gradium (v2.10)**, **Mistral (v2.10)**, **Generic HTTP / OpenAI protocol (v2.10)**
+- **Gradium (v2.10)**, **Mistral (v2.10)**, **Typecast (v2.11)**, **Generic HTTP / OpenAI protocol (v2.10)**
 - Shared: skip patterns, TTS custom parameters, LiveAvatar 24 kHz enforcement when applicable
 
 ### Advanced ASR Integration
@@ -135,6 +136,7 @@ Dropdown vendors:
 
 - **Agora (ARES)**, **Microsoft**, **Deepgram**, **OpenAI**, **Speechmatics**
 - **AssemblyAI**, **Amazon Transcribe**, **Google**, **Sarvam**, **Custom**
+- **ARES keywords (v2.11)**: `asr.keywords` list (max 128) to improve recognition of brand names, product names, and jargon. Only sent when vendor is ARES.
 
 ### Voice Activity Detection (VAD) & Turn Detection
 
@@ -157,6 +159,7 @@ Dropdown vendors:
 
 - **MLLM turn detection**
   - Modes: `agora_vad`, `server_vad`, `semantic_vad` (vendor-dependent; e.g. xAI does not support `semantic_vad`)
+  - Azure OpenAI Realtime requires `mllm.turn_detection` (playground defaults to `server_vad` if the toggle is off)
   - Create Response / Interrupt Response / Eagerness options
 
 ### Silence Management

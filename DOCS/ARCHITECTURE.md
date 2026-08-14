@@ -99,7 +99,7 @@ Form validation and submission, vendor-specific field visibility (TTS / ASR / Av
 1. MLLM mode selected (UI Components)
 2. Agent joins with MLLM vendor configuration (Core API Layer)
 3. Realtime audio/image path handled by the engine / client
-4. Turn detection follows MLLM-specific modes when enabled
+4. Turn detection follows MLLM-specific modes when enabled (required for Azure OpenAI Realtime)
 
 ## Integration Points
 

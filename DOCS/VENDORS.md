@@ -140,6 +140,18 @@ Mistral text-to-speech models.
 - Model (default `voxtral-mini-tts-2603`)
 - Voice
 
+### Typecast TTS (v2.11)
+
+Expressive Typecast voices. Additional vendor params can be passed through TTS custom parameters.
+
+**Required Fields:**
+
+- API Key (`params.api_key`)
+- Voice ID (`params.voice_id`, e.g. `tc_60e5426de8b95f1d3000d7b5`)
+- Model (`params.model`, e.g. `ssfm-v30`)
+
+**Docs:** [Typecast TTS](https://docs.agora.io/en/ai/models/tts/typecast)
+
 ### Generic HTTP TTS (v2.10)
 
 Connect a custom or third-party TTS service that implements the OpenAI TTS protocol (`vendor: generic_http`).
@@ -232,12 +244,33 @@ High-quality voice synthesis with customizable speed and silence control.
 
 ## MLLM Vendor Support
 
-Playground MLLM vendors: `openai`, `xai`, `gemini`, `vertexai`, `custom`.
+Playground MLLM vendors: `openai`, `azure`, `xai`, `gemini`, `vertexai`, `custom`.
 
 ### OpenAI Realtime
 
 **Vendor name:** `openai`  
 WebSocket realtime multimodal conversations. Supports richer turn-detection modes including `semantic_vad`.
+
+### Azure OpenAI Realtime (v2.11)
+
+Azure-hosted OpenAI Realtime API. Enabling MLLM still disables ASR, LLM, and TTS.
+
+**Vendor name:** `azure`
+
+**Required fields:**
+
+- API Key
+- WebSocket URL (e.g. `wss://your-resource-name.openai.azure.com/openai/v1/realtime?model=gpt-realtime-2`)
+- `mllm.turn_detection` (`agora_vad`, `server_vad`, or `semantic_vad`). The playground defaults to `server_vad` if the Turn Detection toggle is off.
+
+**Optional params:**
+
+- `model` (e.g. `gpt-realtime-2`)
+- `voice` (e.g. `alloy`)
+- `instructions`
+- `input_audio_transcription` (`language`, `model`, `prompt`)
+
+**Docs:** [Azure OpenAI Realtime API](https://docs.agora.io/en/ai/models/mllm/azure)
 
 ### xAI Grok
 
@@ -380,6 +413,10 @@ Built-in speech recognition.
 **Vendor name:** `ares`
 
 Supports dozens of locales (ar-*, zh-*, en-US/en-IN, es-ES, fr-FR, de-DE, hi-IN, ja-JP, ko-KR, and more — see the ASR language dropdown). No third-party ASR key required.
+
+**Keywords (v2.11):** Optional `asr.keywords` array (max 128) to improve recognition of brand names, product names, personal names, and jargon. Only valid when `asr.vendor` is `ares` or unset. This is separate from keyword interruption.
+
+**Docs:** [Improve ASR accuracy with keywords](https://docs.agora.io/en/ai/build/shape-the-conversation/asr-keywords)
 
 ### Microsoft ASR
 

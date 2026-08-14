@@ -63,6 +63,7 @@ class ASRManager {
         const googleAsrConfig = document.getElementById('googleAsrConfig');
         const sarvamAsrConfig = document.getElementById('sarvamAsrConfig');
         const customAsrConfig = document.getElementById('customAsrConfig');
+        const aresAsrConfig = document.getElementById('aresAsrConfig');
 
         if (!asrVendor) {
             return;
@@ -81,6 +82,7 @@ class ASRManager {
         if (googleAsrConfig) googleAsrConfig.classList.add('hidden');
         if (sarvamAsrConfig) sarvamAsrConfig.classList.add('hidden');
         if (customAsrConfig) customAsrConfig.classList.add('hidden');
+        if (aresAsrConfig) aresAsrConfig.classList.add('hidden');
         
         // Show/hide main language dropdown based on vendor
         // Speechmatics, AssemblyAI, Amazon, Google, Sarvam, and Custom have their own language fields or don't need language selection
@@ -92,7 +94,7 @@ class ASRManager {
             }
         }
         
-        // Show the selected config section (ARES doesn't need additional config)
+        // Show the selected vendor config section
         if (selectedVendor === 'microsoft' && microsoftAsrConfig) {
             microsoftAsrConfig.classList.remove('hidden');
         } else if (selectedVendor === 'deepgram' && deepgramAsrConfig) {
@@ -111,8 +113,9 @@ class ASRManager {
             sarvamAsrConfig.classList.remove('hidden');
         } else if (selectedVendor === 'custom' && customAsrConfig) {
             customAsrConfig.classList.remove('hidden');
+        } else if (selectedVendor === 'ares' && aresAsrConfig) {
+            aresAsrConfig.classList.remove('hidden');
         }
-        // For ARES, no additional config section is shown
         
         // Update language dropdown based on selected vendor (only if it's visible)
         if (selectedVendor !== 'speechmatics' && selectedVendor !== 'assemblyai' && selectedVendor !== 'amazon' && selectedVendor !== 'google' && selectedVendor !== 'sarvam' && selectedVendor !== 'custom') {
