@@ -268,9 +268,9 @@ End-to-end voice MLLM (no separate ASR/LLM/TTS). Enabling MLLM still disables AS
 - `alpha_selector`: `quicksilver=v3`
 - `voice`: `marin` (default)
 - `prompt`: optional session instructions
-- `tool_enabled`: advertise MCP tools to GPT-Live
+- `tool_enabled`: set automatically when Enable Tools is on in the MLLM drawer (GPT-Live API field; the UI itself is shared across all MLLM vendors)
 
-Join REST is required to use the GPT-Live preview host `https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2` with header `agora-feature: live-models` (not `api.agora.io`). The playground routes GPT-Live join / query / leave / speak / think automatically. MCP servers configured under Enable Tools are attached as `mllm.mcp_servers`.
+Join REST is required to use the GPT-Live preview host `https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2` with header `agora-feature: live-models` (not `api.agora.io`). The playground routes GPT-Live join / query / leave / speak / think automatically. MCP servers are configured in the MLLM drawer (Enable Tools) and sent as `mllm.mcp_servers`.
 
 **Docs:** [OpenAI GPT-Live](https://docs.agora.io/en/ai/models/mllm/openai-gpt-live)
 

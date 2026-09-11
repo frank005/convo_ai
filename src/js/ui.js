@@ -13,6 +13,7 @@ window.UI = class UI {
         this.ttsParams = {};
         this.avatarParams = {};
         this.mcpServers = {};
+        this.mllmMcpServers = {};
         this.lastAgentListCursor = null;
         this.agentListPageHistory = []; // History of accumulated results for back navigation
         this.agentListCurrentPageIndex = -1; // Current position in history (-1 = first page)
@@ -236,6 +237,8 @@ window.UI = class UI {
         document.addEventListener("change", (e) => {
             if (e.target.id === "enableTools") {
                 this.handleEnableToolsChange();
+            } else if (e.target.id === "enableMllmTools") {
+                this.handleEnableMllmToolsChange();
             } else if (e.target.id === "fillerWordsEnable") {
                 this.handleFillerWordsEnableChange();
             } else if (e.target.id === "fillerWordsContentMode") {
@@ -246,7 +249,9 @@ window.UI = class UI {
         
         document.addEventListener("click", (e) => {
             if (e.target.id === "addMcpServerBtn") {
-                this.addMcpServerField();
+                this.addMcpServerField("llm");
+            } else if (e.target.id === "addMllmMcpServerBtn") {
+                this.addMcpServerField("mllm");
             }
         });
 
@@ -2454,6 +2459,15 @@ window.UI = class UI {
         }
     }
 
+    handleEnableMllmToolsChange() {
+        const enableMllmTools = document.getElementById("enableMllmTools");
+        const mllmMcpServersConfig = document.getElementById("mllmMcpServersConfig");
+        if (!enableMllmTools || !mllmMcpServersConfig) return;
+        const isChecked = enableMllmTools.checked;
+        mllmMcpServersConfig.classList.toggle("hidden", !isChecked);
+        mllmMcpServersConfig.style.display = isChecked ? "" : "none";
+    }
+
     handleFillerWordsEnableChange() {
         const fillerWordsEnable = document.getElementById("fillerWordsEnable");
         const fillerWordsConfig = document.getElementById("fillerWordsConfig");
@@ -2470,11 +2484,16 @@ window.UI = class UI {
         generatedConfig.classList.toggle("hidden", !showGenerated);
     }
 
-    addMcpServerField() {
-        const container = document.getElementById("mcp-servers-container");
+    _mcpStoreForId(id) {
+        return id && id.startsWith("mllm-mcp-server-") ? this.mllmMcpServers : this.mcpServers;
+    }
+
+    addMcpServerField(kind = "llm") {
+        const isMllm = kind === "mllm";
+        const container = document.getElementById(isMllm ? "mllm-mcp-servers-container" : "mcp-servers-container");
         if (!container) return;
-        
-        const serverId = "mcp-server-" + Object.keys(this.mcpServers).length;
+        const store = isMllm ? this.mllmMcpServers : this.mcpServers;
+        const serverId = (isMllm ? "mllm-mcp-server-" : "mcp-server-") + Object.keys(store).length;
         
         const div = document.createElement("div");
         div.classList.add("bg-gray-800", "p-3", "rounded", "space-y-2");
@@ -2542,7 +2561,7 @@ window.UI = class UI {
         removeBtn.addEventListener('click', () => this.removeMcpServer(serverId));
         
         container.appendChild(div);
-        this.mcpServers[serverId] = {
+        store[serverId] = {
             name: "",
             endpoint: "",
             transport: "streamable_http",
@@ -2554,40 +2573,41 @@ window.UI = class UI {
         
         // Initialize tooltips for the new server configuration
         if (window.attachTooltipListenersToDrawer) {
-            window.attachTooltipListenersToDrawer('llmDrawer');
+            window.attachTooltipListenersToDrawer(isMllm ? 'mllmDrawer' : 'llmDrawer');
         }
     }
 
     updateMcpServer(id, input, fieldType) {
-        if (!this.mcpServers[id]) return;
+        const store = this._mcpStoreForId(id);
+        if (!store[id]) return;
         
         if (fieldType === "name") {
-            this.mcpServers[id].name = input.value.trim();
+            store[id].name = input.value.trim();
         } else if (fieldType === "endpoint") {
-            this.mcpServers[id].endpoint = input.value.trim();
+            store[id].endpoint = input.value.trim();
         } else if (fieldType === "transport") {
-            this.mcpServers[id].transport = input.value;
+            store[id].transport = input.value;
         } else if (fieldType === "isToolCallAvailable") {
-            this.mcpServers[id].is_tool_call_available = input.value === "true";
+            store[id].is_tool_call_available = input.value === "true";
         } else if (fieldType === "allowedTools") {
             const value = input.value.trim();
             if (value === "") {
-                this.mcpServers[id].allowed_tools = ["*"];
+                store[id].allowed_tools = ["*"];
             } else {
-                this.mcpServers[id].allowed_tools = value.split(",").map(v => v.trim()).filter(v => v !== "");
+                store[id].allowed_tools = value.split(",").map(v => v.trim()).filter(v => v !== "");
             }
         } else if (fieldType === "timeoutMs") {
             const val = input.value.trim();
-            this.mcpServers[id].timeout_ms = val === "" ? null : parseInt(input.value, 10);
+            store[id].timeout_ms = val === "" ? null : parseInt(input.value, 10);
         } else if (fieldType === "headers") {
             const val = input.value.trim();
             if (val === "") {
-                this.mcpServers[id].headers = null;
+                store[id].headers = null;
             } else {
                 try {
-                    this.mcpServers[id].headers = JSON.parse(val);
+                    store[id].headers = JSON.parse(val);
                 } catch (e) {
-                    this.mcpServers[id].headers = null;
+                    store[id].headers = null;
                 }
             }
         }
@@ -2598,7 +2618,7 @@ window.UI = class UI {
         if (element) {
             element.remove();
         }
-        delete this.mcpServers[id];
+        delete this._mcpStoreForId(id)[id];
     }
 
     async createAgent() {
@@ -3130,6 +3150,11 @@ window.UI = class UI {
                     this.handleEnableToolsChange();
                 }
                 this.handleFillerWordsEnableChange();
+            }, 100);
+        }
+        if (drawerId === 'mllmDrawer') {
+            setTimeout(() => {
+                this.handleEnableMllmToolsChange();
             }, 100);
         }
         // Find the button that triggered this drawer

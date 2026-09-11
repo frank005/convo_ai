@@ -198,7 +198,7 @@ Dropdown vendors:
   - Transport protocol: streamable_http
   - Allowed tools configuration (comma-separated list or "*" for all)
   - Automatic `advanced_features.enable_tools` when enabled
-  - Cascading LLM: `llm.mcp_servers`; MLLM (v2.12): `mllm.mcp_servers` (GPT-Live also sets `params.tool_enabled`)
+  - Cascading LLM: `llm.mcp_servers` from the LLM drawer; MLLM (v2.12): `mllm.mcp_servers` from Enable Tools in the MLLM drawer (all MLLM vendors). GPT-Live also sets `params.tool_enabled` when that MLLM switch is on.
 
 - **Custom LLM tools (v2.12)**
 

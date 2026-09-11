@@ -92,7 +92,7 @@ For detailed setup instructions, see [SETUP.md](DOCS/SETUP.md).
 - **Manual Turn Control (v2.9)**: Client-side Start of Speech (SoS) / End of Speech (EoS) via RTM when turn detection modes are set to Manual
 - **Managed Credentials (v2.9)**: Optional ASR / LLM / TTS presets that set `credential_mode: managed`
 - **Backend Pipeline ID**: Use a preconfigured pipeline, with optional override of LLM / TTS / ASR from the UI
-- **Tools (v2.12)**: Custom HTTPS `llm.tools`, MCP servers on cascading LLM (`llm.mcp_servers`) or MLLM (`mllm.mcp_servers`), generated filler words
+- **Tools (v2.12)**: Custom HTTPS `llm.tools` in the LLM drawer; MCP servers in the LLM drawer (`llm.mcp_servers`) or the MLLM drawer (`mllm.mcp_servers`); generated filler words
 - **SIP/Phone Management**: Import numbers, outbound SIP calls, call history, inbound/outbound config
 - **Real-time Audio & Visual**: Waveform visualization, camera preview, device selection with persistence
 - **Live Subtitles & Chat**: RTM and data-stream subtitle modes, chat history, copy/clear

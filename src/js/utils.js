@@ -132,7 +132,6 @@ window.Utils = class Utils {
         const mllmGptLiveModel = document.getElementById("mllmGptLiveModel") ? document.getElementById("mllmGptLiveModel").value.trim() : "";
         const mllmGptLiveAlphaSelector = document.getElementById("mllmGptLiveAlphaSelector") ? document.getElementById("mllmGptLiveAlphaSelector").value.trim() : "";
         const mllmGptLivePrompt = document.getElementById("mllmGptLivePrompt") ? document.getElementById("mllmGptLivePrompt").value.trim() : "";
-        const mllmGptLiveToolEnabled = document.getElementById("mllmGptLiveToolEnabled") ? document.getElementById("mllmGptLiveToolEnabled").checked : false;
         const geminiModel = document.getElementById("geminiModel") ? document.getElementById("geminiModel").value.trim() : "";
         const geminiVoice = document.getElementById("geminiVoice") ? document.getElementById("geminiVoice").value.trim() : "";
         const geminiInstructions = document.getElementById("geminiInstructions") ? document.getElementById("geminiInstructions").value.trim() : "";
@@ -281,6 +280,7 @@ window.Utils = class Utils {
             enableRtm: enableRtm,
             enableSal: enableSal,
             enableTools: document.getElementById("enableTools") ? document.getElementById("enableTools").checked : false,
+            enableMllmTools: document.getElementById("enableMllmTools") ? document.getElementById("enableMllmTools").checked : false,
             // RTM UID
             agentRtmUid: document.getElementById('agentRtmUid') ? document.getElementById('agentRtmUid').value.trim() : '',
             
@@ -300,7 +300,6 @@ window.Utils = class Utils {
             mllmGptLiveModel: mllmGptLiveModel,
             mllmGptLiveAlphaSelector: mllmGptLiveAlphaSelector,
             mllmGptLivePrompt: mllmGptLivePrompt,
-            mllmGptLiveToolEnabled: mllmGptLiveToolEnabled,
             geminiModel: geminiModel,
             geminiVoice: geminiVoice,
             geminiInstructions: geminiInstructions,
@@ -906,17 +905,17 @@ window.Utils = class Utils {
         return params;
     }
 
-    static getMcpServers() {
+    static getMcpServers(containerId = "mcp-servers-container", idPrefix = "mcp-server-") {
         const servers = [];
-        const container = document.getElementById("mcp-servers-container");
+        const container = document.getElementById(containerId);
         if (!container) return servers;
 
         const serverElements = container.children;
 
         for (let element of serverElements) {
-            // Get server ID from element ID (format: mcp-server-0, mcp-server-1, etc.)
+            // Get server ID from element ID (format: mcp-server-0 / mllm-mcp-server-0)
             const serverId = element.id;
-            if (!serverId || !serverId.startsWith("mcp-server-")) continue;
+            if (!serverId || !serverId.startsWith(idPrefix)) continue;
 
             const nameInput = document.getElementById(`${serverId}-name`);
             const endpointInput = document.getElementById(`${serverId}-endpoint`);
@@ -1505,10 +1504,17 @@ window.Utils = class Utils {
         if (formData.enableSal) {
             advancedFeatures.enable_sal = true;
         }
-        const llmTools = formData.enableTools ? this.getLlmTools() : [];
-        const llmTemplateVariables = formData.enableTools ? this.getLlmTemplateVariables() : null;
-        const mcpServers = (formData.enableTools || formData.mllmGptLiveToolEnabled) ? this.getMcpServers() : [];
-        if (formData.enableTools || llmTools.length > 0 || formData.mllmGptLiveToolEnabled || mcpServers.length > 0) {
+        const llmTools = (!formData.enableMllm && formData.enableTools) ? this.getLlmTools() : [];
+        const llmTemplateVariables = (!formData.enableMllm && formData.enableTools) ? this.getLlmTemplateVariables() : null;
+        const llmMcpServers = (!formData.enableMllm && formData.enableTools) ? this.getMcpServers() : [];
+        const mllmMcpServers = (formData.enableMllm && formData.enableMllmTools)
+            ? this.getMcpServers("mllm-mcp-servers-container", "mllm-mcp-server-")
+            : [];
+        if (
+            (!formData.enableMllm && formData.enableTools) ||
+            llmTools.length > 0 ||
+            (formData.enableMllm && formData.enableMllmTools)
+        ) {
             advancedFeatures.enable_tools = true;
         }
         // Prepare SAL config (optional - only included when enableSal is true)
@@ -1906,7 +1912,7 @@ window.Utils = class Utils {
                             model: formData.llmModel,
                             ...customParams
                         },
-                        ...(mcpServers.length > 0 ? { mcp_servers: mcpServers } : {}),
+                        ...(llmMcpServers.length > 0 ? { mcp_servers: llmMcpServers } : {}),
                         ...(llmTools.length > 0 ? { tools: llmTools } : {}),
                         ...(llmTemplateVariables ? { template_variables: llmTemplateVariables } : {})
                     }
@@ -1929,7 +1935,7 @@ window.Utils = class Utils {
                         ...(formData.mllmVendor === 'vertexai' ? {} : { api_key: formData.mllmApiKey }),
                         ...(formData.mllmGreetingMessage ? { greeting_message: formData.mllmGreetingMessage } : {}),
                         ...(formData.mllmVendor ? { vendor: this.isGptLiveVendor(formData.mllmVendor) ? 'openai_gpt_live' : formData.mllmVendor } : {}),
-                        ...(mcpServers.length > 0 ? { mcp_servers: mcpServers } : {}),
+                        ...(mllmMcpServers.length > 0 ? { mcp_servers: mllmMcpServers } : {}),
                         ...(formData.mllmMaxHistory ? { max_history: parseInt(formData.mllmMaxHistory, 10) } : {}),
                         input_modalities: safeMllmInputModalities,
                         output_modalities: safeMllmOutputModalities,
@@ -1978,7 +1984,7 @@ window.Utils = class Utils {
                                 alpha_selector: formData.mllmGptLiveAlphaSelector || 'quicksilver=v3',
                                 voice: formData.mllmGptLiveVoice || 'marin',
                                 ...(formData.mllmGptLivePrompt ? { prompt: formData.mllmGptLivePrompt } : {}),
-                                ...((formData.mllmGptLiveToolEnabled || (formData.enableTools && mcpServers.length > 0)) ? { tool_enabled: true } : {}),
+                                ...(formData.enableMllmTools ? { tool_enabled: true } : {}),
                                 ...mllmCustomParams
                             }
                         } : {

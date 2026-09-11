@@ -54,7 +54,7 @@ Basic agent configuration:
 - Configure WebSocket URL / API key (or Vertex ADC credentials)
 - GPT-Live uses REST `vendor: openai_gpt_live`, `wss://api.openai.com/v1/live/sessions`, preview join URL `https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2/projects/<APP_ID>/join`, and header `agora-feature: live-models`
 - Configure turn detection under the MLLM / Turn Detection controls (required for Azure OpenAI Realtime; not supported for GPT-Live)
-- Enable Tools in the LLM drawer to attach MCP servers as `mllm.mcp_servers`
+- Enable Tools in the MLLM drawer to attach MCP servers as `mllm.mcp_servers`
 
 ### 5. Advanced Configuration (Optional)
 

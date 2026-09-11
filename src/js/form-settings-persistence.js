@@ -171,6 +171,7 @@
         "turnV24EndOfSpeechMode",
         "farewellGracefulEnabled",
         "enableTools",
+        "enableMllmTools",
         "fillerWordsEnable",
         "fillerWordsContentMode",
         "inputImage",

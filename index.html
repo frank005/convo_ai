@@ -3502,9 +3502,7 @@
 
       // Helper to disable LLM/TTS/ASR when either MLLM or pipeline ID is active
       const disableLlmsForBackendOrMllm = () => {
-        // Keep the LLM drawer available in MLLM mode so MCP servers / custom tools
-        // can still be configured (v2.12 mllm.mcp_servers uses the same UI).
-        if (hasPipelineId && llmSettingsBtn) {
+        if (llmSettingsBtn) {
           llmSettingsBtn.disabled = true;
           llmSettingsBtn.classList.add('opacity-50');
         }
@@ -5197,13 +5195,13 @@
   <script src="src/js/AccessToken2.js"></script>
   <script src="src/js/RtcTokenBuilder2.js"></script>
   <script src="src/js/RtmTokenBuilder2.js"></script>
-  <script src="src/js/utils.js?v=1.6"></script>
+  <script src="src/js/utils.js?v=1.7"></script>
   <script src="src/js/api.js?v=1.7"></script>
   <script src="src/js/audio.js?v=1.2"></script>
   <script src="src/js/camera-preview.js?v=1.0"></script>
   <script src="src/js/conversational-ai-api.js?v=1.4"></script>
   <script src="src/js/subtitles.js?v=1.5"></script>
-  <script src="src/js/ui.js?v=1.6"></script>
+  <script src="src/js/ui.js?v=1.7"></script>
   <script src="src/js/asr.js?v=1.1"></script>
 
   <!-- Subtitle Overlay -->
@@ -6197,7 +6195,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <input type="checkbox" id="enableTools" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
             <span>Enable Tools</span>
           </label>
-          <div class="tooltip">Set advanced_features.enable_tools. Required for MCP tools (llm.mcp_servers or mllm.mcp_servers) and custom HTTPS tools (llm.tools). Custom tools are cascading LLM only.</div>
+          <div class="tooltip">Set advanced_features.enable_tools. Required for MCP tools (llm.mcp_servers) and custom HTTPS tools (llm.tools). Cascading LLM only — MLLM MCP is configured in the MLLM drawer.</div>
         </div>
         
         <!-- Custom LLM tools (v2.12) -->
@@ -6231,7 +6229,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           <div class="flex justify-between items-center mb-3">
             <div class="has-tooltip relative">
               <h3 class="text-lg font-semibold">MCP Servers</h3>
-              <div class="tooltip">Configure MCP servers for tool calling. Cascading LLM sends them as llm.mcp_servers; MLLM (v2.12) sends the same list as mllm.mcp_servers. Requires Enable Tools.</div>
+              <div class="tooltip">Configure MCP servers for cascading LLM tool calling (llm.mcp_servers). Requires Enable Tools. For MLLM agents, use Enable Tools in the MLLM drawer instead.</div>
             </div>
             <div class="has-tooltip relative">
               <button id="addMcpServerBtn" class="modern-btn modern-btn-primary text-sm">
@@ -7745,7 +7743,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             id="mllmVendor"
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
           >
-            <option value="openai">OpenAI Realtime API</option>
+            <option value="openai" selected>OpenAI Realtime API</option>
             <option value="openai-gpt-live">OpenAI GPT-Live</option>
             <option value="azure">Azure OpenAI Realtime</option>
             <option value="xai">xAI Grok</option>
@@ -7829,13 +7827,6 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               rows="3"
             ></textarea>
             <div class="tooltip">params.prompt. Session instructions that define assistant behavior. Distinct from OpenAI Realtime params.instructions.</div>
-          </div>
-          <div class="has-tooltip relative">
-            <label class="flex items-center gap-2">
-              <input type="checkbox" id="mllmGptLiveToolEnabled" class="rounded bg-gray-700 border-gray-600">
-              <span>Advertise MCP tools to GPT-Live (params.tool_enabled)</span>
-            </label>
-            <div class="tooltip">When checked, params.tool_enabled is true so GPT-Live can call MCP tools. Enable Tools in the LLM drawer and add MCP servers; those servers are sent as mllm.mcp_servers.</div>
           </div>
         </div>
 
@@ -8083,6 +8074,28 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             </div>
           </div>
           <div id="mllm-param-container" class="space-y-2"></div>
+        </div>
+        <div class="has-tooltip relative">
+          <label class="flex items-center">
+            <input type="checkbox" id="enableMllmTools" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
+            <span>Enable Tools</span>
+          </label>
+          <div class="tooltip">Applies to every MLLM vendor. Sets advanced_features.enable_tools and sends MCP servers as mllm.mcp_servers. Independent from the LLM drawer.</div>
+        </div>
+        <div id="mllmMcpServersConfig" class="hidden bg-gray-700 p-4 rounded-lg mt-4">
+          <div class="flex justify-between items-center mb-3">
+            <div class="has-tooltip relative">
+              <h3 class="text-lg font-semibold">MCP Servers</h3>
+              <div class="tooltip">Sent as mllm.mcp_servers for this MLLM agent. Independent from the LLM drawer MCP list.</div>
+            </div>
+            <div class="has-tooltip relative">
+              <button id="addMllmMcpServerBtn" class="modern-btn modern-btn-primary text-sm">
+                Add MCP Server
+              </button>
+              <div class="tooltip">Add a new MCP server for this MLLM agent.</div>
+            </div>
+          </div>
+          <div id="mllm-mcp-servers-container" class="space-y-2"></div>
         </div>
       </div>
     </div>
