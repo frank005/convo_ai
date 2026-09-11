@@ -172,6 +172,7 @@
         "farewellGracefulEnabled",
         "enableTools",
         "fillerWordsEnable",
+        "fillerWordsContentMode",
         "inputImage",
         "outputAudio",
         "turnsFetchAllPages",

@@ -843,17 +843,19 @@
                     <select id="thinkOnListeningAction" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500">
                       <option value="interrupt" selected>interrupt</option>
                       <option value="inject">inject</option>
+                      <option value="append">append</option>
                       <option value="ignore">ignore</option>
                     </select>
-                    <div class="tooltip">Behavior while agent is listening. Default is interrupt; use inject to queue without interrupting the current flow.</div>
+                    <div class="tooltip">Behavior while agent is listening. interrupt starts a new turn; inject queues in the current turn; append waits until the current LLM output finishes, then starts a new turn (v2.12).</div>
                   </div>
                   <div class="has-tooltip relative">
                     <label class="text-xs text-gray-300 block mb-1">on_thinking_action</label>
                     <select id="thinkOnThinkingAction" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500">
                       <option value="interrupt" selected>interrupt</option>
+                      <option value="append">append</option>
                       <option value="ignore">ignore</option>
                     </select>
-                    <div class="tooltip">Behavior while agent is thinking.</div>
+                    <div class="tooltip">Behavior while agent is thinking. append waits until the current turn's LLM output finishes, then starts a new turn (v2.12).</div>
                   </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
@@ -862,8 +864,9 @@
                     <select id="thinkOnSpeakingAction" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500">
                       <option value="ignore" selected>ignore</option>
                       <option value="interrupt">interrupt</option>
+                      <option value="append">append</option>
                     </select>
-                    <div class="tooltip">Behavior while agent is speaking.</div>
+                    <div class="tooltip">Behavior while agent is speaking. append waits until TTS for the current turn finishes, then starts a new turn (v2.12).</div>
                   </div>
                   <div class="has-tooltip relative">
                     <label class="text-xs text-gray-300 block mb-1">interruptable</label>
@@ -3354,6 +3357,7 @@
     const mllmUrl = document.getElementById('mllmUrl');
     const mllmApiKey = document.getElementById('mllmApiKey');
     const openaiMllmConfig = document.getElementById('openaiMllmConfig');
+    const openaiGptLiveConfig = document.getElementById('openaiGptLiveConfig');
     const geminiConfig = document.getElementById('geminiConfig');
     const vertexaiConfig = document.getElementById('vertexaiConfig');
     const customMllmConfig = document.getElementById('customMllmConfig');
@@ -3364,14 +3368,19 @@
             const selectedVendor = mllmVendor.value;
 
             openaiMllmConfig.classList.toggle('hidden', selectedVendor !== 'openai' && selectedVendor !== 'xai' && selectedVendor !== 'azure');
+            if (openaiGptLiveConfig) {
+                openaiGptLiveConfig.classList.toggle('hidden', selectedVendor !== 'openai-gpt-live' && selectedVendor !== 'openai_gpt_live');
+            }
             geminiConfig.classList.toggle('hidden', selectedVendor !== 'gemini');
             vertexaiConfig.classList.toggle('hidden', selectedVendor !== 'vertexai');
             customMllmConfig.classList.toggle('hidden', selectedVendor !== 'custom');
 
             const openaiUrlDefault = 'wss://api.openai.com/v1/realtime';
+            const gptLiveUrlDefault = 'wss://api.openai.com/v1/live/sessions';
+            const gptLiveUrlLegacy = 'wss://api.openai.com/v1/live';
             const xaiUrlDefault = 'wss://api.x.ai/v1/realtime';
             const azureUrlDefault = 'wss://your-resource-name.openai.azure.com/openai/v1/realtime?model=gpt-realtime-2';
-            const knownUrlDefaults = [openaiUrlDefault, xaiUrlDefault, azureUrlDefault];
+            const knownUrlDefaults = [openaiUrlDefault, gptLiveUrlDefault, gptLiveUrlLegacy, xaiUrlDefault, azureUrlDefault];
             const currentUrl = mllmUrl ? mllmUrl.value.trim() : '';
             const mllmOpenaiModel = document.getElementById('mllmOpenaiModel');
             const mllmOpenaiVoice = document.getElementById('mllmOpenaiVoice');
@@ -3408,6 +3417,10 @@
                         mllmOpenaiVoice.value = 'alloy';
                     }
                 }
+            } else if (selectedVendor === 'openai-gpt-live' || selectedVendor === 'openai_gpt_live') {
+                if (mllmUrl && (!currentUrl || knownUrlDefaults.includes(currentUrl))) mllmUrl.value = gptLiveUrlDefault;
+                if (mllmUrl) mllmUrl.placeholder = 'GPT-Live WebSocket URL (Required)';
+                if (mllmApiKey) mllmApiKey.placeholder = 'OpenAI API Key (Required, alpha-enabled)';
             } else {
                 if (mllmUrl && (!currentUrl || knownUrlDefaults.includes(currentUrl))) mllmUrl.value = openaiUrlDefault;
                 if (mllmUrl) mllmUrl.placeholder = 'MLLM WebSocket URL (Required)';
@@ -3489,7 +3502,9 @@
 
       // Helper to disable LLM/TTS/ASR when either MLLM or pipeline ID is active
       const disableLlmsForBackendOrMllm = () => {
-        if (llmSettingsBtn) {
+        // Keep the LLM drawer available in MLLM mode so MCP servers / custom tools
+        // can still be configured (v2.12 mllm.mcp_servers uses the same UI).
+        if (hasPipelineId && llmSettingsBtn) {
           llmSettingsBtn.disabled = true;
           llmSettingsBtn.classList.add('opacity-50');
         }
@@ -5182,14 +5197,14 @@
   <script src="src/js/AccessToken2.js"></script>
   <script src="src/js/RtcTokenBuilder2.js"></script>
   <script src="src/js/RtmTokenBuilder2.js"></script>
-  <script src="src/js/utils.js?v=1.3"></script>
-  <script src="src/js/api.js?v=1.3"></script>
+  <script src="src/js/utils.js?v=1.6"></script>
+  <script src="src/js/api.js?v=1.7"></script>
   <script src="src/js/audio.js?v=1.2"></script>
   <script src="src/js/camera-preview.js?v=1.0"></script>
-  <script src="src/js/conversational-ai-api.js?v=1.3"></script>
+  <script src="src/js/conversational-ai-api.js?v=1.4"></script>
   <script src="src/js/subtitles.js?v=1.5"></script>
-  <script src="src/js/ui.js?v=1.5"></script>
-  <script src="src/js/asr.js?v=1.0"></script>
+  <script src="src/js/ui.js?v=1.6"></script>
+  <script src="src/js/asr.js?v=1.1"></script>
 
   <!-- Subtitle Overlay -->
   <div id="subtitleOverlay" class="fixed inset-0 pointer-events-none hidden" style="z-index: 20001;">
@@ -5542,6 +5557,7 @@
                 <option value="microsoft">Microsoft</option>
                 <option value="deepgram">Deepgram</option>
                 <option value="openai">OpenAI</option>
+                <option value="gemini">Gemini</option>
                 <option value="speechmatics">Speechmatics</option>
                 <option value="assemblyai">AssemblyAI</option>
                 <option value="amazon">Amazon Transcribe</option>
@@ -5549,7 +5565,7 @@
                 <option value="sarvam">Sarvam</option>
                 <option value="custom">Custom</option>
               </select>
-              <div class="tooltip">Select the Automatic Speech Recognition (ASR) vendor. ARES keywords (v2.11) improve recognition of brand names and jargon and are only sent when vendor is ARES.</div>
+              <div class="tooltip">Select the Automatic Speech Recognition (ASR) vendor. Gemini ASR is a ConvoAI v2.12 provider. ARES keywords improve recognition of brand names and jargon and are only sent when vendor is ARES.</div>
             </div>
             <div class="has-tooltip relative">
               <select
@@ -5690,6 +5706,44 @@
                   placeholder="OpenAI API Key (Required)"
                 />
                 <div class="tooltip">API key for OpenAI ASR service.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gemini ASR Configuration (v2.12) -->
+          <div id="geminiAsrConfig" class="hidden mt-4">
+            <h4 class="text-sm font-semibold mb-2">Gemini ASR Settings</h4>
+            <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="has-tooltip relative">
+                <input
+                  id="geminiAsrKey"
+                  placeholder="Google Gemini API Key (Required)"
+                />
+                <div class="tooltip">Google Gemini API key used as asr.params.api_key. Generate a key in Google AI Studio.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="geminiAsrModel"
+                  placeholder="Model (Required)"
+                  value="gemini-3.5-transcribe-live"
+                />
+                <div class="tooltip">Gemini transcription model. Default: gemini-3.5-transcribe-live.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="geminiAsrSampleRate"
+                  type="number"
+                  placeholder="Sample rate (Hz)"
+                  value="16000"
+                />
+                <div class="tooltip">Audio sample rate in Hz for Gemini ASR (asr.params.sample_rate). Default 16000.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <label class="flex items-center gap-2 mt-2">
+                  <input type="checkbox" id="geminiAsrWordTimestamp" class="rounded bg-gray-700 border-gray-600" checked>
+                  <span>Word timestamps</span>
+                </label>
+                <div class="tooltip">When enabled, Gemini includes word-level timestamps in transcription results (asr.params.word_timestamp).</div>
               </div>
             </div>
           </div>
@@ -6028,9 +6082,17 @@
             <input type="checkbox" id="fillerWordsEnable" class="rounded bg-gray-700 border-gray-600">
             <span>Enable Filler Words</span>
           </label>
-          <div class="tooltip">Enable filler words to play phrases while waiting for LLM responses. Uses trigger (fixed_time) and content (static phrases).</div>
+          <div class="tooltip">Enable filler words to play phrases while waiting for LLM responses. Static mode uses a phrase list; generated mode (v2.12) creates a context-relevant phrase and falls back to the static list.</div>
         </div>
         <div id="fillerWordsConfig" class="space-y-2 hidden">
+          <div class="has-tooltip relative">
+            <label class="text-sm">Content mode</label>
+            <select id="fillerWordsContentMode" class="w-full p-2 rounded bg-gray-700">
+              <option value="static">static</option>
+              <option value="generated">generated</option>
+            </select>
+            <div class="tooltip">static picks from your phrase list. generated (v2.12) produces a context-relevant filler; Agora-hosted, no extra model or credentials. Static phrases are always required as fallback.</div>
+          </div>
           <div class="has-tooltip relative">
             <label class="text-sm">Phrases (comma-separated)</label>
             <textarea
@@ -6039,7 +6101,19 @@
               placeholder='e.g. "Please wait.", "Okay.", "Uh-huh."'
               rows="2"
             ></textarea>
-            <div class="tooltip">Static filler phrases. Max 100 phrases, each max 50 words.</div>
+            <div class="tooltip">Static filler phrases (content.static_config). Required for both static and generated modes. Max 100 phrases, each max 50 words.</div>
+          </div>
+          <div id="fillerWordsGeneratedConfig" class="space-y-2 hidden">
+            <div class="has-tooltip relative">
+              <label class="text-sm">Generated prompt (optional)</label>
+              <textarea
+                id="fillerWordsGeneratedPrompt"
+                class="resize-y min-h-[60px] w-full p-2 rounded bg-gray-700"
+                placeholder="Generate a short, natural filler phrase indicating you are processing the request. Do not answer the question directly."
+                rows="2"
+              ></textarea>
+              <div class="tooltip">generated_config.prompt. Used only when content.mode is generated. Leave blank to use the Agora default prompt.</div>
+            </div>
           </div>
           <div class="has-tooltip relative">
             <label class="text-sm">Response Wait (ms)</label>
@@ -6052,7 +6126,7 @@
               <option value="shuffle">Shuffle</option>
               <option value="round_robin">Round Robin</option>
             </select>
-            <div class="tooltip">static_config: shuffle (random, no repeat until all used) or round_robin (sequential).</div>
+            <div class="tooltip">static_config: shuffle (random, no repeat until all used) or round_robin (sequential). Also used as generated-mode fallback.</div>
           </div>
         </div>
         <div class="has-tooltip relative">
@@ -6123,15 +6197,41 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <input type="checkbox" id="enableTools" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
             <span>Enable Tools</span>
           </label>
-          <div class="tooltip">Enable MCP (Model Context Protocol) servers for tool calling.</div>
+          <div class="tooltip">Set advanced_features.enable_tools. Required for MCP tools (llm.mcp_servers or mllm.mcp_servers) and custom HTTPS tools (llm.tools). Custom tools are cascading LLM only.</div>
         </div>
         
+        <!-- Custom LLM tools (v2.12) -->
+        <div id="llmToolsConfig" class="hidden bg-gray-700 p-4 rounded-lg mt-4">
+          <div class="has-tooltip relative mb-3">
+            <h3 class="text-lg font-semibold">Custom LLM tools</h3>
+            <div class="tooltip">properties.llm.tools. Each tool needs type function, a function schema, and a server block (GET or POST HTTPS). Max 32 tools shared with MCP/built-in tools. Cascading LLM only — not used for MLLM.</div>
+          </div>
+          <div class="has-tooltip relative mb-3">
+            <textarea
+              id="llmToolsJson"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500 font-mono text-xs"
+              rows="8"
+              placeholder='[{"type":"function","function":{"name":"getOrderStatus","description":"Get shipping status by order ID.","parameters":{"type":"object","properties":{"order_id":{"type":"string"}},"required":["order_id"],"additionalProperties":false}},"execution":{"mode":"sync"},"server":{"method":"GET","url":"https://api.example.com/orders/{{args.order_id}}/status","timeout_ms":5000}}]'
+            ></textarea>
+            <div class="tooltip">JSON array of custom tool definitions sent as llm.tools. Leave empty to omit. Requires enable_tools.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <textarea
+              id="llmTemplateVariablesJson"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500 font-mono text-xs"
+              rows="3"
+              placeholder='{"api_key":"Bearer your-order-service-key"}'
+            ></textarea>
+            <div class="tooltip">Optional llm.template_variables object. Use {{template_variables.key}} in tool server headers/body/URL path. Do not put {{args.}} in headers.</div>
+          </div>
+        </div>
+
         <!-- MCP Servers Configuration -->
         <div id="mcpServersConfig" class="hidden bg-gray-700 p-4 rounded-lg mt-4">
           <div class="flex justify-between items-center mb-3">
             <div class="has-tooltip relative">
               <h3 class="text-lg font-semibold">MCP Servers</h3>
-              <div class="tooltip">Configure MCP servers for tool calling. Each server requires a name, endpoint, transport protocol, tool call availability, and allowed tools.</div>
+              <div class="tooltip">Configure MCP servers for tool calling. Cascading LLM sends them as llm.mcp_servers; MLLM (v2.12) sends the same list as mllm.mcp_servers. Requires Enable Tools.</div>
             </div>
             <div class="has-tooltip relative">
               <button id="addMcpServerBtn" class="modern-btn modern-btn-primary text-sm">
@@ -7646,13 +7746,14 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
           >
             <option value="openai">OpenAI Realtime API</option>
+            <option value="openai-gpt-live">OpenAI GPT-Live</option>
             <option value="azure">Azure OpenAI Realtime</option>
             <option value="xai">xAI Grok</option>
             <option value="gemini">Google Gemini Live</option>
             <option value="vertexai">Google Gemini Live (Vertex AI)</option>
             <option value="custom">Custom</option>
           </select>
-          <div class="tooltip">MLLM provider. Supports OpenAI Realtime, Azure OpenAI Realtime (v2.11), xAI Grok, Google Gemini Live, Vertex AI, and custom providers. Azure requires mllm.turn_detection.</div>
+          <div class="tooltip">MLLM provider. Supports OpenAI Realtime, OpenAI GPT-Live (vendor openai_gpt_live), Azure OpenAI Realtime, xAI Grok, Google Gemini Live, Vertex AI, and custom providers. Azure requires mllm.turn_detection. GPT-Live does not support turn detection.</div>
         </div>
         <div class="has-tooltip relative">
           <input
@@ -7688,6 +7789,54 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="openai">OpenAI</option>
           </select>
           <div class="tooltip">The request style for MLLM completion. Use 'openai' for OpenAI-compatible APIs or Google Gemini Live.</div>
+        </div>
+
+        <!-- OpenAI GPT-Live Specific Settings -->
+        <div id="openaiGptLiveConfig" class="hidden space-y-4">
+          <p class="text-xs text-amber-300">GPT-Live is an alpha preview on gpt-live-1-diamond-alpha. REST join uses https://partner.ai.agora.io/preview/... with header agora-feature: live-models. Turn detection and input audio transcription are not supported.</p>
+          <div class="has-tooltip relative">
+            <input
+              id="mllmGptLiveModel"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Model (e.g., gpt-live-1-diamond-alpha)"
+              value="gpt-live-1-diamond-alpha"
+            />
+            <div class="tooltip">params.model. Official default: gpt-live-1-diamond-alpha.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="mllmGptLiveAlphaSelector"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="alpha_selector (e.g., quicksilver=v3)"
+              value="quicksilver=v3"
+            />
+            <div class="tooltip">params.alpha_selector. Required by the GPT-Live v3 preview contract. Default: quicksilver=v3.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <input
+              id="mllmGptLiveVoice"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Voice (e.g., marin)"
+              value="marin"
+            />
+            <div class="tooltip">params.voice. Official default: marin.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <textarea
+              id="mllmGptLivePrompt"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+              placeholder="Session prompt / system instructions (optional)"
+              rows="3"
+            ></textarea>
+            <div class="tooltip">params.prompt. Session instructions that define assistant behavior. Distinct from OpenAI Realtime params.instructions.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <label class="flex items-center gap-2">
+              <input type="checkbox" id="mllmGptLiveToolEnabled" class="rounded bg-gray-700 border-gray-600">
+              <span>Advertise MCP tools to GPT-Live (params.tool_enabled)</span>
+            </label>
+            <div class="tooltip">When checked, params.tool_enabled is true so GPT-Live can call MCP tools. Enable Tools in the LLM drawer and add MCP servers; those servers are sent as mllm.mcp_servers.</div>
+          </div>
         </div>
 
         <!-- OpenAI Realtime Specific Settings -->

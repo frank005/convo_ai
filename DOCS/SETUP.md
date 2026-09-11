@@ -24,7 +24,7 @@ This guide will walk you through setting up and configuring the Conversational A
 The application supports two AI modes:
 
 - **LLM Mode**: Traditional text-based conversations (LLM + TTS + ASR)
-- **MLLM Mode**: Multimodal realtime conversations (OpenAI Realtime, Azure OpenAI Realtime, xAI Grok, Gemini Live, Vertex AI, or custom WebSocket)
+- **MLLM Mode**: Multimodal realtime conversations (OpenAI Realtime, OpenAI GPT-Live, Azure OpenAI Realtime, xAI Grok, Gemini Live, Vertex AI, or custom WebSocket)
 
 ### 3. Configure Your Agent
 
@@ -42,16 +42,19 @@ Basic agent configuration:
 
 **For LLM Mode:**
 
-- Configure LLM settings (URL, API key, model params, MCP servers)
+- Configure LLM settings (URL, API key, model params)
 - Configure TTS settings (vendor + voice)
-- Configure ASR settings (vendor + language)
+- Configure ASR settings (vendor + language; Gemini ASR is v2.12)
+- Enable Tools for custom HTTPS `llm.tools` and/or MCP servers
 - Add custom parameters for advanced model control
 
 **For MLLM Mode:**
 
-- Select MLLM vendor (OpenAI, Azure OpenAI Realtime, xAI, Gemini Live, Vertex AI, or Custom)
+- Select MLLM vendor (OpenAI Realtime, OpenAI GPT-Live, Azure OpenAI Realtime, xAI, Gemini Live, Vertex AI, or Custom)
 - Configure WebSocket URL / API key (or Vertex ADC credentials)
-- Configure turn detection under the MLLM / Turn Detection controls (required for Azure OpenAI Realtime)
+- GPT-Live uses REST `vendor: openai_gpt_live`, `wss://api.openai.com/v1/live/sessions`, preview join URL `https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2/projects/<APP_ID>/join`, and header `agora-feature: live-models`
+- Configure turn detection under the MLLM / Turn Detection controls (required for Azure OpenAI Realtime; not supported for GPT-Live)
+- Enable Tools in the LLM drawer to attach MCP servers as `mllm.mcp_servers`
 
 ### 5. Advanced Configuration (Optional)
 
@@ -61,6 +64,9 @@ Basic agent configuration:
 - Enable RTM for signaling, metrics, and error messages
 - Configure silence management and farewell graceful timeout
 - Add custom LLM / TTS / Avatar parameters
+- **Custom tools (v2.12)**: Enable Tools, then paste `llm.tools` JSON (cascading LLM only)
+- **Generated filler words (v2.12)**: Enable Filler Words and set content mode to generated; static phrases are still required as fallback
+- **Think `append` (v2.12)**: Send Custom Instruction actions can wait until the current turn finishes
 - Configure geofence or RTC encryption if needed
 
 For more details, see [FEATURES.md](./FEATURES.md).
@@ -137,4 +143,4 @@ Enable real-time subtitle display:
 - Check [VENDORS.md](./VENDORS.md) for vendor-specific configuration details
 - See [API.md](./API.md) for API integration information
 - Review [ARCHITECTURE.md](./ARCHITECTURE.md) for technical architecture details
-- See platform [release notes](https://docs.agora.io/en/ai/release-notes) for ConvoAI v2.11 / v2.10 / v2.9 changes
+- See platform [release notes](https://docs.agora.io/en/ai/release-notes) for ConvoAI v2.12 / v2.11 / v2.10 / v2.9 changes

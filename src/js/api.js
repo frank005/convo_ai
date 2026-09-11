@@ -1,9 +1,14 @@
 // API Module for Agora Conversational AI
 window.AgoraAPI = class AgoraAPI {
+    static PRODUCTION_BASE_URL = 'https://api.agora.io/api/conversational-ai-agent/v2';
+    // GPT-Live REST join is an early-access preview and must use this host, not api.agora.io.
+    static GPT_LIVE_PREVIEW_BASE_URL = 'https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2';
+
     constructor(appId) {
         this.appId = appId;
         // Get base URL from localStorage or use default
-        this.baseUrl = localStorage.getItem('agoraBaseUrl') || 'https://api.agora.io/api/conversational-ai-agent/v2';
+        this.baseUrl = localStorage.getItem('agoraBaseUrl') || AgoraAPI.PRODUCTION_BASE_URL;
+        this.gptLiveAgent = false;
     }
 
     // Method to update base URL
@@ -19,21 +24,46 @@ window.AgoraAPI = class AgoraAPI {
 
     // Method to reset to default base URL
     resetBaseUrl() {
-        const defaultUrl = 'https://api.agora.io/api/conversational-ai-agent/v2';
+        const defaultUrl = AgoraAPI.PRODUCTION_BASE_URL;
         this.baseUrl = defaultUrl;
         localStorage.removeItem('agoraBaseUrl');
         return defaultUrl;
     }
 
-    getAuthHeaders(customerId, customerSecret) {
+    _isGptLiveVendor(vendor) {
+        return vendor === 'openai_gpt_live' || vendor === 'openai-gpt-live';
+    }
+
+    _isGptLiveSession() {
+        if (this.gptLiveAgent) return true;
+        const enableMllm = document.getElementById('enableMllm');
+        const mllmVendor = document.getElementById('mllmVendor');
+        return !!(enableMllm && enableMllm.checked && mllmVendor && this._isGptLiveVendor(mllmVendor.value));
+    }
+
+    _agentRestBaseUrl() {
+        return this._isGptLiveSession() ? AgoraAPI.GPT_LIVE_PREVIEW_BASE_URL : this.baseUrl;
+    }
+
+    getAuthHeaders(customerId, customerSecret, options = {}) {
         if (!customerId || !customerSecret || !this.appId) {
             throw new Error("Missing required credentials");
         }
         const encoded = btoa(`${customerId}:${customerSecret}`);
-        return {
+        const headers = {
             "Content-Type": "application/json",
             "Authorization": `Basic ${encoded}`
         };
+        const liveModels = options.liveModels != null ? options.liveModels : this._isGptLiveSession();
+        if (liveModels) {
+            headers["agora-feature"] = "live-models";
+        }
+        return headers;
+    }
+
+    setLiveModelsHeader(enabled) {
+        this.liveModelsHeader = !!enabled;
+        this.gptLiveAgent = !!enabled;
     }
 
     /**
@@ -98,8 +128,14 @@ window.AgoraAPI = class AgoraAPI {
     }
 
     async createAgent(customerId, customerSecret, agentConfig) {
-        const headers = this.getAuthHeaders(customerId, customerSecret);
-        const url = `${this.baseUrl}/projects/${this.appId}/join`;
+        const mllmVendor = agentConfig && agentConfig.properties && agentConfig.properties.mllm
+            ? agentConfig.properties.mllm.vendor
+            : '';
+        const isGptLive = this._isGptLiveVendor(mllmVendor);
+        this.setLiveModelsHeader(isGptLive);
+        const headers = this.getAuthHeaders(customerId, customerSecret, { liveModels: isGptLive });
+        const baseUrl = isGptLive ? AgoraAPI.GPT_LIVE_PREVIEW_BASE_URL : this.baseUrl;
+        const url = `${baseUrl}/projects/${this.appId}/join`;
 
         // If agentConfig.properties.advanced_features.enable_rtm is true and agentConfig.properties.agent_rtm_uid is set,
         // also add agent_rtm_uid to the top-level of the request body (for compatibility)
@@ -124,7 +160,7 @@ window.AgoraAPI = class AgoraAPI {
 
     async updateAgent(customerId, customerSecret, agentId, updatePayload) {
         const headers = this.getAuthHeaders(customerId, customerSecret);
-        const url = `${this.baseUrl}/projects/${this.appId}/agents/${agentId}/update`;
+        const url = `${this._agentRestBaseUrl()}/projects/${this.appId}/agents/${agentId}/update`;
 
         const operation = 'Failed to update agent';
         try {
@@ -141,7 +177,7 @@ window.AgoraAPI = class AgoraAPI {
 
     async stopAgent(customerId, customerSecret, agentId) {
         const headers = this.getAuthHeaders(customerId, customerSecret);
-        const url = `${this.baseUrl}/projects/${this.appId}/agents/${agentId}/leave`;
+        const url = `${this._agentRestBaseUrl()}/projects/${this.appId}/agents/${agentId}/leave`;
 
         const operation = 'Failed to stop agent';
         try {
@@ -157,7 +193,7 @@ window.AgoraAPI = class AgoraAPI {
 
     async queryAgent(customerId, customerSecret, agentId) {
         const headers = this.getAuthHeaders(customerId, customerSecret);
-        const url = `${this.baseUrl}/projects/${this.appId}/agents/${agentId}`;
+        const url = `${this._agentRestBaseUrl()}/projects/${this.appId}/agents/${agentId}`;
 
         const operation = 'Failed to query agent';
         try {
@@ -183,7 +219,7 @@ window.AgoraAPI = class AgoraAPI {
         if (params.limit) queryParams.append('limit', params.limit);
         if (params.cursor) queryParams.append('cursor', params.cursor);
         
-        const url = `${this.baseUrl}/projects/${this.appId}/agents${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+        const url = `${this._agentRestBaseUrl()}/projects/${this.appId}/agents${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
 
         const operation = 'Failed to list agents';
         try {
@@ -199,7 +235,7 @@ window.AgoraAPI = class AgoraAPI {
 
     async getAgentHistory(customerId, customerSecret, agentId) {
         const headers = this.getAuthHeaders(customerId, customerSecret);
-        const url = `${this.baseUrl}/projects/${this.appId}/agents/${agentId}/history`;
+        const url = `${this._agentRestBaseUrl()}/projects/${this.appId}/agents/${agentId}/history`;
 
         const operation = 'Failed to get agent history';
         try {
@@ -223,7 +259,7 @@ window.AgoraAPI = class AgoraAPI {
             queryParams.append('page_size', Math.min(50, Math.max(1, params.page_size)));
         }
         const qs = queryParams.toString();
-        const url = `${this.baseUrl}/projects/${this.appId}/agents/${agentId}/turns${qs ? `?${qs}` : ''}`;
+        const url = `${this._agentRestBaseUrl()}/projects/${this.appId}/agents/${agentId}/turns${qs ? `?${qs}` : ''}`;
 
         const operation = 'Failed to query conversation turns';
         try {
@@ -273,8 +309,36 @@ window.AgoraAPI = class AgoraAPI {
     }
 
     async sendCustomInstruction(customerId, customerSecret, agentId, instruction, options = {}) {
+        if (window.subtitleManager && window.subtitleManager.isEnabled && window.ConversationalAIAPI) {
+            try {
+                const conversationalAI = window.ConversationalAIAPI.getInstance();
+                if (conversationalAI && conversationalAI.isReady() && typeof conversationalAI.think === 'function') {
+                    const agoraRtcUidElement = document.getElementById('agoraRtcUid');
+                    const agentRtcUid = agoraRtcUidElement ? agoraRtcUidElement.value.trim() : null;
+                    if (agentRtcUid) {
+                        await conversationalAI.think(agentRtcUid, {
+                            text: instruction,
+                            onListeningAction: options.on_listening_action,
+                            onThinkingAction: options.on_thinking_action,
+                            onSpeakingAction: options.on_speaking_action,
+                            interruptable: options.interruptable,
+                            metadata: options.metadata
+                        });
+                        return {
+                            success: true,
+                            method: 'conversational-ai-toolkit',
+                            agent_id: agentId,
+                            agent_rtc_uid: agentRtcUid,
+                            timestamp: Date.now()
+                        };
+                    }
+                }
+            } catch (toolkitError) {
+                console.warn('Conversational AI toolkit think failed, falling back to REST API:', toolkitError);
+            }
+        }
         const headers = this.getAuthHeaders(customerId, customerSecret);
-        const url = `${this.baseUrl}/projects/${this.appId}/agents/${encodeURIComponent(agentId)}/think`;
+        const url = `${this._agentRestBaseUrl()}/projects/${this.appId}/agents/${encodeURIComponent(agentId)}/think`;
         const body = {
             text: instruction,
             ...(options.on_listening_action ? { on_listening_action: options.on_listening_action } : {}),
@@ -297,8 +361,34 @@ window.AgoraAPI = class AgoraAPI {
     }
 
     async broadcastMessage(customerId, customerSecret, agentId, text, priority, interruptable) {
+        if (window.subtitleManager && window.subtitleManager.isEnabled && window.ConversationalAIAPI) {
+            try {
+                const conversationalAI = window.ConversationalAIAPI.getInstance();
+                if (conversationalAI && conversationalAI.isReady() && typeof conversationalAI.speak === 'function') {
+                    const agoraRtcUidElement = document.getElementById('agoraRtcUid');
+                    const agentRtcUid = agoraRtcUidElement ? agoraRtcUidElement.value.trim() : null;
+                    if (agentRtcUid) {
+                        const toolkitPriority = String(priority || 'INTERRUPT').toLowerCase();
+                        await conversationalAI.speak(agentRtcUid, {
+                            text,
+                            priority: toolkitPriority === 'interrupt' ? 'interrupted' : toolkitPriority,
+                            interruptable
+                        });
+                        return {
+                            success: true,
+                            method: 'conversational-ai-toolkit',
+                            agent_id: agentId,
+                            agent_rtc_uid: agentRtcUid,
+                            timestamp: Date.now()
+                        };
+                    }
+                }
+            } catch (toolkitError) {
+                console.warn('Conversational AI toolkit speak failed, falling back to REST API:', toolkitError);
+            }
+        }
         const headers = this.getAuthHeaders(customerId, customerSecret);
-        const url = `${this.baseUrl}/projects/${this.appId}/agents/${encodeURIComponent(agentId)}/speak`;
+        const url = `${this._agentRestBaseUrl()}/projects/${this.appId}/agents/${encodeURIComponent(agentId)}/speak`;
         const body = { text, priority, interruptable };
         const operation = 'Failed to broadcast message';
         try {
@@ -342,7 +432,7 @@ window.AgoraAPI = class AgoraAPI {
 
         // Fallback to REST API method
         const headers = this.getAuthHeaders(customerId, customerSecret);
-        const url = `${this.baseUrl}/projects/${this.appId}/agents/${encodeURIComponent(agentId)}/interrupt`;
+        const url = `${this._agentRestBaseUrl()}/projects/${this.appId}/agents/${encodeURIComponent(agentId)}/interrupt`;
         const operation = 'Failed to interrupt agent';
         try {
             console.log('Using REST API interrupt method');
@@ -361,7 +451,7 @@ window.AgoraAPI = class AgoraAPI {
 
     // Outbound Call APIs
     async startOutboundCall(customerId, customerSecret, callConfig) {
-        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const headers = this.getAuthHeaders(customerId, customerSecret, { liveModels: false });
         const url = `${this.baseUrl}/projects/${this.appId}/call`;
 
         const operation = 'Failed to start outbound call';
@@ -378,7 +468,7 @@ window.AgoraAPI = class AgoraAPI {
     }
 
     async getOutboundCallStatus(customerId, customerSecret, agentId) {
-        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const headers = this.getAuthHeaders(customerId, customerSecret, { liveModels: false });
         const url = `${this.baseUrl}/projects/${this.appId}/calls/${agentId}`;
 
         const operation = 'Failed to get outbound call status';
@@ -394,7 +484,7 @@ window.AgoraAPI = class AgoraAPI {
     }
 
     async hangUpOutboundCall(customerId, customerSecret, agentId) {
-        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const headers = this.getAuthHeaders(customerId, customerSecret, { liveModels: false });
         const url = `${this.baseUrl}/projects/${this.appId}/calls/${agentId}/hangup`;
 
         const operation = 'Failed to hang up outbound call';
@@ -410,7 +500,7 @@ window.AgoraAPI = class AgoraAPI {
     }
 
     async getCallRecords(customerId, customerSecret, params = {}) {
-        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const headers = this.getAuthHeaders(customerId, customerSecret, { liveModels: false });
         const queryParams = new URLSearchParams();
         if (params.number) queryParams.append('number', params.number);
         if (params.from_time) queryParams.append('from_time', params.from_time);
@@ -435,7 +525,7 @@ window.AgoraAPI = class AgoraAPI {
 
     // Phone Number Management APIs
     async listPhoneNumbers(customerId, customerSecret) {
-        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const headers = this.getAuthHeaders(customerId, customerSecret, { liveModels: false });
         const url = `${this.baseUrl}/phone-numbers`;
 
         const operation = 'Failed to list phone numbers';
@@ -451,7 +541,7 @@ window.AgoraAPI = class AgoraAPI {
     }
 
     async importPhoneNumber(customerId, customerSecret, importConfig) {
-        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const headers = this.getAuthHeaders(customerId, customerSecret, { liveModels: false });
         const url = `${this.baseUrl}/phone-numbers`;
 
         const operation = 'Failed to import phone number';
@@ -468,7 +558,7 @@ window.AgoraAPI = class AgoraAPI {
     }
 
     async getPhoneNumberInfo(customerId, customerSecret, phoneNumber) {
-        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const headers = this.getAuthHeaders(customerId, customerSecret, { liveModels: false });
         const url = `${this.baseUrl}/phone-numbers/${encodeURIComponent(phoneNumber)}`;
 
         const operation = 'Failed to get phone number info';
@@ -484,7 +574,7 @@ window.AgoraAPI = class AgoraAPI {
     }
 
     async updatePhoneNumber(customerId, customerSecret, phoneNumber, updateConfig) {
-        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const headers = this.getAuthHeaders(customerId, customerSecret, { liveModels: false });
         const url = `${this.baseUrl}/phone-numbers/${encodeURIComponent(phoneNumber)}`;
 
         const operation = 'Failed to update phone number';
@@ -501,7 +591,7 @@ window.AgoraAPI = class AgoraAPI {
     }
 
     async deletePhoneNumber(customerId, customerSecret, phoneNumber) {
-        const headers = this.getAuthHeaders(customerId, customerSecret);
+        const headers = this.getAuthHeaders(customerId, customerSecret, { liveModels: false });
         const url = `${this.baseUrl}/phone-numbers/${encodeURIComponent(phoneNumber)}`;
 
         const operation = 'Failed to delete phone number';

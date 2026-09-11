@@ -238,6 +238,8 @@ window.UI = class UI {
                 this.handleEnableToolsChange();
             } else if (e.target.id === "fillerWordsEnable") {
                 this.handleFillerWordsEnableChange();
+            } else if (e.target.id === "fillerWordsContentMode") {
+                this.handleFillerWordsContentModeChange();
             }
         });
         
@@ -2446,6 +2448,10 @@ window.UI = class UI {
             mcpServersConfig.classList.add("hidden");
             mcpServersConfig.style.display = "none";
         }
+        const llmToolsConfig = document.getElementById("llmToolsConfig");
+        if (llmToolsConfig) {
+            llmToolsConfig.classList.toggle("hidden", !isChecked);
+        }
     }
 
     handleFillerWordsEnableChange() {
@@ -2453,6 +2459,15 @@ window.UI = class UI {
         const fillerWordsConfig = document.getElementById("fillerWordsConfig");
         if (!fillerWordsEnable || !fillerWordsConfig) return;
         fillerWordsConfig.classList.toggle("hidden", !fillerWordsEnable.checked);
+        this.handleFillerWordsContentModeChange();
+    }
+
+    handleFillerWordsContentModeChange() {
+        const mode = document.getElementById("fillerWordsContentMode");
+        const generatedConfig = document.getElementById("fillerWordsGeneratedConfig");
+        if (!generatedConfig) return;
+        const showGenerated = !!(mode && mode.value === "generated");
+        generatedConfig.classList.toggle("hidden", !showGenerated);
     }
 
     addMcpServerField() {

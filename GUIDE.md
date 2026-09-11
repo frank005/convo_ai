@@ -369,6 +369,8 @@ _The agent configuration form allows you to set up all aspects of your conversat
   ```
 - Greeting: `Hi, I'm Emma! What can I help you with?`
 - Max History: `32`
+- **Custom tools (v2.12)**: Enable Tools, then paste HTTPS `llm.tools` JSON. See [Call custom tools](https://docs.agora.io/en/ai/build/custom-model-integration/custom-tools).
+- **Filler words (v2.12)**: Enable Filler Words under LLM settings. Static mode uses your phrase list; generated mode produces a context-relevant phrase and falls back to that list. See [Talking while waiting](https://docs.agora.io/en/ai/build/shape-the-conversation/filler-words).
 
 **Custom Parameters:**
 
@@ -412,6 +414,7 @@ Agora supports multiple ASR vendors:
 - [Agora ASR (ares)](https://docs.agora.io/en/conversational-ai/models/asr/ares) — optional [ARES keywords](https://docs.agora.io/en/ai/build/shape-the-conversation/asr-keywords) (v2.11)
 - [Microsoft ASR](https://docs.agora.io/en/conversational-ai/models/asr/microsoft)
 - [Deepgram ASR](https://docs.agora.io/en/conversational-ai/models/asr/deepgram)
+- [Gemini ASR](https://docs.agora.io/en/ai/models/asr/gemini) (v2.12)
 - [OpenAI ASR](https://docs.agora.io/en/conversational-ai/models/asr/openai)
 - [Speechmatics ASR](https://docs.agora.io/en/conversational-ai/models/asr/speechmatics)
 - [AssemblyAI ASR](https://docs.agora.io/en/conversational-ai/models/asr/assembly-ai)
@@ -953,19 +956,19 @@ The code is modular. Swap LLM providers without touching the audio pipeline. Cha
 
 ### What's Supported
 
-Aligned with the current playground dropdowns (ConvoAI Engine **v2.11**):
+Aligned with the current playground dropdowns (ConvoAI Engine **v2.12**):
 
 **LLM Providers**: OpenAI, Azure OpenAI, Google Gemini, Google Vertex AI, Anthropic Claude, Amazon Bedrock, Dify, custom endpoints
 
-**MLLM Providers**: OpenAI Realtime, Azure OpenAI Realtime, xAI Grok, Gemini Live, Vertex AI, Custom WebSocket
+**MLLM Providers**: OpenAI Realtime, [OpenAI GPT-Live](https://docs.agora.io/en/ai/models/mllm/openai-gpt-live) (`openai_gpt_live`, preview REST host `partner.ai.agora.io/preview/...`, header `agora-feature: live-models`), Azure OpenAI Realtime, xAI Grok, Gemini Live, Vertex AI, Custom WebSocket
 
 **TTS Vendors**: Microsoft Azure, ElevenLabs, MiniMax, Deepgram, Murf, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Google, Amazon Polly, Sarvam, Gradium, Mistral, Typecast, Generic HTTP (OpenAI protocol)
 
-**ASR Vendors**: Agora (ARES, with optional keywords), Microsoft Azure, Deepgram, OpenAI, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, Custom
+**ASR Vendors**: Agora (ARES, with optional keywords), Microsoft Azure, Deepgram, OpenAI, Gemini, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, Custom
 
 **AI Avatars**: Akool, LiveAvatar (HeyGen), Generic, LemonSlice (UI option → REST `generic`), Anam, HeyGen (Deprecated)
 
-**Features**: Turn Detection v2.4 SoS/EoS (including Manual), v2.6 interruption object, Manual Turn Control via RTM (v2.9), managed credential presets (v2.9), MCP servers, SAL, silence/farewell config, SIP/phone management, live subtitles, camera preview, device management, local RTC+RTM tokens (60 min TTL)
+**Features**: Turn Detection v2.4 SoS/EoS (including Manual), v2.6 interruption object, Manual Turn Control via RTM (v2.9), managed credential presets (v2.9), custom LLM tools and generated filler words (v2.12), MCP servers (LLM and MLLM), SAL, silence/farewell config, SIP/phone management, live subtitles, camera preview, device management, local RTC+RTM tokens (60 min TTL)
 
 ### Production Notes
 

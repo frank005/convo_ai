@@ -895,6 +895,54 @@ class ConversationalAIAPI extends EventHelper {
         }
     }
 
+    async speak(agentUserId, message = {}) {
+        const { rtmEngine } = this.getCfg();
+        const text = message.text != null ? String(message.text) : '';
+        if (!text) {
+            throw new Error('Speak text is required');
+        }
+        const priority = (message.priority || 'interrupted').toString().toLowerCase();
+        const payload = {
+            text,
+            priority: priority === 'interrupt' ? 'interrupted' : priority,
+            interruptable: message.interruptable !== false
+        };
+        const publishOptions = {
+            channelType: 'USER',
+            customType: 'user.speak'
+        };
+        try {
+            await rtmEngine.publish(agentUserId.toString(), JSON.stringify(payload), publishOptions);
+        } catch (error) {
+            console.error('Failed to send speak message:', error);
+            throw new Error('Failed to send speak request');
+        }
+    }
+
+    async think(agentUserId, message = {}) {
+        const { rtmEngine } = this.getCfg();
+        const text = message.text != null ? String(message.text) : '';
+        if (!text) {
+            throw new Error('Think text is required');
+        }
+        const payload = { text };
+        if (message.onListeningAction) payload.on_listening_action = message.onListeningAction;
+        if (message.onThinkingAction) payload.on_thinking_action = message.onThinkingAction;
+        if (message.onSpeakingAction) payload.on_speaking_action = message.onSpeakingAction;
+        if (typeof message.interruptable === 'boolean') payload.interruptable = message.interruptable;
+        if (message.metadata && typeof message.metadata === 'object') payload.metadata = message.metadata;
+        const publishOptions = {
+            channelType: 'USER',
+            customType: 'user.think'
+        };
+        try {
+            await rtmEngine.publish(agentUserId.toString(), JSON.stringify(payload), publishOptions);
+        } catch (error) {
+            console.error('Failed to send think message:', error);
+            throw new Error('Failed to send think request');
+        }
+    }
+
     createManualTurnRequestId(prefix) {
         return `${prefix}-req-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     }

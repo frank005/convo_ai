@@ -128,6 +128,11 @@ window.Utils = class Utils {
         const mllmOpenaiTranscriptionLanguage = document.getElementById("mllmOpenaiTranscriptionLanguage") ? document.getElementById("mllmOpenaiTranscriptionLanguage").value.trim() : "";
         const mllmOpenaiTranscriptionModel = document.getElementById("mllmOpenaiTranscriptionModel") ? document.getElementById("mllmOpenaiTranscriptionModel").value.trim() : "";
         const mllmOpenaiTranscriptionPrompt = document.getElementById("mllmOpenaiTranscriptionPrompt") ? document.getElementById("mllmOpenaiTranscriptionPrompt").value.trim() : "";
+        const mllmGptLiveVoice = document.getElementById("mllmGptLiveVoice") ? document.getElementById("mllmGptLiveVoice").value.trim() : "";
+        const mllmGptLiveModel = document.getElementById("mllmGptLiveModel") ? document.getElementById("mllmGptLiveModel").value.trim() : "";
+        const mllmGptLiveAlphaSelector = document.getElementById("mllmGptLiveAlphaSelector") ? document.getElementById("mllmGptLiveAlphaSelector").value.trim() : "";
+        const mllmGptLivePrompt = document.getElementById("mllmGptLivePrompt") ? document.getElementById("mllmGptLivePrompt").value.trim() : "";
+        const mllmGptLiveToolEnabled = document.getElementById("mllmGptLiveToolEnabled") ? document.getElementById("mllmGptLiveToolEnabled").checked : false;
         const geminiModel = document.getElementById("geminiModel") ? document.getElementById("geminiModel").value.trim() : "";
         const geminiVoice = document.getElementById("geminiVoice") ? document.getElementById("geminiVoice").value.trim() : "";
         const geminiInstructions = document.getElementById("geminiInstructions") ? document.getElementById("geminiInstructions").value.trim() : "";
@@ -254,6 +259,8 @@ window.Utils = class Utils {
             fMsg: document.getElementById("fMsg").value.trim(),
             fillerWordsEnable: document.getElementById("fillerWordsEnable") ? document.getElementById("fillerWordsEnable").checked : false,
             fillerWords: document.getElementById("fillerWords") ? document.getElementById("fillerWords").value.trim() : '',
+            fillerWordsContentMode: document.getElementById("fillerWordsContentMode") ? document.getElementById("fillerWordsContentMode").value : 'static',
+            fillerWordsGeneratedPrompt: document.getElementById("fillerWordsGeneratedPrompt") ? document.getElementById("fillerWordsGeneratedPrompt").value.trim() : '',
             fillerWordsResponseWaitMs: document.getElementById("fillerWordsResponseWaitMs") ? document.getElementById("fillerWordsResponseWaitMs").value : '1500',
             fillerWordsSelectionRule: document.getElementById("fillerWordsSelectionRule") ? document.getElementById("fillerWordsSelectionRule").value : 'shuffle',
             sMsgContent: document.getElementById("sMsgContent").value.trim(),
@@ -289,6 +296,11 @@ window.Utils = class Utils {
             mllmOpenaiTranscriptionLanguage: mllmOpenaiTranscriptionLanguage,
             mllmOpenaiTranscriptionModel: mllmOpenaiTranscriptionModel,
             mllmOpenaiTranscriptionPrompt: mllmOpenaiTranscriptionPrompt,
+            mllmGptLiveVoice: mllmGptLiveVoice,
+            mllmGptLiveModel: mllmGptLiveModel,
+            mllmGptLiveAlphaSelector: mllmGptLiveAlphaSelector,
+            mllmGptLivePrompt: mllmGptLivePrompt,
+            mllmGptLiveToolEnabled: mllmGptLiveToolEnabled,
             geminiModel: geminiModel,
             geminiVoice: geminiVoice,
             geminiInstructions: geminiInstructions,
@@ -743,6 +755,15 @@ window.Utils = class Utils {
                     if (!asrLanguage) {
                         throw new Error('ASR Language is required');
                     }
+                } else if (asrVendor === 'gemini') {
+                    const geminiAsrKey = document.getElementById('geminiAsrKey') ? document.getElementById('geminiAsrKey').value.trim() : '';
+                    const geminiAsrModel = document.getElementById('geminiAsrModel') ? document.getElementById('geminiAsrModel').value.trim() : '';
+                    if (!geminiAsrKey) {
+                        throw new Error('Gemini ASR API Key is required');
+                    }
+                    if (!geminiAsrModel) {
+                        throw new Error('Gemini ASR Model is required');
+                    }
                 }
             }
         }
@@ -766,6 +787,11 @@ window.Utils = class Utils {
             if (data.dataChannel === 'rtm' && !data.enableRtm) {
                 throw new Error('RTM must be enabled to use RTM data channel');
             }
+        }
+
+        if (data.enableTools) {
+            this.getLlmTools();
+            this.getLlmTemplateVariables();
         }
     }
 
@@ -941,6 +967,66 @@ window.Utils = class Utils {
         return servers;
     }
 
+    static isGptLiveVendor(vendor) {
+        return vendor === 'openai_gpt_live' || vendor === 'openai-gpt-live';
+    }
+
+    static parseJsonField(raw, label, { expectArray = false, expectObject = false } = {}) {
+        const text = (raw || '').trim();
+        if (!text) return expectArray ? [] : null;
+        let parsed;
+        try {
+            parsed = JSON.parse(text);
+        } catch (e) {
+            throw new Error(`${label} must be valid JSON`);
+        }
+        if (expectArray && !Array.isArray(parsed)) {
+            throw new Error(`${label} must be a JSON array`);
+        }
+        if (expectObject && (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed))) {
+            throw new Error(`${label} must be a JSON object`);
+        }
+        return parsed;
+    }
+
+    static getLlmTools() {
+        const el = document.getElementById('llmToolsJson');
+        const tools = this.parseJsonField(el ? el.value : '', 'Custom LLM tools', { expectArray: true });
+        return Array.isArray(tools) ? tools : [];
+    }
+
+    static getLlmTemplateVariables() {
+        const el = document.getElementById('llmTemplateVariablesJson');
+        return this.parseJsonField(el ? el.value : '', 'LLM template variables', { expectObject: true });
+    }
+
+    static buildFillerWordsConfig(formData) {
+        if (!formData.fillerWordsEnable || !formData.fillerWords) return {};
+        const phrases = formData.fillerWords.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        if (phrases.length === 0) return {};
+        const responseWaitMs = parseInt(formData.fillerWordsResponseWaitMs, 10) || 1500;
+        const selectionRule = formData.fillerWordsSelectionRule || 'shuffle';
+        const mode = formData.fillerWordsContentMode === 'generated' ? 'generated' : 'static';
+        const content = {
+            mode,
+            static_config: { phrases, selection_rule: selectionRule }
+        };
+        if (mode === 'generated') {
+            const generatedConfig = { fallback_strategy: 'static' };
+            if (formData.fillerWordsGeneratedPrompt) {
+                generatedConfig.prompt = formData.fillerWordsGeneratedPrompt;
+            }
+            content.generated_config = generatedConfig;
+        }
+        return {
+            filler_words: {
+                enable: true,
+                trigger: { mode: 'fixed_time', fixed_time_config: { response_wait_ms: Math.min(10000, Math.max(100, responseWaitMs)) } },
+                content
+            }
+        };
+    }
+
     static parseParamValue(type, value) {
         switch (type) {
             case 'array':
@@ -1015,6 +1101,9 @@ window.Utils = class Utils {
             if (presetKey.startsWith('openai_tts_')) {
                 block.vendor = 'openai';
                 if (model) block.params.model = model;
+                const openaiTtsUrl = block.params.url || block.params.base_url || 'https://api.openai.com/v1';
+                if (!block.params.url) block.params.url = openaiTtsUrl;
+                if (!block.params.base_url) block.params.base_url = openaiTtsUrl;
                 delete block.params.api_key;
             } else if (presetKey.startsWith('minimax_speech_')) {
                 block.vendor = 'minimax';
@@ -1154,6 +1243,28 @@ window.Utils = class Utils {
                     api_key: openaiAsrKey
                 },
                 language: asrLanguage
+            };
+        } else if (vendor === 'gemini') {
+            const geminiAsrKey = document.getElementById('geminiAsrKey') ? document.getElementById('geminiAsrKey').value.trim() : '';
+            const geminiAsrModel = document.getElementById('geminiAsrModel') ? document.getElementById('geminiAsrModel').value.trim() : 'gemini-3.5-transcribe-live';
+            const geminiAsrSampleRateRaw = document.getElementById('geminiAsrSampleRate') ? document.getElementById('geminiAsrSampleRate').value.trim() : '16000';
+            const geminiAsrSampleRate = parseInt(geminiAsrSampleRateRaw, 10);
+            const geminiAsrWordTimestamp = document.getElementById('geminiAsrWordTimestamp') ? document.getElementById('geminiAsrWordTimestamp').checked : true;
+            const params = {
+                api_key: geminiAsrKey,
+                model: geminiAsrModel || 'gemini-3.5-transcribe-live',
+                word_timestamp: geminiAsrWordTimestamp
+            };
+            if (Number.isFinite(geminiAsrSampleRate) && geminiAsrSampleRate > 0) {
+                params.sample_rate = geminiAsrSampleRate;
+            }
+            if (asrLanguage) {
+                params.language = asrLanguage;
+            }
+            return {
+                vendor: 'gemini',
+                language: asrLanguage,
+                params
             };
         } else if (vendor === 'speechmatics') {
             const speechmaticsAsrKey = document.getElementById('speechmaticsAsrKey').value.trim();
@@ -1313,6 +1424,8 @@ window.Utils = class Utils {
      */
     static buildMllmTurnDetection(formData) {
         if (!formData.enableMllm) return null;
+        // GPT-Live does not support turn detection.
+        if (this.isGptLiveVendor(formData.mllmVendor)) return null;
         // Azure OpenAI Realtime requires mllm.turn_detection; default to server_vad when the UI toggle is off.
         if (!formData.turnDetectionEnabled) {
             return formData.mllmVendor === 'azure' ? { mode: 'server_vad' } : null;
@@ -1392,8 +1505,10 @@ window.Utils = class Utils {
         if (formData.enableSal) {
             advancedFeatures.enable_sal = true;
         }
-        // Enable tools if MCP servers are configured
-        if (formData.enableTools) {
+        const llmTools = formData.enableTools ? this.getLlmTools() : [];
+        const llmTemplateVariables = formData.enableTools ? this.getLlmTemplateVariables() : null;
+        const mcpServers = (formData.enableTools || formData.mllmGptLiveToolEnabled) ? this.getMcpServers() : [];
+        if (formData.enableTools || llmTools.length > 0 || formData.mllmGptLiveToolEnabled || mcpServers.length > 0) {
             advancedFeatures.enable_tools = true;
         }
         // Prepare SAL config (optional - only included when enableSal is true)
@@ -1758,6 +1873,7 @@ window.Utils = class Utils {
                 ...(formData.enableMllm ? {} : { asr: this.buildAsrConfig(formData) }), // Only include ASR if MLLM is not enabled
                 ...(turnDetection && !formData.enableMllm ? { turn_detection: turnDetection } : {}),
                 ...(interruption ? { interruption: interruption } : {}),
+                ...(formData.enableMllm ? {} : this.buildFillerWordsConfig(formData)),
                 ...(parameters ? { parameters: parameters } : {}),
                 ...(formData.enableMllm ? {} : { // Only include LLM/TTS if MLLM is not enabled
                     llm: {
@@ -1783,19 +1899,6 @@ window.Utils = class Utils {
                                 : {};
                         })(),
                         failure_message: formData.fMsg,
-                        ...(formData.fillerWordsEnable && formData.fillerWords ? (() => {
-                            const phrases = formData.fillerWords.split(',').map(s => s.trim()).filter(s => s.length > 0);
-                            if (phrases.length === 0) return {};
-                            const responseWaitMs = parseInt(formData.fillerWordsResponseWaitMs, 10) || 1500;
-                            const selectionRule = formData.fillerWordsSelectionRule || 'shuffle';
-                            return {
-                                filler_words: {
-                                    enable: true,
-                                    trigger: { mode: 'fixed_time', fixed_time_config: { response_wait_ms: Math.min(10000, Math.max(100, responseWaitMs)) } },
-                                    content: { mode: 'static', static_config: { phrases, selection_rule: selectionRule } }
-                                }
-                            };
-                        })() : {}),
                         max_history: 32,
                         input_modalities: formData.inputModalities,
                         output_modalities: formData.outputModalities,
@@ -1803,13 +1906,9 @@ window.Utils = class Utils {
                             model: formData.llmModel,
                             ...customParams
                         },
-                        ...(formData.enableTools ? (() => {
-                            const mcpServers = this.getMcpServers();
-                            if (mcpServers.length > 0) {
-                                return { mcp_servers: mcpServers };
-                            }
-                            return {};
-                        })() : {})
+                        ...(mcpServers.length > 0 ? { mcp_servers: mcpServers } : {}),
+                        ...(llmTools.length > 0 ? { tools: llmTools } : {}),
+                        ...(llmTemplateVariables ? { template_variables: llmTemplateVariables } : {})
                     }
                 }),
                 ...(formData.enableMllm ? { // Include MLLM if enabled
@@ -1829,7 +1928,8 @@ window.Utils = class Utils {
                         ...((formData.mllmVendor === 'vertexai' || formData.mllmVendor === 'gemini') ? {} : { url: formData.mllmUrl }),
                         ...(formData.mllmVendor === 'vertexai' ? {} : { api_key: formData.mllmApiKey }),
                         ...(formData.mllmGreetingMessage ? { greeting_message: formData.mllmGreetingMessage } : {}),
-                        ...(formData.mllmVendor ? { vendor: formData.mllmVendor } : {}),
+                        ...(formData.mllmVendor ? { vendor: this.isGptLiveVendor(formData.mllmVendor) ? 'openai_gpt_live' : formData.mllmVendor } : {}),
+                        ...(mcpServers.length > 0 ? { mcp_servers: mcpServers } : {}),
                         ...(formData.mllmMaxHistory ? { max_history: parseInt(formData.mllmMaxHistory, 10) } : {}),
                         input_modalities: safeMllmInputModalities,
                         output_modalities: safeMllmOutputModalities,
@@ -1870,6 +1970,15 @@ window.Utils = class Utils {
                                 language: 'en',
                                 sample_rate: 24000,
                                 ...(formData.mllmOpenaiInstructions ? { instructions: formData.mllmOpenaiInstructions } : {}),
+                                ...mllmCustomParams
+                            }
+                        } : this.isGptLiveVendor(formData.mllmVendor) ? {
+                            params: {
+                                model: formData.mllmGptLiveModel || 'gpt-live-1-diamond-alpha',
+                                alpha_selector: formData.mllmGptLiveAlphaSelector || 'quicksilver=v3',
+                                voice: formData.mllmGptLiveVoice || 'marin',
+                                ...(formData.mllmGptLivePrompt ? { prompt: formData.mllmGptLivePrompt } : {}),
+                                ...((formData.mllmGptLiveToolEnabled || (formData.enableTools && mcpServers.length > 0)) ? { tool_enabled: true } : {}),
                                 ...mllmCustomParams
                             }
                         } : {
@@ -2060,12 +2169,14 @@ window.Utils = class Utils {
                     }
                 };
             } else if (formData.vendor === "openai") {
+                const openaiTtsUrl = document.getElementById("openaiBaseUrl")?.value.trim() || "https://api.openai.com/v1";
                 config.properties.tts = {
                     vendor: "openai",
                     ...(skip_patterns ? { skip_patterns } : {}),
                     params: {
                         api_key: document.getElementById("openaiTtsKey").value,
-                        ...(document.getElementById("openaiBaseUrl")?.value ? { base_url: document.getElementById("openaiBaseUrl").value.trim() } : {}),
+                        base_url: openaiTtsUrl,
+                        url: openaiTtsUrl,
                         model: document.getElementById("openaiModel").value,
                         voice: document.getElementById("openaiVoice").value,
                         ...(document.getElementById("openaiInstructions")?.value ? { instructions: document.getElementById("openaiInstructions").value } : {}),

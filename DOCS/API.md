@@ -9,6 +9,7 @@ The application integrates with Agora's Conversational AI API endpoints to manag
 Create a new conversational AI agent.
 
 - **Endpoint:** `POST /api/conversational-ai-agent/v2/projects/{appId}/join`
+- **GPT-Live:** `POST https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2/projects/{appId}/join` with header `agora-feature: live-models`
 - **Description:** Creates a new agent and joins it to the specified channel
 
 ### Update Agent
@@ -48,14 +49,14 @@ Retrieve conversation history for an agent.
 
 ## Communication & Control
 
-### Send Broadcast Message
+### Send Broadcast Message (Speak)
 
-Send a broadcast message to agents with priority control.
+Send text for the agent to speak, bypassing the LLM.
 
-- **Endpoint:** `POST /api/conversational-ai-agent/v2/projects/{appId}/agents/{agentId}/broadcast`
-- **Description:** Sends a broadcast message to the agent with configurable interruptability settings
+- **Endpoint:** `POST /api/conversational-ai-agent/v2/projects/{appId}/agents/{agentId}/speak`
+- **Description:** Plays the text through TTS with priority (`INTERRUPT` / `APPEND` / `IGNORE`) and interruptability
 - **Maximum Message Size:** 512 bytes
-- **Features:** Priority control, interruptability settings, real-time status feedback
+- **Playground:** REST `/speak` with toolkit `speak` over RTM when subtitles/RTM are ready
 
 ### Interrupt Agent
 
@@ -84,7 +85,8 @@ Inject custom text into the agent pipeline.
 
 - **Endpoint:** `POST /api/conversational-ai-agent/v2/projects/{appId}/agents/{agentId}/think`
 - **Description:** Sends instruction text with optional action overrides
-- **Default:** `on_listening_action` is **`interrupt`**. Set **`inject`** to queue without interrupting the current flow.
+- **Default:** `on_listening_action` is **`interrupt`**. Set **`inject`** to queue without interrupting, or **`append`** (v2.12) to wait until the current turn's LLM output finishes, then start a new turn. `on_thinking_action` and `on_speaking_action` also accept `append`.
+- **Playground:** REST `/think` with toolkit `think` over RTM when subtitles/RTM are ready.
 
 ### Query Conversation Turns
 
@@ -113,7 +115,7 @@ All REST calls in `src/js/api.js` format error bodies through `Utils.formatConvo
 
 - **112 turns finished:** post-session batched turn data (alternative to paginated REST query).
 
-See [release notes](https://docs.agora.io/en/ai/release-notes) for platform changelog details (v2.11 Typecast TTS, Azure OpenAI Realtime MLLM, ARES `asr.keywords`; v2.10 Gradium / Mistral / `generic_http` TTS, LemonSlice avatar docs; v2.9 manual turn toolkit APIs).
+See [release notes](https://docs.agora.io/en/ai/release-notes) for platform changelog details (v2.12 custom `llm.tools`, generated filler words, think `append`, MLLM MCP, Gemini ASR; v2.11 Typecast TTS, Azure OpenAI Realtime MLLM, ARES `asr.keywords`; v2.10 Gradium / Mistral / `generic_http` TTS).
 
 ### Avatar payload notes
 

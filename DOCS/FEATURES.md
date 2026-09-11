@@ -25,6 +25,7 @@
 
 - **Multimodal LLM (MLLM) Mode**
   - Real-time multimodal conversations with OpenAI Realtime API
+  - **OpenAI GPT-Live** via REST `vendor: openai_gpt_live` (`wss://api.openai.com/v1/live/sessions`, preview join host `partner.ai.agora.io/preview/...`, header `agora-feature: live-models`)
   - **Azure OpenAI Realtime (v2.11)** via `vendor: azure` (`mllm.turn_detection` required)
   - **xAI Grok** via `wss://api.x.ai/v1/realtime`
   - **Gemini Live** realtime WebSocket support
@@ -134,9 +135,10 @@ Dropdown vendors (see [VENDORS.md](./VENDORS.md) for field details):
 
 Dropdown vendors:
 
-- **Agora (ARES)**, **Microsoft**, **Deepgram**, **OpenAI**, **Speechmatics**
+- **Agora (ARES)**, **Microsoft**, **Deepgram**, **OpenAI**, **Gemini (v2.12)**, **Speechmatics**
 - **AssemblyAI**, **Amazon Transcribe**, **Google**, **Sarvam**, **Custom**
 - **ARES keywords (v2.11)**: `asr.keywords` list (max 128) to improve recognition of brand names, product names, and jargon. Only sent when vendor is ARES.
+- **Gemini ASR (v2.12)**: `vendor: gemini` with `gemini-3.5-transcribe-live`, sample rate, and optional word timestamps
 
 ### Voice Activity Detection (VAD) & Turn Detection
 
@@ -193,11 +195,21 @@ Dropdown vendors:
 
   - Tool calling support with multiple server configurations
   - Configure multiple MCP servers with unique names and endpoints
-  - Transport protocol options: http, sse, streamable_http
-  - Tool availability toggle (is_tool_call_available)
+  - Transport protocol: streamable_http
   - Allowed tools configuration (comma-separated list or "*" for all)
-  - Automatic enable_tools flag in advanced_features when enabled
-  - mcp_servers array added to LLM configuration in JSON output
+  - Automatic `advanced_features.enable_tools` when enabled
+  - Cascading LLM: `llm.mcp_servers`; MLLM (v2.12): `mllm.mcp_servers` (GPT-Live also sets `params.tool_enabled`)
+
+- **Custom LLM tools (v2.12)**
+
+  - `llm.tools` HTTPS GET/POST function tools plus optional `llm.template_variables`
+  - Requires `advanced_features.enable_tools`; cascading LLM only (not MLLM)
+
+- **Generated filler words (v2.12)**
+
+  - `properties.filler_words` (not nested under `llm`)
+  - `content.mode`: `static` or `generated`
+  - Generated mode uses Agora-hosted phrases with sibling `static_config` as fallback
 
 - **SAL (Speaker Adaptation Library)**
 
@@ -248,7 +260,12 @@ Dropdown vendors:
 
 - **Think (Custom Instruction)**
   - Inject instruction text into the agent pipeline
-  - Configurable `on_listening_action` / `on_speaking_action` and metadata
+  - Configurable `on_listening_action` / `on_thinking_action` / `on_speaking_action` (`interrupt`, `inject`, `append`, `ignore`) and metadata
+  - Client toolkit `think` over RTM when available, otherwise REST `/think`
+
+- **Speak (Broadcast)**
+  - Bypass the LLM and play text through TTS
+  - Client toolkit `speak` over RTM when available, otherwise REST `/speak`
 
 - **Query Conversation Turns**
   - Paginated turn metrics (last 7 days)

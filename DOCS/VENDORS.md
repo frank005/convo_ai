@@ -244,12 +244,35 @@ High-quality voice synthesis with customizable speed and silence control.
 
 ## MLLM Vendor Support
 
-Playground MLLM vendors: `openai`, `azure`, `xai`, `gemini`, `vertexai`, `custom`.
+Playground MLLM vendors: `openai`, `openai-gpt-live` (REST `openai_gpt_live`), `azure`, `xai`, `gemini`, `vertexai`, `custom`.
 
 ### OpenAI Realtime
 
 **Vendor name:** `openai`  
 WebSocket realtime multimodal conversations. Supports richer turn-detection modes including `semantic_vad`.
+
+### OpenAI GPT-Live
+
+End-to-end voice MLLM (no separate ASR/LLM/TTS). Enabling MLLM still disables ASR, TTS, and cascading LLM (the LLM drawer stays available to configure MCP servers). GPT-Live does not support turn detection or input audio transcription.
+
+**Vendor name:** UI `openai-gpt-live` → REST `openai_gpt_live`
+
+**Required fields:**
+
+- API Key (alpha-enabled OpenAI key)
+- WebSocket URL: `wss://api.openai.com/v1/live/sessions`
+
+**Params:**
+
+- `model`: `gpt-live-1-diamond-alpha`
+- `alpha_selector`: `quicksilver=v3`
+- `voice`: `marin` (default)
+- `prompt`: optional session instructions
+- `tool_enabled`: advertise MCP tools to GPT-Live
+
+Join REST is required to use the GPT-Live preview host `https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2` with header `agora-feature: live-models` (not `api.agora.io`). The playground routes GPT-Live join / query / leave / speak / think automatically. MCP servers configured under Enable Tools are attached as `mllm.mcp_servers`.
+
+**Docs:** [OpenAI GPT-Live](https://docs.agora.io/en/ai/models/mllm/openai-gpt-live)
 
 ### Azure OpenAI Realtime (v2.11)
 
@@ -404,7 +427,7 @@ Legacy Interactive Avatar path (`vendor: heygen`). Prefer **LiveAvatar** for new
 
 ## ASR Vendor Support
 
-Playground ASR vendors: `ares`, `microsoft`, `deepgram`, `openai`, `speechmatics`, `assemblyai`, `amazon`, `google`, `sarvam`, `custom`.
+Playground ASR vendors: `ares`, `microsoft`, `deepgram`, `openai`, `gemini`, `speechmatics`, `assemblyai`, `amazon`, `google`, `sarvam`, `custom`.
 
 ### Agora ASR (ARES)
 
@@ -425,6 +448,18 @@ High-accuracy speech recognition with region and language configuration; phrase 
 ### Deepgram ASR
 
 Real-time streaming speech recognition with models such as nova-3 / nova-2 and optional custom URL. Strong multi-language coverage via ISO language codes.
+
+### Gemini ASR (v2.12)
+
+Google Gemini real-time streaming transcription.
+
+**Vendor name:** `gemini`
+
+**Required:** `params.api_key`, `params.model` (`gemini-3.5-transcribe-live`)
+
+**Optional / defaults:** `language` (`en-US`), `params.sample_rate` (`16000`), `params.word_timestamp`
+
+**Docs:** [Gemini ASR](https://docs.agora.io/en/ai/models/asr/gemini)
 
 ### OpenAI ASR
 
