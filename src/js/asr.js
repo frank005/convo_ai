@@ -58,6 +58,7 @@ class ASRManager {
         const deepgramAsrConfig = document.getElementById('deepgramAsrConfig');
         const openaiAsrConfig = document.getElementById('openaiAsrConfig');
         const geminiAsrConfig = document.getElementById('geminiAsrConfig');
+        const smallestaiAsrConfig = document.getElementById('smallestaiAsrConfig');
         const speechmaticsAsrConfig = document.getElementById('speechmaticsAsrConfig');
         const assemblyaiAsrConfig = document.getElementById('assemblyaiAsrConfig');
         const amazonAsrConfig = document.getElementById('amazonAsrConfig');
@@ -78,6 +79,7 @@ class ASRManager {
         if (deepgramAsrConfig) deepgramAsrConfig.classList.add('hidden');
         if (openaiAsrConfig) openaiAsrConfig.classList.add('hidden');
         if (geminiAsrConfig) geminiAsrConfig.classList.add('hidden');
+        if (smallestaiAsrConfig) smallestaiAsrConfig.classList.add('hidden');
         if (speechmaticsAsrConfig) speechmaticsAsrConfig.classList.add('hidden');
         if (assemblyaiAsrConfig) assemblyaiAsrConfig.classList.add('hidden');
         if (amazonAsrConfig) amazonAsrConfig.classList.add('hidden');
@@ -105,6 +107,8 @@ class ASRManager {
             openaiAsrConfig.classList.remove('hidden');
         } else if (selectedVendor === 'gemini' && geminiAsrConfig) {
             geminiAsrConfig.classList.remove('hidden');
+        } else if (selectedVendor === 'smallestai' && smallestaiAsrConfig) {
+            smallestaiAsrConfig.classList.remove('hidden');
         } else if (selectedVendor === 'speechmatics' && speechmaticsAsrConfig) {
             speechmaticsAsrConfig.classList.remove('hidden');
         } else if (selectedVendor === 'assemblyai' && assemblyaiAsrConfig) {
@@ -524,6 +528,26 @@ class ASRManager {
                 langSelect.appendChild(option);
             });
             console.log('Added', geminiLanguages.length, 'Gemini ASR language options');
+
+        } else if (vendor === 'smallestai') {
+            const smallestLanguages = [
+                { value: 'en', label: 'English (en)' },
+                { value: 'zh', label: 'Chinese (zh)' },
+                { value: 'hi', label: 'Hindi (hi)' },
+                { value: 'es', label: 'Spanish (es)' },
+                { value: 'fr', label: 'French (fr)' },
+                { value: 'de', label: 'German (de)' },
+                { value: 'ja', label: 'Japanese (ja)' },
+                { value: 'ko', label: 'Korean (ko)' },
+                { value: 'pt', label: 'Portuguese (pt)' }
+            ];
+            smallestLanguages.forEach(lang => {
+                const option = document.createElement('option');
+                option.value = lang.value;
+                option.textContent = lang.label;
+                if (lang.value === 'en') option.selected = true;
+                langSelect.appendChild(option);
+            });
             
         } else if (vendor === 'speechmatics') {
             console.log('Populating Speechmatics languages');

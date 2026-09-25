@@ -1658,6 +1658,17 @@ window.UI = class UI {
             "typecastVoiceIdBlock",
             "typecastModelBlock"
         ];
+        const smallestaiTtsBlocks = [
+            "smallestaiTtsKeyBlock",
+            "smallestaiTtsUrlBlock",
+            "smallestaiTtsModelBlock",
+            "smallestaiTtsVoiceBlock",
+            "smallestaiTtsSampleRateBlock",
+            "smallestaiTtsSpeedBlock",
+            "smallestaiTtsLanguageBlock",
+            "smallestaiTtsNumberLanguageBlock",
+            "smallestaiTtsMathBlock"
+        ];
         const genericHttpBlocks = [
             "genericHttpUrlBlock",
             "genericHttpTtsKeyBlock",
@@ -1793,6 +1804,13 @@ window.UI = class UI {
             const element = document.getElementById(block);
             if (element) {
                 element.classList.toggle("hidden", vendor !== "typecast");
+            }
+        });
+
+        smallestaiTtsBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "smallestai");
             }
         });
 
@@ -2466,6 +2484,10 @@ window.UI = class UI {
         const isChecked = enableMllmTools.checked;
         mllmMcpServersConfig.classList.toggle("hidden", !isChecked);
         mllmMcpServersConfig.style.display = isChecked ? "" : "none";
+        const mllmToolsConfig = document.getElementById("mllmToolsConfig");
+        if (mllmToolsConfig) {
+            mllmToolsConfig.classList.toggle("hidden", !isChecked);
+        }
     }
 
     handleFillerWordsEnableChange() {

@@ -64,6 +64,8 @@ window.Utils = class Utils {
             ttsKey = document.getElementById("mistralTtsKey") ? document.getElementById("mistralTtsKey").value.trim() : '';
         } else if (ttsVendor === "typecast") {
             ttsKey = document.getElementById("typecastTtsKey") ? document.getElementById("typecastTtsKey").value.trim() : '';
+        } else if (ttsVendor === "smallestai") {
+            ttsKey = document.getElementById("smallestaiTtsKey") ? document.getElementById("smallestaiTtsKey").value.trim() : '';
         } else if (ttsVendor === "generic_http") {
             ttsKey = document.getElementById("genericHttpTtsKey") ? document.getElementById("genericHttpTtsKey").value.trim() : '';
         }
@@ -260,6 +262,8 @@ window.Utils = class Utils {
             fillerWords: document.getElementById("fillerWords") ? document.getElementById("fillerWords").value.trim() : '',
             fillerWordsContentMode: document.getElementById("fillerWordsContentMode") ? document.getElementById("fillerWordsContentMode").value : 'static',
             fillerWordsGeneratedPrompt: document.getElementById("fillerWordsGeneratedPrompt") ? document.getElementById("fillerWordsGeneratedPrompt").value.trim() : '',
+            fillerWordsContextMessageLimit: document.getElementById("fillerWordsContextMessageLimit") ? document.getElementById("fillerWordsContextMessageLimit").value : '1',
+            fillerWordsHistoryCharacterLimit: document.getElementById("fillerWordsHistoryCharacterLimit") ? document.getElementById("fillerWordsHistoryCharacterLimit").value : '1000',
             fillerWordsResponseWaitMs: document.getElementById("fillerWordsResponseWaitMs") ? document.getElementById("fillerWordsResponseWaitMs").value : '1500',
             fillerWordsSelectionRule: document.getElementById("fillerWordsSelectionRule") ? document.getElementById("fillerWordsSelectionRule").value : 'shuffle',
             sMsgContent: document.getElementById("sMsgContent").value.trim(),
@@ -703,6 +707,9 @@ window.Utils = class Utils {
                     if (!typecastTtsKey) throw new Error('Typecast API Key is required');
                     if (!typecastVoiceId) throw new Error('Typecast Voice ID is required');
                     if (!typecastModel) throw new Error('Typecast Model is required');
+                } else if (ttsVendor === 'smallestai') {
+                    const smallestaiTtsKey = document.getElementById('smallestaiTtsKey') ? document.getElementById('smallestaiTtsKey').value.trim() : '';
+                    if (!smallestaiTtsKey) throw new Error('Smallest AI TTS API Key is required');
                 } else if (ttsVendor === 'generic_http') {
                     const genericHttpUrl = document.getElementById('genericHttpUrl') ? document.getElementById('genericHttpUrl').value.trim() : '';
                     const genericHttpTtsKey = document.getElementById('genericHttpTtsKey') ? document.getElementById('genericHttpTtsKey').value.trim() : '';
@@ -763,6 +770,11 @@ window.Utils = class Utils {
                     if (!geminiAsrModel) {
                         throw new Error('Gemini ASR Model is required');
                     }
+                } else if (asrVendor === 'smallestai') {
+                    const smallestaiAsrKey = document.getElementById('smallestaiAsrKey') ? document.getElementById('smallestaiAsrKey').value.trim() : '';
+                    if (!smallestaiAsrKey) {
+                        throw new Error('Smallest AI ASR API Key is required');
+                    }
                 }
             }
         }
@@ -791,6 +803,9 @@ window.Utils = class Utils {
         if (data.enableTools) {
             this.getLlmTools();
             this.getLlmTemplateVariables();
+        }
+        if (data.enableMllmTools) {
+            this.getMllmTools();
         }
     }
 
@@ -994,6 +1009,12 @@ window.Utils = class Utils {
         return Array.isArray(tools) ? tools : [];
     }
 
+    static getMllmTools() {
+        const el = document.getElementById('mllmToolsJson');
+        const tools = this.parseJsonField(el ? el.value : '', 'Custom MLLM tools', { expectArray: true });
+        return Array.isArray(tools) ? tools : [];
+    }
+
     static getLlmTemplateVariables() {
         const el = document.getElementById('llmTemplateVariablesJson');
         return this.parseJsonField(el ? el.value : '', 'LLM template variables', { expectObject: true });
@@ -1014,6 +1035,14 @@ window.Utils = class Utils {
             const generatedConfig = { fallback_strategy: 'static' };
             if (formData.fillerWordsGeneratedPrompt) {
                 generatedConfig.prompt = formData.fillerWordsGeneratedPrompt;
+            }
+            const contextMessageLimit = parseInt(formData.fillerWordsContextMessageLimit, 10);
+            const historyCharacterLimit = parseInt(formData.fillerWordsHistoryCharacterLimit, 10);
+            if (Number.isFinite(contextMessageLimit)) {
+                generatedConfig.context_message_limit = Math.min(6, Math.max(1, contextMessageLimit));
+            }
+            if (Number.isFinite(historyCharacterLimit)) {
+                generatedConfig.history_character_limit = Math.min(10000, Math.max(0, historyCharacterLimit));
             }
             content.generated_config = generatedConfig;
         }
@@ -1265,6 +1294,36 @@ window.Utils = class Utils {
                 language: asrLanguage,
                 params
             };
+        } else if (vendor === 'smallestai') {
+            const boolString = (id) => {
+                const el = document.getElementById(id);
+                return el && el.checked ? 'true' : 'false';
+            };
+            const smallestaiAsrKey = document.getElementById('smallestaiAsrKey') ? document.getElementById('smallestaiAsrKey').value.trim() : '';
+            const smallestaiAsrUrl = document.getElementById('smallestaiAsrUrl') ? document.getElementById('smallestaiAsrUrl').value.trim() : '';
+            const smallestaiAsrEncoding = document.getElementById('smallestaiAsrEncoding') ? document.getElementById('smallestaiAsrEncoding').value.trim() : 'linear16';
+            const smallestaiAsrKeywords = document.getElementById('smallestaiAsrKeywords') ? document.getElementById('smallestaiAsrKeywords').value.trim() : '';
+            const sampleRate = parseInt(document.getElementById('smallestaiAsrSampleRate') ? document.getElementById('smallestaiAsrSampleRate').value : '16000', 10);
+            const eouTimeout = parseInt(document.getElementById('smallestaiAsrEouTimeout') ? document.getElementById('smallestaiAsrEouTimeout').value : '', 10);
+            const params = {
+                api_key: smallestaiAsrKey,
+                word_timestamps: boolString('smallestaiAsrWordTimestamps'),
+                sentence_timestamps: boolString('smallestaiAsrSentenceTimestamps'),
+                punctuate: boolString('smallestaiAsrPunctuate'),
+                endpointing: boolString('smallestaiAsrEndpointing'),
+                diarize: boolString('smallestaiAsrDiarize')
+            };
+            if (smallestaiAsrUrl) params.url = smallestaiAsrUrl;
+            if (smallestaiAsrEncoding) params.encoding = smallestaiAsrEncoding;
+            if (asrLanguage) params.language = asrLanguage;
+            if (smallestaiAsrKeywords) params.keywords = smallestaiAsrKeywords;
+            if (Number.isFinite(sampleRate) && sampleRate > 0) params.sample_rate = sampleRate;
+            if (Number.isFinite(eouTimeout)) params.eou_timeout_ms = eouTimeout;
+            return {
+                vendor: 'smallestai',
+                language: asrLanguage,
+                params
+            };
         } else if (vendor === 'speechmatics') {
             const speechmaticsAsrKey = document.getElementById('speechmaticsAsrKey').value.trim();
             const speechmaticsAsrLanguage = document.getElementById('speechmaticsAsrLanguage').value.trim();
@@ -1505,6 +1564,7 @@ window.Utils = class Utils {
             advancedFeatures.enable_sal = true;
         }
         const llmTools = (!formData.enableMllm && formData.enableTools) ? this.getLlmTools() : [];
+        const mllmTools = (formData.enableMllm && formData.enableMllmTools) ? this.getMllmTools() : [];
         const llmTemplateVariables = (!formData.enableMllm && formData.enableTools) ? this.getLlmTemplateVariables() : null;
         const llmMcpServers = (!formData.enableMllm && formData.enableTools) ? this.getMcpServers() : [];
         const mllmMcpServers = (formData.enableMllm && formData.enableMllmTools)
@@ -1513,7 +1573,8 @@ window.Utils = class Utils {
         if (
             (!formData.enableMllm && formData.enableTools) ||
             llmTools.length > 0 ||
-            (formData.enableMllm && formData.enableMllmTools)
+            (formData.enableMllm && formData.enableMllmTools) ||
+            mllmTools.length > 0
         ) {
             advancedFeatures.enable_tools = true;
         }
@@ -1936,6 +1997,7 @@ window.Utils = class Utils {
                         ...(formData.mllmGreetingMessage ? { greeting_message: formData.mllmGreetingMessage } : {}),
                         ...(formData.mllmVendor ? { vendor: this.isGptLiveVendor(formData.mllmVendor) ? 'openai_gpt_live' : formData.mllmVendor } : {}),
                         ...(mllmMcpServers.length > 0 ? { mcp_servers: mllmMcpServers } : {}),
+                        ...(mllmTools.length > 0 ? { tools: mllmTools } : {}),
                         ...(formData.mllmMaxHistory ? { max_history: parseInt(formData.mllmMaxHistory, 10) } : {}),
                         input_modalities: safeMllmInputModalities,
                         output_modalities: safeMllmOutputModalities,
@@ -2407,6 +2469,32 @@ window.Utils = class Utils {
                         voice_id: document.getElementById("typecastVoiceId").value.trim(),
                         model: document.getElementById("typecastModel").value.trim()
                     }
+                };
+            } else if (formData.vendor === "smallestai") {
+                const smallestParams = {
+                    api_key: document.getElementById("smallestaiTtsKey").value
+                };
+                const smallestUrl = document.getElementById("smallestaiTtsUrl")?.value.trim();
+                const smallestModel = document.getElementById("smallestaiTtsModel")?.value.trim();
+                const smallestVoice = document.getElementById("smallestaiTtsVoice")?.value.trim();
+                const smallestLanguage = document.getElementById("smallestaiTtsLanguage")?.value.trim();
+                const smallestNumberLanguage = document.getElementById("smallestaiTtsNumberLanguage")?.value.trim();
+                const smallestSampleRate = parseInt(document.getElementById("smallestaiTtsSampleRate")?.value || '', 10);
+                const smallestSpeed = parseFloat(document.getElementById("smallestaiTtsSpeed")?.value || '');
+                if (smallestUrl) smallestParams.url = smallestUrl;
+                if (smallestModel) smallestParams.model = smallestModel;
+                if (smallestVoice) smallestParams.voice_id = smallestVoice;
+                if (smallestLanguage) smallestParams.language = smallestLanguage;
+                if (smallestNumberLanguage) smallestParams.number_pronunciation_language = smallestNumberLanguage;
+                if (Number.isFinite(smallestSampleRate)) smallestParams.sample_rate = smallestSampleRate;
+                if (Number.isFinite(smallestSpeed)) smallestParams.speed = smallestSpeed;
+                if (document.getElementById("smallestaiTtsMathNotation")?.checked) {
+                    smallestParams.math_notation = true;
+                }
+                config.properties.tts = {
+                    vendor: "smallestai",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: smallestParams
                 };
             } else if (formData.vendor === "generic_http") {
                 const genericHttpParams = {};

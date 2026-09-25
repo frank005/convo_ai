@@ -25,7 +25,7 @@
 
 - **Multimodal LLM (MLLM) Mode**
   - Real-time multimodal conversations with OpenAI Realtime API
-  - **OpenAI GPT-Live** via REST `vendor: openai_gpt_live` (`wss://api.openai.com/v1/live/sessions`, preview join host `partner.ai.agora.io/preview/...`, header `agora-feature: live-models`)
+  - **OpenAI GPT-Live** via REST `vendor: openai_gpt_live` (`wss://api.openai.com/v1/live/sessions`, preview join host `partner.ai.agora.io/preview/...`, header `agora-feature: live-models`). Enable Tools sends `mllm.mcp_servers` and v2.13 `mllm.tools`.
   - **Azure OpenAI Realtime (v2.11)** via `vendor: azure` (`mllm.turn_detection` required)
   - **xAI Grok** via `wss://api.x.ai/v1/realtime`
   - **Gemini Live** realtime WebSocket support
@@ -128,17 +128,18 @@ Dropdown vendors (see [VENDORS.md](./VENDORS.md) for field details):
 
 - **Microsoft**, **ElevenLabs**, **MiniMax**, **Deepgram**, **Murf**, **Cartesia**, **OpenAI**
 - **Hume AI**, **Rime**, **Fish Audio**, **Google**, **Amazon Polly**, **Sarvam**
-- **Gradium (v2.10)**, **Mistral (v2.10)**, **Typecast (v2.11)**, **Generic HTTP / OpenAI protocol (v2.10)**
+- **Gradium (v2.10)**, **Mistral (v2.10)**, **Typecast (v2.11)**, **Smallest AI (v2.13)**, **Generic HTTP / OpenAI protocol (v2.10)**
 - Shared: skip patterns, TTS custom parameters, LiveAvatar 24 kHz enforcement when applicable
 
 ### Advanced ASR Integration
 
 Dropdown vendors:
 
-- **Agora (ARES)**, **Microsoft**, **Deepgram**, **OpenAI**, **Gemini (v2.12)**, **Speechmatics**
+- **Agora (ARES)**, **Microsoft**, **Deepgram**, **OpenAI**, **Gemini (v2.12)**, **Smallest AI (v2.13)**, **Speechmatics**
 - **AssemblyAI**, **Amazon Transcribe**, **Google**, **Sarvam**, **Custom**
 - **ARES keywords (v2.11)**: `asr.keywords` list (max 128) to improve recognition of brand names, product names, and jargon. Only sent when vendor is ARES.
 - **Gemini ASR (v2.12)**: `vendor: gemini` with `gemini-3.5-transcribe-live`, sample rate, and optional word timestamps
+- **Smallest AI ASR (v2.13)**: `vendor: smallestai`. Required `params.api_key`. Boolean options are strings `"true"` / `"false"`.
 
 ### Voice Activity Detection (VAD) & Turn Detection
 
@@ -198,18 +199,19 @@ Dropdown vendors:
   - Transport protocol: streamable_http
   - Allowed tools configuration (comma-separated list or "*" for all)
   - Automatic `advanced_features.enable_tools` when enabled
-  - Cascading LLM: `llm.mcp_servers` from the LLM drawer; MLLM (v2.12): `mllm.mcp_servers` from Enable Tools in the MLLM drawer (all MLLM vendors). GPT-Live also sets `params.tool_enabled` when that MLLM switch is on.
+  - Cascading LLM: `llm.mcp_servers` from the LLM drawer; MLLM: `mllm.mcp_servers` from Enable Tools in the MLLM drawer (all MLLM vendors). GPT-Live also sets `params.tool_enabled` when that MLLM switch is on.
 
-- **Custom LLM tools (v2.12)**
+- **Custom tools**
 
-  - `llm.tools` HTTPS GET/POST function tools plus optional `llm.template_variables`
-  - Requires `advanced_features.enable_tools`; cascading LLM only (not MLLM)
+  - Cascading LLM (v2.12): `llm.tools` HTTPS GET/POST function tools plus optional `llm.template_variables`
+  - MLLM (v2.13): `mllm.tools` uses the same JSON format and requires `advanced_features.enable_tools`
 
-- **Generated filler words (v2.12)**
+- **Generated filler words**
 
   - `properties.filler_words` (not nested under `llm`)
   - `content.mode`: `static` or `generated`
   - Generated mode uses Agora-hosted phrases with sibling `static_config` as fallback
+  - v2.13 context window: `generated_config.context_message_limit` (1–6, default 1) and `history_character_limit` (0–10000, default 1000). A custom `prompt` replaces Agora's default prompt over that same window.
 
 - **SAL (Speaker Adaptation Library)**
 

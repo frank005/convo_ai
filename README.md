@@ -2,7 +2,7 @@
 
 A web dashboard for managing and interacting with Agora's Conversational AI Agents. This application provides a user-friendly interface for creating, updating, and monitoring AI agents that can engage in real-time conversations with support for both traditional LLM and Multimodal Large Language Model (MLLM) configurations.
 
-Targets **Agora Conversational AI Engine v2.12** features (custom LLM tools, generated filler words, think `append`, MLLM MCP tools, Gemini ASR, GPT-Live, plus v2.11 Typecast / Azure Realtime / ARES keywords and earlier managed presets). See the [platform release notes](https://docs.agora.io/en/ai/release-notes).
+Targets **Agora Conversational AI Engine v2.13** features (Smallest AI ASR/TTS, OpenAI GPT-Live, MLLM custom tools, generated filler-word context, plus v2.12 custom LLM tools, generated filler words, think `append`, MLLM MCP, Gemini ASR, and earlier presets). See the [platform release notes](https://docs.agora.io/en/ai/release-notes).
 
 ## Project Structure
 
@@ -84,15 +84,15 @@ For detailed setup instructions, see [SETUP.md](DOCS/SETUP.md).
 - **Dual AI Model Support**: Traditional LLM and Multimodal LLM (MLLM) configurations
   - **LLM Mode**: OpenAI, Anthropic, Gemini, Vertex AI, Amazon Bedrock, and custom LLM providers
   - **MLLM Mode**: OpenAI Realtime, OpenAI GPT-Live, Azure OpenAI Realtime, xAI Grok, Gemini Live, Google Vertex AI, and custom WebSocket endpoints
-- **Comprehensive TTS Support**: Microsoft, ElevenLabs, MiniMax, Deepgram, Murf, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Google, Amazon Polly, Sarvam, Gradium, Mistral, Typecast, and Generic HTTP (OpenAI protocol)
-- **Advanced ASR Integration**: Agora (ARES, including keywords), Microsoft, Deepgram, OpenAI, Gemini, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, and Custom ASR
+- **Comprehensive TTS Support**: Microsoft, ElevenLabs, MiniMax, Deepgram, Murf, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Google, Amazon Polly, Sarvam, Gradium, Mistral, Typecast, Smallest AI, and Generic HTTP (OpenAI protocol)
+- **Advanced ASR Integration**: Agora (ARES, including keywords), Microsoft, Deepgram, OpenAI, Gemini, Smallest AI, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, and Custom ASR
 - **AI Avatar Support**: Akool, LiveAvatar, Generic, LemonSlice, Anam, and deprecated HeyGen
   - LemonSlice is a first-class UI option that still sends `vendor: generic` with LemonSlice defaults
   - LiveAvatar forces 24 kHz TTS sample rate for supported vendors
 - **Manual Turn Control (v2.9)**: Client-side Start of Speech (SoS) / End of Speech (EoS) via RTM when turn detection modes are set to Manual
 - **Managed Credentials (v2.9)**: Optional ASR / LLM / TTS presets that set `credential_mode: managed`
 - **Backend Pipeline ID**: Use a preconfigured pipeline, with optional override of LLM / TTS / ASR from the UI
-- **Tools (v2.12)**: Custom HTTPS `llm.tools` in the LLM drawer; MCP servers in the LLM drawer (`llm.mcp_servers`) or the MLLM drawer (`mllm.mcp_servers`); generated filler words
+- **Tools**: Custom HTTPS tools for cascading LLM (`llm.tools`) and MLLM (`mllm.tools`, v2.13); MCP servers in the LLM drawer (`llm.mcp_servers`) or the MLLM drawer (`mllm.mcp_servers`); generated filler words with conversation context (v2.13)
 - **SIP/Phone Management**: Import numbers, outbound SIP calls, call history, inbound/outbound config
 - **Real-time Audio & Visual**: Waveform visualization, camera preview, device selection with persistence
 - **Live Subtitles & Chat**: RTM and data-stream subtitle modes, chat history, copy/clear
@@ -155,4 +155,4 @@ For issues and questions:
 
 ---
 
-**Agora Conversational AI Engine v2.12** — a comprehensive web dashboard for managing and interacting with Agora's Conversational AI Agents. Features include dual LLM/MLLM modes, custom LLM tools, generated filler words, 16+ TTS vendors, 11 ASR vendors including Gemini, GPT-Live MLLM with MCP tools, Azure OpenAI Realtime, AI avatars, manual SoS/EoS turn control, managed credential presets, SIP/phone management, live subtitles, device management, and local RTC+RTM token generation.
+**Agora Conversational AI Engine v2.13** — a comprehensive web dashboard for managing and interacting with Agora's Conversational AI Agents. Features include dual LLM/MLLM modes, custom tools for LLM and MLLM, generated filler words with conversation context, Smallest AI ASR and TTS, GPT-Live MLLM, Azure OpenAI Realtime, AI avatars, manual SoS/EoS turn control, managed credential presets, SIP/phone management, live subtitles, device management, and local RTC+RTM token generation.

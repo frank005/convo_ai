@@ -44,7 +44,7 @@ Basic agent configuration:
 
 - Configure LLM settings (URL, API key, model params)
 - Configure TTS settings (vendor + voice)
-- Configure ASR settings (vendor + language; Gemini ASR is v2.12)
+- Configure ASR settings (vendor + language; Smallest AI ASR is v2.13, Gemini ASR is v2.12)
 - Enable Tools for custom HTTPS `llm.tools` and/or MCP servers
 - Add custom parameters for advanced model control
 
@@ -54,7 +54,7 @@ Basic agent configuration:
 - Configure WebSocket URL / API key (or Vertex ADC credentials)
 - GPT-Live uses REST `vendor: openai_gpt_live`, `wss://api.openai.com/v1/live/sessions`, preview join URL `https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2/projects/<APP_ID>/join`, and header `agora-feature: live-models`
 - Configure turn detection under the MLLM / Turn Detection controls (required for Azure OpenAI Realtime; not supported for GPT-Live)
-- Enable Tools in the MLLM drawer to attach MCP servers as `mllm.mcp_servers`
+- Enable Tools in the MLLM drawer for `mllm.tools` and `mllm.mcp_servers`
 
 ### 5. Advanced Configuration (Optional)
 
@@ -64,8 +64,8 @@ Basic agent configuration:
 - Enable RTM for signaling, metrics, and error messages
 - Configure silence management and farewell graceful timeout
 - Add custom LLM / TTS / Avatar parameters
-- **Custom tools (v2.12)**: Enable Tools, then paste `llm.tools` JSON (cascading LLM only)
-- **Generated filler words (v2.12)**: Enable Filler Words and set content mode to generated; static phrases are still required as fallback
+- **Custom tools**: Enable Tools, then paste `llm.tools` JSON (cascading LLM) or `mllm.tools` JSON in the MLLM drawer (v2.13, same format)
+- **Generated filler words**: Enable Filler Words and set content mode to generated; static phrases are still required as fallback. Generated mode can set context message limit (1–6) and history character limit (0–10000).
 - **Think `append` (v2.12)**: Send Custom Instruction actions can wait until the current turn finishes
 - Configure geofence or RTC encryption if needed
 
@@ -143,4 +143,4 @@ Enable real-time subtitle display:
 - Check [VENDORS.md](./VENDORS.md) for vendor-specific configuration details
 - See [API.md](./API.md) for API integration information
 - Review [ARCHITECTURE.md](./ARCHITECTURE.md) for technical architecture details
-- See platform [release notes](https://docs.agora.io/en/ai/release-notes) for ConvoAI v2.12 / v2.11 / v2.10 / v2.9 changes
+- See platform [release notes](https://docs.agora.io/en/ai/release-notes) for ConvoAI v2.13 / v2.12 / v2.11 / v2.10 / v2.9 changes

@@ -152,6 +152,18 @@ Expressive Typecast voices. Additional vendor params can be passed through TTS c
 
 **Docs:** [Typecast TTS](https://docs.agora.io/en/ai/models/tts/typecast)
 
+### Smallest AI TTS (v2.13)
+
+Low-latency streaming speech through the Lightning model family.
+
+**Vendor name:** `smallestai`
+
+**Required:** `params.api_key`
+
+**Optional / defaults:** `params.url` (`https://api.smallest.ai/waves/v1/tts/live`), `params.model` (`lightning_v3.1_pro`), `params.voice_id` (`hazel`; must belong to the selected model), `params.sample_rate` (`16000`), `params.speed` (`1.0`), `params.language`, `params.number_pronunciation_language`, `params.math_notation`.
+
+**Docs:** [Smallest AI TTS](https://docs.agora.io/en/ai/models/tts/smallest-ai)
+
 ### Generic HTTP TTS (v2.10)
 
 Connect a custom or third-party TTS service that implements the OpenAI TTS protocol (`vendor: generic_http`).
@@ -270,7 +282,7 @@ End-to-end voice MLLM (no separate ASR/LLM/TTS). Enabling MLLM still disables AS
 - `prompt`: optional session instructions
 - `tool_enabled`: set automatically when Enable Tools is on in the MLLM drawer (GPT-Live API field; the UI itself is shared across all MLLM vendors)
 
-Join REST is required to use the GPT-Live preview host `https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2` with header `agora-feature: live-models` (not `api.agora.io`). The playground routes GPT-Live join / query / leave / speak / think automatically. MCP servers are configured in the MLLM drawer (Enable Tools) and sent as `mllm.mcp_servers`.
+Join REST uses the GPT-Live preview host `https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2` with header `agora-feature: live-models` (not `api.agora.io`). The playground routes GPT-Live join / query / leave / speak / think automatically. Enable Tools in the MLLM drawer sends `mllm.mcp_servers` and, as of v2.13, custom HTTPS definitions as `mllm.tools` (same format as `llm.tools`).
 
 **Docs:** [OpenAI GPT-Live](https://docs.agora.io/en/ai/models/mllm/openai-gpt-live)
 
@@ -427,7 +439,7 @@ Legacy Interactive Avatar path (`vendor: heygen`). Prefer **LiveAvatar** for new
 
 ## ASR Vendor Support
 
-Playground ASR vendors: `ares`, `microsoft`, `deepgram`, `openai`, `gemini`, `speechmatics`, `assemblyai`, `amazon`, `google`, `sarvam`, `custom`.
+Playground ASR vendors: `ares`, `microsoft`, `deepgram`, `openai`, `gemini`, `smallestai`, `speechmatics`, `assemblyai`, `amazon`, `google`, `sarvam`, `custom`.
 
 ### Agora ASR (ARES)
 
@@ -460,6 +472,18 @@ Google Gemini real-time streaming transcription.
 **Optional / defaults:** `language` (`en-US`), `params.sample_rate` (`16000`), `params.word_timestamp`
 
 **Docs:** [Gemini ASR](https://docs.agora.io/en/ai/models/asr/gemini)
+
+### Smallest AI ASR (v2.13)
+
+Real-time streaming transcription through the Pulse model.
+
+**Vendor name:** `smallestai`
+
+**Required:** `params.api_key`
+
+**Optional / defaults:** `language` (playground default `en`; `params.language` takes precedence over top-level `asr.language`), `params.url` (`wss://api.us.smallest.ai/waves/v1/stt/live`), `params.sample_rate` (`16000`), `params.encoding` (`linear16`), `params.eou_timeout_ms`, `params.keywords` (`keyword:weight` list). Boolean options (`word_timestamps`, `sentence_timestamps`, `punctuate`, `endpointing`, `diarize`) are sent as the strings `"true"` and `"false"`.
+
+**Docs:** [Smallest AI ASR](https://docs.agora.io/en/ai/models/asr/smallest-ai)
 
 ### OpenAI ASR
 

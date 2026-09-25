@@ -5556,6 +5556,7 @@
                 <option value="deepgram">Deepgram</option>
                 <option value="openai">OpenAI</option>
                 <option value="gemini">Gemini</option>
+                <option value="smallestai">Smallest AI</option>
                 <option value="speechmatics">Speechmatics</option>
                 <option value="assemblyai">AssemblyAI</option>
                 <option value="amazon">Amazon Transcribe</option>
@@ -5563,7 +5564,7 @@
                 <option value="sarvam">Sarvam</option>
                 <option value="custom">Custom</option>
               </select>
-              <div class="tooltip">Select the Automatic Speech Recognition (ASR) vendor. Gemini ASR is a ConvoAI v2.12 provider. ARES keywords improve recognition of brand names and jargon and are only sent when vendor is ARES.</div>
+              <div class="tooltip">Select the Automatic Speech Recognition (ASR) vendor. Smallest AI is a ConvoAI v2.13 provider. Gemini ASR is v2.12. ARES keywords improve recognition of brand names and jargon and are only sent when vendor is ARES.</div>
             </div>
             <div class="has-tooltip relative">
               <select
@@ -5746,6 +5747,71 @@
             </div>
           </div>
           
+          <!-- Smallest AI ASR Configuration (v2.13) -->
+          <div id="smallestaiAsrConfig" class="hidden mt-4">
+            <h4 class="text-sm font-semibold mb-2">Smallest AI ASR Settings</h4>
+            <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="has-tooltip relative">
+                <input
+                  id="smallestaiAsrKey"
+                  placeholder="Smallest AI API Key (Required)"
+                />
+                <div class="tooltip">Smallest AI API key. Sent as asr.params.api_key. The only required Smallest AI ASR field.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="smallestaiAsrUrl"
+                  placeholder="WebSocket URL"
+                  value="wss://api.us.smallest.ai/waves/v1/stt/live"
+                />
+                <div class="tooltip">Streaming ASR WebSocket endpoint (asr.params.url).</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="smallestaiAsrSampleRate"
+                  type="number"
+                  placeholder="Sample rate (Hz)"
+                  value="16000"
+                />
+                <div class="tooltip">Input audio sample rate in Hz. Default 16000.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="smallestaiAsrEncoding"
+                  placeholder="Encoding"
+                  value="linear16"
+                />
+                <div class="tooltip">Input audio encoding. Default linear16.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="smallestaiAsrEouTimeout"
+                  type="number"
+                  placeholder="End-of-utterance timeout (ms)"
+                  value="480"
+                />
+                <div class="tooltip">asr.params.eou_timeout_ms. Example: 480.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="smallestaiAsrKeywords"
+                  placeholder="Keywords (optional, keyword:weight)"
+                />
+                <div class="tooltip">Comma-separated keyword boosts, for example Codex:2,Smallest AI:2.</div>
+              </div>
+              <div class="has-tooltip relative md:col-span-2">
+                <div class="flex flex-wrap gap-4">
+                  <label class="flex items-center gap-2"><input type="checkbox" id="smallestaiAsrWordTimestamps" class="rounded bg-gray-700 border-gray-600"> Word timestamps</label>
+                  <label class="flex items-center gap-2"><input type="checkbox" id="smallestaiAsrSentenceTimestamps" class="rounded bg-gray-700 border-gray-600"> Sentence timestamps</label>
+                  <label class="flex items-center gap-2"><input type="checkbox" id="smallestaiAsrPunctuate" class="rounded bg-gray-700 border-gray-600" checked> Punctuate</label>
+                  <label class="flex items-center gap-2"><input type="checkbox" id="smallestaiAsrEndpointing" class="rounded bg-gray-700 border-gray-600" checked> Endpointing</label>
+                  <label class="flex items-center gap-2"><input type="checkbox" id="smallestaiAsrDiarize" class="rounded bg-gray-700 border-gray-600"> Diarize</label>
+                </div>
+                <div class="tooltip">Boolean options are sent as the strings "true" and "false", which Smallest AI expects on the REST API.</div>
+              </div>
+            </div>
+          </div>
+
           <!-- Speechmatics ASR Configuration -->
           <div id="speechmaticsAsrConfig" class="hidden mt-4">
             <h4 class="text-sm font-semibold mb-2">Speechmatics ASR Settings</h4>
@@ -6110,7 +6176,19 @@
                 placeholder="Generate a short, natural filler phrase indicating you are processing the request. Do not answer the question directly."
                 rows="2"
               ></textarea>
-              <div class="tooltip">generated_config.prompt. Used only when content.mode is generated. Leave blank to use the Agora default prompt.</div>
+              <div class="tooltip">generated_config.prompt. A custom prompt fully replaces Agora's default prompt and applies over the same conversation context window. Leave blank to use the default prompt.</div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div class="has-tooltip relative">
+                <label class="text-sm">Context message limit</label>
+                <input type="number" id="fillerWordsContextMessageLimit" class="w-full p-2 rounded bg-gray-700" min="1" max="6" value="1">
+                <div class="tooltip">generated_config.context_message_limit (v2.13). How many of the most recent messages to use, counting the current turn. 1–6, default 1.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <label class="text-sm">History character limit</label>
+                <input type="number" id="fillerWordsHistoryCharacterLimit" class="w-full p-2 rounded bg-gray-700" min="0" max="10000" value="1000">
+                <div class="tooltip">generated_config.history_character_limit (v2.13). Maximum combined characters of the earlier messages in the window. 0–10000, default 1000.</div>
+              </div>
             </div>
           </div>
           <div class="has-tooltip relative">
@@ -6202,7 +6280,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         <div id="llmToolsConfig" class="hidden bg-gray-700 p-4 rounded-lg mt-4">
           <div class="has-tooltip relative mb-3">
             <h3 class="text-lg font-semibold">Custom tools</h3>
-            <div class="tooltip">properties.llm.tools. Each tool needs type function, a function schema, and a server block (GET or POST HTTPS). Max 32 tools shared with MCP/built-in tools. Cascading LLM only — not used for MLLM.</div>
+            <div class="tooltip">properties.llm.tools. Each tool needs type function, a function schema, and a server block (GET or POST HTTPS). Max 32 tools shared with MCP/built-in tools. Cascading LLM. MLLM agents use the same JSON as mllm.tools in the MLLM drawer.</div>
           </div>
           <div class="has-tooltip relative mb-3">
             <textarea
@@ -6278,9 +6356,10 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="gradium">Gradium</option>
             <option value="mistral">Mistral</option>
             <option value="typecast">Typecast</option>
+            <option value="smallestai">Smallest AI</option>
             <option value="generic_http">Generic HTTP (OpenAI protocol)</option>
           </select>
-          <div class="tooltip">Select the Text-to-Speech vendor to use for voice output. Typecast is a ConvoAI v2.11 provider. Generic HTTP connects a custom OpenAI-protocol TTS endpoint (v2.10).</div>
+          <div class="tooltip">Select the Text-to-Speech vendor to use for voice output. Smallest AI is a ConvoAI v2.13 provider. Typecast is v2.11. Generic HTTP connects a custom OpenAI-protocol TTS endpoint (v2.10).</div>
         </div>
 
         <!-- Microsoft TTS Settings -->
@@ -7310,6 +7389,90 @@ The user speaks to you directly — treat each input as part of a live, spoken d
           <div class="tooltip">Typecast TTS model. Sent as params.model. Example: ssfm-v30.</div>
         </div>
 
+        <!-- Smallest AI TTS Settings (v2.13) -->
+        <div id="smallestaiTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="smallestaiTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Smallest AI API Key (Required)"
+          />
+          <div class="tooltip">API key for Smallest AI TTS. Sent as params.api_key. The only required field.</div>
+        </div>
+        <div id="smallestaiTtsUrlBlock" class="has-tooltip relative hidden">
+          <input
+            id="smallestaiTtsUrl"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="TTS URL"
+            value="https://api.smallest.ai/waves/v1/tts/live"
+          />
+          <div class="tooltip">Streaming TTS endpoint. Sent as params.url.</div>
+        </div>
+        <div id="smallestaiTtsModelBlock" class="has-tooltip relative hidden">
+          <input
+            id="smallestaiTtsModel"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Model"
+            value="lightning_v3.1_pro"
+          />
+          <div class="tooltip">Smallest AI TTS model, such as lightning_v3.1_pro or lightning_v3.1. voice_id must belong to this model.</div>
+        </div>
+        <div id="smallestaiTtsVoiceBlock" class="has-tooltip relative hidden">
+          <input
+            id="smallestaiTtsVoice"
+            name="ttsVoiceId"
+            autocomplete="on"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Voice ID (e.g. hazel)"
+            value="hazel"
+          />
+          <div class="tooltip">Smallest AI voice identifier. Sent as params.voice_id.</div>
+        </div>
+        <div id="smallestaiTtsSampleRateBlock" class="has-tooltip relative hidden">
+          <input
+            id="smallestaiTtsSampleRate"
+            type="number"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Sample rate (Hz)"
+            value="16000"
+          />
+          <div class="tooltip">Output audio sample rate in Hz.</div>
+        </div>
+        <div id="smallestaiTtsSpeedBlock" class="has-tooltip relative hidden">
+          <input
+            id="smallestaiTtsSpeed"
+            type="number"
+            step="0.1"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Speed (1.0 = default pace)"
+            value="1.0"
+          />
+          <div class="tooltip">Speech rate multiplier. 1.0 is the model's default pace.</div>
+        </div>
+        <div id="smallestaiTtsLanguageBlock" class="has-tooltip relative hidden">
+          <input
+            id="smallestaiTtsLanguage"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Language (e.g. en)"
+            value="en"
+          />
+          <div class="tooltip">Language code used for speech synthesis.</div>
+        </div>
+        <div id="smallestaiTtsNumberLanguageBlock" class="has-tooltip relative hidden">
+          <input
+            id="smallestaiTtsNumberLanguage"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Number pronunciation language (optional)"
+          />
+          <div class="tooltip">Language used when reading numbers aloud, if it should differ from the surrounding text.</div>
+        </div>
+        <div id="smallestaiTtsMathBlock" class="has-tooltip relative hidden">
+          <label class="flex items-center gap-2">
+            <input type="checkbox" id="smallestaiTtsMathNotation" class="rounded bg-gray-700 border-gray-600">
+            <span>Read math notation</span>
+          </label>
+          <div class="tooltip">params.math_notation. Read mathematical notation as spoken mathematics.</div>
+        </div>
+
         <!-- Generic HTTP TTS Settings (v2.10 OpenAI protocol) -->
         <div id="genericHttpUrlBlock" class="has-tooltip relative hidden">
           <input
@@ -7791,7 +7954,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
 
         <!-- OpenAI GPT-Live Specific Settings -->
         <div id="openaiGptLiveConfig" class="hidden space-y-4">
-          <p class="text-xs text-amber-300">GPT-Live is an alpha preview on gpt-live-1-diamond-alpha. REST join uses https://partner.ai.agora.io/preview/... with header agora-feature: live-models. Turn detection and input audio transcription are not supported.</p>
+          <p class="text-xs text-amber-300">GPT-Live is an alpha preview on gpt-live-1-diamond-alpha. REST join uses https://partner.ai.agora.io/preview/... with header agora-feature: live-models. Turn detection and input audio transcription are not supported. Enable Tools below adds mllm.tools and MCP servers.</p>
           <div class="has-tooltip relative">
             <input
               id="mllmGptLiveModel"
@@ -8080,7 +8243,22 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <input type="checkbox" id="enableMllmTools" class="mr-2 h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
             <span>Enable Tools</span>
           </label>
-          <div class="tooltip">Applies to every MLLM vendor. Sets advanced_features.enable_tools and sends MCP servers as mllm.mcp_servers. Independent from the LLM drawer.</div>
+          <div class="tooltip">Applies to every MLLM vendor. Sets advanced_features.enable_tools. Custom HTTPS tools are sent as mllm.tools (same format as llm.tools). MCP servers are sent as mllm.mcp_servers. GPT-Live also sets params.tool_enabled.</div>
+        </div>
+        <div id="mllmToolsConfig" class="hidden bg-gray-700 p-4 rounded-lg mt-4">
+          <div class="has-tooltip relative mb-3">
+            <h3 class="text-lg font-semibold">Custom tools</h3>
+            <div class="tooltip">properties.mllm.tools (v2.13). Same format as llm.tools. Requires advanced_features.enable_tools.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <textarea
+              id="mllmToolsJson"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500 font-mono text-xs"
+              rows="8"
+              placeholder='[{"type":"function","function":{"name":"getOrderStatus","description":"Get shipping status by order ID.","parameters":{"type":"object","properties":{"order_id":{"type":"string"}},"required":["order_id"],"additionalProperties":false}},"execution":{"mode":"sync"},"server":{"method":"GET","url":"https://api.example.com/orders/{{args.order_id}}/status","timeout_ms":5000}}]'
+            ></textarea>
+            <div class="tooltip">JSON array of custom tool definitions sent as mllm.tools. Leave empty to omit.</div>
+          </div>
         </div>
         <div id="mllmMcpServersConfig" class="hidden bg-gray-700 p-4 rounded-lg mt-4">
           <div class="flex justify-between items-center mb-3">

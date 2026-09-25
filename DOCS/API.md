@@ -115,7 +115,7 @@ All REST calls in `src/js/api.js` format error bodies through `Utils.formatConvo
 
 - **112 turns finished:** post-session batched turn data (alternative to paginated REST query).
 
-See [release notes](https://docs.agora.io/en/ai/release-notes) for platform changelog details (v2.12 custom `llm.tools`, generated filler words, think `append`, MLLM MCP, Gemini ASR; v2.11 Typecast TTS, Azure OpenAI Realtime MLLM, ARES `asr.keywords`; v2.10 Gradium / Mistral / `generic_http` TTS).
+See [release notes](https://docs.agora.io/en/ai/release-notes) for platform changelog details (v2.13 Smallest AI ASR/TTS, OpenAI GPT-Live, `mllm.tools`, filler-word context; v2.12 custom `llm.tools`, generated filler words, think `append`, MLLM MCP, Gemini ASR; v2.11 Typecast TTS, Azure OpenAI Realtime MLLM, ARES `asr.keywords`; v2.10 Gradium / Mistral / `generic_http` TTS).
 
 ### Avatar payload notes
 
