@@ -1557,17 +1557,21 @@ window.UI = class UI {
         const prevVendor = this._lastTtsVendor || 'microsoft';
 
         if (nextVendor === 'gemini' && prevVendor !== 'gemini') {
-            const ok = window.confirm(
-                'Gemini TTS is an early-access preview.\n\n' +
-                'Selecting it routes the whole agent session (join / update / leave / speak / think) to:\n' +
-                'https://partner.ai.agora.io/preview/...\n' +
-                'with header agora-feature: gemini-live.\n\n' +
-                'Switch this playground session to the preview API?'
-            );
-            if (!ok) {
-                ttsVendorElement.value = prevVendor;
-                return;
-            }
+            // Revert until the in-app modal confirms; keep dropdown on gemini for the prompt UX
+            this.openGeminiTtsPreviewModal({
+                onConfirm: () => {
+                    this._lastTtsVendor = 'gemini';
+                    this.handleTtsVendorChange();
+                    this.updateBaseUrlIndicator();
+                },
+                onCancel: () => {
+                    ttsVendorElement.value = prevVendor;
+                    this._lastTtsVendor = prevVendor;
+                    this.handleTtsVendorChange();
+                    this.updateBaseUrlIndicator();
+                }
+            });
+            return;
         }
 
         // Leaving Gemini TTS clears sticky preview unless GPT-Live still needs it
@@ -1580,6 +1584,39 @@ window.UI = class UI {
         this._lastTtsVendor = nextVendor;
         this.handleTtsVendorChange();
         this.updateBaseUrlIndicator();
+    }
+
+    openGeminiTtsPreviewModal({ onConfirm, onCancel } = {}) {
+        const modal = document.getElementById('geminiTtsPreviewModal');
+        const confirmBtn = document.getElementById('confirmGeminiTtsPreview');
+        const cancelBtn = document.getElementById('cancelGeminiTtsPreview');
+        if (!modal || !confirmBtn || !cancelBtn) {
+            if (typeof onConfirm === 'function') onConfirm();
+            return;
+        }
+
+        const close = () => {
+            modal.classList.add('hidden');
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', handleCancel);
+            modal.removeEventListener('click', handleBackdrop);
+        };
+        const handleConfirm = () => {
+            close();
+            if (typeof onConfirm === 'function') onConfirm();
+        };
+        const handleCancel = () => {
+            close();
+            if (typeof onCancel === 'function') onCancel();
+        };
+        const handleBackdrop = (e) => {
+            if (e.target === modal) handleCancel();
+        };
+
+        confirmBtn.addEventListener('click', handleConfirm);
+        cancelBtn.addEventListener('click', handleCancel);
+        modal.addEventListener('click', handleBackdrop);
+        modal.classList.remove('hidden');
     }
 
     handleTtsVendorChange() {
@@ -1724,6 +1761,12 @@ window.UI = class UI {
             "geminiTtsModelBlock",
             "geminiTtsVoiceBlock",
             "geminiTtsStyleBlock"
+        ];
+        const xaiTtsBlocks = [
+            "xaiTtsKeyBlock",
+            "xaiTtsVoiceBlock",
+            "xaiTtsLanguageBlock",
+            "xaiTtsSampleRateBlock"
         ];
         const smallestaiTtsBlocks = [
             "smallestaiTtsKeyBlock",
@@ -1878,6 +1921,13 @@ window.UI = class UI {
             const element = document.getElementById(block);
             if (element) {
                 element.classList.toggle("hidden", vendor !== "gemini");
+            }
+        });
+
+        xaiTtsBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "xai");
             }
         });
 

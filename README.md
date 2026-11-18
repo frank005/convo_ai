@@ -84,8 +84,8 @@ For detailed setup instructions, see [SETUP.md](DOCS/SETUP.md).
 - **Dual AI Model Support**: Traditional LLM and Multimodal LLM (MLLM) configurations
   - **LLM Mode**: OpenAI, Anthropic, Gemini, Vertex AI, Amazon Bedrock, and custom LLM providers
   - **MLLM Mode**: OpenAI Realtime, OpenAI GPT-Live, Azure OpenAI Realtime, xAI Grok, Gemini Live, Google Vertex AI, and custom WebSocket endpoints
-- **Comprehensive TTS Support**: Microsoft, ElevenLabs, MiniMax, Deepgram, Murf, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Google, Amazon Polly, Sarvam, Gradium, Mistral, Typecast, Gemini (preview host), Smallest AI, and Generic HTTP (OpenAI protocol)
-- **Advanced ASR Integration**: Agora (ARES, including keywords), Microsoft, Deepgram, OpenAI, Gemini, Smallest AI, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, and Custom ASR
+- **Comprehensive TTS Support**: Microsoft, ElevenLabs, MiniMax, Deepgram, Murf, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Google, Amazon Polly, Sarvam, Gradium, Mistral, Typecast, Gemini (preview host), xAI, Smallest AI, and Generic HTTP (OpenAI protocol)
+- **Advanced ASR Integration**: Agora (ARES, including keywords), Microsoft, Deepgram, OpenAI, Gemini, xAI, Smallest AI, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, and Custom ASR
 - **AI Avatar Support**: Akool, LiveAvatar, Generic, LemonSlice, Anam, and deprecated HeyGen
   - LemonSlice is a first-class UI option that still sends `vendor: generic` with LemonSlice defaults
   - LiveAvatar forces 24 kHz TTS sample rate for supported vendors

@@ -403,6 +403,8 @@ Agora supports multiple TTS vendors (playground dropdown):
 - [Gradium TTS](https://docs.agora.io/en/ai/models/tts/gradium) (v2.10)
 - [Mistral TTS](https://docs.agora.io/en/ai/models/tts/mistral) (v2.10)
 - [Typecast TTS](https://docs.agora.io/en/ai/models/tts/typecast) (v2.11)
+- [Gemini TTS](https://docs.agora.io/en/ai/models/tts/gemini) (preview host)
+- [xAI TTS](https://docs.agora.io/en/ai/models/tts/xai)
 - [Smallest AI TTS](https://docs.agora.io/en/ai/models/tts/smallest-ai) (v2.13)
 - [Generic HTTP TTS](https://docs.agora.io/en/ai/models/tts/generic-http) (v2.10 OpenAI protocol)
 
@@ -416,6 +418,7 @@ Agora supports multiple ASR vendors:
 - [Microsoft ASR](https://docs.agora.io/en/conversational-ai/models/asr/microsoft)
 - [Deepgram ASR](https://docs.agora.io/en/conversational-ai/models/asr/deepgram)
 - [Gemini ASR](https://docs.agora.io/en/ai/models/asr/gemini) (v2.12)
+- [xAI ASR](https://docs.agora.io/en/ai/models/asr/xai)
 - [Smallest AI ASR](https://docs.agora.io/en/ai/models/asr/smallest-ai) (v2.13)
 - [OpenAI ASR](https://docs.agora.io/en/conversational-ai/models/asr/openai)
 - [Speechmatics ASR](https://docs.agora.io/en/conversational-ai/models/asr/speechmatics)
@@ -964,9 +967,9 @@ Aligned with the current playground dropdowns (ConvoAI Engine **v2.14**):
 
 **MLLM Providers**: OpenAI Realtime, [OpenAI GPT-Live](https://docs.agora.io/en/ai/models/mllm/openai-gpt-live) (`openai_gpt_live`, preview REST host `partner.ai.agora.io/preview/...`, header `agora-feature: live-models`), Azure OpenAI Realtime, xAI Grok, Gemini Live, Vertex AI, Custom WebSocket
 
-**TTS Vendors**: Microsoft Azure, ElevenLabs, MiniMax, Deepgram, Murf, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Google, Amazon Polly, Sarvam, Gradium, Mistral, Typecast, Gemini (preview → `partner.ai.agora.io` + `agora-feature: gemini-live`), Smallest AI, Generic HTTP (OpenAI protocol)
+**TTS Vendors**: Microsoft Azure, ElevenLabs, MiniMax, Deepgram, Murf, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Google, Amazon Polly, Sarvam, Gradium, Mistral, Typecast, Gemini (preview → `partner.ai.agora.io` + `agora-feature: gemini-live`), xAI, Smallest AI, Generic HTTP (OpenAI protocol)
 
-**ASR Vendors**: Agora (ARES, with optional keywords), Microsoft Azure, Deepgram, OpenAI, Gemini, Smallest AI, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, Custom
+**ASR Vendors**: Agora (ARES, with optional keywords), Microsoft Azure, Deepgram, OpenAI, Gemini, xAI, Smallest AI, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, Custom
 
 **AI Avatars**: Akool, LiveAvatar (HeyGen), Generic, LemonSlice (UI option → REST `generic`), Anam, HeyGen (Deprecated)
 

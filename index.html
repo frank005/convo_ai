@@ -1328,6 +1328,48 @@
     </div>
   </div>
 
+  <!-- Gemini TTS Preview Confirmation Modal -->
+  <div id="geminiTtsPreviewModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 101;">
+    <div class="modern-card w-full max-w-md mx-4">
+      <div class="flex items-center mb-4">
+        <div class="flex-shrink-0">
+          <svg class="h-8 w-8 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-lg font-bold text-white">Gemini TTS Preview</h3>
+        </div>
+      </div>
+      <div class="mb-6">
+        <p class="text-gray-300 mb-3">
+          Gemini TTS is an early-access preview. Selecting it routes the whole agent session (join / update / leave / speak / think) to the preview API.
+        </p>
+        <div class="modern-panel border-l-4 border-amber-400 space-y-2">
+          <p class="text-sm text-gray-300">
+            <strong>Preview host:</strong>
+            <code class="text-amber-200 break-all">https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2</code>
+          </p>
+          <p class="text-sm text-gray-300">
+            <strong>Header:</strong>
+            <code class="text-amber-200">agora-feature: gemini-live</code>
+          </p>
+          <p class="text-sm text-gray-400">
+            Choosing another TTS vendor returns this playground session to the production API.
+          </p>
+        </div>
+      </div>
+      <div class="flex space-x-2">
+        <button id="cancelGeminiTtsPreview" class="modern-btn modern-btn-secondary flex-1">
+          Cancel
+        </button>
+        <button id="confirmGeminiTtsPreview" class="modern-btn modern-btn-primary flex-1">
+          Switch to Preview
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Experimental Features Modal (hidden, triggered by Konami code) -->
   <div id="experimentalFeaturesModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center" style="z-index: 103;">
     <div class="modern-card max-w-xl w-full mx-4 overflow-y-auto max-h-[90vh] text-base" style="font-size: 14px;">
@@ -5573,6 +5615,7 @@
                 <option value="deepgram">Deepgram</option>
                 <option value="openai">OpenAI</option>
                 <option value="gemini">Gemini</option>
+                <option value="xai">xAI</option>
                 <option value="smallestai">Smallest AI</option>
                 <option value="speechmatics">Speechmatics</option>
                 <option value="assemblyai">AssemblyAI</option>
@@ -5581,7 +5624,7 @@
                 <option value="sarvam">Sarvam</option>
                 <option value="custom">Custom</option>
               </select>
-              <div class="tooltip">Select the Automatic Speech Recognition (ASR) vendor. Smallest AI is a ConvoAI v2.13 provider. Gemini ASR is v2.12. ARES keywords improve recognition of brand names and jargon and are only sent when vendor is ARES.</div>
+              <div class="tooltip">Select the Automatic Speech Recognition (ASR) vendor. xAI uses params.api_key / base_url / sample_rate / language. Smallest AI is v2.13. Gemini ASR is v2.12. ARES keywords only apply when vendor is ARES.</div>
             </div>
             <div class="has-tooltip relative">
               <select
@@ -5760,6 +5803,47 @@
                   <span>Word timestamps</span>
                 </label>
                 <div class="tooltip">When enabled, Gemini includes word-level timestamps in transcription results (asr.params.word_timestamp).</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- xAI ASR Configuration -->
+          <div id="xaiAsrConfig" class="hidden mt-4">
+            <h4 class="text-sm font-semibold mb-2">xAI ASR Settings</h4>
+            <div class="modern-input grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="has-tooltip relative">
+                <input
+                  id="xaiAsrKey"
+                  placeholder="xAI API Key (Required)"
+                />
+                <div class="tooltip">xAI API key. Sent as asr.params.api_key.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="xaiAsrBaseUrl"
+                  placeholder="WebSocket URL"
+                  value="wss://api.x.ai/v1/stt"
+                />
+                <div class="tooltip">Streaming STT WebSocket endpoint (asr.params.base_url). Default wss://api.x.ai/v1/stt.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <input
+                  id="xaiAsrLanguage"
+                  placeholder="Language (e.g. en)"
+                  value="en"
+                />
+                <div class="tooltip">Optional language code for transcription formatting (asr.params.language). Example: en.</div>
+              </div>
+              <div class="has-tooltip relative">
+                <select id="xaiAsrSampleRate" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500">
+                  <option value="8000">8000</option>
+                  <option value="16000" selected>16000</option>
+                  <option value="22050">22050</option>
+                  <option value="24000">24000</option>
+                  <option value="44100">44100</option>
+                  <option value="48000">48000</option>
+                </select>
+                <div class="tooltip">Audio sample rate in Hz (asr.params.sample_rate).</div>
               </div>
             </div>
           </div>
@@ -6377,10 +6461,11 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="mistral">Mistral</option>
             <option value="typecast">Typecast</option>
             <option value="gemini">Gemini (preview)</option>
+            <option value="xai">xAI</option>
             <option value="smallestai">Smallest AI</option>
             <option value="generic_http">Generic HTTP (OpenAI protocol)</option>
           </select>
-          <div class="tooltip">Select the Text-to-Speech vendor. Gemini TTS is early-access preview and switches join/leave/update to partner.ai.agora.io/preview with agora-feature: gemini-live. Smallest AI is v2.13. Typecast is v2.11.</div>
+          <div class="tooltip">Select the Text-to-Speech vendor. Gemini TTS is early-access preview (partner.ai.agora.io + agora-feature: gemini-live). xAI sends api_key, voice_id, language, sample_rate. Smallest AI is v2.13. Typecast is v2.11.</div>
         </div>
 
         <!-- Microsoft TTS Settings -->
@@ -7450,6 +7535,47 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             placeholder="Style (Optional, e.g. warm and reassuring)"
           />
           <div class="tooltip">Optional natural-language delivery style. Sent as params.style.</div>
+        </div>
+
+        <!-- xAI TTS Settings -->
+        <div id="xaiTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="xaiTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="xAI API Key (Required)"
+          />
+          <div class="tooltip">xAI API key. Sent as params.api_key.</div>
+        </div>
+        <div id="xaiTtsVoiceBlock" class="has-tooltip relative hidden">
+          <input
+            id="xaiTtsVoiceId"
+            name="ttsVoiceId"
+            autocomplete="on"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Voice ID (Optional, e.g. eve)"
+            value="eve"
+          />
+          <div class="tooltip">xAI voice ID (params.voice_id). Docs sample: eve.</div>
+        </div>
+        <div id="xaiTtsLanguageBlock" class="has-tooltip relative hidden">
+          <input
+            id="xaiTtsLanguage"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Language (Required, e.g. en)"
+            value="en"
+          />
+          <div class="tooltip">Required BCP-47 language code for synthesis (params.language). Example: en.</div>
+        </div>
+        <div id="xaiTtsSampleRateBlock" class="has-tooltip relative hidden">
+          <select id="xaiTtsSampleRate" class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500">
+            <option value="8000">8000</option>
+            <option value="16000" selected>16000</option>
+            <option value="22050">22050</option>
+            <option value="24000">24000</option>
+            <option value="44100">44100</option>
+            <option value="48000">48000</option>
+          </select>
+          <div class="tooltip">Optional audio sample rate in Hz (params.sample_rate).</div>
         </div>
 
         <!-- Smallest AI TTS Settings (v2.13) -->

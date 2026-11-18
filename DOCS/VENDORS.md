@@ -231,6 +231,15 @@ Supports language-grouped voice picker and v2.9 managed presets (`minimax_speech
 
 **Docs:** [Gemini TTS](https://docs.agora.io/en/ai/models/tts/gemini)
 
+### xAI TTS
+
+**Vendor name:** `xai`
+
+**Required:** `api_key`, `language` (e.g. `en`)  
+**Optional:** `voice_id` (docs sample `eve`), `sample_rate` (`8000` / `16000` / `22050` / `24000` / `44100` / `48000`)
+
+**Docs:** [xAI TTS](https://docs.agora.io/en/ai/models/tts/xai)
+
 ### Google TTS
 
 **Required:** Service account credentials JSON, voice name  
@@ -454,7 +463,7 @@ Legacy Interactive Avatar path (`vendor: heygen`). Prefer **LiveAvatar** for new
 
 ## ASR Vendor Support
 
-Playground ASR vendors: `ares`, `microsoft`, `deepgram`, `openai`, `gemini`, `smallestai`, `speechmatics`, `assemblyai`, `amazon`, `google`, `sarvam`, `custom`.
+Playground ASR vendors: `ares`, `microsoft`, `deepgram`, `openai`, `gemini`, `xai`, `smallestai`, `speechmatics`, `assemblyai`, `amazon`, `google`, `sarvam`, `custom`.
 
 ### Agora ASR (ARES)
 
@@ -487,6 +496,18 @@ Google Gemini real-time streaming transcription.
 **Optional / defaults:** `language` (`en-US`), `params.sample_rate` (`16000`), `params.word_timestamp`
 
 **Docs:** [Gemini ASR](https://docs.agora.io/en/ai/models/asr/gemini)
+
+### xAI ASR
+
+Real-time streaming STT over WebSocket.
+
+**Vendor name:** `xai`
+
+**Required:** `params.api_key`
+
+**Optional / defaults:** `params.base_url` (`wss://api.x.ai/v1/stt`), `params.sample_rate` (`16000`; also `8000` / `22050` / `24000` / `44100` / `48000`), `params.language` (e.g. `en`)
+
+**Docs:** [xAI ASR](https://docs.agora.io/en/ai/models/asr/xai)
 
 ### Smallest AI ASR (v2.13)
 

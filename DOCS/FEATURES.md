@@ -133,6 +133,7 @@ Dropdown vendors (see [VENDORS.md](./VENDORS.md) for field details):
 - **Hume AI**, **Rime**, **Fish Audio**, **Google**, **Amazon Polly**, **Sarvam**
 - **Gradium (v2.10)**, **Mistral (v2.10)**, **Typecast (v2.11)**, **Smallest AI (v2.13)**, **Generic HTTP / OpenAI protocol (v2.10)**
 - **Gemini TTS (preview)**: `vendor: gemini` — selecting it confirms and routes join/leave/update to `partner.ai.agora.io/preview` with `agora-feature: gemini-live`; switching away restores production
+- **xAI TTS**: `vendor: xai` with `api_key`, required `language`, optional `voice_id` / `sample_rate`
 - **Managed Cartesia / Fish Audio (v2.14)**: `cartesia_sonic_3_5`, `cartesia_sonic_3_6`, `fishaudio_s2_1_pro`
 - Shared: skip patterns, TTS custom parameters, LiveAvatar 24 kHz enforcement when applicable
 
@@ -140,10 +141,11 @@ Dropdown vendors (see [VENDORS.md](./VENDORS.md) for field details):
 
 Dropdown vendors:
 
-- **Agora (ARES)**, **Microsoft**, **Deepgram**, **OpenAI**, **Gemini (v2.12)**, **Smallest AI (v2.13)**, **Speechmatics**
+- **Agora (ARES)**, **Microsoft**, **Deepgram**, **OpenAI**, **Gemini (v2.12)**, **xAI**, **Smallest AI (v2.13)**, **Speechmatics**
 - **AssemblyAI**, **Amazon Transcribe**, **Google**, **Sarvam**, **Custom**
 - **ARES keywords (v2.11)**: `asr.keywords` list (max 128) to improve recognition of brand names, product names, and jargon. Only sent when vendor is ARES.
 - **Gemini ASR (v2.12)**: `vendor: gemini` with `gemini-3.5-transcribe-live`, sample rate, and optional word timestamps
+- **xAI ASR**: `vendor: xai` with required `params.api_key`; optional `base_url`, `sample_rate`, `language`
 - **Smallest AI ASR (v2.13)**: `vendor: smallestai`. Required `params.api_key`. Boolean options are strings `"true"` / `"false"`.
 
 ### Voice Activity Detection (VAD) & Turn Detection

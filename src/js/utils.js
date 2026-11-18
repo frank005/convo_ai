@@ -68,6 +68,8 @@ window.Utils = class Utils {
             ttsKey = document.getElementById("smallestaiTtsKey") ? document.getElementById("smallestaiTtsKey").value.trim() : '';
         } else if (ttsVendor === "gemini") {
             ttsKey = document.getElementById("geminiTtsKey") ? document.getElementById("geminiTtsKey").value.trim() : '';
+        } else if (ttsVendor === "xai") {
+            ttsKey = document.getElementById("xaiTtsKey") ? document.getElementById("xaiTtsKey").value.trim() : '';
         } else if (ttsVendor === "generic_http") {
             ttsKey = document.getElementById("genericHttpTtsKey") ? document.getElementById("genericHttpTtsKey").value.trim() : '';
         }
@@ -725,6 +727,11 @@ window.Utils = class Utils {
                     if (!geminiTtsKey) throw new Error('Gemini TTS API Key is required');
                     if (!geminiTtsModel) throw new Error('Gemini TTS Model is required');
                     if (!geminiTtsVoice) throw new Error('Gemini TTS Voice is required');
+                } else if (ttsVendor === 'xai') {
+                    const xaiTtsKey = document.getElementById('xaiTtsKey') ? document.getElementById('xaiTtsKey').value.trim() : '';
+                    const xaiTtsLanguage = document.getElementById('xaiTtsLanguage') ? document.getElementById('xaiTtsLanguage').value.trim() : '';
+                    if (!xaiTtsKey) throw new Error('xAI TTS API Key is required');
+                    if (!xaiTtsLanguage) throw new Error('xAI TTS Language is required');
                 } else if (ttsVendor === 'generic_http') {
                     const genericHttpUrl = document.getElementById('genericHttpUrl') ? document.getElementById('genericHttpUrl').value.trim() : '';
                     const genericHttpTtsKey = document.getElementById('genericHttpTtsKey') ? document.getElementById('genericHttpTtsKey').value.trim() : '';
@@ -784,6 +791,11 @@ window.Utils = class Utils {
                     }
                     if (!geminiAsrModel) {
                         throw new Error('Gemini ASR Model is required');
+                    }
+                } else if (asrVendor === 'xai') {
+                    const xaiAsrKey = document.getElementById('xaiAsrKey') ? document.getElementById('xaiAsrKey').value.trim() : '';
+                    if (!xaiAsrKey) {
+                        throw new Error('xAI ASR API Key is required');
                     }
                 } else if (asrVendor === 'smallestai') {
                     const smallestaiAsrKey = document.getElementById('smallestaiAsrKey') ? document.getElementById('smallestaiAsrKey').value.trim() : '';
@@ -1329,6 +1341,21 @@ window.Utils = class Utils {
                 language: asrLanguage,
                 params
             };
+        } else if (vendor === 'xai') {
+            const xaiAsrKey = document.getElementById('xaiAsrKey') ? document.getElementById('xaiAsrKey').value.trim() : '';
+            const xaiAsrBaseUrl = document.getElementById('xaiAsrBaseUrl') ? document.getElementById('xaiAsrBaseUrl').value.trim() : '';
+            const xaiAsrLanguage = document.getElementById('xaiAsrLanguage') ? document.getElementById('xaiAsrLanguage').value.trim() : '';
+            const xaiAsrSampleRate = parseInt(document.getElementById('xaiAsrSampleRate') ? document.getElementById('xaiAsrSampleRate').value : '16000', 10);
+            const params = {
+                api_key: xaiAsrKey
+            };
+            if (xaiAsrBaseUrl) params.base_url = xaiAsrBaseUrl;
+            if (Number.isFinite(xaiAsrSampleRate) && xaiAsrSampleRate > 0) params.sample_rate = xaiAsrSampleRate;
+            if (xaiAsrLanguage) params.language = xaiAsrLanguage;
+            return {
+                vendor: 'xai',
+                params
+            };
         } else if (vendor === 'smallestai') {
             const boolString = (id) => {
                 const el = document.getElementById(id);
@@ -1486,6 +1513,7 @@ window.Utils = class Utils {
             case 'murf':
             case 'deepgram':
             case 'gradium':
+            case 'xai':
             case 'generic_http':
                 p.sample_rate = rate;
                 break;
@@ -2525,6 +2553,20 @@ window.Utils = class Utils {
                     vendor: "gemini",
                     ...(skip_patterns ? { skip_patterns } : {}),
                     params: geminiParams
+                };
+            } else if (formData.vendor === "xai") {
+                const xaiParams = {
+                    api_key: document.getElementById("xaiTtsKey").value.trim(),
+                    language: document.getElementById("xaiTtsLanguage").value.trim()
+                };
+                const xaiVoiceId = document.getElementById("xaiTtsVoiceId")?.value.trim();
+                const xaiSampleRate = parseInt(document.getElementById("xaiTtsSampleRate")?.value || '', 10);
+                if (xaiVoiceId) xaiParams.voice_id = xaiVoiceId;
+                if (Number.isFinite(xaiSampleRate) && xaiSampleRate > 0) xaiParams.sample_rate = xaiSampleRate;
+                config.properties.tts = {
+                    vendor: "xai",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: xaiParams
                 };
             } else if (formData.vendor === "smallestai") {
                 const smallestParams = {
