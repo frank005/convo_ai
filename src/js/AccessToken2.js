@@ -162,6 +162,23 @@ class ServiceFpa extends Service {
 
 ServiceFpa.kPrivilegeLogin = 1
 
+const kConvoAIServiceType = 9
+
+// ConvoAI service (v2.14): presence in the token grants REST API auth; no privilege payload.
+class ServiceConvoAI extends Service {
+    constructor() {
+        super(kConvoAIServiceType)
+    }
+
+    pack() {
+        return super.pack()
+    }
+
+    unpack(buffer) {
+        return super.unpack(buffer)
+    }
+}
+
 const kChatServiceType = 5
 
 class ServiceChat extends Service {
@@ -514,6 +531,7 @@ AccessToken2.kServices[kChatServiceType] = ServiceChat
 AccessToken2.kServices[kFpaServiceType] = ServiceFpa
 AccessToken2.kServices[kRtcServiceType] = ServiceRtc
 AccessToken2.kServices[kRtmServiceType] = ServiceRtm
+AccessToken2.kServices[kConvoAIServiceType] = ServiceConvoAI
 
 // Export for browser
 window.AccessToken2 = AccessToken2
@@ -522,3 +540,5 @@ window.ServiceRtm = ServiceRtm
 window.ServiceChat = ServiceChat
 window.ServiceFpa = ServiceFpa
 window.ServiceApaas = ServiceApaas
+window.ServiceConvoAI = ServiceConvoAI
+window.kConvoAIServiceType = kConvoAIServiceType

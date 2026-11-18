@@ -958,7 +958,7 @@ The code is modular. Swap LLM providers without touching the audio pipeline. Cha
 
 ### What's Supported
 
-Aligned with the current playground dropdowns (ConvoAI Engine **v2.13**):
+Aligned with the current playground dropdowns (ConvoAI Engine **v2.14**):
 
 **LLM Providers**: OpenAI, Azure OpenAI, Google Gemini, Google Vertex AI, Anthropic Claude, Amazon Bedrock, Dify, custom endpoints
 
@@ -970,7 +970,7 @@ Aligned with the current playground dropdowns (ConvoAI Engine **v2.13**):
 
 **AI Avatars**: Akool, LiveAvatar (HeyGen), Generic, LemonSlice (UI option → REST `generic`), Anam, HeyGen (Deprecated)
 
-**Features**: Turn Detection v2.4 SoS/EoS (including Manual), v2.6 interruption object, Manual Turn Control via RTM (v2.9), managed credential presets (v2.9), custom tools for LLM and MLLM, generated filler words with conversation context (v2.13), MCP servers (LLM and MLLM), SAL, silence/farewell config, SIP/phone management, live subtitles, camera preview, device management, local RTC+RTM tokens (60 min TTL)
+**Features**: Turn Detection v2.4 SoS/EoS (including Manual), v2.6 interruption object, Manual Turn Control via RTM (v2.9), managed credential presets (v2.9 + v2.14 Cartesia/Fish Audio), ConvoAI token service (v2.14), custom tools for LLM and MLLM, generated filler words with conversation context (v2.13), MCP servers (LLM and MLLM), SAL, silence/farewell config, SIP/phone management, live subtitles, camera preview, device management, local RTC+RTM(+ConvoAI) tokens (60 min TTL)
 
 ### Production Notes
 

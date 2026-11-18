@@ -356,7 +356,7 @@
                           >
                             <span id="toggleConversationTurnsOptionsText">Show Conversation Turn Options</span>
                           </button>
-                          <div class="tooltip">Pagination and fetch-all settings for Query Conversation Turns. Defaults: page 1, 50 turns per page.</div>
+                          <div class="tooltip">Pagination and fetch-all settings for Query Conversation Turns. Defaults: page 1, 50 turns per page. For interrupted turns (v2.14), end.metadata includes playback_duration_ms and intended_playback_duration_ms.</div>
                         </div>
                         <div class="has-tooltip relative">
                           <button
@@ -3709,7 +3709,8 @@
     const applyTtsPresetState = () => {
       if (!ttsPreset) return;
       const ttsVendor = document.getElementById('ttsVendor');
-      const ttsProviderAllowsPreset = ttsVendor && (ttsVendor.value === 'openai' || ttsVendor.value === 'minimax');
+      const managedVendors = ['openai', 'minimax', 'cartesia', 'fishaudio'];
+      const ttsProviderAllowsPreset = ttsVendor && managedVendors.includes(ttsVendor.value);
       if (ttsPresetContainer) ttsPresetContainer.style.opacity = ttsProviderAllowsPreset ? '1' : '0.6';
       if (!ttsProviderAllowsPreset) ttsPreset.value = '';
       ttsPreset.disabled = !ttsProviderAllowsPreset;
@@ -3723,25 +3724,31 @@
           opt.hidden = !opt.value.startsWith('openai_tts_');
         } else if (ttsVendor && ttsVendor.value === 'minimax') {
           opt.hidden = !opt.value.startsWith('minimax_speech_');
+        } else if (ttsVendor && ttsVendor.value === 'cartesia') {
+          opt.hidden = !opt.value.startsWith('cartesia_sonic_');
+        } else if (ttsVendor && ttsVendor.value === 'fishaudio') {
+          opt.hidden = !opt.value.startsWith('fishaudio_');
         } else {
           opt.hidden = true;
         }
       });
-      // Drop preset selection if it no longer matches the vendor (e.g. openai_tts_1 after switching to MiniMax)
-      if (ttsVendor && ttsVendor.value === 'minimax' && ttsPreset.value && !ttsPreset.value.startsWith('minimax_speech_')) {
-        ttsPreset.value = '';
-      }
-      if (ttsVendor && ttsVendor.value === 'openai' && ttsPreset.value && !ttsPreset.value.startsWith('openai_tts_')) {
-        ttsPreset.value = '';
-      }
+      // Drop preset selection if it no longer matches the vendor
+      const vSel = ttsVendor ? ttsVendor.value : '';
+      if (vSel === 'minimax' && ttsPreset.value && !ttsPreset.value.startsWith('minimax_speech_')) ttsPreset.value = '';
+      if (vSel === 'openai' && ttsPreset.value && !ttsPreset.value.startsWith('openai_tts_')) ttsPreset.value = '';
+      if (vSel === 'cartesia' && ttsPreset.value && !ttsPreset.value.startsWith('cartesia_sonic_')) ttsPreset.value = '';
+      if (vSel === 'fishaudio' && ttsPreset.value && !ttsPreset.value.startsWith('fishaudio_')) ttsPreset.value = '';
       const value = ttsPreset.value;
       const isOpenAiPreset = value.startsWith('openai_tts_');
       const isMiniMaxPreset = value.startsWith('minimax_speech_');
+      const isCartesiaPreset = value.startsWith('cartesia_sonic_');
+      const isFishAudioPreset = value.startsWith('fishaudio_');
       const v = ttsVendor ? ttsVendor.value : '';
       // Hide credential fields when using Agora preset, but never un-hide them for the wrong vendor
-      // (toggle(hidden, false) was incorrectly revealing OpenAI fields after switching to MiniMax).
       const hideOpenAiCredentialFields = v !== 'openai' || isOpenAiPreset;
       const hideMiniMaxCredentialFields = v !== 'minimax' || isMiniMaxPreset;
+      const hideCartesiaCredentialFields = v !== 'cartesia' || isCartesiaPreset;
+      const hideFishAudioCredentialFields = v !== 'fishaudio' || isFishAudioPreset;
       const openaiTtsKeyWrap = document.getElementById('openaiTtsKey')?.closest('.has-tooltip');
       const openaiBaseUrlWrap = document.getElementById('openaiBaseUrl')?.closest('.has-tooltip');
       const openaiModelWrap = document.getElementById('openaiModel')?.closest('.has-tooltip');
@@ -3757,6 +3764,16 @@
       if (minimaxGroupIdWrap) minimaxGroupIdWrap.classList.toggle('hidden', hideMiniMaxCredentialFields);
       if (minimaxModelWrap) minimaxModelWrap.classList.toggle('hidden', hideMiniMaxCredentialFields);
       if (minimaxUrlWrap) minimaxUrlWrap.classList.toggle('hidden', hideMiniMaxCredentialFields);
+
+      const cartesiaKeyBlock = document.getElementById('cartesiaTtsKeyBlock');
+      const cartesiaModelBlock = document.getElementById('cartesiaModelBlock');
+      if (cartesiaKeyBlock) cartesiaKeyBlock.classList.toggle('hidden', hideCartesiaCredentialFields);
+      if (cartesiaModelBlock) cartesiaModelBlock.classList.toggle('hidden', v !== 'cartesia' || isCartesiaPreset);
+
+      const fishaudioKeyBlock = document.getElementById('fishaudioTtsKeyBlock');
+      const fishaudioBackendBlock = document.getElementById('fishaudioBackendBlock');
+      if (fishaudioKeyBlock) fishaudioKeyBlock.classList.toggle('hidden', hideFishAudioCredentialFields);
+      if (fishaudioBackendBlock) fishaudioBackendBlock.classList.toggle('hidden', v !== 'fishaudio' || isFishAudioPreset);
     };
 
     const applyAllPresetState = () => {
@@ -5195,13 +5212,13 @@
   <script src="src/js/AccessToken2.js"></script>
   <script src="src/js/RtcTokenBuilder2.js"></script>
   <script src="src/js/RtmTokenBuilder2.js"></script>
-  <script src="src/js/utils.js?v=1.7"></script>
-  <script src="src/js/api.js?v=1.7"></script>
+  <script src="src/js/utils.js?v=1.8"></script>
+  <script src="src/js/api.js?v=1.8"></script>
   <script src="src/js/audio.js?v=1.2"></script>
   <script src="src/js/camera-preview.js?v=1.0"></script>
   <script src="src/js/conversational-ai-api.js?v=1.4"></script>
   <script src="src/js/subtitles.js?v=1.5"></script>
-  <script src="src/js/ui.js?v=1.7"></script>
+  <script src="src/js/ui.js?v=1.8"></script>
   <script src="src/js/asr.js?v=1.1"></script>
 
   <!-- Subtitle Overlay -->
@@ -5277,7 +5294,7 @@
                   Generate
                 </button>
               </div>
-              <div class="tooltip">Authentication token for Agora RTC (if required). Generated tokens are valid for 60 minutes.</div>
+              <div class="tooltip">Agent channel token (RTC + RTM + ConvoAI service, v2.14). Can also be used as Authorization: agora token=… for REST. Valid for 60 minutes.</div>
             </div>
             <div class="has-tooltip relative">
               <input
@@ -6333,8 +6350,11 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="minimax_speech_2_8_turbo">minimax_speech_2_8_turbo</option>
             <option value="openai_tts_1">openai_tts_1</option>
             <option value="openai_tts_1_hd">openai_tts_1_hd</option>
+            <option value="cartesia_sonic_3_5">cartesia_sonic_3_5</option>
+            <option value="cartesia_sonic_3_6">cartesia_sonic_3_6</option>
+            <option value="fishaudio_s2_1_pro">fishaudio_s2_1_pro</option>
           </select>
-          <div class="tooltip">ConvoAI v2.9 managed mode for OpenAI/MiniMax TTS. Sets credential_mode: managed; voice settings remain editable.</div>
+          <div class="tooltip">Managed mode for OpenAI / MiniMax (v2.9) and Cartesia / Fish Audio (v2.14). Sets credential_mode: managed; omit API key. Voice / reference ID remain editable.</div>
         </div>
         <div class="has-tooltip relative">
           <select
@@ -6609,7 +6629,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Cartesia API Key (Required)"
           />
-          <div class="tooltip">API key for Cartesia TTS service.</div>
+          <div class="tooltip">API key for Cartesia TTS. Not required when using managed presets cartesia_sonic_3_5 / cartesia_sonic_3_6 (v2.14).</div>
         </div>
         <div id="cartesiaModelBlock" class="has-tooltip relative hidden">
           <input
@@ -6618,7 +6638,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             placeholder="Cartesia Model ID (Required)"
             value="sonic-2"
           />
-          <div class="tooltip">Enter the Cartesia model ID for voice synthesis.</div>
+          <div class="tooltip">Cartesia model ID (e.g. sonic-2). Managed presets force sonic-3.5 or sonic-3.6 (v2.14).</div>
         </div>
         <div id="cartesiaVoiceBlock" class="has-tooltip relative hidden">
           <input
@@ -6629,7 +6649,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             placeholder="Cartesia Voice ID (Required)"
             value="coral"
           />
-          <div class="tooltip">Enter the Cartesia voice ID for speech output.</div>
+          <div class="tooltip">Cartesia voice ID. Still required in managed mode.</div>
         </div>
 
         <!-- OpenAI TTS Settings -->
@@ -6902,7 +6922,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Fish Audio API Key (Required)"
           />
-          <div class="tooltip">API key for Fish Audio TTS service.</div>
+          <div class="tooltip">API key for Fish Audio TTS. Not required when using managed preset fishaudio_s2_1_pro (v2.14).</div>
         </div>
         <div id="fishaudioReferenceIdBlock" class="has-tooltip relative hidden">
           <input
@@ -6910,7 +6930,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
             placeholder="Voice Model ID (Required)"
           />
-          <div class="tooltip">The identifier of the voice model to use for speech synthesis.</div>
+          <div class="tooltip">The identifier of the voice model to use for speech synthesis. Still required in managed mode.</div>
         </div>
         <div id="fishaudioBackendBlock" class="has-tooltip relative hidden">
           <input
@@ -6919,7 +6939,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             placeholder="Backend (e.g., speech-1.5)"
             value="speech-1.5"
           />
-          <div class="tooltip">The backend model version to use.</div>
+          <div class="tooltip">Backend model version. Managed preset fishaudio_s2_1_pro forces s2.1-pro (v2.14).</div>
         </div>
         
         <!-- Groq TTS Settings -->
@@ -7662,7 +7682,7 @@ The user speaks to you directly — treat each input as part of a live, spoken d
         </div>
 
         <!-- Anam-specific settings -->
-        <div id="anamSettings" class="hidden">
+        <div id="anamSettings" class="hidden space-y-2">
           <div class="has-tooltip relative">
             <select
               id="anamSampleRate"
@@ -7694,6 +7714,38 @@ The user speaks to you directly — treat each input as part of a live, spoken d
               <option value="AV1">AV1</option>
             </select>
             <div class="tooltip">Anam video encoding format.</div>
+          </div>
+          <div class="has-tooltip relative">
+            <select
+              id="anamAvatarModel"
+              class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            >
+              <option value="">Avatar model: Default (from avatar_id)</option>
+              <option value="cara-4">cara-4 (Cara 4 / portrait)</option>
+            </select>
+            <div class="tooltip">avatar.params.avatar_model (v2.11). Use cara-4 for Cara 4 and portrait resolutions.</div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="has-tooltip relative">
+              <input
+                id="anamVideoWidth"
+                type="number"
+                min="1"
+                class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                placeholder="video_width (e.g. 768)"
+              />
+              <div class="tooltip">avatar.params.video_width. Set together with video_height. Portrait example: 768×1152 with cara-4.</div>
+            </div>
+            <div class="has-tooltip relative">
+              <input
+                id="anamVideoHeight"
+                type="number"
+                min="1"
+                class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+                placeholder="video_height (e.g. 1152)"
+              />
+              <div class="tooltip">avatar.params.video_height. Supported Cara 4: 1152×768 landscape, 768×1152 portrait.</div>
+            </div>
           </div>
         </div>
 

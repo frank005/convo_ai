@@ -107,6 +107,31 @@ class RtcTokenBuilder {
         return await token.build()
     }
 
+    /**
+     * ConvoAI Engine v2.14 token: RTC + RTM + ConvoAI service.
+     * Use the same token for agent channel join and REST Authorization: agora token=...
+     */
+    static async buildTokenWithConvoAI(appId, appCertificate, channelName, account, role, tokenExpire, privilegeExpire = 0) {
+        let token = new AccessToken2(appId, appCertificate, 0, tokenExpire)
+
+        let serviceRtc = new ServiceRtc(channelName, account)
+        serviceRtc.add_privilege(ServiceRtc.kPrivilegeJoinChannel, privilegeExpire)
+        if (role == Role.PUBLISHER) {
+            serviceRtc.add_privilege(ServiceRtc.kPrivilegePublishAudioStream, privilegeExpire)
+            serviceRtc.add_privilege(ServiceRtc.kPrivilegePublishVideoStream, privilegeExpire)
+            serviceRtc.add_privilege(ServiceRtc.kPrivilegePublishDataStream, privilegeExpire)
+        }
+        token.add_service(serviceRtc)
+
+        let serviceRtm = new ServiceRtm(account)
+        serviceRtm.add_privilege(ServiceRtm.kPrivilegeLogin, privilegeExpire || tokenExpire)
+        token.add_service(serviceRtm)
+
+        token.add_service(new ServiceConvoAI())
+
+        return await token.build()
+    }
+
     static async buildTokenWithRtm2(
         appId,
         appCertificate,

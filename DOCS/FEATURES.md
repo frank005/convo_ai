@@ -48,7 +48,10 @@
 ### Backend Pipeline & Managed Credentials
 
 - **Backend Pipeline ID**: Point the agent at a preconfigured pipeline; optionally override LLM / TTS / ASR from the playground UI
-- **Managed presets (v2.9)**: ASR / LLM / TTS presets that set `credential_mode: managed` (OpenAI / MiniMax TTS presets and related managed options)
+- **Managed presets**: ASR / LLM / TTS presets that set `credential_mode: managed`
+  - v2.9: Deepgram ASR, OpenAI LLM, OpenAI / MiniMax TTS
+  - **v2.14**: Cartesia TTS (`sonic-3.5`, `sonic-3.6`) and Fish Audio TTS (`s2.1-pro`) — omit `api_key`
+- **ConvoAI token service (v2.14)**: Agent Generate Token builds RTC + RTM + ConvoAI; same token can authenticate REST as `Authorization: agora token=…`
 
 ### Real-time Audio & Visual Experience
 
@@ -99,7 +102,7 @@
     - API key and avatar ID configuration
     - RTC UID and token management for avatar channel access
     - LemonSlice-specific settings: identity (agent ID / image URL / base64), aspect ratio, video encoding, model, idle/response timeouts, speaking/idle prompts; TTS sample rate forced (default 24000)
-    - Anam-specific settings: sample rate, quality, video encoding
+    - Anam-specific settings: sample rate, quality, video encoding; **v2.11** `avatar_model` (e.g. `cara-4`) and optional `video_width` / `video_height` for portrait
     - LiveAvatar / HeyGen settings: quality, idle timeout, activity timeout
     - LiveAvatar and LemonSlice force TTS sample rate for supported TTS vendors
     - Automatic client UID configuration for avatar-agent communication
@@ -129,6 +132,7 @@ Dropdown vendors (see [VENDORS.md](./VENDORS.md) for field details):
 - **Microsoft**, **ElevenLabs**, **MiniMax**, **Deepgram**, **Murf**, **Cartesia**, **OpenAI**
 - **Hume AI**, **Rime**, **Fish Audio**, **Google**, **Amazon Polly**, **Sarvam**
 - **Gradium (v2.10)**, **Mistral (v2.10)**, **Typecast (v2.11)**, **Smallest AI (v2.13)**, **Generic HTTP / OpenAI protocol (v2.10)**
+- **Managed Cartesia / Fish Audio (v2.14)**: `cartesia_sonic_3_5`, `cartesia_sonic_3_6`, `fishaudio_s2_1_pro`
 - Shared: skip patterns, TTS custom parameters, LiveAvatar 24 kHz enforcement when applicable
 
 ### Advanced ASR Integration
@@ -272,6 +276,7 @@ Dropdown vendors:
 - **Query Conversation Turns**
   - Paginated turn metrics (last 7 days)
   - Optional fetch-all-pages merge in the playground
+  - **v2.14** interrupted turns include `end.metadata.playback_duration_ms` (PCM actually played) and `intended_playback_duration_ms` (PCM scheduled)
 
 ### Input/Output Modalities
 

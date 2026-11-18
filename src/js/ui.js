@@ -1072,7 +1072,8 @@ window.UI = class UI {
                 appCertificate,
                 channelName,
                 agoraRtcUid,
-                1 // PUBLISHER role
+                1, // PUBLISHER role
+                { includeConvoAI: true } // v2.14: ConvoAI service for REST + channel
             );
 
             document.getElementById("agoraRtcToken").value = token;
@@ -1115,7 +1116,8 @@ window.UI = class UI {
                     appCertificate,
                     channelName,
                     agentUid,
-                    1
+                    1,
+                    { includeConvoAI: true }
                 );
                 agentTokenInput.value = token;
                 this.tokenGeneratedAt.agent = Date.now();
@@ -1836,6 +1838,11 @@ window.UI = class UI {
         if (enableAvatar && enableAvatar.checked && !vendor) {
             enableAvatar.checked = false;
             enableAvatar.dispatchEvent(new Event('change'));
+        }
+
+        // Re-apply managed TTS preset field visibility after vendor blocks are shown
+        if (typeof window.applyAllPresetState === 'function') {
+            window.applyAllPresetState();
         }
     }
 

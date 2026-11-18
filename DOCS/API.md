@@ -115,7 +115,7 @@ All REST calls in `src/js/api.js` format error bodies through `Utils.formatConvo
 
 - **112 turns finished:** post-session batched turn data (alternative to paginated REST query).
 
-See [release notes](https://docs.agora.io/en/ai/release-notes) for platform changelog details (v2.13 Smallest AI ASR/TTS, OpenAI GPT-Live, `mllm.tools`, filler-word context; v2.12 custom `llm.tools`, generated filler words, think `append`, MLLM MCP, Gemini ASR; v2.11 Typecast TTS, Azure OpenAI Realtime MLLM, ARES `asr.keywords`; v2.10 Gradium / Mistral / `generic_http` TTS).
+See [release notes](https://docs.agora.io/en/ai/release-notes) for platform changelog details (v2.14 managed Cartesia / Fish Audio TTS, ConvoAI token service, interrupted-turn `playback_duration_ms` / `intended_playback_duration_ms`; v2.13 Smallest AI ASR/TTS, OpenAI GPT-Live, `mllm.tools`, filler-word context; v2.12 custom `llm.tools`, generated filler words, think `append`, MLLM MCP, Gemini ASR; v2.11 Typecast TTS, Azure OpenAI Realtime MLLM, ARES `asr.keywords`, Anam Cara 4; v2.10 Gradium / Mistral / `generic_http` TTS).
 
 ### Avatar payload notes
 
@@ -126,9 +126,9 @@ See [release notes](https://docs.agora.io/en/ai/release-notes) for platform chan
 
 All API requests require authentication using your Agora credentials:
 
-- **Customer ID**: Your Agora Customer ID
-- **Customer Secret**: Your Agora Customer Secret
-- **App ID**: Your Agora Application ID
+- **Basic HTTP**: Customer ID + Customer Secret (default in this playground)
+- **Token (v2.14)**: `Authorization: agora token=<token>` where the token includes the ConvoAI AccessToken2 service. Agent **Generate Token** builds RTC + RTM + ConvoAI so the same value can be used for `properties.token` and REST auth.
+- **App ID** / **App Certificate**: Required for local token generation
 
 Credentials are managed through the "Set API Credentials" button in the application interface and stored securely in localStorage.
 

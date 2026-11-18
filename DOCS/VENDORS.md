@@ -77,11 +77,13 @@ Ultra-fast, low-latency text-to-speech with real-time streaming capabilities.
 
 **Required Fields:**
 
-- API Key
+- API Key (omit when managed)
 - Model ID
 - Voice ID
 
-**Default Model:** "sonic-2"
+**Default Model:** `sonic-2`
+
+**Managed mode (v2.14):** Presets `cartesia_sonic_3_5` / `cartesia_sonic_3_6` set `credential_mode: managed` and `model_id` to `sonic-3.5` / `sonic-3.6`. Voice ID still required.
 
 **Features:**
 
@@ -215,7 +217,8 @@ Supports language-grouped voice picker and v2.9 managed presets (`minimax_speech
 
 ### Fish Audio TTS
 
-**Required:** API Key, `reference_id`, `backend`
+**Required:** API Key (omit when managed), `reference_id`, `backend`  
+**Managed mode (v2.14):** Preset `fishaudio_s2_1_pro` sets `credential_mode: managed` and `backend` to `s2.1-pro`. `reference_id` still required.
 
 ### Google TTS
 
@@ -435,7 +438,8 @@ Legacy Interactive Avatar path (`vendor: heygen`). Prefer **LiveAvatar** for new
 **Vendor name:** `anam`
 
 **Required:** API Key, Avatar ID (Agora `avatar_id`), Avatar RTC UID  
-**Also sent:** `sample_rate`, `quality`, `video_encoding`, `agora_token`, `agora_uid`
+**Also sent:** `sample_rate`, `quality`, `video_encoding`, `agora_token`, `agora_uid`  
+**v2.11 optional:** `avatar_model` (e.g. `cara-4`), `video_width` + `video_height` together (portrait example: 768×1152)
 
 ## ASR Vendor Support
 

@@ -2,7 +2,7 @@
 
 A web dashboard for managing and interacting with Agora's Conversational AI Agents. This application provides a user-friendly interface for creating, updating, and monitoring AI agents that can engage in real-time conversations with support for both traditional LLM and Multimodal Large Language Model (MLLM) configurations.
 
-Targets **Agora Conversational AI Engine v2.13** features (Smallest AI ASR/TTS, OpenAI GPT-Live, MLLM custom tools, generated filler-word context, plus v2.12 custom LLM tools, generated filler words, think `append`, MLLM MCP, Gemini ASR, and earlier presets). See the [platform release notes](https://docs.agora.io/en/ai/release-notes).
+Targets **Agora Conversational AI Engine v2.14** features (managed Fish Audio / Cartesia TTS, ConvoAI token service, interrupted-turn playback metrics, plus v2.13 Smallest AI ASR/TTS, OpenAI GPT-Live, MLLM custom tools, generated filler-word context, and earlier presets through v2.11). See the [platform release notes](https://docs.agora.io/en/ai/release-notes).
 
 ## Project Structure
 
@@ -89,8 +89,10 @@ For detailed setup instructions, see [SETUP.md](DOCS/SETUP.md).
 - **AI Avatar Support**: Akool, LiveAvatar, Generic, LemonSlice, Anam, and deprecated HeyGen
   - LemonSlice is a first-class UI option that still sends `vendor: generic` with LemonSlice defaults
   - LiveAvatar forces 24 kHz TTS sample rate for supported vendors
+  - Anam Cara 4 / portrait via `avatar_model`, `video_width`, `video_height` (v2.11)
 - **Manual Turn Control (v2.9)**: Client-side Start of Speech (SoS) / End of Speech (EoS) via RTM when turn detection modes are set to Manual
-- **Managed Credentials (v2.9)**: Optional ASR / LLM / TTS presets that set `credential_mode: managed`
+- **Managed Credentials**: ASR / LLM / TTS presets that set `credential_mode: managed` (v2.9 OpenAI / MiniMax / Deepgram; **v2.14** Cartesia `sonic-3.5`/`sonic-3.6` and Fish Audio `s2.1-pro`)
+- **ConvoAI tokens (v2.14)**: Agent Generate Token includes the ConvoAI service (RTC + RTM + ConvoAI) for channel join and optional REST `Authorization: agora token=…`
 - **Backend Pipeline ID**: Use a preconfigured pipeline, with optional override of LLM / TTS / ASR from the UI
 - **Tools**: Custom HTTPS tools for cascading LLM (`llm.tools`) and MLLM (`mllm.tools`, v2.13); MCP servers in the LLM drawer (`llm.mcp_servers`) or the MLLM drawer (`mllm.mcp_servers`); generated filler words with conversation context (v2.13)
 - **SIP/Phone Management**: Import numbers, outbound SIP calls, call history, inbound/outbound config
@@ -155,4 +157,4 @@ For issues and questions:
 
 ---
 
-**Agora Conversational AI Engine v2.13** — a comprehensive web dashboard for managing and interacting with Agora's Conversational AI Agents. Features include dual LLM/MLLM modes, custom tools for LLM and MLLM, generated filler words with conversation context, Smallest AI ASR and TTS, GPT-Live MLLM, Azure OpenAI Realtime, AI avatars, manual SoS/EoS turn control, managed credential presets, SIP/phone management, live subtitles, device management, and local RTC+RTM token generation.
+**Agora Conversational AI Engine v2.14** — a comprehensive web dashboard for managing and interacting with Agora's Conversational AI Agents. Features include dual LLM/MLLM modes, custom tools for LLM and MLLM, generated filler words with conversation context, Smallest AI ASR and TTS, GPT-Live MLLM, Azure OpenAI Realtime, managed Cartesia / Fish Audio TTS, ConvoAI token service, AI avatars (including Anam Cara 4), manual SoS/EoS turn control, managed credential presets, SIP/phone management, live subtitles, device management, and local RTC+RTM(+ConvoAI) token generation.

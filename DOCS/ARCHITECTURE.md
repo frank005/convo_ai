@@ -15,7 +15,7 @@ The application is organized into these main modules:
 7. **ASR helpers** (`asr.js`) — ASR vendor UI/config helpers
 8. **Camera preview** (`camera-preview.js`) — Local camera overlay
 9. **Form persistence** (`form-settings-persistence.js`) — Persist selected settings across reloads
-10. **Token builders** (`RtcTokenBuilder2.js`, `RtmTokenBuilder2.js`, `AccessToken2.js`)
+10. **Token builders** (`RtcTokenBuilder2.js`, `RtmTokenBuilder2.js`, `AccessToken2.js`) — agent tokens optionally include ConvoAI service type 9 (v2.14)
 
 ## Module Details
 

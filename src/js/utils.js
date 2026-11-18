@@ -223,6 +223,9 @@ window.Utils = class Utils {
         const anamSampleRate = document.getElementById("anamSampleRate") ? document.getElementById("anamSampleRate").value : '24000';
         const anamQuality = document.getElementById("anamQuality") ? document.getElementById("anamQuality").value : 'high';
         const anamVideoEncoding = document.getElementById("anamVideoEncoding") ? document.getElementById("anamVideoEncoding").value : 'H264';
+        const anamAvatarModel = document.getElementById("anamAvatarModel") ? document.getElementById("anamAvatarModel").value.trim() : '';
+        const anamVideoWidth = document.getElementById("anamVideoWidth") ? document.getElementById("anamVideoWidth").value.trim() : '';
+        const anamVideoHeight = document.getElementById("anamVideoHeight") ? document.getElementById("anamVideoHeight").value.trim() : '';
         const asrPreset = document.getElementById("asrPreset") ? document.getElementById("asrPreset").value : '';
         const llmPreset = document.getElementById("llmPreset") ? document.getElementById("llmPreset").value : '';
         const ttsPreset = document.getElementById("ttsPreset") ? document.getElementById("ttsPreset").value : '';
@@ -403,6 +406,9 @@ window.Utils = class Utils {
             anamSampleRate: anamSampleRate,
             anamQuality: anamQuality,
             anamVideoEncoding: anamVideoEncoding,
+            anamAvatarModel: anamAvatarModel,
+            anamVideoWidth: anamVideoWidth,
+            anamVideoHeight: anamVideoHeight,
             // RTC Encryption settings
             rtcEncryptionMode: document.getElementById('rtcEncryptionMode') ? document.getElementById('rtcEncryptionMode').value : '',
             rtcEncryptionKey: document.getElementById('rtcEncryptionKey') ? document.getElementById('rtcEncryptionKey').value.trim() : '',
@@ -424,7 +430,7 @@ window.Utils = class Utils {
         const presets = this.parsePresetList(data.preset);
         const presetHasAsr = presets.some(p => p.startsWith('deepgram_'));
         const presetHasLlm = presets.some(p => p.startsWith('openai_gpt_'));
-        const presetHasTts = presets.some(p => p.startsWith('openai_tts_') || p.startsWith('minimax_speech_'));
+        const presetHasTts = presets.some(p => this.isManagedTtsPreset(p));
 
         if (this.usesManualTurnControl(data)) {
             if (!data.enableRtm) {
@@ -1096,8 +1102,20 @@ window.Utils = class Utils {
         openai_tts_1: 'tts-1',
         openai_tts_1_hd: 'tts-1',
         minimax_speech_2_6_turbo: 'speech-2.6-turbo',
-        minimax_speech_2_8_turbo: 'speech-2.8-turbo'
+        minimax_speech_2_8_turbo: 'speech-2.8-turbo',
+        // v2.14 managed TTS
+        cartesia_sonic_3_5: 'sonic-3.5',
+        cartesia_sonic_3_6: 'sonic-3.6',
+        fishaudio_s2_1_pro: 's2.1-pro'
     };
+
+    static isManagedTtsPreset(presetKey) {
+        if (!presetKey) return false;
+        return presetKey.startsWith('openai_tts_')
+            || presetKey.startsWith('minimax_speech_')
+            || presetKey.startsWith('cartesia_sonic_')
+            || presetKey.startsWith('fishaudio_');
+    }
 
     static usesManualTurnControl(formData) {
         if (formData.useDeprecatedFeatures || !formData.turnV24Enabled) return false;
@@ -1139,6 +1157,14 @@ window.Utils = class Utils {
                 if (!block.params.url) block.params.url = 'wss://api.minimax.io/ws/v1/t2a_v2';
                 delete block.params.key;
                 delete block.params.group_id;
+            } else if (presetKey.startsWith('cartesia_sonic_')) {
+                block.vendor = 'cartesia';
+                if (model) block.params.model_id = model;
+                delete block.params.api_key;
+            } else if (presetKey.startsWith('fishaudio_')) {
+                block.vendor = 'fishaudio';
+                if (model) block.params.backend = model;
+                delete block.params.api_key;
             }
         }
     }
@@ -1544,7 +1570,7 @@ window.Utils = class Utils {
         const presets = this.parsePresetList(formData.preset);
         const presetHasAsr = presets.some(p => p.startsWith('deepgram_'));
         const presetHasLlm = presets.some(p => p.startsWith('openai_gpt_'));
-        const presetHasTts = presets.some(p => p.startsWith('openai_tts_') || p.startsWith('minimax_speech_'));
+        const presetHasTts = presets.some(p => this.isManagedTtsPreset(p));
 
         // Parse remote RTC UIDs
         let remoteRtcUids = ["*"];
@@ -2112,6 +2138,14 @@ window.Utils = class Utils {
                     quality: formData.anamQuality,
                     video_encoding: formData.anamVideoEncoding
                 };
+                // v2.11 Cara 4 / portrait video
+                if (formData.anamAvatarModel) {
+                    avatarParams.avatar_model = formData.anamAvatarModel;
+                }
+                if (formData.anamVideoWidth && formData.anamVideoHeight) {
+                    avatarParams.video_width = parseInt(formData.anamVideoWidth, 10);
+                    avatarParams.video_height = parseInt(formData.anamVideoHeight, 10);
+                }
             } else if (formData.avatarVendor === 'generic') {
                 avatarParams = {
                     api_key: formData.avatarApiKey,
@@ -2640,15 +2674,16 @@ window.Utils = class Utils {
     }
 
     /**
-     * Generate Agora RTC + RTM token
+     * Generate Agora RTC + RTM token (optionally with ConvoAI service for v2.14 REST auth).
      * @param {string} appId - Agora App ID
      * @param {string} appCertificate - Agora App Certificate
      * @param {string} channelName - Channel name
      * @param {string|number} userAccount - User account (UID)
      * @param {number} role - Role (1 = PUBLISHER, 2 = SUBSCRIBER)
+     * @param {{ includeConvoAI?: boolean }} [options] - When includeConvoAI is true, adds the ConvoAI service (v2.14)
      * @returns {Promise<string>} Generated token
      */
-    static async generateAgoraToken(appId, appCertificate, channelName, userAccount, role = 1) {
+    static async generateAgoraToken(appId, appCertificate, channelName, userAccount, role = 1, options = {}) {
         if (!appId || !appCertificate) {
             throw new Error("App ID and App Certificate are required to generate tokens");
         }
@@ -2663,9 +2698,13 @@ window.Utils = class Utils {
 
         const TOKEN_EXPIRE = 3600; // 60 minutes in seconds
         const PRIVILEGE_EXPIRE = 3600; // 60 minutes in seconds
+        const includeConvoAI = options && options.includeConvoAI === true;
 
         try {
-            const token = await RtcTokenBuilder.buildTokenWithRtm(
+            const builder = includeConvoAI && typeof RtcTokenBuilder.buildTokenWithConvoAI === 'function'
+                ? RtcTokenBuilder.buildTokenWithConvoAI.bind(RtcTokenBuilder)
+                : RtcTokenBuilder.buildTokenWithRtm.bind(RtcTokenBuilder);
+            const token = await builder(
                 appId,
                 appCertificate,
                 channelName,

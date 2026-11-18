@@ -36,7 +36,8 @@ Basic agent configuration:
 - Set idle timeout for automatic agent cleanup
 - Choose input/output modalities
 - Optionally set a **Backend Pipeline ID** (and override LLM / TTS / ASR checkboxes if you still want UI values)
-- Optionally use **managed presets** (v2.9) for ASR / LLM / TTS (`credential_mode: managed`)
+- Optionally use **managed presets** for ASR / LLM / TTS (`credential_mode: managed`): Deepgram / OpenAI / MiniMax (v2.9), Cartesia / Fish Audio (v2.14)
+- Agent **Generate Token** includes the ConvoAI service (v2.14) for channel join and optional REST token auth
 
 ### 4. Set up AI Model Configuration
 
@@ -143,4 +144,4 @@ Enable real-time subtitle display:
 - Check [VENDORS.md](./VENDORS.md) for vendor-specific configuration details
 - See [API.md](./API.md) for API integration information
 - Review [ARCHITECTURE.md](./ARCHITECTURE.md) for technical architecture details
-- See platform [release notes](https://docs.agora.io/en/ai/release-notes) for ConvoAI v2.13 / v2.12 / v2.11 / v2.10 / v2.9 changes
+- See platform [release notes](https://docs.agora.io/en/ai/release-notes) for ConvoAI v2.14 / v2.13 / v2.12 / v2.11 / v2.10 / v2.9 changes
