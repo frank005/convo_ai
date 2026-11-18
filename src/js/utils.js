@@ -66,6 +66,8 @@ window.Utils = class Utils {
             ttsKey = document.getElementById("typecastTtsKey") ? document.getElementById("typecastTtsKey").value.trim() : '';
         } else if (ttsVendor === "smallestai") {
             ttsKey = document.getElementById("smallestaiTtsKey") ? document.getElementById("smallestaiTtsKey").value.trim() : '';
+        } else if (ttsVendor === "gemini") {
+            ttsKey = document.getElementById("geminiTtsKey") ? document.getElementById("geminiTtsKey").value.trim() : '';
         } else if (ttsVendor === "generic_http") {
             ttsKey = document.getElementById("genericHttpTtsKey") ? document.getElementById("genericHttpTtsKey").value.trim() : '';
         }
@@ -716,6 +718,13 @@ window.Utils = class Utils {
                 } else if (ttsVendor === 'smallestai') {
                     const smallestaiTtsKey = document.getElementById('smallestaiTtsKey') ? document.getElementById('smallestaiTtsKey').value.trim() : '';
                     if (!smallestaiTtsKey) throw new Error('Smallest AI TTS API Key is required');
+                } else if (ttsVendor === 'gemini') {
+                    const geminiTtsKey = document.getElementById('geminiTtsKey') ? document.getElementById('geminiTtsKey').value.trim() : '';
+                    const geminiTtsModel = document.getElementById('geminiTtsModel') ? document.getElementById('geminiTtsModel').value.trim() : '';
+                    const geminiTtsVoice = document.getElementById('geminiTtsVoice') ? document.getElementById('geminiTtsVoice').value.trim() : '';
+                    if (!geminiTtsKey) throw new Error('Gemini TTS API Key is required');
+                    if (!geminiTtsModel) throw new Error('Gemini TTS Model is required');
+                    if (!geminiTtsVoice) throw new Error('Gemini TTS Voice is required');
                 } else if (ttsVendor === 'generic_http') {
                     const genericHttpUrl = document.getElementById('genericHttpUrl') ? document.getElementById('genericHttpUrl').value.trim() : '';
                     const genericHttpTtsKey = document.getElementById('genericHttpTtsKey') ? document.getElementById('genericHttpTtsKey').value.trim() : '';
@@ -2503,6 +2512,19 @@ window.Utils = class Utils {
                         voice_id: document.getElementById("typecastVoiceId").value.trim(),
                         model: document.getElementById("typecastModel").value.trim()
                     }
+                };
+            } else if (formData.vendor === "gemini") {
+                const geminiParams = {
+                    api_key: document.getElementById("geminiTtsKey").value.trim(),
+                    model: document.getElementById("geminiTtsModel").value.trim() || 'gemini-3.8-flash-tts',
+                    voice: document.getElementById("geminiTtsVoice").value.trim()
+                };
+                const geminiStyle = document.getElementById("geminiTtsStyle")?.value.trim();
+                if (geminiStyle) geminiParams.style = geminiStyle;
+                config.properties.tts = {
+                    vendor: "gemini",
+                    ...(skip_patterns ? { skip_patterns } : {}),
+                    params: geminiParams
                 };
             } else if (formData.vendor === "smallestai") {
                 const smallestParams = {

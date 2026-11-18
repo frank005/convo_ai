@@ -220,6 +220,17 @@ Supports language-grouped voice picker and v2.9 managed presets (`minimax_speech
 **Required:** API Key (omit when managed), `reference_id`, `backend`  
 **Managed mode (v2.14):** Preset `fishaudio_s2_1_pro` sets `credential_mode: managed` and `backend` to `s2.1-pro`. `reference_id` still required.
 
+### Gemini TTS (preview)
+
+**Vendor name:** `gemini`
+
+**Required:** `api_key`, `model` (default `gemini-3.8-flash-tts`), `voice` (e.g. `Puck`)  
+**Optional:** `style` (natural-language delivery instructions)
+
+**Preview routing:** Selecting Gemini TTS asks to switch the whole agent session to `https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2` with header `agora-feature: gemini-live` (join / update / leave / speak / think). Choosing another TTS vendor returns to the production API. Same preview host as GPT-Live, different feature header (`live-models` vs `gemini-live`).
+
+**Docs:** [Gemini TTS](https://docs.agora.io/en/ai/models/tts/gemini)
+
 ### Google TTS
 
 **Required:** Service account credentials JSON, voice name  

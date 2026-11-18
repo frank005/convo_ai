@@ -1,14 +1,19 @@
 // API Module for Agora Conversational AI
 window.AgoraAPI = class AgoraAPI {
     static PRODUCTION_BASE_URL = 'https://api.agora.io/api/conversational-ai-agent/v2';
-    // GPT-Live REST join is an early-access preview and must use this host, not api.agora.io.
+    // Early-access preview host (GPT-Live, Gemini TTS, etc.) — not api.agora.io.
+    static PREVIEW_BASE_URL = 'https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2';
+    /** @deprecated use PREVIEW_BASE_URL */
     static GPT_LIVE_PREVIEW_BASE_URL = 'https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2';
 
     constructor(appId) {
         this.appId = appId;
         // Get base URL from localStorage or use default
         this.baseUrl = localStorage.getItem('agoraBaseUrl') || AgoraAPI.PRODUCTION_BASE_URL;
-        this.gptLiveAgent = false;
+        // Sticky preview feature after createAgent so leave/update/query stay on preview.
+        // Values: 'live-models' | 'gemini-live' | null
+        this.previewFeatureSticky = null;
+        this.gptLiveAgent = false; // legacy alias for previewFeatureSticky === 'live-models'
     }
 
     // Method to update base URL
@@ -35,14 +40,44 @@ window.AgoraAPI = class AgoraAPI {
     }
 
     _isGptLiveSession() {
-        if (this.gptLiveAgent) return true;
+        return this._activePreviewFeature() === 'live-models';
+    }
+
+    _detectPreviewFeatureFromUi() {
         const enableMllm = document.getElementById('enableMllm');
         const mllmVendor = document.getElementById('mllmVendor');
-        return !!(enableMllm && enableMllm.checked && mllmVendor && this._isGptLiveVendor(mllmVendor.value));
+        if (enableMllm && enableMllm.checked && mllmVendor && this._isGptLiveVendor(mllmVendor.value)) {
+            return 'live-models';
+        }
+        const ttsVendor = document.getElementById('ttsVendor');
+        if (ttsVendor && ttsVendor.value === 'gemini') {
+            return 'gemini-live';
+        }
+        return null;
+    }
+
+    _previewFeatureFromConfig(agentConfig) {
+        const mllmVendor = agentConfig && agentConfig.properties && agentConfig.properties.mllm
+            ? agentConfig.properties.mllm.vendor
+            : '';
+        if (this._isGptLiveVendor(mllmVendor)) {
+            return 'live-models';
+        }
+        const ttsVendor = agentConfig && agentConfig.properties && agentConfig.properties.tts
+            ? agentConfig.properties.tts.vendor
+            : '';
+        if (ttsVendor === 'gemini') {
+            return 'gemini-live';
+        }
+        return null;
+    }
+
+    _activePreviewFeature() {
+        return this.previewFeatureSticky || this._detectPreviewFeatureFromUi();
     }
 
     _agentRestBaseUrl() {
-        return this._isGptLiveSession() ? AgoraAPI.GPT_LIVE_PREVIEW_BASE_URL : this.baseUrl;
+        return this._activePreviewFeature() ? AgoraAPI.PREVIEW_BASE_URL : this.baseUrl;
     }
 
     getAuthHeaders(customerId, customerSecret, options = {}) {
@@ -54,16 +89,27 @@ window.AgoraAPI = class AgoraAPI {
             "Content-Type": "application/json",
             "Authorization": `Basic ${encoded}`
         };
-        const liveModels = options.liveModels != null ? options.liveModels : this._isGptLiveSession();
-        if (liveModels) {
-            headers["agora-feature"] = "live-models";
+        let feature = options.agoraFeature;
+        if (feature == null && options.liveModels != null) {
+            feature = options.liveModels ? 'live-models' : null;
+        }
+        if (feature == null) {
+            feature = this._activePreviewFeature();
+        }
+        if (feature) {
+            headers["agora-feature"] = feature;
         }
         return headers;
     }
 
+    setPreviewFeature(feature) {
+        this.previewFeatureSticky = feature || null;
+        this.gptLiveAgent = feature === 'live-models';
+        this.liveModelsHeader = feature === 'live-models';
+    }
+
     setLiveModelsHeader(enabled) {
-        this.liveModelsHeader = !!enabled;
-        this.gptLiveAgent = !!enabled;
+        this.setPreviewFeature(enabled ? 'live-models' : null);
     }
 
     /**
@@ -128,13 +174,10 @@ window.AgoraAPI = class AgoraAPI {
     }
 
     async createAgent(customerId, customerSecret, agentConfig) {
-        const mllmVendor = agentConfig && agentConfig.properties && agentConfig.properties.mllm
-            ? agentConfig.properties.mllm.vendor
-            : '';
-        const isGptLive = this._isGptLiveVendor(mllmVendor);
-        this.setLiveModelsHeader(isGptLive);
-        const headers = this.getAuthHeaders(customerId, customerSecret, { liveModels: isGptLive });
-        const baseUrl = isGptLive ? AgoraAPI.GPT_LIVE_PREVIEW_BASE_URL : this.baseUrl;
+        const previewFeature = this._previewFeatureFromConfig(agentConfig);
+        this.setPreviewFeature(previewFeature);
+        const headers = this.getAuthHeaders(customerId, customerSecret, { agoraFeature: previewFeature });
+        const baseUrl = previewFeature ? AgoraAPI.PREVIEW_BASE_URL : this.baseUrl;
         const url = `${baseUrl}/projects/${this.appId}/join`;
 
         // If agentConfig.properties.advanced_features.enable_rtm is true and agentConfig.properties.agent_rtm_uid is set,

@@ -964,7 +964,7 @@ Aligned with the current playground dropdowns (ConvoAI Engine **v2.14**):
 
 **MLLM Providers**: OpenAI Realtime, [OpenAI GPT-Live](https://docs.agora.io/en/ai/models/mllm/openai-gpt-live) (`openai_gpt_live`, preview REST host `partner.ai.agora.io/preview/...`, header `agora-feature: live-models`), Azure OpenAI Realtime, xAI Grok, Gemini Live, Vertex AI, Custom WebSocket
 
-**TTS Vendors**: Microsoft Azure, ElevenLabs, MiniMax, Deepgram, Murf, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Google, Amazon Polly, Sarvam, Gradium, Mistral, Typecast, Smallest AI, Generic HTTP (OpenAI protocol)
+**TTS Vendors**: Microsoft Azure, ElevenLabs, MiniMax, Deepgram, Murf, Cartesia, OpenAI, Hume AI, Rime, Fish Audio, Google, Amazon Polly, Sarvam, Gradium, Mistral, Typecast, Gemini (preview → `partner.ai.agora.io` + `agora-feature: gemini-live`), Smallest AI, Generic HTTP (OpenAI protocol)
 
 **ASR Vendors**: Agora (ARES, with optional keywords), Microsoft Azure, Deepgram, OpenAI, Gemini, Smallest AI, Speechmatics, AssemblyAI, Amazon Transcribe, Google, Sarvam, Custom
 

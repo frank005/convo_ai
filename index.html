@@ -5212,13 +5212,13 @@
   <script src="src/js/AccessToken2.js"></script>
   <script src="src/js/RtcTokenBuilder2.js"></script>
   <script src="src/js/RtmTokenBuilder2.js"></script>
-  <script src="src/js/utils.js?v=1.8"></script>
-  <script src="src/js/api.js?v=1.8"></script>
+  <script src="src/js/utils.js?v=1.9"></script>
+  <script src="src/js/api.js?v=1.9"></script>
   <script src="src/js/audio.js?v=1.2"></script>
   <script src="src/js/camera-preview.js?v=1.0"></script>
   <script src="src/js/conversational-ai-api.js?v=1.4"></script>
   <script src="src/js/subtitles.js?v=1.5"></script>
-  <script src="src/js/ui.js?v=1.8"></script>
+  <script src="src/js/ui.js?v=1.9"></script>
   <script src="src/js/asr.js?v=1.1"></script>
 
   <!-- Subtitle Overlay -->
@@ -6376,10 +6376,11 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             <option value="gradium">Gradium</option>
             <option value="mistral">Mistral</option>
             <option value="typecast">Typecast</option>
+            <option value="gemini">Gemini (preview)</option>
             <option value="smallestai">Smallest AI</option>
             <option value="generic_http">Generic HTTP (OpenAI protocol)</option>
           </select>
-          <div class="tooltip">Select the Text-to-Speech vendor to use for voice output. Smallest AI is a ConvoAI v2.13 provider. Typecast is v2.11. Generic HTTP connects a custom OpenAI-protocol TTS endpoint (v2.10).</div>
+          <div class="tooltip">Select the Text-to-Speech vendor. Gemini TTS is early-access preview and switches join/leave/update to partner.ai.agora.io/preview with agora-feature: gemini-live. Smallest AI is v2.13. Typecast is v2.11.</div>
         </div>
 
         <!-- Microsoft TTS Settings -->
@@ -7407,6 +7408,48 @@ The user speaks to you directly — treat each input as part of a live, spoken d
             value="ssfm-v30"
           />
           <div class="tooltip">Typecast TTS model. Sent as params.model. Example: ssfm-v30.</div>
+        </div>
+
+        <!-- Gemini TTS Settings (preview — requires partner.ai.agora.io + agora-feature: gemini-live) -->
+        <div id="geminiTtsPreviewBanner" class="hidden p-3 rounded border border-amber-500/50 bg-amber-900/30 text-amber-100 text-xs space-y-1">
+          <div class="font-semibold">Gemini TTS preview mode</div>
+          <div>Join / update / leave / speak / think use <code class="text-amber-200">https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2</code> with header <code class="text-amber-200">agora-feature: gemini-live</code>. Choosing another TTS vendor returns to the production API.</div>
+        </div>
+        <div id="geminiTtsKeyBlock" class="has-tooltip relative hidden">
+          <input
+            id="geminiTtsKey"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Google Gemini API Key (Required)"
+          />
+          <div class="tooltip">Google Gemini API key (AI Studio). Sent as params.api_key.</div>
+        </div>
+        <div id="geminiTtsModelBlock" class="has-tooltip relative hidden">
+          <input
+            id="geminiTtsModel"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Model"
+            value="gemini-3.8-flash-tts"
+          />
+          <div class="tooltip">Gemini TTS model. Docs default: gemini-3.8-flash-tts.</div>
+        </div>
+        <div id="geminiTtsVoiceBlock" class="has-tooltip relative hidden">
+          <input
+            id="geminiTtsVoice"
+            name="ttsVoiceId"
+            autocomplete="on"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Voice (Required, e.g. Puck)"
+            value="Puck"
+          />
+          <div class="tooltip">Prebuilt Gemini voice name (e.g. Puck). Sent as params.voice.</div>
+        </div>
+        <div id="geminiTtsStyleBlock" class="has-tooltip relative hidden">
+          <input
+            id="geminiTtsStyle"
+            class="w-full p-2 rounded bg-gray-800 text-white border border-gray-500 focus:border-blue-500"
+            placeholder="Style (Optional, e.g. warm and reassuring)"
+          />
+          <div class="tooltip">Optional natural-language delivery style. Sent as params.style.</div>
         </div>
 
         <!-- Smallest AI TTS Settings (v2.13) -->

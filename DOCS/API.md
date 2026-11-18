@@ -10,6 +10,7 @@ Create a new conversational AI agent.
 
 - **Endpoint:** `POST /api/conversational-ai-agent/v2/projects/{appId}/join`
 - **GPT-Live:** `POST https://partner.ai.agora.io/preview/api/conversational-ai-agent/v2/projects/{appId}/join` with header `agora-feature: live-models`
+- **Gemini TTS (preview):** same preview host with header `agora-feature: gemini-live` for join and all follow-up agent calls while Gemini TTS is selected
 - **Description:** Creates a new agent and joins it to the specified channel
 
 ### Update Agent

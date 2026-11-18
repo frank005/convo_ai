@@ -132,6 +132,7 @@ Dropdown vendors (see [VENDORS.md](./VENDORS.md) for field details):
 - **Microsoft**, **ElevenLabs**, **MiniMax**, **Deepgram**, **Murf**, **Cartesia**, **OpenAI**
 - **Hume AI**, **Rime**, **Fish Audio**, **Google**, **Amazon Polly**, **Sarvam**
 - **Gradium (v2.10)**, **Mistral (v2.10)**, **Typecast (v2.11)**, **Smallest AI (v2.13)**, **Generic HTTP / OpenAI protocol (v2.10)**
+- **Gemini TTS (preview)**: `vendor: gemini` — selecting it confirms and routes join/leave/update to `partner.ai.agora.io/preview` with `agora-feature: gemini-live`; switching away restores production
 - **Managed Cartesia / Fish Audio (v2.14)**: `cartesia_sonic_3_5`, `cartesia_sonic_3_6`, `fishaudio_s2_1_pro`
 - Shared: skip patterns, TTS custom parameters, LiveAvatar 24 kHz enforcement when applicable
 

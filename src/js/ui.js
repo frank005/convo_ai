@@ -41,6 +41,8 @@ window.UI = class UI {
         this.setupDrawerListeners();
         // Initialize TTS vendor blocks visibility
         this.handleTtsVendorChange();
+        const ttsVendorEl = document.getElementById('ttsVendor');
+        if (ttsVendorEl) this._lastTtsVendor = ttsVendorEl.value || 'microsoft';
         // Dependent UI (checkbox panels) runs via FormSettingsPersistence.syncDependentUI() at end of DOMContentLoaded
         // Update base URL indicator
         this.updateBaseUrlIndicator();
@@ -66,6 +68,8 @@ window.UI = class UI {
         this.handleGeofenceAreaChange();
         this.handleGeofenceExcludeChange();
         this.handleTtsVendorChange();
+        const ttsVendorEl = document.getElementById('ttsVendor');
+        if (ttsVendorEl) this._lastTtsVendor = ttsVendorEl.value || 'microsoft';
         this.syncMinimaxVoiceSelect();
         if (
             window.subtitleManager &&
@@ -77,6 +81,7 @@ window.UI = class UI {
         this.trySyncAvatarFieldsFromClient();
         this.autoGenerateAgentAndClientTokensIfPossible();
         this.autoConfigureAvatarIfPossible();
+        this.updateBaseUrlIndicator();
         this.updateMessageUIState();
     }
 
@@ -162,10 +167,11 @@ window.UI = class UI {
     }
 
     setupEventListeners() {
-        // TTS Vendor change handler
+        // TTS Vendor change handler (confirm Gemini preview before applying)
         const ttsVendor = document.getElementById("ttsVendor");
         if (ttsVendor) {
-            ttsVendor.addEventListener("change", () => this.handleTtsVendorChange());
+            this._lastTtsVendor = ttsVendor.value || 'microsoft';
+            ttsVendor.addEventListener("change", () => this.handleTtsVendorSelectionChange());
         }
         
         // Microsoft language change handler
@@ -1349,6 +1355,25 @@ window.UI = class UI {
 
     updateBaseUrlIndicator() {
         const indicator = document.getElementById("baseUrlIndicator");
+        if (!indicator || !this.agoraAPI) return;
+
+        const previewFeature = typeof this.agoraAPI._activePreviewFeature === 'function'
+            ? this.agoraAPI._activePreviewFeature()
+            : null;
+        if (previewFeature === 'gemini-live') {
+            indicator.textContent = 'Preview: gemini-live';
+            indicator.classList.remove('hidden');
+            indicator.classList.add('text-amber-300');
+            return;
+        }
+        if (previewFeature === 'live-models') {
+            indicator.textContent = 'Preview: live-models';
+            indicator.classList.remove('hidden');
+            indicator.classList.add('text-amber-300');
+            return;
+        }
+
+        indicator.classList.remove('text-amber-300');
         const currentUrl = this.agoraAPI.getBaseUrl();
         const defaultUrl = 'https://api.agora.io/api/conversational-ai-agent/v2';
         
@@ -1524,6 +1549,39 @@ window.UI = class UI {
         }
     }
 
+    handleTtsVendorSelectionChange() {
+        const ttsVendorElement = document.getElementById("ttsVendor");
+        if (!ttsVendorElement) return;
+
+        const nextVendor = ttsVendorElement.value;
+        const prevVendor = this._lastTtsVendor || 'microsoft';
+
+        if (nextVendor === 'gemini' && prevVendor !== 'gemini') {
+            const ok = window.confirm(
+                'Gemini TTS is an early-access preview.\n\n' +
+                'Selecting it routes the whole agent session (join / update / leave / speak / think) to:\n' +
+                'https://partner.ai.agora.io/preview/...\n' +
+                'with header agora-feature: gemini-live.\n\n' +
+                'Switch this playground session to the preview API?'
+            );
+            if (!ok) {
+                ttsVendorElement.value = prevVendor;
+                return;
+            }
+        }
+
+        // Leaving Gemini TTS clears sticky preview unless GPT-Live still needs it
+        if (prevVendor === 'gemini' && nextVendor !== 'gemini' && this.agoraAPI) {
+            if (this.agoraAPI.previewFeatureSticky === 'gemini-live') {
+                this.agoraAPI.setPreviewFeature(null);
+            }
+        }
+
+        this._lastTtsVendor = nextVendor;
+        this.handleTtsVendorChange();
+        this.updateBaseUrlIndicator();
+    }
+
     handleTtsVendorChange() {
         const ttsVendorElement = document.getElementById("ttsVendor");
         if (!ttsVendorElement) return;
@@ -1659,6 +1717,13 @@ window.UI = class UI {
             "typecastTtsKeyBlock",
             "typecastVoiceIdBlock",
             "typecastModelBlock"
+        ];
+        const geminiTtsBlocks = [
+            "geminiTtsPreviewBanner",
+            "geminiTtsKeyBlock",
+            "geminiTtsModelBlock",
+            "geminiTtsVoiceBlock",
+            "geminiTtsStyleBlock"
         ];
         const smallestaiTtsBlocks = [
             "smallestaiTtsKeyBlock",
@@ -1806,6 +1871,13 @@ window.UI = class UI {
             const element = document.getElementById(block);
             if (element) {
                 element.classList.toggle("hidden", vendor !== "typecast");
+            }
+        });
+
+        geminiTtsBlocks.forEach(block => {
+            const element = document.getElementById(block);
+            if (element) {
+                element.classList.toggle("hidden", vendor !== "gemini");
             }
         });
 
@@ -2681,6 +2753,7 @@ window.UI = class UI {
 
             const { customerId, customerSecret } = Utils.getStoredCredentials();
             const data = await this.agoraAPI.createAgent(customerId, customerSecret, agentConfig);
+            this.updateBaseUrlIndicator();
             
             if (output) {
                 output.textContent = JSON.stringify(data, null, 2);
